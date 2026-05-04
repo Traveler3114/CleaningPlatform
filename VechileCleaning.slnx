@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/UserWebsite/">
+    <File Path="Index.html" />
+  </Folder>
+  <Project Path="VechileCleaningAPI/VechileCleaningAPI.csproj" />
+</Solution>
