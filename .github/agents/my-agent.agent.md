@@ -1,11 +1,5 @@
----
-# Fill in the fields below to create a basic custom agent for your repository.
-# The Copilot CLI can be used for local testing: https://gh.io/customagents/cli
-# To make this agent available, merge this file into the default repository branch.
-# For format details, see: https://gh.io/customagents/config
-
-name:
-description:
+name: Vehicle Cleaning Agent
+description: A GitHub Copilot agent for rapid development, understanding, and troubleshooting of the Vehicle Cleaning booking system, including API, admin dashboard, and customer flows.
 ---
 
 # My Agent
@@ -233,20 +227,6 @@ public class OperationResult<T>
 
 ---
 
-# Fill in the fields below to create a basic custom agent for your repository.
-
-# The Copilot CLI can be used for local testing:
-https://gh.io/customagents/cli
-
-# To make this agent available, merge this file into the default repository branch.
-
-# For format details, see:
-https://gh.io/customagents/config
-
-name:
-description:
-
----
 # My Agent
-Describe what your agent does here.
-
+This agent provides expertise and automation for the Vehicle Cleaning booking system repository.  
+It understands the API, admin dashboard, database models, and customer website flow to answer questions, help generate tests and endpoints, and assist developers in all parts of the stack.
