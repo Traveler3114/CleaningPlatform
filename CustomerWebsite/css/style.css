@@ -1,0 +1,228 @@
+/* ===== Customer Booking Website Styles ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --primary: #1a237e;
+    --primary-light: #3949ab;
+    --accent: #00acc1;
+    --success: #43a047;
+    --danger: #e53935;
+    --bg: #f0f4ff;
+    --card: #ffffff;
+    --text: #222;
+    --muted: #666;
+    --border: #dde3f0;
+    --radius: 12px;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Header */
+.site-header {
+    background: var(--primary);
+    color: white;
+    width: 100%;
+    padding: 1.2rem 2rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+.site-header h1 { font-size: 1.6rem; }
+.site-header p { font-size: 0.9rem; opacity: 0.8; margin-top: 0.25rem; }
+
+/* Booking Card */
+.booking-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    margin: 2rem auto;
+    width: 100%;
+    max-width: 680px;
+    overflow: hidden;
+}
+
+/* Progress Steps */
+.steps {
+    display: flex;
+    background: #e8eaf6;
+    padding: 1rem 1.5rem;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.step {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    flex: 1;
+}
+.step.active { color: var(--primary); font-weight: 600; }
+.step.done { color: var(--success); }
+.step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ccc;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.step.active .step-num { background: var(--primary); }
+.step.done .step-num { background: var(--success); }
+
+/* Step Content */
+.step-content { padding: 2rem; }
+.step-content h2 { font-size: 1.3rem; color: var(--primary); margin-bottom: 1.2rem; }
+
+/* Calendar Step */
+.calendar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+.date-picker-label { font-size: 0.95rem; color: var(--muted); }
+.date-picker-input {
+    font-size: 1.1rem;
+    padding: 0.6rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 220px;
+}
+.date-picker-input:focus { border-color: var(--primary-light); }
+.btn-next {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 0.5rem;
+}
+.btn-next:hover { background: var(--primary-light); transform: translateY(-1px); }
+.btn-next:disabled { background: #aaa; cursor: not-allowed; transform: none; }
+
+/* Slots Step */
+.slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem; }
+.slot-btn {
+    padding: 0.85rem 0.5rem;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: white;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+.slot-btn:hover:not(:disabled) { border-color: var(--primary-light); background: #e8eaf6; }
+.slot-btn.selected { border-color: var(--primary); background: #e8eaf6; font-weight: 600; }
+.slot-btn:disabled { opacity: 0.45; cursor: not-allowed; background: #f5f5f5; }
+.slot-time { font-size: 1rem; font-weight: 700; color: var(--primary); }
+.slot-avail { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+.slot-closed { font-size: 0.75rem; color: var(--danger); }
+.no-slots { color: var(--muted); font-style: italic; padding: 1rem 0; }
+.loading { color: var(--muted); padding: 1rem 0; display: flex; align-items: center; gap: 0.5rem; }
+.spinner {
+    width: 18px; height: 18px;
+    border: 2px solid #ccc;
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Details Step */
+.form-group { margin-bottom: 1.2rem; }
+.form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.35rem; color: var(--text); }
+.form-group input {
+    width: 100%;
+    padding: 0.6rem 0.9rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.form-group input:focus { border-color: var(--primary-light); }
+.booking-summary {
+    background: #e8eaf6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.9rem;
+    color: var(--primary);
+}
+.booking-summary strong { font-weight: 700; }
+
+/* Confirmation Step */
+.confirmation {
+    text-align: center;
+    padding: 1rem 0;
+}
+.confirmation-icon { font-size: 4rem; margin-bottom: 1rem; }
+.confirmation h2 { color: var(--success); margin-bottom: 0.5rem; }
+.confirmation p { color: var(--muted); margin-bottom: 0.5rem; }
+.confirmation-details {
+    background: #e8f5e9;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin: 1.2rem auto;
+    max-width: 400px;
+    text-align: left;
+    font-size: 0.95rem;
+}
+.confirmation-details p { margin-bottom: 0.4rem; }
+.confirmation-details strong { color: var(--primary); }
+.btn-restart {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: background 0.2s;
+}
+.btn-restart:hover { background: var(--primary-light); }
+
+/* Back button */
+.btn-back {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.2s;
+}
+.btn-back:hover { color: var(--text); border-color: #aaa; }
+
+/* Error */
+.error-msg { color: var(--danger); font-size: 0.88rem; margin-top: 0.5rem; }
+
+/* Nav row */
+.nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
+
+/* Footer */
+.site-footer { color: var(--muted); font-size: 0.8rem; padding: 1rem; text-align: center; margin-top: auto; }

@@ -1,0 +1,56 @@
+@page
+@model VechileCleaningAPI.Pages.ScheduleModel
+@{
+    ViewData["Title"] = "Weekly Schedule";
+}
+
+<div class="page-header">
+    <h1>Weekly Schedule</h1>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success">@Model.Message</div>
+}
+
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>Day</th>
+            <th>Closed</th>
+            <th>Start Hour</th>
+            <th>End Hour</th>
+            <th>Capacity</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            var dayNames = new[] { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+        }
+        @foreach (var day in Model.Schedule)
+        {
+            <tr>
+                <td><strong>@dayNames[day.DayOfWeek]</strong></td>
+                <form method="post" asp-page-handler="UpdateDay">
+                    <input type="hidden" name="dayOfWeek" value="@day.DayOfWeek" />
+                    <td>
+                        <input type="checkbox" name="isClosed" value="true" @(day.IsClosed ? "checked" : "") class="checkbox" />
+                    </td>
+                    <td>
+                        <input type="number" name="startHour" value="@day.StartHour" min="0" max="23" class="small-input" />
+                    </td>
+                    <td>
+                        <input type="number" name="endHour" value="@day.EndHour" min="1" max="24" class="small-input" />
+                    </td>
+                    <td>
+                        <input type="number" name="defaultCapacity" value="@day.DefaultCapacity" min="1" max="99" class="small-input" />
+                    </td>
+                    <td>
+                        <button type="submit" class="btn btn-sm">Save</button>
+                    </td>
+                </form>
+            </tr>
+        }
+    </tbody>
+</table>
