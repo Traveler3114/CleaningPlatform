@@ -1,6 +1,6 @@
 // ===== Vehicle Cleaning Customer Booking App =====
 // Config: update API_BASE to match your deployed API URL
-const API_BASE = 'http://localhost:7124';
+const API_BASE = 'http://localhost:5098';
 
 // State
 const state = {
