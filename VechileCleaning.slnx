@@ -1,3 +1,8 @@
 <Solution>
+  <Folder Name="/CustomerWebsite/">
+    <File Path="CustomerWebsite/index.html" />
+    <File Path="CustomerWebsite/css/style.css" />
+    <File Path="CustomerWebsite/js/app.js" />
+  </Folder>
   <Project Path="VechileCleaningAPI/VechileCleaningAPI.csproj" />
 </Solution>
