@@ -1,0 +1,42 @@
+using Microsoft.AspNetCore.Mvc;
+using VechileCleaningAPI.Common;
+using VechileCleaningAPI.Dtos;
+using VechileCleaningAPI.Managers;
+
+namespace VechileCleaningAPI.Controllers;
+
+[ApiController]
+[Route("api/bookings")]
+public class BookingController : ControllerBase
+{
+    private readonly BookingManager _manager;
+
+    public BookingController(BookingManager manager)
+    {
+        _manager = manager;
+    }
+
+    [HttpGet]
+    public async Task<OperationResult<List<BookingDto>>> Get([FromQuery] DateTime date)
+    {
+        var bookings = await _manager.GetBookingsAsync(date);
+        return OperationResult<List<BookingDto>>.Ok(bookings);
+    }
+
+    [HttpPost]
+    public async Task<OperationResult<BookingDto>> Post([FromBody] CreateBookingDto dto)
+    {
+        return await _manager.CreateBookingAsync(dto);
+    }
+
+    [HttpPut("{id}/status")]
+    public async Task<OperationResult<BookingDto>> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
+    {
+        return await _manager.UpdateStatusAsync(id, request.Status);
+    }
+}
+
+public class UpdateStatusRequest
+{
+    public string Status { get; set; } = string.Empty;
+}
