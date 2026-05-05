@@ -34,13 +34,10 @@ app.UseCors();
 app.UseRouting();
 app.UseAuthorization();
 
-// IMPORTANT: Static files FIRST (so index.html loads at root /)
-app.UseDefaultFiles();    // Looks for index.html in wwwroot
-app.UseStaticFiles();     // Serves CSS, JS from wwwroot
-
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.MapControllers();
-
-// FALLBACK: If nothing else matches, serve index.html
+app.MapGet("/admin", () => Results.File("admin/index.html", "text/html"));
 app.MapFallbackToFile("index.html");
 
 // Ensure DB created and seeded
