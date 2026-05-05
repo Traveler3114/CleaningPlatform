@@ -1,6 +1,6 @@
 // ===== Vehicle Cleaning Customer Booking App =====
 // Config: update API_BASE to match your deployed API URL
-const API_BASE = 'http://localhost:5098';
+const API_BASE = 'https://localhost:7124';
 
 // State
 const state = {
@@ -17,9 +17,12 @@ const state = {
 const stepsEl = document.querySelectorAll('.step');
 const stepContents = document.querySelectorAll('.step-panel');
 
+// Helper to format date as YYYY-MM-DD local time
 function formatDate(date) {
-    // Returns YYYY-MM-DD
-    return date.toISOString().split('T')[0];
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
 }
 
 function formatHour(h) {
@@ -40,14 +43,37 @@ function updateStepUI() {
 }
 
 // ===== STEP 1: Date Selection =====
-function initStep1() {
+async function initStep1() {
     const dateInput = document.getElementById('date-input');
     const nextBtn = document.getElementById('step1-next');
 
-    // Default to today
-    const today = new Date();
-    dateInput.value = formatDate(today);
-    dateInput.min = formatDate(today);
+    // Start with today's date
+    let defaultDate = new Date();
+
+    try {
+        // Fetch today's availability from the API
+        const dateStr = formatDate(defaultDate);
+        const res = await fetch(`${API_BASE}/api/availability?date=${dateStr}`);
+        const result = await res.json();
+
+        // Check if there are any slots today that are NOT closed and have availability > 0[cite: 2, 4]
+        // Also ensure those slots are in the future relative to the current time
+        const currentHour = new Date().getHours();
+        const hasAvailableFutureSlots = result.success && result.data && result.data.some(s =>
+            !s.isClosed && s.available > 0 && s.hour > currentHour
+        );
+
+        // If the workday is over or fully booked, skip to the next day[cite: 1]
+        if (!hasAvailableFutureSlots) {
+            defaultDate.setDate(defaultDate.getDate() + 1);
+        }
+    } catch (e) {
+        console.error("End-of-day check failed, defaulting to current date.");
+    }
+
+    const finalDateStr = formatDate(defaultDate);
+    dateInput.value = finalDateStr;
+    dateInput.min = finalDateStr; // Prevents the user from manually selecting a finished workday
 
     dateInput.addEventListener('change', () => {
         nextBtn.disabled = !dateInput.value;
@@ -91,9 +117,21 @@ async function loadSlots() {
 function renderSlots() {
     const slotsContainer = document.getElementById('slots-container');
     const nextBtn = document.getElementById('step2-next');
-    const openSlots = state.slots.filter(s => !s.isClosed);
 
-    if (openSlots.length === 0) {
+    const now = new Date();
+    const isToday = formatDate(state.selectedDate) === formatDate(now);
+    const currentHour = now.getHours();
+
+    // Filter: 1. Not closed, 2. Has capacity, 3. Is in the future (if today)[cite: 2, 4]
+    const availableSlots = state.slots.filter(s => {
+        const isNotClosed = !s.isClosed && s.available > 0;
+        if (isToday) {
+            return isNotClosed && s.hour > currentHour; // Past hours removed[cite: 2]
+        }
+        return isNotClosed;
+    });
+
+    if (availableSlots.length === 0) {
         slotsContainer.innerHTML = '<p class="no-slots">No open slots for this date.</p>';
         return;
     }
@@ -101,30 +139,24 @@ function renderSlots() {
     slotsContainer.innerHTML = '<div class="slots-grid"></div>';
     const grid = slotsContainer.querySelector('.slots-grid');
 
-    state.slots.forEach(slot => {
+    availableSlots.forEach(slot => {
         const btn = document.createElement('button');
         btn.className = 'slot-btn';
-        btn.disabled = slot.isClosed || slot.available <= 0;
         if (state.selectedHour === slot.hour) btn.classList.add('selected');
 
-        let statusHtml = '';
-        if (slot.isClosed) {
-            statusHtml = `<div class="slot-closed">Closed</div>`;
-        } else if (slot.available <= 0) {
-            statusHtml = `<div class="slot-closed">Full</div>`;
-        } else {
-            statusHtml = `<div class="slot-avail">${slot.available} spot${slot.available !== 1 ? 's' : ''} left</div>`;
-        }
-
-        btn.innerHTML = `<div class="slot-time">${formatHour(slot.hour)}</div>${statusHtml}`;
+        // Capacity defaults to 2 if not overridden by the daily schedule[cite: 1, 4]
+        btn.innerHTML = `
+            <div class="slot-time">${formatHour(slot.hour)}</div>
+            <div class="slot-avail">${slot.available} spot${slot.available !== 1 ? 's' : ''} left</div>
+        `;
 
         btn.addEventListener('click', () => {
             state.selectedHour = slot.hour;
-            // Update selection UI
             grid.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             nextBtn.disabled = false;
         });
+
         grid.appendChild(btn);
     });
 }
@@ -250,6 +282,7 @@ function initStep4() {
         document.getElementById('customer-name').value = '';
         document.getElementById('customer-phone').value = '';
         updateStepUI();
+        initStep1(); // Refresh today's check
     });
 }
 

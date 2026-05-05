@@ -23,7 +23,6 @@ public class ScheduleManager
             IsClosed = s.IsClosed,
             StartHour = s.StartHour,
             EndHour = s.EndHour,
-            DefaultCapacity = s.DefaultCapacity
         }).ToList();
     }
 
@@ -35,7 +34,6 @@ public class ScheduleManager
         schedule.IsClosed = dto.IsClosed;
         schedule.StartHour = dto.StartHour;
         schedule.EndHour = dto.EndHour;
-        schedule.DefaultCapacity = dto.DefaultCapacity;
         await _db.SaveChangesAsync();
         return OperationResult<WeeklyScheduleDto>.Ok(dto);
     }

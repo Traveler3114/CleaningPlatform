@@ -7,5 +7,4 @@ public class WeeklySchedule
     public bool IsClosed { get; set; }
     public int StartHour { get; set; }
     public int EndHour { get; set; }
-    public int DefaultCapacity { get; set; }
 }

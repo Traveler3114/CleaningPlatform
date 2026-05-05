@@ -14,39 +14,42 @@ public class AvailabilityManager
         _db = db;
     }
 
+    // Inside AvailabilityManager.cs
+    // AvailabilityManager.cs refactoring
     public async Task<List<AvailabilityDto>> GetSlotsAsync(DateTime date)
     {
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == (int)date.DayOfWeek);
         if (schedule == null || schedule.IsClosed)
             return new List<AvailabilityDto>();
 
-        var overrides = await _db.SlotOverrides.Where(o => o.Date.Date == date.Date).ToListAsync();
-        var dayOverride = overrides.FirstOrDefault(o => o.Hour == null);
-
-        if (dayOverride != null && dayOverride.IsClosed)
-            return new List<AvailabilityDto>();
+        // Get daily overrides for this specific date
+        var overrides = await _db.SlotOverrides
+            .Where(o => o.Date.Date == date.Date)
+            .ToListAsync();
 
         var bookings = await _db.Bookings
             .Where(b => b.Date.Date == date.Date && b.Status != BookingStatus.Cancelled)
             .ToListAsync();
 
         var slots = new List<AvailabilityDto>();
-        var startHour = schedule.StartHour;
-        var endHour = schedule.EndHour;
-        var defaultCapacity = dayOverride?.Capacity ?? schedule.DefaultCapacity;
 
-        for (int h = startHour; h < endHour; h++)
+        for (int h = schedule.StartHour; h < schedule.EndHour; h++)
         {
+            // Find if there is a daily override for this specific hour
             var hourOverride = overrides.FirstOrDefault(o => o.Hour == h);
+
+            // Logic: Use override capacity if it exists, otherwise default to 2
+            int effectiveCapacity = hourOverride?.Capacity ?? 2;
             bool isClosed = hourOverride?.IsClosed ?? false;
-            int capacity = hourOverride?.Capacity ?? defaultCapacity;
+
             int booked = bookings.Count(b => b.Hour == h);
+
             slots.Add(new AvailabilityDto
             {
                 Hour = h,
-                Capacity = capacity,
+                Capacity = effectiveCapacity,
                 Booked = booked,
-                Available = Math.Max(0, capacity - booked),
+                Available = isClosed ? 0 : Math.Max(0, effectiveCapacity - booked),
                 IsClosed = isClosed
             });
         }

@@ -30,7 +30,6 @@ public class ScheduleModel : PageModel
             IsClosed = isClosed,
             StartHour = startHour,
             EndHour = endHour,
-            DefaultCapacity = defaultCapacity
         };
         await _schedule.UpdateDayAsync(dayOfWeek, dto);
         Message = "Schedule updated.";

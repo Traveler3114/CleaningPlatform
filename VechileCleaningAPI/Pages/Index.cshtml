@@ -22,11 +22,10 @@ else
         <thead>
             <tr>
                 <th>Hour</th>
-                <th>Capacity</th>
                 <th>Booked</th>
                 <th>Available</th>
                 <th>Status</th>
-                <th>Override</th>
+                <th>Slot Management (Capacity & Closure)</th>
             </tr>
         </thead>
         <tbody>
@@ -34,7 +33,6 @@ else
             {
                 <tr class="@(slot.IsClosed ? "row-closed" : slot.Available == 0 ? "row-full" : "")">
                     <td>@slot.Hour:00</td>
-                    <td>@slot.Capacity</td>
                     <td>@slot.Booked</td>
                     <td>@slot.Available</td>
                     <td>
@@ -52,13 +50,22 @@ else
                         }
                     </td>
                     <td>
-                        <form method="post" asp-page-handler="Override" class="override-form">
+                        <form method="post" asp-page-handler="Override" class="override-form" style="display: flex; align-items: center; gap: 10px;">
                             <input type="hidden" name="date" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" />
                             <input type="hidden" name="hour" value="@slot.Hour" />
-                            <input type="number" name="capacity" placeholder="Capacity" min="0" max="99" value="@slot.Capacity" class="small-input" />
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="isClosed" value="true" @(slot.IsClosed ? "checked" : "") /> Close
+                            
+                            <input type="number" name="capacity"
+                                   placeholder="Cap (Def: 2)"
+                                   min="0" max="99"
+                                   value="@slot.Capacity"
+                                   class="small-input"
+                                   style="width: 80px;" />
+
+                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 5px; white-space: nowrap;">
+                                <input type="checkbox" name="isClosed" value="true" @(slot.IsClosed ? "checked" : "") />
+                                <strong>Close Slot</strong>
                             </label>
+
                             <button type="submit" class="btn btn-sm">Set</button>
                         </form>
                     </td>

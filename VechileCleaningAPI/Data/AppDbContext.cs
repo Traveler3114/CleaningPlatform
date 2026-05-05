@@ -23,13 +23,13 @@ public class AppDbContext : DbContext
 
         // Seed WeeklySchedule
         modelBuilder.Entity<WeeklySchedule>().HasData(
-            new WeeklySchedule { Id = 1, DayOfWeek = 0, IsClosed = true,  StartHour = 8, EndHour = 17, DefaultCapacity = 2 },
-            new WeeklySchedule { Id = 2, DayOfWeek = 1, IsClosed = false, StartHour = 8, EndHour = 17, DefaultCapacity = 2 },
-            new WeeklySchedule { Id = 3, DayOfWeek = 2, IsClosed = false, StartHour = 8, EndHour = 17, DefaultCapacity = 2 },
-            new WeeklySchedule { Id = 4, DayOfWeek = 3, IsClosed = false, StartHour = 8, EndHour = 17, DefaultCapacity = 2 },
-            new WeeklySchedule { Id = 5, DayOfWeek = 4, IsClosed = false, StartHour = 8, EndHour = 17, DefaultCapacity = 2 },
-            new WeeklySchedule { Id = 6, DayOfWeek = 5, IsClosed = false, StartHour = 8, EndHour = 17, DefaultCapacity = 2 },
-            new WeeklySchedule { Id = 7, DayOfWeek = 6, IsClosed = false, StartHour = 9, EndHour = 13, DefaultCapacity = 2 }
+            new WeeklySchedule { Id = 1, DayOfWeek = 0, IsClosed = true,  StartHour = 8, EndHour = 17},
+            new WeeklySchedule { Id = 2, DayOfWeek = 1, IsClosed = false, StartHour = 8, EndHour = 17},
+            new WeeklySchedule { Id = 3, DayOfWeek = 2, IsClosed = false, StartHour = 8, EndHour = 17},
+            new WeeklySchedule { Id = 4, DayOfWeek = 3, IsClosed = false, StartHour = 8, EndHour = 17},
+            new WeeklySchedule { Id = 5, DayOfWeek = 4, IsClosed = false, StartHour = 8, EndHour = 17},
+            new WeeklySchedule { Id = 6, DayOfWeek = 5, IsClosed = false, StartHour = 8, EndHour = 17},
+            new WeeklySchedule { Id = 7, DayOfWeek = 6, IsClosed = false, StartHour = 9, EndHour = 13}
         );
     }
 }

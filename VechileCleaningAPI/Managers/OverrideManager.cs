@@ -24,14 +24,32 @@ public class OverrideManager
 
     public async Task<OperationResult<SlotOverrideDto>> CreateOverrideAsync(SlotOverrideDto dto)
     {
-        var entity = new SlotOverride
+        // Check if an override already exists for this date and hour
+        var existingOverride = await _db.SlotOverrides
+            .FirstOrDefaultAsync(o => o.Date.Date == dto.Date.Date && o.Hour == dto.Hour);
+
+        SlotOverride entity;
+
+        if (existingOverride != null)
         {
-            Date = dto.Date.Date,
-            Hour = dto.Hour,
-            IsClosed = dto.IsClosed,
-            Capacity = dto.Capacity
-        };
-        _db.SlotOverrides.Add(entity);
+            // Update existing override
+            existingOverride.IsClosed = dto.IsClosed;
+            existingOverride.Capacity = dto.Capacity;
+            entity = existingOverride;
+        }
+        else
+        {
+            // Create new override
+            entity = new SlotOverride
+            {
+                Date = dto.Date.Date,
+                Hour = dto.Hour,
+                IsClosed = dto.IsClosed,
+                Capacity = dto.Capacity
+            };
+            _db.SlotOverrides.Add(entity);
+        }
+
         await _db.SaveChangesAsync();
         return OperationResult<SlotOverrideDto>.Ok(MapToDto(entity));
     }
@@ -41,14 +59,22 @@ public class OverrideManager
         var entity = await _db.SlotOverrides.FindAsync(id);
         if (entity == null)
             return OperationResult<bool>.Fail("Override not found.");
+
         _db.SlotOverrides.Remove(entity);
         await _db.SaveChangesAsync();
-        // Nightly cleanup: delete overrides older than 30 days
-        var cutoff = DateTime.Today.AddDays(-30);
-        var old = _db.SlotOverrides.Where(o => o.Date < cutoff);
-        _db.SlotOverrides.RemoveRange(old);
-        await _db.SaveChangesAsync();
         return OperationResult<bool>.Ok(true);
+    }
+
+    // Call this separately (e.g., from a background job or admin endpoint)
+    public async Task CleanupOldOverridesAsync()
+    {
+        var cutoff = DateTime.Today.AddDays(-30);
+        var old = await _db.SlotOverrides.Where(o => o.Date < cutoff).ToListAsync();
+        if (old.Any())
+        {
+            _db.SlotOverrides.RemoveRange(old);
+            await _db.SaveChangesAsync();
+        }
     }
 
     private static SlotOverrideDto MapToDto(SlotOverride o) => new()
