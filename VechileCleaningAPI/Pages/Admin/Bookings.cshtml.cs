@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using VechileCleaningAPI.Dtos;
 using VechileCleaningAPI.Managers;
 
-namespace VechileCleaningAPI.Pages;
+namespace VechileCleaningAPI.Pages.Admin;
 
 public class BookingsModel : PageModel
 {

@@ -4,6 +4,8 @@ using VechileCleaningAPI.Managers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.UseUrls("http://*:5098", "https://*:7124");
+
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
@@ -34,9 +36,15 @@ app.UseCors();
 app.UseRouting();
 app.UseAuthorization();
 
+// IMPORTANT: Static files FIRST (so index.html loads at root /)
+app.UseDefaultFiles();    // Looks for index.html in wwwroot
+app.UseStaticFiles();     // Serves CSS, JS from wwwroot
+
 app.MapControllers();
-app.MapStaticAssets();
-app.MapRazorPages().WithStaticAssets();
+app.MapRazorPages();
+
+// FALLBACK: If nothing else matches, serve index.html
+app.MapFallbackToFile("index.html");
 
 // Ensure DB created and seeded
 using (var scope = app.Services.CreateScope())
