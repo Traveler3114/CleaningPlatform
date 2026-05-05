@@ -6,7 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.UseUrls("http://*:5098", "https://*:7124");
 
-builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -27,7 +26,6 @@ var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
 
@@ -41,7 +39,6 @@ app.UseDefaultFiles();    // Looks for index.html in wwwroot
 app.UseStaticFiles();     // Serves CSS, JS from wwwroot
 
 app.MapControllers();
-app.MapRazorPages();
 
 // FALLBACK: If nothing else matches, serve index.html
 app.MapFallbackToFile("index.html");

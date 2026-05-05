@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Schedule — Vehicle Cleaning Admin</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+    <header class="admin-header">
+        <div class="header-inner">
+            <span class="brand">🚗 Vehicle Cleaning Admin</span>
+            <nav class="main-nav">
+                <a href="/admin/index.html" class="nav-link">Daily View</a>
+                <a href="/admin/bookings.html" class="nav-link">Bookings</a>
+                <a href="/admin/schedule.html" class="nav-link active">Schedule</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <div class="page-header">
+            <h1>Weekly Schedule</h1>
+        </div>
+
+        <div id="message-area"></div>
+        <div id="schedule-section"></div>
+    </main>
+
+    <footer class="admin-footer">
+        <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        function showMessage(msg) {
+            const el = document.getElementById('message-area');
+            el.innerHTML = `<div class="alert alert-success">${msg}</div>`;
+            setTimeout(() => { el.innerHTML = ''; }, 3000);
+        }
+
+        async function loadSchedule() {
+            const section = document.getElementById('schedule-section');
+            section.innerHTML = '<div class="alert alert-info">Loading…</div>';
+            try {
+                const res = await fetch('/api/schedule');
+                const result = await res.json();
+                if (!result.success || !result.data) {
+                    section.innerHTML = '<div class="alert alert-info">Failed to load schedule.</div>';
+                    return;
+                }
+                let rows = result.data.map(day => `
+                    <tr>
+                        <td><strong>${DAY_NAMES[day.dayOfWeek]}</strong></td>
+                        <td><input type="checkbox" class="checkbox" id="closed-${day.dayOfWeek}" ${day.isClosed ? 'checked' : ''} aria-label="Closed for ${DAY_NAMES[day.dayOfWeek]}" /></td>
+                        <td><input type="number" class="small-input" id="start-${day.dayOfWeek}" value="${day.startHour}" min="0" max="23" aria-label="Start hour for ${DAY_NAMES[day.dayOfWeek]}" /></td>
+                        <td><input type="number" class="small-input" id="end-${day.dayOfWeek}" value="${day.endHour}" min="1" max="24" aria-label="End hour for ${DAY_NAMES[day.dayOfWeek]}" /></td>
+                        <td><button class="btn btn-sm" onclick="saveDay(${day.dayOfWeek})">Save</button></td>
+                    </tr>
+                `).join('');
+                section.innerHTML = `
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Day</th><th>Closed</th><th>Start Hour</th><th>End Hour</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            } catch (e) {
+                section.innerHTML = '<div class="alert alert-info">Error loading schedule.</div>';
+            }
+        }
+
+        async function saveDay(dayOfWeek) {
+            const isClosed = document.getElementById(`closed-${dayOfWeek}`).checked;
+            const startHour = parseInt(document.getElementById(`start-${dayOfWeek}`).value, 10);
+            const endHour = parseInt(document.getElementById(`end-${dayOfWeek}`).value, 10);
+            try {
+                const res = await fetch(`/api/schedule/${dayOfWeek}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dayOfWeek, isClosed, startHour, endHour })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showMessage('Schedule updated.');
+                } else {
+                    alert(result.message || 'Failed to update schedule.');
+                }
+            } catch (err) {
+                alert('Network error.');
+            }
+        }
+
+        loadSchedule();
+    </script>
+</body>
+</html>
