@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily View — Vehicle Cleaning Admin</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+    <header class="admin-header">
+        <div class="header-inner">
+            <span class="brand">🚗 Vehicle Cleaning Admin</span>
+            <nav class="main-nav">
+                <a href="/admin/index.html" class="nav-link active">Daily View</a>
+                <a href="/admin/bookings.html" class="nav-link">Bookings</a>
+                <a href="/admin/schedule.html" class="nav-link">Schedule</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <div class="page-header">
+            <h1>Daily View</h1>
+            <div class="date-form">
+                <label for="date-input">Select Date:</label>
+                <input type="date" id="date-input" class="date-input" />
+            </div>
+        </div>
+
+        <div id="slots-section"></div>
+        <div id="bookings-section"></div>
+    </main>
+
+    <footer class="admin-footer">
+        <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        const dateInput = document.getElementById('date-input');
+
+        function todayStr() {
+            const d = new Date();
+            return d.toISOString().slice(0, 10);
+        }
+
+        dateInput.value = todayStr();
+        dateInput.addEventListener('change', loadPage);
+
+        function formatHour(h) {
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const hour = h % 12 === 0 ? 12 : h % 12;
+            return `${hour}:00 ${ampm}`;
+        }
+
+        function badge(status) {
+            return `<span class="badge badge-${status.toLowerCase()}">${status}</span>`;
+        }
+
+        async function loadPage() {
+            const date = dateInput.value;
+            await Promise.all([loadSlots(date), loadBookings(date)]);
+        }
+
+        async function loadSlots(date) {
+            const section = document.getElementById('slots-section');
+            section.innerHTML = '<div class="alert alert-info">Loading slots…</div>';
+            try {
+                const res = await fetch(`/api/availability?date=${date}`);
+                const result = await res.json();
+                if (!result.success || !result.data || result.data.length === 0) {
+                    section.innerHTML = '<div class="alert alert-info">No slots available for this date (day is closed or no schedule found).</div>';
+                    return;
+                }
+                let rows = result.data.map(slot => `
+                    <tr class="${slot.isClosed ? 'row-closed' : slot.available === 0 ? 'row-full' : ''}">
+                        <td>${slot.hour}:00</td>
+                        <td>${slot.booked}</td>
+                        <td>${slot.available}</td>
+                        <td>${slot.isClosed ? badge('Closed') : slot.available === 0 ? badge('Full') : badge('Open')}</td>
+                        <td>
+                            <form class="override-form" onsubmit="setCapacity(event, '${date}', ${slot.hour})">
+                                <input type="number" name="capacity" placeholder="Cap (Def: 2)"
+                                       min="0" max="99" value="${slot.capacity}" class="small-input" style="width:80px" />
+                                <button type="submit" class="btn btn-sm">Set</button>
+                            </form>
+                        </td>
+                    </tr>
+                `).join('');
+                section.innerHTML = `
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Hour</th><th>Booked</th><th>Available</th><th>Status</th><th>Capacity</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            } catch (e) {
+                section.innerHTML = '<div class="alert alert-info">Error loading slots.</div>';
+            }
+        }
+
+        async function setCapacity(e, date, hour) {
+            e.preventDefault();
+            const form = e.target;
+            const capacity = parseInt(form.querySelector('[name=capacity]').value, 10);
+            try {
+                await fetch('/api/overrides', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date, hour, capacity })
+                });
+                await loadSlots(date);
+            } catch (err) {
+                alert('Failed to set capacity.');
+            }
+        }
+
+        async function loadBookings(date) {
+            const section = document.getElementById('bookings-section');
+            try {
+                const res = await fetch(`/api/bookings?date=${date}`);
+                const result = await res.json();
+                if (!result.success || !result.data || result.data.length === 0) {
+                    section.innerHTML = '';
+                    return;
+                }
+                const d = new Date(date + 'T00:00:00');
+                const heading = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                let rows = result.data.map(b => `
+                    <tr>
+                        <td>${b.customerName}</td>
+                        <td>${b.phone}</td>
+                        <td>${b.hour}:00</td>
+                        <td>${badge(b.status)}</td>
+                    </tr>
+                `).join('');
+                section.innerHTML = `
+                    <h2 class="section-title">Bookings for ${heading}</h2>
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>Name</th><th>Phone</th><th>Hour</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            } catch (e) {
+                section.innerHTML = '';
+            }
+        }
+
+        loadPage();
+    </script>
+</body>
+</html>

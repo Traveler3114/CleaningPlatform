@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bookings — Vehicle Cleaning Admin</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+    <header class="admin-header">
+        <div class="header-inner">
+            <span class="brand">🚗 Vehicle Cleaning Admin</span>
+            <nav class="main-nav">
+                <a href="/admin/index.html" class="nav-link">Daily View</a>
+                <a href="/admin/bookings.html" class="nav-link active">Bookings</a>
+                <a href="/admin/schedule.html" class="nav-link">Schedule</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <div class="page-header">
+            <h1>Bookings</h1>
+            <div class="date-form">
+                <label for="date-input">Select Date:</label>
+                <input type="date" id="date-input" class="date-input" />
+                <button id="show-all-btn" class="btn btn-sm">Show All</button>
+            </div>
+        </div>
+
+        <div id="message-area"></div>
+        <div id="bookings-section"></div>
+    </main>
+
+    <footer class="admin-footer">
+        <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        const dateInput = document.getElementById('date-input');
+        let showAll = false;
+
+        function todayStr() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        dateInput.value = todayStr();
+        dateInput.addEventListener('change', () => { showAll = false; loadBookings(); });
+        document.getElementById('show-all-btn').addEventListener('click', () => { showAll = true; loadBookings(); });
+
+        function badge(status) {
+            return `<span class="badge badge-${status.toLowerCase()}">${status}</span>`;
+        }
+
+        function showMessage(msg) {
+            const el = document.getElementById('message-area');
+            el.innerHTML = `<div class="alert alert-success">${msg}</div>`;
+            setTimeout(() => { el.innerHTML = ''; }, 3000);
+        }
+
+        async function loadBookings() {
+            const section = document.getElementById('bookings-section');
+            section.innerHTML = '<div class="alert alert-info">Loading…</div>';
+            const url = showAll ? '/api/bookings' : `/api/bookings?date=${dateInput.value}`;
+            try {
+                const res = await fetch(url);
+                const result = await res.json();
+                if (!result.success || !result.data || result.data.length === 0) {
+                    section.innerHTML = '<div class="alert alert-info">No bookings found.</div>';
+                    return;
+                }
+                let rows = result.data.map(b => `
+                    <tr>
+                        <td>${b.id}</td>
+                        <td>${b.customerName}</td>
+                        <td>${b.phone}</td>
+                        <td>${b.date.slice(0, 10)}</td>
+                        <td>${b.hour}:00</td>
+                        <td>${badge(b.status)}</td>
+                        <td>
+                            <form class="inline-form" onsubmit="updateStatus(event, ${b.id})">
+                                <select name="status" class="status-select">
+                                    ${['Reserved','Cancelled','Completed'].map(s =>
+                                        `<option value="${s}"${b.status === s ? ' selected' : ''}>${s}</option>`
+                                    ).join('')}
+                                </select>
+                                <button type="submit" class="btn btn-sm">Save</button>
+                            </form>
+                        </td>
+                    </tr>
+                `).join('');
+                section.innerHTML = `
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th><th>Name</th><th>Phone</th><th>Date</th>
+                                <th>Hour</th><th>Status</th><th>Update Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            } catch (e) {
+                section.innerHTML = '<div class="alert alert-info">Error loading bookings.</div>';
+            }
+        }
+
+        async function updateStatus(e, id) {
+            e.preventDefault();
+            const form = e.target;
+            const status = form.querySelector('[name=status]').value;
+            try {
+                const res = await fetch(`/api/bookings/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showMessage('Status updated.');
+                    await loadBookings();
+                } else {
+                    alert(result.message || 'Failed to update status.');
+                }
+            } catch (err) {
+                alert('Network error.');
+            }
+        }
+
+        loadBookings();
+    </script>
+</body>
+</html>
