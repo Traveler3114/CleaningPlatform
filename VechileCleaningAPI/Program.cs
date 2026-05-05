@@ -37,7 +37,7 @@ app.UseAuthorization();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.MapControllers();
-app.MapGet("/admin", () => Results.File("admin/index.html", "text/html"));
+app.MapGet("/admin", () => Results.Redirect("/admin/index.html"));
 app.MapFallbackToFile("index.html");
 
 // Ensure DB created and seeded
