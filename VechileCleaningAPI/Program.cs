@@ -14,7 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<AvailabilityManager>();
 builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<ScheduleManager>();
-builder.Services.AddScoped<OverrideManager>();
+builder.Services.AddScoped<DateOverrideManager>();
 
 builder.Services.AddCors(options =>
 {

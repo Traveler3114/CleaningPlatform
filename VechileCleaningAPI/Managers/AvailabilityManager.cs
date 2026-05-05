@@ -14,18 +14,21 @@ public class AvailabilityManager
         _db = db;
     }
 
-    // Inside AvailabilityManager.cs
-    // AvailabilityManager.cs refactoring
     public async Task<List<AvailabilityDto>> GetSlotsAsync(DateTime date)
     {
-        var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == (int)date.DayOfWeek);
-        if (schedule == null || schedule.IsClosed)
+        // Check DateOverride first
+        var dateOverride = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date.Date == date.Date);
+        if (dateOverride != null && dateOverride.IsFullyClosed)
             return new List<AvailabilityDto>();
 
-        // Get daily overrides for this specific date
-        var overrides = await _db.HourOverrides
-            .Where(o => o.Date.Date == date.Date)
-            .ToListAsync();
+        var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == (int)date.DayOfWeek);
+        if (schedule == null)
+            return new List<AvailabilityDto>();
+
+        // Use override hours if provided, otherwise fall back to schedule
+        int startHour = dateOverride?.StartHour ?? schedule.StartHour;
+        int endHour = dateOverride?.EndHour ?? schedule.EndHour;
+        int defaultCapacity = dateOverride?.Capacity ?? schedule.Capacity;
 
         var bookings = await _db.Bookings
             .Where(b => b.Date.Date == date.Date && b.Status != BookingStatus.Cancelled)
@@ -33,22 +36,16 @@ public class AvailabilityManager
 
         var slots = new List<AvailabilityDto>();
 
-        for (int h = schedule.StartHour; h < schedule.EndHour; h++)
+        for (int h = startHour; h < endHour; h++)
         {
-            // Find if there is a daily override for this specific hour
-            var hourOverride = overrides.FirstOrDefault(o => o.Hour == h);
-
-            // Logic: Use override capacity if it exists, otherwise default to 2
-            int effectiveCapacity = hourOverride?.Capacity ?? 2; //GET READ OF THE MAGIC NUMBER 2 STORE DEFAULT IN DB
-
             int booked = bookings.Count(b => b.Hour == h);
 
             slots.Add(new AvailabilityDto
             {
                 Hour = h,
-                Capacity = effectiveCapacity,
+                Capacity = defaultCapacity,
                 Booked = booked,
-                Available = Math.Max(0, effectiveCapacity - booked)
+                Available = Math.Max(0, defaultCapacity - booked)
             });
         }
         return slots;

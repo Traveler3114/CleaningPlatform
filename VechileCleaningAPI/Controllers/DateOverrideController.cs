@@ -7,24 +7,24 @@ namespace VechileCleaningAPI.Controllers;
 
 [ApiController]
 [Route("api/overrides")]
-public class OverrideController : ControllerBase
+public class DateOverrideController : ControllerBase
 {
-    private readonly OverrideManager _manager;
+    private readonly DateOverrideManager _manager;
 
-    public OverrideController(OverrideManager manager)
+    public DateOverrideController(DateOverrideManager manager)
     {
         _manager = manager;
     }
 
     [HttpGet]
-    public async Task<OperationResult<List<HourOverrideDto>>> Get()
+    public async Task<OperationResult<List<DateOverrideDto>>> Get()
     {
         var overrides = await _manager.GetOverridesAsync();
-        return OperationResult<List<HourOverrideDto>>.Ok(overrides);
+        return OperationResult<List<DateOverrideDto>>.Ok(overrides);
     }
 
     [HttpPost]
-    public async Task<OperationResult<HourOverrideDto>> Post([FromBody] HourOverrideDto dto)
+    public async Task<OperationResult<DateOverrideDto>> Post([FromBody] DateOverrideDto dto)
     {
         return await _manager.CreateOverrideAsync(dto);
     }

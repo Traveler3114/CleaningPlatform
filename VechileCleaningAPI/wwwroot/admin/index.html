@@ -27,6 +27,7 @@
             </div>
         </div>
 
+        <div id="override-section"></div>
         <div id="slots-section"></div>
         <div id="bookings-section"></div>
     </main>
@@ -60,7 +61,104 @@
 
         async function loadPage() {
             const date = dateInput.value;
-            await Promise.all([loadSlots(date), loadBookings(date)]);
+            await Promise.all([loadOverride(date), loadSlots(date), loadBookings(date)]);
+        }
+
+        async function loadOverride(date) {
+            const section = document.getElementById('override-section');
+            try {
+                const res = await fetch('/api/overrides');
+                const result = await res.json();
+                if (!result.success) { section.innerHTML = ''; return; }
+
+                const override = result.data.find(o => o.date && o.date.slice(0, 10) === date);
+
+                if (override) {
+                    const closedLabel = override.isFullyClosed ? '<span class="badge badge-cancelled">Fully Closed</span>' : '';
+                    const hoursLabel = (override.startHour != null && override.endHour != null)
+                        ? `Hours: ${override.startHour}:00 – ${override.endHour}:00` : '';
+                    const capLabel = override.capacity != null ? `Capacity: ${override.capacity}` : '';
+                    const details = [closedLabel, hoursLabel, capLabel].filter(Boolean).join(' &nbsp;|&nbsp; ');
+                    section.innerHTML = `
+                        <div class="alert alert-info" style="display:flex;align-items:center;gap:1rem;">
+                            <strong>Override active:</strong> ${details}
+                            <button class="btn btn-sm btn-danger" onclick="deleteOverride(${override.id}, '${date}')">Remove Override</button>
+                        </div>
+                        <div id="override-form-area"></div>
+                    `;
+                } else {
+                    section.innerHTML = `
+                        <div style="margin-bottom:1rem;">
+                            <button class="btn btn-sm" onclick="showOverrideForm('${date}')">+ Add Date Override</button>
+                        </div>
+                        <div id="override-form-area"></div>
+                    `;
+                }
+            } catch (e) {
+                section.innerHTML = '';
+            }
+        }
+
+        function showOverrideForm(date) {
+            const area = document.getElementById('override-form-area');
+            area.innerHTML = `
+                <form class="card" style="padding:1rem;margin-bottom:1rem;" onsubmit="saveOverride(event, '${date}')">
+                    <h3 class="section-title">Date Override for ${date}</h3>
+                    <div class="form-row">
+                        <label><input type="checkbox" id="ov-closed" /> Fully Closed</label>
+                        <label>Start Hour: <input type="number" id="ov-start" class="small-input" min="0" max="23" placeholder="(optional)" /></label>
+                        <label>End Hour: <input type="number" id="ov-end" class="small-input" min="1" max="24" placeholder="(optional)" /></label>
+                        <label>Capacity: <input type="number" id="ov-cap" class="small-input" min="0" max="99" placeholder="(optional)" /></label>
+                        <button type="submit" class="btn btn-sm">Save Override</button>
+                        <button type="button" class="btn btn-sm" onclick="document.getElementById('override-form-area').innerHTML=''">Cancel</button>
+                    </div>
+                </form>
+            `;
+        }
+
+        async function saveOverride(e, date) {
+            e.preventDefault();
+            const isFullyClosed = document.getElementById('ov-closed').checked;
+            const startVal = document.getElementById('ov-start').value;
+            const endVal = document.getElementById('ov-end').value;
+            const capVal = document.getElementById('ov-cap').value;
+            const payload = {
+                date,
+                isFullyClosed,
+                startHour: startVal !== '' ? parseInt(startVal, 10) : null,
+                endHour: endVal !== '' ? parseInt(endVal, 10) : null,
+                capacity: capVal !== '' ? parseInt(capVal, 10) : null,
+            };
+            try {
+                const res = await fetch('/api/overrides', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    await loadPage();
+                } else {
+                    alert(result.message || 'Failed to save override.');
+                }
+            } catch (err) {
+                alert('Network error.');
+            }
+        }
+
+        async function deleteOverride(id, date) {
+            if (!confirm('Remove override for this date?')) return;
+            try {
+                const res = await fetch(`/api/overrides/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    await loadPage();
+                } else {
+                    alert(result.message || 'Failed to remove override.');
+                }
+            } catch (err) {
+                alert('Network error.');
+            }
         }
 
         async function loadSlots(date) {
@@ -74,26 +172,19 @@
                     return;
                 }
                 let rows = result.data.map(slot => `
-                    <tr class="${slot.isClosed ? 'row-closed' : slot.available === 0 ? 'row-full' : ''}">
+                    <tr class="${slot.available === 0 ? 'row-full' : ''}">
                         <td>${slot.hour}:00</td>
+                        <td>${slot.capacity}</td>
                         <td>${slot.booked}</td>
                         <td>${slot.available}</td>
-                        <td>${slot.isClosed ? badge('Closed') : slot.available === 0 ? badge('Full') : badge('Open')}</td>
-                        <td>
-                            <form class="override-form" onsubmit="setCapacity(event, '${date}', ${slot.hour})">
-                                <input type="number" name="capacity" placeholder="Cap (Def: 2)"
-                                       min="0" max="99" value="${slot.capacity}" class="small-input" style="width:80px"
-                                       aria-label="Set capacity for ${slot.hour}:00" />
-                                <button type="submit" class="btn btn-sm">Set</button>
-                            </form>
-                        </td>
+                        <td>${slot.available === 0 ? badge('Full') : badge('Open')}</td>
                     </tr>
                 `).join('');
                 section.innerHTML = `
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>Hour</th><th>Booked</th><th>Available</th><th>Status</th><th>Capacity</th>
+                                <th>Hour</th><th>Capacity</th><th>Booked</th><th>Available</th><th>Status</th>
                             </tr>
                         </thead>
                         <tbody>${rows}</tbody>
@@ -101,22 +192,6 @@
                 `;
             } catch (e) {
                 section.innerHTML = '<div class="alert alert-info">Error loading slots.</div>';
-            }
-        }
-
-        async function setCapacity(e, date, hour) {
-            e.preventDefault();
-            const form = e.target;
-            const capacity = parseInt(form.querySelector('[name=capacity]').value, 10);
-            try {
-                await fetch('/api/overrides', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ date, hour, capacity })
-                });
-                await loadSlots(date);
-            } catch (err) {
-                alert('Failed to set capacity.');
             }
         }
 

@@ -23,9 +23,21 @@ public class ScheduleController : ControllerBase
         return OperationResult<List<WeeklyScheduleDto>>.Ok(schedule);
     }
 
+    [HttpPost]
+    public async Task<OperationResult<WeeklyScheduleDto>> Post([FromBody] WeeklyScheduleDto dto)
+    {
+        return await _manager.CreateDayAsync(dto);
+    }
+
     [HttpPut("{dayOfWeek}")]
     public async Task<OperationResult<WeeklyScheduleDto>> Put(int dayOfWeek, [FromBody] WeeklyScheduleDto dto)
     {
         return await _manager.UpdateDayAsync(dayOfWeek, dto);
+    }
+
+    [HttpDelete("{dayOfWeek}")]
+    public async Task<OperationResult<bool>> Delete(int dayOfWeek)
+    {
+        return await _manager.DeleteDayAsync(dayOfWeek);
     }
 }

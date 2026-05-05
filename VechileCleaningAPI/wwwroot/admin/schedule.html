@@ -21,9 +21,35 @@
     <main class="admin-main">
         <div class="page-header">
             <h1>Weekly Schedule</h1>
+            <button class="btn" onclick="showAddForm()">+ Add Day</button>
         </div>
 
         <div id="message-area"></div>
+
+        <div id="add-form" style="display:none" class="card" style="margin-bottom:1rem;padding:1rem;">
+            <h2 class="section-title">Add New Day</h2>
+            <form onsubmit="addDay(event)">
+                <div class="form-row">
+                    <label>Day:
+                        <select id="new-dow" class="small-input">
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                        </select>
+                    </label>
+                    <label>Start Hour: <input type="number" id="new-start" class="small-input" value="8" min="0" max="23" /></label>
+                    <label>End Hour: <input type="number" id="new-end" class="small-input" value="17" min="1" max="24" /></label>
+                    <label>Capacity: <input type="number" id="new-cap" class="small-input" value="2" min="1" max="99" /></label>
+                    <button type="submit" class="btn btn-sm">Save</button>
+                    <button type="button" class="btn btn-sm" onclick="hideAddForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
         <div id="schedule-section"></div>
     </main>
 
@@ -36,10 +62,18 @@
 
         const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-        function showMessage(msg) {
+        function showMessage(msg, isError) {
             const el = document.getElementById('message-area');
-            el.innerHTML = `<div class="alert alert-success">${msg}</div>`;
+            el.innerHTML = `<div class="alert ${isError ? 'alert-danger' : 'alert-success'}">${msg}</div>`;
             setTimeout(() => { el.innerHTML = ''; }, 3000);
+        }
+
+        function showAddForm() {
+            document.getElementById('add-form').style.display = '';
+        }
+
+        function hideAddForm() {
+            document.getElementById('add-form').style.display = 'none';
         }
 
         async function loadSchedule() {
@@ -52,20 +86,27 @@
                     section.innerHTML = '<div class="alert alert-info">Failed to load schedule.</div>';
                     return;
                 }
+                if (result.data.length === 0) {
+                    section.innerHTML = '<div class="alert alert-info">No days configured. Use the Add Day button to create schedule entries.</div>';
+                    return;
+                }
                 let rows = result.data.map(day => `
                     <tr>
                         <td><strong>${DAY_NAMES[day.dayOfWeek]}</strong></td>
-                        <td><input type="checkbox" class="checkbox" id="closed-${day.dayOfWeek}" ${day.isClosed ? 'checked' : ''} aria-label="Closed for ${DAY_NAMES[day.dayOfWeek]}" /></td>
                         <td><input type="number" class="small-input" id="start-${day.dayOfWeek}" value="${day.startHour}" min="0" max="23" aria-label="Start hour for ${DAY_NAMES[day.dayOfWeek]}" /></td>
                         <td><input type="number" class="small-input" id="end-${day.dayOfWeek}" value="${day.endHour}" min="1" max="24" aria-label="End hour for ${DAY_NAMES[day.dayOfWeek]}" /></td>
-                        <td><button class="btn btn-sm" onclick="saveDay(${day.dayOfWeek})">Save</button></td>
+                        <td><input type="number" class="small-input" id="cap-${day.dayOfWeek}" value="${day.capacity}" min="1" max="99" aria-label="Capacity for ${DAY_NAMES[day.dayOfWeek]}" /></td>
+                        <td>
+                            <button class="btn btn-sm" onclick="saveDay(${day.dayOfWeek})">Save</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteDay(${day.dayOfWeek})">Delete</button>
+                        </td>
                     </tr>
                 `).join('');
                 section.innerHTML = `
                     <table class="admin-table">
                         <thead>
                             <tr>
-                                <th>Day</th><th>Closed</th><th>Start Hour</th><th>End Hour</th><th>Action</th>
+                                <th>Day</th><th>Start Hour</th><th>End Hour</th><th>Capacity</th><th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>${rows}</tbody>
@@ -76,24 +117,65 @@
             }
         }
 
+        async function addDay(e) {
+            e.preventDefault();
+            const dayOfWeek = parseInt(document.getElementById('new-dow').value, 10);
+            const startHour = parseInt(document.getElementById('new-start').value, 10);
+            const endHour = parseInt(document.getElementById('new-end').value, 10);
+            const capacity = parseInt(document.getElementById('new-cap').value, 10);
+            try {
+                const res = await fetch('/api/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dayOfWeek, startHour, endHour, capacity })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    hideAddForm();
+                    showMessage('Day added.');
+                    await loadSchedule();
+                } else {
+                    showMessage(result.message || 'Failed to add day.', true);
+                }
+            } catch (err) {
+                showMessage('Network error.', true);
+            }
+        }
+
         async function saveDay(dayOfWeek) {
-            const isClosed = document.getElementById(`closed-${dayOfWeek}`).checked;
             const startHour = parseInt(document.getElementById(`start-${dayOfWeek}`).value, 10);
             const endHour = parseInt(document.getElementById(`end-${dayOfWeek}`).value, 10);
+            const capacity = parseInt(document.getElementById(`cap-${dayOfWeek}`).value, 10);
             try {
                 const res = await fetch(`/api/schedule/${dayOfWeek}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ dayOfWeek, isClosed, startHour, endHour })
+                    body: JSON.stringify({ dayOfWeek, startHour, endHour, capacity })
                 });
                 const result = await res.json();
                 if (result.success) {
                     showMessage('Schedule updated.');
                 } else {
-                    alert(result.message || 'Failed to update schedule.');
+                    showMessage(result.message || 'Failed to update schedule.', true);
                 }
             } catch (err) {
-                alert('Network error.');
+                showMessage('Network error.', true);
+            }
+        }
+
+        async function deleteDay(dayOfWeek) {
+            if (!confirm(`Remove ${DAY_NAMES[dayOfWeek]} from the schedule?`)) return;
+            try {
+                const res = await fetch(`/api/schedule/${dayOfWeek}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    showMessage('Day removed.');
+                    await loadSchedule();
+                } else {
+                    showMessage(result.message || 'Failed to remove day.', true);
+                }
+            } catch (err) {
+                showMessage('Network error.', true);
             }
         }
 
