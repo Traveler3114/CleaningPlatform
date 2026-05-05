@@ -82,7 +82,8 @@
                         <td>
                             <form class="override-form" onsubmit="setCapacity(event, '${date}', ${slot.hour})">
                                 <input type="number" name="capacity" placeholder="Cap (Def: 2)"
-                                       min="0" max="99" value="${slot.capacity}" class="small-input" style="width:80px" />
+                                       min="0" max="99" value="${slot.capacity}" class="small-input" style="width:80px"
+                                       aria-label="Set capacity for ${slot.hour}:00" />
                                 <button type="submit" class="btn btn-sm">Set</button>
                             </form>
                         </td>

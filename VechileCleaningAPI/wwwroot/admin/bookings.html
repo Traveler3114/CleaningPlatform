@@ -81,7 +81,7 @@
                         <td>${badge(b.status)}</td>
                         <td>
                             <form class="inline-form" onsubmit="updateStatus(event, ${b.id})">
-                                <select name="status" class="status-select">
+                                <select name="status" class="status-select" aria-label="Update status for booking ${b.id}">
                                     ${['Reserved','Cancelled','Completed'].map(s =>
                                         `<option value="${s}"${b.status === s ? ' selected' : ''}>${s}</option>`
                                     ).join('')}

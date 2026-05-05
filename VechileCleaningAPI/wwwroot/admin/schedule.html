@@ -55,9 +55,9 @@
                 let rows = result.data.map(day => `
                     <tr>
                         <td><strong>${DAY_NAMES[day.dayOfWeek]}</strong></td>
-                        <td><input type="checkbox" class="checkbox" id="closed-${day.dayOfWeek}" ${day.isClosed ? 'checked' : ''} /></td>
-                        <td><input type="number" class="small-input" id="start-${day.dayOfWeek}" value="${day.startHour}" min="0" max="23" /></td>
-                        <td><input type="number" class="small-input" id="end-${day.dayOfWeek}" value="${day.endHour}" min="1" max="24" /></td>
+                        <td><input type="checkbox" class="checkbox" id="closed-${day.dayOfWeek}" ${day.isClosed ? 'checked' : ''} aria-label="Closed for ${DAY_NAMES[day.dayOfWeek]}" /></td>
+                        <td><input type="number" class="small-input" id="start-${day.dayOfWeek}" value="${day.startHour}" min="0" max="23" aria-label="Start hour for ${DAY_NAMES[day.dayOfWeek]}" /></td>
+                        <td><input type="number" class="small-input" id="end-${day.dayOfWeek}" value="${day.endHour}" min="1" max="24" aria-label="End hour for ${DAY_NAMES[day.dayOfWeek]}" /></td>
                         <td><button class="btn btn-sm" onclick="saveDay(${day.dayOfWeek})">Save</button></td>
                     </tr>
                 `).join('');
