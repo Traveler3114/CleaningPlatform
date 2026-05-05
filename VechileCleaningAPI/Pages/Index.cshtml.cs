@@ -33,11 +33,10 @@ public class IndexModel : PageModel
     {
         if (DateTime.TryParse(date, out var parsedDate))
         {
-            await _override.CreateOverrideAsync(new SlotOverrideDto
+            await _override.CreateOverrideAsync(new HourOverrideDto
             {
                 Date = parsedDate,
                 Hour = hour,
-                IsClosed = isClosed,
                 Capacity = capacity
             });
         }

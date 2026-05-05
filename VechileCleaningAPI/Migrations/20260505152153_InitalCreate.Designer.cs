@@ -12,7 +12,7 @@ using VechileCleaningAPI.Data;
 namespace VechileCleaningAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260504173300_InitalCreate")]
+    [Migration("20260505152153_InitalCreate")]
     partial class InitalCreate
     {
         /// <inheritdoc />
@@ -59,7 +59,7 @@ namespace VechileCleaningAPI.Migrations
                     b.ToTable("Bookings");
                 });
 
-            modelBuilder.Entity("VechileCleaningAPI.Entities.SlotOverride", b =>
+            modelBuilder.Entity("VechileCleaningAPI.Entities.HourOverride", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -76,12 +76,9 @@ namespace VechileCleaningAPI.Migrations
                     b.Property<int?>("Hour")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsClosed")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
-                    b.ToTable("SlotOverrides");
+                    b.ToTable("HourOverrides");
                 });
 
             modelBuilder.Entity("VechileCleaningAPI.Entities.WeeklySchedule", b =>
@@ -93,9 +90,6 @@ namespace VechileCleaningAPI.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DefaultCapacity")
                         .HasColumnType("int");
 
                     b.Property<int>("EndHour")
@@ -116,7 +110,6 @@ namespace VechileCleaningAPI.Migrations
                         {
                             Id = 1,
                             DayOfWeek = 0,
-                            DefaultCapacity = 2,
                             EndHour = 17,
                             IsClosed = true,
                             StartHour = 8
@@ -125,7 +118,6 @@ namespace VechileCleaningAPI.Migrations
                         {
                             Id = 2,
                             DayOfWeek = 1,
-                            DefaultCapacity = 2,
                             EndHour = 17,
                             IsClosed = false,
                             StartHour = 8
@@ -134,7 +126,6 @@ namespace VechileCleaningAPI.Migrations
                         {
                             Id = 3,
                             DayOfWeek = 2,
-                            DefaultCapacity = 2,
                             EndHour = 17,
                             IsClosed = false,
                             StartHour = 8
@@ -143,7 +134,6 @@ namespace VechileCleaningAPI.Migrations
                         {
                             Id = 4,
                             DayOfWeek = 3,
-                            DefaultCapacity = 2,
                             EndHour = 17,
                             IsClosed = false,
                             StartHour = 8
@@ -152,7 +142,6 @@ namespace VechileCleaningAPI.Migrations
                         {
                             Id = 5,
                             DayOfWeek = 4,
-                            DefaultCapacity = 2,
                             EndHour = 17,
                             IsClosed = false,
                             StartHour = 8
@@ -161,7 +150,6 @@ namespace VechileCleaningAPI.Migrations
                         {
                             Id = 6,
                             DayOfWeek = 5,
-                            DefaultCapacity = 2,
                             EndHour = 17,
                             IsClosed = false,
                             StartHour = 8
@@ -170,7 +158,6 @@ namespace VechileCleaningAPI.Migrations
                         {
                             Id = 7,
                             DayOfWeek = 6,
-                            DefaultCapacity = 2,
                             EndHour = 13,
                             IsClosed = false,
                             StartHour = 9

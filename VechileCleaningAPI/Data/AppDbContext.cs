@@ -9,7 +9,7 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<WeeklySchedule> WeeklySchedules => Set<WeeklySchedule>();
-    public DbSet<SlotOverride> SlotOverrides => Set<SlotOverride>();
+    public DbSet<HourOverride> HourOverrides => Set<HourOverride>();
     public DbSet<Booking> Bookings => Set<Booking>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

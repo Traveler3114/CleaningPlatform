@@ -23,7 +23,7 @@ public class AvailabilityManager
             return new List<AvailabilityDto>();
 
         // Get daily overrides for this specific date
-        var overrides = await _db.SlotOverrides
+        var overrides = await _db.HourOverrides
             .Where(o => o.Date.Date == date.Date)
             .ToListAsync();
 
@@ -39,8 +39,7 @@ public class AvailabilityManager
             var hourOverride = overrides.FirstOrDefault(o => o.Hour == h);
 
             // Logic: Use override capacity if it exists, otherwise default to 2
-            int effectiveCapacity = hourOverride?.Capacity ?? 2;
-            bool isClosed = hourOverride?.IsClosed ?? false;
+            int effectiveCapacity = hourOverride?.Capacity ?? 2; //GET READ OF THE MAGIC NUMBER 2 STORE DEFAULT IN DB
 
             int booked = bookings.Count(b => b.Hour == h);
 
@@ -49,8 +48,7 @@ public class AvailabilityManager
                 Hour = h,
                 Capacity = effectiveCapacity,
                 Booked = booked,
-                Available = isClosed ? 0 : Math.Max(0, effectiveCapacity - booked),
-                IsClosed = isClosed
+                Available = Math.Max(0, effectiveCapacity - booked)
             });
         }
         return slots;

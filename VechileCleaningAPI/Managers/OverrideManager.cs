@@ -15,52 +15,50 @@ public class OverrideManager
         _db = db;
     }
 
-    public async Task<List<SlotOverrideDto>> GetOverridesAsync()
+    public async Task<List<HourOverrideDto>> GetOverridesAsync()
     {
         var cutoff = DateTime.Today;
-        var overrides = await _db.SlotOverrides.Where(o => o.Date >= cutoff).ToListAsync();
+        var overrides = await _db.HourOverrides.Where(o => o.Date >= cutoff).ToListAsync();
         return overrides.Select(MapToDto).ToList();
     }
 
-    public async Task<OperationResult<SlotOverrideDto>> CreateOverrideAsync(SlotOverrideDto dto)
+    public async Task<OperationResult<HourOverrideDto>> CreateOverrideAsync(HourOverrideDto dto)
     {
         // Check if an override already exists for this date and hour
-        var existingOverride = await _db.SlotOverrides
+        var existingOverride = await _db.HourOverrides
             .FirstOrDefaultAsync(o => o.Date.Date == dto.Date.Date && o.Hour == dto.Hour);
 
-        SlotOverride entity;
+        HourOverride entity;
 
         if (existingOverride != null)
         {
             // Update existing override
-            existingOverride.IsClosed = dto.IsClosed;
             existingOverride.Capacity = dto.Capacity;
             entity = existingOverride;
         }
         else
         {
             // Create new override
-            entity = new SlotOverride
+            entity = new HourOverride
             {
                 Date = dto.Date.Date,
                 Hour = dto.Hour,
-                IsClosed = dto.IsClosed,
                 Capacity = dto.Capacity
             };
-            _db.SlotOverrides.Add(entity);
+            _db.HourOverrides.Add(entity);
         }
 
         await _db.SaveChangesAsync();
-        return OperationResult<SlotOverrideDto>.Ok(MapToDto(entity));
+        return OperationResult<HourOverrideDto>.Ok(MapToDto(entity));
     }
 
     public async Task<OperationResult<bool>> DeleteOverrideAsync(int id)
     {
-        var entity = await _db.SlotOverrides.FindAsync(id);
+        var entity = await _db.HourOverrides.FindAsync(id);
         if (entity == null)
             return OperationResult<bool>.Fail("Override not found.");
 
-        _db.SlotOverrides.Remove(entity);
+        _db.HourOverrides.Remove(entity);
         await _db.SaveChangesAsync();
         return OperationResult<bool>.Ok(true);
     }
@@ -69,19 +67,18 @@ public class OverrideManager
     public async Task CleanupOldOverridesAsync()
     {
         var cutoff = DateTime.Today.AddDays(-30);
-        var old = await _db.SlotOverrides.Where(o => o.Date < cutoff).ToListAsync();
+        var old = await _db.HourOverrides.Where(o => o.Date < cutoff).ToListAsync();
         if (old.Any())
         {
-            _db.SlotOverrides.RemoveRange(old);
+            _db.HourOverrides.RemoveRange(old);
             await _db.SaveChangesAsync();
         }
     }
 
-    private static SlotOverrideDto MapToDto(SlotOverride o) => new()
+    private static HourOverrideDto MapToDto(HourOverride o) => new()
     {
         Date = o.Date,
         Hour = o.Hour,
-        IsClosed = o.IsClosed,
         Capacity = o.Capacity
     };
 }

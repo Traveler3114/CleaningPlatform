@@ -32,19 +32,18 @@ namespace VechileCleaningAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SlotOverrides",
+                name: "HourOverrides",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Hour = table.Column<int>(type: "int", nullable: true),
-                    IsClosed = table.Column<bool>(type: "bit", nullable: false),
                     Capacity = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SlotOverrides", x => x.Id);
+                    table.PrimaryKey("PK_HourOverrides", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -56,8 +55,7 @@ namespace VechileCleaningAPI.Migrations
                     DayOfWeek = table.Column<int>(type: "int", nullable: false),
                     IsClosed = table.Column<bool>(type: "bit", nullable: false),
                     StartHour = table.Column<int>(type: "int", nullable: false),
-                    EndHour = table.Column<int>(type: "int", nullable: false),
-                    DefaultCapacity = table.Column<int>(type: "int", nullable: false)
+                    EndHour = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -66,16 +64,16 @@ namespace VechileCleaningAPI.Migrations
 
             migrationBuilder.InsertData(
                 table: "WeeklySchedules",
-                columns: new[] { "Id", "DayOfWeek", "DefaultCapacity", "EndHour", "IsClosed", "StartHour" },
+                columns: new[] { "Id", "DayOfWeek", "EndHour", "IsClosed", "StartHour" },
                 values: new object[,]
                 {
-                    { 1, 0, 2, 17, true, 8 },
-                    { 2, 1, 2, 17, false, 8 },
-                    { 3, 2, 2, 17, false, 8 },
-                    { 4, 3, 2, 17, false, 8 },
-                    { 5, 4, 2, 17, false, 8 },
-                    { 6, 5, 2, 17, false, 8 },
-                    { 7, 6, 2, 13, false, 9 }
+                    { 1, 0, 17, true, 8 },
+                    { 2, 1, 17, false, 8 },
+                    { 3, 2, 17, false, 8 },
+                    { 4, 3, 17, false, 8 },
+                    { 5, 4, 17, false, 8 },
+                    { 6, 5, 17, false, 8 },
+                    { 7, 6, 13, false, 9 }
                 });
         }
 
@@ -86,7 +84,7 @@ namespace VechileCleaningAPI.Migrations
                 name: "Bookings");
 
             migrationBuilder.DropTable(
-                name: "SlotOverrides");
+                name: "HourOverrides");
 
             migrationBuilder.DropTable(
                 name: "WeeklySchedules");

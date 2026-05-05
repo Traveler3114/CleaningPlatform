@@ -17,14 +17,14 @@ public class OverrideController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<OperationResult<List<SlotOverrideDto>>> Get()
+    public async Task<OperationResult<List<HourOverrideDto>>> Get()
     {
         var overrides = await _manager.GetOverridesAsync();
-        return OperationResult<List<SlotOverrideDto>>.Ok(overrides);
+        return OperationResult<List<HourOverrideDto>>.Ok(overrides);
     }
 
     [HttpPost]
-    public async Task<OperationResult<SlotOverrideDto>> Post([FromBody] SlotOverrideDto dto)
+    public async Task<OperationResult<HourOverrideDto>> Post([FromBody] HourOverrideDto dto)
     {
         return await _manager.CreateOverrideAsync(dto);
     }

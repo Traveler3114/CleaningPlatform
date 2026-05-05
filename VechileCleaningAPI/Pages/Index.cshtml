@@ -25,7 +25,7 @@ else
                 <th>Booked</th>
                 <th>Available</th>
                 <th>Status</th>
-                <th>Slot Management (Capacity & Closure)</th>
+                <th>Capacity</th>
             </tr>
         </thead>
         <tbody>
@@ -61,10 +61,6 @@ else
                                    class="small-input"
                                    style="width: 80px;" />
 
-                            <label class="checkbox-label" style="display: flex; align-items: center; gap: 5px; white-space: nowrap;">
-                                <input type="checkbox" name="isClosed" value="true" @(slot.IsClosed ? "checked" : "") />
-                                <strong>Close Slot</strong>
-                            </label>
 
                             <button type="submit" class="btn btn-sm">Set</button>
                         </form>
