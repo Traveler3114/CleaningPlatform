@@ -2,6 +2,7 @@ using BCrypt.Net;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using VechileCleaningAPI.Enums;
 using VechileCleaningAPI.Entities;
 
 namespace VechileCleaningAPI.Data;
@@ -39,7 +40,7 @@ public class AppDbContext : DbContext
             Username = "owner",
             Name = "Owner",
             Surname= "User",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("ChangeMe123!"),
+            PasswordHash = "$2y$10$qZKh.FlEZrHNSyAcazlNdOyBMHA.SJSfnLDoPtuFKt9Mrj99tdNEe",
             Role = UserRole.Owner,
             IsActive = true,
             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)

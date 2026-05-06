@@ -1,7 +1,7 @@
 ﻿
-namespace VechileCleaningAPI.Entities;
+using VechileCleaningAPI.Enums;
 
-public enum UserRole { Owner, Dispatcher, Cleaner, Finance, Client }
+namespace VechileCleaningAPI.Entities;
 
 public class User
 {

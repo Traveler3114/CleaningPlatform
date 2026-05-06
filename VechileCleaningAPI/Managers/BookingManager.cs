@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using VechileCleaningAPI.Data;
 using VechileCleaningAPI.Dtos;
+using VechileCleaningAPI.Enums;
 using VechileCleaningAPI.Entities;
 using VechileCleaningAPI.Common;
 

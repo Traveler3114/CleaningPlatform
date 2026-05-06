@@ -1,7 +1,5 @@
+using VechileCleaningAPI.Enums;
 namespace VechileCleaningAPI.Entities;
-
-public enum BookingStatus { Reserved, Cancelled, Completed }
-
 public class Booking
 {
     public int Id { get; set; }
