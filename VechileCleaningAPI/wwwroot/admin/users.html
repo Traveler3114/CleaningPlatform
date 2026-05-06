@@ -235,11 +235,7 @@
             <div class="form-group">
                 <label>Role</label>
                 <select id="new-role">
-                    <option value="Dispatcher">Dispatcher</option>
-                    <option value="Cleaner">Cleaner</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Owner">Owner</option>
-                    <option value="Client">Client</option>
+                    <option value="">Loading roles…</option>
                 </select>
             </div>
             <div class="modal-error" id="modal-error"></div>
@@ -250,15 +246,21 @@
         </div>
     </div>
 
+    <script src="../js/permissions.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        // Owner-only page
-        if (!Auth.requireRole('Owner')) { /* redirected */ }
+        // Permission-based access
+        if (!Auth.requirePermission('pages.users')) { /* redirected */ }
         injectAdminHeader('users');
 
         const currentUser = Auth.getUser();
+
+        // Show/hide Create Account button based on permission
+        if (!Auth.can('actions.user.create')) {
+            document.getElementById('create-user-btn').style.display = 'none';
+        }
 
         function showMessage(msg, isError) {
             const el = document.getElementById('message-area');
@@ -293,7 +295,7 @@
                 const total = users.length;
                 const active = users.filter(u => u.isActive).length;
                 const byRole = {};
-                users.forEach(u => { byRole[u.role] = (byRole[u.role] || 0) + 1; });
+                users.forEach(u => { byRole[u.roleName] = (byRole[u.roleName] || 0) + 1; });
 
                 document.getElementById('stats-row').innerHTML = `
                     <div class="stat-card">
@@ -317,7 +319,7 @@
                 const rows = users.map(u => {
                     const isYou = u.id === currentUser?.id;
                     const initials = getInitials(u.name, u.surname);
-                    const canToggle = !isYou; // Can't deactivate yourself
+                    const canToggle = !isYou && Auth.can('actions.user.toggleActive');
 
                     return `
                         <tr class="${!u.isActive ? 'row-inactive' : ''}">
@@ -334,7 +336,7 @@
                                 </div>
                             </td>
                             <td>
-                                <span class="badge ${getRoleClass(u.role)}">${u.role}</span>
+                                <span class="badge ${getRoleClass(u.roleName)}">${u.roleName}</span>
                             </td>
                             <td>
                                 <span class="badge ${u.isActive ? 'badge-completed' : 'badge-cancelled'}">
@@ -393,13 +395,28 @@
         const modal = document.getElementById('create-modal');
         const modalError = document.getElementById('modal-error');
 
-        document.getElementById('create-user-btn').addEventListener('click', () => {
+        document.getElementById('create-user-btn').addEventListener('click', async () => {
             modal.classList.add('open');
             modalError.textContent = '';
             ['new-name', 'new-surname', 'new-username', 'new-password'].forEach(id => {
                 document.getElementById(id).value = '';
             });
-            document.getElementById('new-role').value = 'Dispatcher';
+            // Load roles dynamically
+            const roleSelect = document.getElementById('new-role');
+            roleSelect.innerHTML = '<option value="">Loading…</option>';
+            try {
+                const res = await apiFetch('/api/roles');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    roleSelect.innerHTML = result.data
+                        .map(r => `<option value="${r.name}">${r.name}</option>`)
+                        .join('');
+                } else {
+                    roleSelect.innerHTML = '<option value="">Failed to load roles</option>';
+                }
+            } catch {
+                roleSelect.innerHTML = '<option value="">Error loading roles</option>';
+            }
         });
 
         document.getElementById('modal-cancel').addEventListener('click', () => {
@@ -419,7 +436,7 @@
             const password = document.getElementById('new-password').value;
             const role = document.getElementById('new-role').value;
 
-            if (!name || !surname || !username || !password) {
+            if (!name || !surname || !username || !password || !role) {
                 modalError.textContent = 'All fields are required.';
                 return;
             }
@@ -436,7 +453,7 @@
             try {
                 const res = await apiFetch('/api/auth/register', {
                     method: 'POST',
-                    body: JSON.stringify({ name, surname, username, password, role })
+                    body: JSON.stringify({ name, surname, username, password, roleName: role })
                 });
                 const result = await res.json();
 

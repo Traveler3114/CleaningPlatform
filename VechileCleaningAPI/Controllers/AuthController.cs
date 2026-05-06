@@ -17,8 +17,8 @@ public class AuthController : ControllerBase
         _authManager = authManager;
     }
 
-    // POST /api/auth/register — Owner only
-    [Authorize(Roles = "Owner")]
+    // POST /api/auth/register — requires actions.user.create permission
+    [Authorize(Policy = "actions.user.create")]
     [HttpPost("register")]
     public async Task<ActionResult<OperationResult<string>>> Register(CreateUserDto request)
     {

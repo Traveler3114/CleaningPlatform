@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roles — Vehicle Cleaning Admin</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <style>
+        .role-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .role-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .role-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #222;
+        }
+        .role-meta {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 0.2rem;
+        }
+        .role-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        .permissions-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.8rem;
+        }
+        .perm-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 4px;
+            padding: 0.2rem 0.55rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+        .perm-badge.page { background: #e3f2fd; color: #1565c0; }
+        .badge-protected {
+            background: #fff3e0;
+            color: #e65100;
+            border-radius: 4px;
+            padding: 0.15rem 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-backdrop.open { display: flex; }
+        .modal-box {
+            background: #fff;
+            border-radius: 10px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+        .modal-box h2 { margin: 0 0 1.2rem; font-size: 1.15rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
+        .form-group input[type="text"] {
+            width: 100%; padding: 0.55rem 0.75rem; border: 1px solid #ccc;
+            border-radius: 6px; font-size: 0.95rem; box-sizing: border-box;
+        }
+        .perm-checkbox-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.35rem;
+        }
+        .perm-checkbox-list label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.82rem;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .error-msg { color: #c62828; font-size: 0.85rem; margin-top: 0.5rem; min-height: 1.1em; }
+
+        /* Delete confirm */
+        .delete-confirm {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+        .delete-confirm.open { display: flex; }
+        .delete-confirm-box {
+            background: #fff;
+            border-radius: 10px;
+            padding: 1.5rem 2rem;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+        }
+        .delete-confirm-box h3 { margin: 0 0 0.8rem; font-size: 1rem; }
+        .delete-confirm-box p { font-size: 0.9rem; color: #555; margin: 0 0 1.2rem; }
+        .delete-confirm-footer { display: flex; justify-content: flex-end; gap: 0.75rem; }
+    </style>
+</head>
+<body>
+    <div id="admin-header"></div>
+
+    <main class="container" style="padding-top:2rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+            <h1 style="margin:0;">Roles</h1>
+            <button class="btn" id="create-role-btn">+ New Role</button>
+        </div>
+
+        <div id="message-area" style="margin-bottom:1rem;"></div>
+        <div id="roles-list">
+            <p style="color:#888;">Loading roles…</p>
+        </div>
+    </main>
+
+    <!-- Create / Edit Modal -->
+    <div class="modal-backdrop" id="role-modal">
+        <div class="modal-box">
+            <h2 id="modal-title">New Role</h2>
+            <div class="form-group">
+                <label>Role Name</label>
+                <input type="text" id="role-name-input" placeholder="e.g. Dispatcher" autocomplete="off" />
+            </div>
+            <div class="form-group">
+                <label>Permissions</label>
+                <div class="perm-checkbox-list" id="perm-checklist"></div>
+            </div>
+            <div class="error-msg" id="modal-error"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+                <button class="btn" id="modal-submit">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirm Dialog -->
+    <div class="delete-confirm" id="delete-confirm">
+        <div class="delete-confirm-box">
+            <h3>Delete Role</h3>
+            <p id="delete-confirm-text">Are you sure you want to delete this role?</p>
+            <div class="delete-confirm-footer">
+                <button class="btn btn-secondary" id="delete-cancel">Cancel</button>
+                <button class="btn btn-danger" id="delete-ok">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/permissions.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        if (!Auth.requirePermission('pages.roles')) { /* redirected */ }
+        injectAdminHeader('roles');
+
+        const canManage = Auth.can('actions.role.manage');
+
+        let allPermissions = [];
+        let editingRoleId = null;
+
+        const modal = document.getElementById('role-modal');
+        const modalError = document.getElementById('modal-error');
+        const deleteConfirm = document.getElementById('delete-confirm');
+        let pendingDeleteId = null;
+
+        function showMessage(msg, isError = false) {
+            const el = document.getElementById('message-area');
+            el.innerHTML = `<div class="alert ${isError ? 'alert-danger' : 'alert-success'}">${msg}</div>`;
+            setTimeout(() => { el.innerHTML = ''; }, 4000);
+        }
+
+        async function apiFetch(url, opts = {}) {
+            const token = Auth.getToken();
+            return fetch(url, {
+                ...opts,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    ...(opts.headers || {})
+                }
+            });
+        }
+
+        async function loadPermissions() {
+            try {
+                const res = await apiFetch('/api/roles/permissions');
+                const result = await res.json();
+                if (result.success) allPermissions = result.data;
+            } catch {
+                allPermissions = [];
+            }
+        }
+
+        async function loadRoles() {
+            const list = document.getElementById('roles-list');
+            try {
+                const res = await apiFetch('/api/roles');
+                const result = await res.json();
+                if (!result.success) {
+                    list.innerHTML = `<p class="error-msg">${result.message || 'Failed to load roles.'}</p>`;
+                    return;
+                }
+                const roles = result.data;
+                if (!roles.length) {
+                    list.innerHTML = '<p style="color:#888;">No roles found.</p>';
+                    return;
+                }
+                list.innerHTML = roles.map(r => renderRole(r)).join('');
+            } catch {
+                list.innerHTML = '<p class="error-msg">Error loading roles.</p>';
+            }
+        }
+
+        function renderRole(r) {
+            const pagePerms = r.permissions.filter(p => p.startsWith('pages.'));
+            const actionPerms = r.permissions.filter(p => p.startsWith('actions.'));
+            const editBtn = canManage && !r.isProtected
+                ? `<button class="btn btn-sm btn-secondary" onclick="openEditModal(${r.id})">Edit</button>`
+                : '';
+            const deleteBtn = canManage && !r.isProtected
+                ? `<button class="btn btn-sm btn-danger" onclick="confirmDelete(${r.id}, '${escHtml(r.name)}')">Delete</button>`
+                : '';
+            const protectedBadge = r.isProtected ? `<span class="badge-protected">Protected</span>` : '';
+            return `
+                <div class="role-card" id="role-card-${r.id}">
+                    <div class="role-card-header">
+                        <div>
+                            <div class="role-name">${escHtml(r.name)} ${protectedBadge}</div>
+                            <div class="role-meta">${r.permissions.length} permission${r.permissions.length !== 1 ? 's' : ''}</div>
+                        </div>
+                        <div class="role-actions">${editBtn}${deleteBtn}</div>
+                    </div>
+                    <div class="permissions-grid">
+                        ${pagePerms.map(p => `<span class="perm-badge page">${p}</span>`).join('')}
+                        ${actionPerms.map(p => `<span class="perm-badge">${p}</span>`).join('')}
+                        ${r.permissions.length === 0 ? '<span style="color:#aaa;font-size:0.8rem;">No permissions assigned</span>' : ''}
+                    </div>
+                </div>`;
+        }
+
+        function escHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function buildPermChecklist(selected = []) {
+            const container = document.getElementById('perm-checklist');
+            container.innerHTML = allPermissions.map(p => `
+                <label>
+                    <input type="checkbox" value="${p.key}" ${selected.includes(p.key) ? 'checked' : ''} />
+                    <span title="${escHtml(p.description)}">${p.key}</span>
+                </label>
+            `).join('');
+        }
+
+        function openCreateModal() {
+            editingRoleId = null;
+            document.getElementById('modal-title').textContent = 'New Role';
+            document.getElementById('role-name-input').value = '';
+            modalError.textContent = '';
+            buildPermChecklist();
+            modal.classList.add('open');
+        }
+
+        async function openEditModal(id) {
+            editingRoleId = id;
+            document.getElementById('modal-title').textContent = 'Edit Role';
+            modalError.textContent = '';
+            try {
+                const res = await apiFetch(`/api/roles/${id}`);
+                const result = await res.json();
+                if (!result.success) {
+                    showMessage(result.message || 'Failed to load role.', true);
+                    return;
+                }
+                const role = result.data;
+                document.getElementById('role-name-input').value = role.name;
+                buildPermChecklist(role.permissions);
+                modal.classList.add('open');
+            } catch {
+                showMessage('Error loading role.', true);
+            }
+        }
+
+        document.getElementById('create-role-btn').addEventListener('click', () => {
+            if (!canManage) return;
+            openCreateModal();
+        });
+
+        if (!canManage) {
+            document.getElementById('create-role-btn').style.display = 'none';
+        }
+
+        document.getElementById('modal-cancel').addEventListener('click', () => {
+            modal.classList.remove('open');
+        });
+
+        document.getElementById('modal-submit').addEventListener('click', async () => {
+            const name = document.getElementById('role-name-input').value.trim();
+            const permissions = Array.from(
+                document.querySelectorAll('#perm-checklist input[type=checkbox]:checked')
+            ).map(cb => cb.value);
+
+            if (!name) {
+                modalError.textContent = 'Role name is required.';
+                return;
+            }
+
+            const btn = document.getElementById('modal-submit');
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+            modalError.textContent = '';
+
+            try {
+                const url = editingRoleId ? `/api/roles/${editingRoleId}` : '/api/roles';
+                const method = editingRoleId ? 'PUT' : 'POST';
+                const res = await apiFetch(url, {
+                    method,
+                    body: JSON.stringify({ name, permissions })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    modal.classList.remove('open');
+                    showMessage(editingRoleId ? 'Role updated.' : 'Role created.');
+                    await loadRoles();
+                } else {
+                    modalError.textContent = result.message || 'Failed to save role.';
+                }
+            } catch {
+                modalError.textContent = 'Network error. Please try again.';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save';
+            }
+        });
+
+        function confirmDelete(id, name) {
+            pendingDeleteId = id;
+            document.getElementById('delete-confirm-text').textContent =
+                `Are you sure you want to delete the "${name}" role? This cannot be undone.`;
+            deleteConfirm.classList.add('open');
+        }
+
+        document.getElementById('delete-cancel').addEventListener('click', () => {
+            deleteConfirm.classList.remove('open');
+            pendingDeleteId = null;
+        });
+
+        document.getElementById('delete-ok').addEventListener('click', async () => {
+            if (!pendingDeleteId) return;
+            const id = pendingDeleteId;
+            deleteConfirm.classList.remove('open');
+            pendingDeleteId = null;
+            try {
+                const res = await apiFetch(`/api/roles/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    showMessage('Role deleted.');
+                    await loadRoles();
+                } else {
+                    showMessage(result.message || 'Failed to delete role.', true);
+                }
+            } catch {
+                showMessage('Network error. Please try again.', true);
+            }
+        });
+
+        // Close modal on backdrop click
+        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+        deleteConfirm.addEventListener('click', e => {
+            if (e.target === deleteConfirm) {
+                deleteConfirm.classList.remove('open');
+                pendingDeleteId = null;
+            }
+        });
+
+        (async () => {
+            await loadPermissions();
+            await loadRoles();
+        })();
+    </script>
+</body>
+</html>

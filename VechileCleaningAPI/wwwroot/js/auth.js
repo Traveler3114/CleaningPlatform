@@ -29,7 +29,22 @@ const Auth = {
     },
 
     getRole() {
-        return this.getUser()?.role || null;
+        return this.getUser()?.roleName || null;
+    },
+
+    getPermissions() {
+        return this.getUser()?.permissions || [];
+    },
+
+    // Returns true if user has the given permission key OR is Owner
+    can(permissionKey) {
+        if (this.getRole() === 'Owner') return true;
+        return this.getPermissions().includes(permissionKey);
+    },
+
+    // Checks pages.{pageKey} permission
+    canPage(pageKey) {
+        return this.can(`pages.${pageKey}`);
     },
 
     // Redirect to login if not authenticated
@@ -41,14 +56,13 @@ const Auth = {
         return true;
     },
 
-    // Redirect to login if not authenticated, or to daily view if insufficient role
-    requireRole(...roles) {
+    // Redirect to login if not authenticated, or to daily view if lacking permission
+    requirePermission(permissionKey) {
         if (!this.isLoggedIn()) {
             window.location.href = '/admin/login.html';
             return false;
         }
-        const role = this.getRole();
-        if (!roles.map(r => r.toLowerCase()).includes(role?.toLowerCase())) {
+        if (!this.can(permissionKey)) {
             window.location.href = '/admin/index.html';
             return false;
         }
@@ -58,16 +72,6 @@ const Auth = {
     authHeader() {
         const token = this.getToken();
         return token ? { 'Authorization': `Bearer ${token}` } : {};
-    },
-
-    async fetchMe() {
-        // Decode JWT payload to get user info
-        const token = this.getToken();
-        if (!token) return null;
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload;
-        } catch { return null; }
     },
 
     logout() {
@@ -82,10 +86,7 @@ function injectAdminHeader(activePage) {
     if (!Auth.requireAuth()) return false;
 
     const user = Auth.getUser();
-    const role = user?.role || '';
-
-    // Role-based nav visibility
-    const canSeeUsers = role.toLowerCase() === 'owner';
+    const role = user?.roleName || '';
 
     const header = document.querySelector('.admin-header');
     if (!header) return true;
@@ -93,20 +94,20 @@ function injectAdminHeader(activePage) {
     const inner = header.querySelector('.header-inner');
     if (!inner) return true;
 
-    // Rebuild nav with role-aware links
+    // Permission-based nav visibility
     const navLinks = [
-        { href: '/admin/index.html', label: 'Daily View', key: 'daily', roles: null },
-        { href: '/admin/bookings.html', label: 'Bookings', key: 'bookings', roles: null },
-        { href: '/admin/schedule.html', label: 'Schedule', key: 'schedule', roles: ['owner', 'dispatcher'] },
-        { href: '/admin/users.html', label: 'Users', key: 'users', roles: ['owner'] },
+        { href: '/admin/index.html',    label: 'Daily View', key: 'daily',    perm: 'pages.daily' },
+        { href: '/admin/bookings.html', label: 'Bookings',   key: 'bookings', perm: 'pages.bookings' },
+        { href: '/admin/schedule.html', label: 'Schedule',   key: 'schedule', perm: 'pages.schedule' },
+        { href: '/admin/users.html',    label: 'Users',      key: 'users',    perm: 'pages.users' },
+        { href: '/admin/roles.html',    label: 'Roles',      key: 'roles',    perm: 'pages.roles' },
     ];
 
     const navHtml = navLinks
-        .filter(link => !link.roles || link.roles.includes(role.toLowerCase()))
+        .filter(link => Auth.can(link.perm))
         .map(link => `<a href="${link.href}" class="nav-link${link.key === activePage ? ' active' : ''}">${link.label}</a>`)
         .join('');
 
-    // User pill
     const fullName = user ? `${user.name} ${user.surname}` : 'Unknown';
     const roleLabel = role || 'Unknown';
 

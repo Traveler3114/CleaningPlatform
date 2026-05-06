@@ -1,5 +1,3 @@
-﻿using VechileCleaningAPI.Enums;
-
 namespace VechileCleaningAPI.Dtos;
 
 public class CreateUserDto
@@ -8,5 +6,5 @@ public class CreateUserDto
     public string Surname { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
-    public UserRole Role { get; set; }
+    public string RoleName { get; set; } = string.Empty;
 }

@@ -31,6 +31,7 @@
         <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
     </footer>
 
+    <script src="../js/permissions.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
@@ -78,6 +79,7 @@
                         <td>${b.hour}:00</td>
                         <td>${badge(b.status)}</td>
                         <td>
+                            ${Auth.can('actions.booking.updateStatus') ? `
                             <form class="inline-form" onsubmit="updateStatus(event, ${b.id})">
                                 <select name="status" class="status-select" aria-label="Update status for booking ${b.id}">
                                     ${['Reserved','Cancelled','Completed'].map(s =>
@@ -85,7 +87,7 @@
                                     ).join('')}
                                 </select>
                                 <button type="submit" class="btn btn-sm">Save</button>
-                            </form>
+                            </form>` : ''}
                         </td>
                     </tr>
                 `).join('');

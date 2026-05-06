@@ -52,12 +52,13 @@
         <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
     </footer>
 
+    <script src="../js/permissions.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        // Schedule visible to Owner and Dispatcher only
-        if (!Auth.requireRole('Owner', 'Dispatcher')) { /* redirected */ }
+        // Schedule visible to users with pages.schedule permission
+        if (!Auth.requirePermission('pages.schedule')) { /* redirected */ }
         injectAdminHeader('schedule');
 
         const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
