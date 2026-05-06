@@ -18,16 +18,26 @@ public class RoleController : ControllerBase
         _roleManager = roleManager;
     }
 
-    // GET /api/roles — all roles with permissions
+    // GET /api/roles — all roles with permissions (any authenticated user, needed for dropdowns)
     [HttpGet]
-    [Authorize(Policy = "actions.role.manage")]
     public async Task<ActionResult<OperationResult<List<RoleDto>>>> GetAll()
     {
         var roles = await _roleManager.GetAllRolesAsync();
         return Ok(OperationResult<List<RoleDto>>.Ok(roles));
     }
 
-    // GET /api/roles/permissions — available permission key list
+    // GET /api/roles/{id} — single role (any authenticated user)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<OperationResult<RoleDto>>> GetById(int id)
+    {
+        var roles = await _roleManager.GetAllRolesAsync();
+        var role = roles.FirstOrDefault(r => r.Id == id);
+        if (role is null)
+            return NotFound(OperationResult<RoleDto>.Fail("Role not found."));
+        return Ok(OperationResult<RoleDto>.Ok(role));
+    }
+
+    // GET /api/roles/permissions — available permission key list (any authenticated user)
     [HttpGet("permissions")]
     public ActionResult<OperationResult<List<AvailablePermissionDto>>> GetPermissions()
     {
