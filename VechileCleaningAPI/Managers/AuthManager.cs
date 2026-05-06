@@ -1,12 +1,8 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VechileCleaningAPI.Common;
 using VechileCleaningAPI.Data;
 using VechileCleaningAPI.Dtos;
 using VechileCleaningAPI.Entities;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace VechileCleaningAPI.Managers;
 
@@ -15,13 +11,11 @@ public class AuthManager
     private readonly TokenManager _tokenManager;
     private readonly AppDbContext _db;
 
-    public AuthManager(TokenManager tokenManager,AppDbContext db)
+    public AuthManager(TokenManager tokenManager, AppDbContext db)
     {
         _tokenManager = tokenManager;
         _db = db;
     }
-
-
 
     public async Task<OperationResult<string>> RegisterAsync(CreateUserDto dto)
     {
@@ -29,13 +23,17 @@ public class AuthManager
         if (existing != null)
             return OperationResult<string>.Fail("Username already taken.");
 
+        var roleExists = await _db.Roles.AnyAsync(r => r.Name == dto.RoleName);
+        if (!roleExists)
+            return OperationResult<string>.Fail("Invalid role name.");
+
         var user = new User
         {
             Username = dto.Username,
             Name = dto.Name,
             Surname = dto.Surname,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Role = dto.Role,
+            RoleName = dto.RoleName,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -54,7 +52,13 @@ public class AuthManager
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             return OperationResult<string>.Fail("Invalid credentials.");
 
-        var token = _tokenManager.CreateToken(user);
+        var permissions = await _db.Roles
+            .Where(r => r.Name == user.RoleName)
+            .SelectMany(r => r.Permissions)
+            .Select(p => p.PermissionKey)
+            .ToListAsync();
+
+        var token = _tokenManager.CreateToken(user, permissions);
         return OperationResult<string>.Ok(token);
     }
 }

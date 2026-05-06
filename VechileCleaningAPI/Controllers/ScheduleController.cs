@@ -8,7 +8,7 @@ namespace VechileCleaningAPI.Controllers;
 
 [ApiController]
 [Route("api/schedule")]
-[Authorize(Roles = "Owner,Dispatcher")]
+[Authorize]
 public class ScheduleController : ControllerBase
 {
     private readonly ScheduleManager _manager;
@@ -18,7 +18,6 @@ public class ScheduleController : ControllerBase
         _manager = manager;
     }
 
-
     [HttpGet]
     public async Task<OperationResult<List<WeeklyScheduleDto>>> Get()
     {
@@ -27,18 +26,21 @@ public class ScheduleController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "actions.schedule.edit")]
     public async Task<OperationResult<WeeklyScheduleDto>> Post([FromBody] WeeklyScheduleDto dto)
     {
         return await _manager.CreateDayAsync(dto);
     }
 
     [HttpPut("{dayOfWeek}")]
+    [Authorize(Policy = "actions.schedule.edit")]
     public async Task<OperationResult<WeeklyScheduleDto>> Put(int dayOfWeek, [FromBody] WeeklyScheduleDto dto)
     {
         return await _manager.UpdateDayAsync(dayOfWeek, dto);
     }
 
     [HttpDelete("{dayOfWeek}")]
+    [Authorize(Policy = "actions.schedule.edit")]
     public async Task<OperationResult<bool>> Delete(int dayOfWeek)
     {
         return await _manager.DeleteDayAsync(dayOfWeek);

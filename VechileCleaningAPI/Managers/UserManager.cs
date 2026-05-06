@@ -17,17 +17,29 @@ public class UserManager
     public async Task<List<UserDto>> GetAllUsersAsync()
     {
         var users = await _db.Users
-            .OrderBy(u => u.Role)
+            .OrderBy(u => u.RoleName)
             .ThenBy(u => u.Surname)
             .ToListAsync();
 
-        return users.Select(MapToDto).ToList();
+        var rolePermissions = await _db.Roles
+            .Include(r => r.Permissions)
+            .ToDictionaryAsync(r => r.Name, r => r.Permissions.Select(p => p.PermissionKey).ToList());
+
+        return users.Select(u => MapToDto(u, rolePermissions.GetValueOrDefault(u.RoleName, new List<string>()))).ToList();
     }
 
     public async Task<UserDto?> GetByIdAsync(int id)
     {
         var user = await _db.Users.FindAsync(id);
-        return user == null ? null : MapToDto(user);
+        if (user == null) return null;
+
+        var permissions = await _db.Roles
+            .Where(r => r.Name == user.RoleName)
+            .SelectMany(r => r.Permissions)
+            .Select(p => p.PermissionKey)
+            .ToListAsync();
+
+        return MapToDto(user, permissions);
     }
 
     public async Task<OperationResult<UserDto>> ToggleActiveAsync(int id, int requestingUserId)
@@ -42,17 +54,24 @@ public class UserManager
         user.IsActive = !user.IsActive;
         await _db.SaveChangesAsync();
 
-        return OperationResult<UserDto>.Ok(MapToDto(user));
+        var permissions = await _db.Roles
+            .Where(r => r.Name == user.RoleName)
+            .SelectMany(r => r.Permissions)
+            .Select(p => p.PermissionKey)
+            .ToListAsync();
+
+        return OperationResult<UserDto>.Ok(MapToDto(user, permissions));
     }
 
-    private static UserDto MapToDto(Entities.User u) => new()
+    private static UserDto MapToDto(Entities.User u, List<string> permissions) => new()
     {
         Id = u.Id,
         Name = u.Name,
         Surname = u.Surname,
         Username = u.Username,
-        Role = u.Role.ToString(),
+        RoleName = u.RoleName,
         IsActive = u.IsActive,
-        CreatedAt = u.CreatedAt
+        CreatedAt = u.CreatedAt,
+        Permissions = permissions
     };
 }

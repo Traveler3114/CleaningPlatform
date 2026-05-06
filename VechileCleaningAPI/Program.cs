@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json.Serialization;
+using VechileCleaningAPI.Authorization;
+using VechileCleaningAPI.Common;
 using VechileCleaningAPI.Data;
 using VechileCleaningAPI.Managers;
 
@@ -25,7 +28,10 @@ builder.Services.AddScoped<ScheduleManager>();
 builder.Services.AddScoped<DateOverrideManager>();
 builder.Services.AddScoped<AuthManager>();
 builder.Services.AddScoped<TokenManager>();
-builder.Services.AddScoped<UserManager>();   // <-- new
+builder.Services.AddScoped<UserManager>();
+builder.Services.AddScoped<RoleManager>();
+
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
 builder.Services.AddCors(options =>
 {
@@ -51,6 +57,12 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    foreach (var key in PermissionKeys.All)
+        options.AddPolicy(key, policy => policy.AddRequirements(new PermissionRequirement(key)));
 });
 
 var app = builder.Build();

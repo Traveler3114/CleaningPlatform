@@ -8,7 +8,7 @@ namespace VechileCleaningAPI.Controllers;
 
 [ApiController]
 [Route("api/bookings")]
-[Authorize(Roles = "Owner,Dispatcher")]
+[Authorize]
 public class BookingController : ControllerBase
 {
     private readonly BookingManager _manager;
@@ -34,6 +34,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPut("{id}/status")]
+    [Authorize(Policy = "actions.booking.updateStatus")]
     public async Task<OperationResult<BookingDto>> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
     {
         return await _manager.UpdateStatusAsync(id, request.Status);

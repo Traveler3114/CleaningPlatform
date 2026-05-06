@@ -31,6 +31,7 @@
         <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
     </footer>
 
+    <script src="../js/permissions.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
@@ -80,14 +81,18 @@
                     section.innerHTML = `
                         <div class="alert alert-info" style="display:flex;align-items:center;gap:1rem;">
                             <strong>Override active:</strong> ${details}
-                            <button class="btn btn-sm btn-danger" onclick="deleteOverride(${override.id}, '${date}')">Remove Override</button>
+                            ${Auth.can('actions.override.manage')
+                                ? `<button class="btn btn-sm btn-danger" onclick="deleteOverride(${override.id}, '${date}')">Remove Override</button>`
+                                : ''}
                         </div>
                         <div id="override-form-area"></div>
                     `;
                 } else {
                     section.innerHTML = `
                         <div style="margin-bottom:1rem;">
-                            <button class="btn btn-sm" onclick="showOverrideForm('${date}')">+ Add Date Override</button>
+                            ${Auth.can('actions.override.manage')
+                                ? `<button class="btn btn-sm" onclick="showOverrideForm('${date}')">+ Add Date Override</button>`
+                                : ''}
                         </div>
                         <div id="override-form-area"></div>
                     `;
