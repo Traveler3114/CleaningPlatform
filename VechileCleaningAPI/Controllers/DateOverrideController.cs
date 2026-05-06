@@ -8,7 +8,7 @@ namespace VechileCleaningAPI.Controllers;
 
 [ApiController]
 [Route("api/overrides")]
-[Authorize(Roles = "Owner,Dispatcher")]
+[Authorize]
 public class DateOverrideController : ControllerBase
 {
     private readonly DateOverrideManager _manager;
@@ -26,12 +26,14 @@ public class DateOverrideController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "actions.override.manage")]
     public async Task<OperationResult<DateOverrideDto>> Post([FromBody] DateOverrideDto dto)
     {
         return await _manager.CreateOverrideAsync(dto);
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "actions.override.manage")]
     public async Task<OperationResult<bool>> Delete(int id)
     {
         return await _manager.DeleteOverrideAsync(id);

@@ -16,7 +16,7 @@
     <main class="admin-main">
         <div class="page-header">
             <h1>Weekly Schedule</h1>
-            <button class="btn" onclick="showAddForm()">+ Add Day</button>
+            <button class="btn" id="add-day-btn" onclick="showAddForm()">+ Add Day</button>
         </div>
 
         <div id="message-area"></div>
@@ -61,6 +61,13 @@
         if (!Auth.requirePermission('pages.schedule')) { /* redirected */ }
         injectAdminHeader('schedule');
 
+        const canEditSchedule = Auth.can('actions.schedule.edit');
+
+        // Hide + Add Day button if no edit permission
+        if (!canEditSchedule) {
+            document.getElementById('add-day-btn').style.display = 'none';
+        }
+
         const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
         function showMessage(msg, isError) {
@@ -89,12 +96,14 @@
                 let rows = result.data.map(day => `
                     <tr>
                         <td><strong>${DAY_NAMES[day.dayOfWeek]}</strong></td>
-                        <td><input type="number" class="small-input" id="start-${day.dayOfWeek}" value="${day.startHour}" min="0" max="23" /></td>
-                        <td><input type="number" class="small-input" id="end-${day.dayOfWeek}" value="${day.endHour}" min="1" max="24" /></td>
-                        <td><input type="number" class="small-input" id="cap-${day.dayOfWeek}" value="${day.capacity}" min="1" max="99" /></td>
+                        <td><input type="number" class="small-input" id="start-${day.dayOfWeek}" value="${day.startHour}" min="0" max="23" ${canEditSchedule ? '' : 'disabled'} /></td>
+                        <td><input type="number" class="small-input" id="end-${day.dayOfWeek}" value="${day.endHour}" min="1" max="24" ${canEditSchedule ? '' : 'disabled'} /></td>
+                        <td><input type="number" class="small-input" id="cap-${day.dayOfWeek}" value="${day.capacity}" min="1" max="99" ${canEditSchedule ? '' : 'disabled'} /></td>
                         <td>
+                            ${canEditSchedule ? `
                             <button class="btn btn-sm" onclick="saveDay(${day.dayOfWeek})">Save</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteDay(${day.dayOfWeek})">Delete</button>
+                            ` : '<span style="font-size:0.8rem;color:#aaa;">View only</span>'}
                         </td>
                     </tr>
                 `).join('');

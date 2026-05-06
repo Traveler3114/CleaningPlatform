@@ -132,11 +132,15 @@
     </style>
 </head>
 <body>
-    <div id="admin-header"></div>
+    <header class="admin-header">
+        <div class="header-inner">
+            <!-- Injected by auth.js -->
+        </div>
+    </header>
 
-    <main class="container" style="padding-top:2rem;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
-            <h1 style="margin:0;">Roles</h1>
+    <main class="admin-main">
+        <div class="page-header">
+            <h1>Roles</h1>
             <button class="btn" id="create-role-btn">+ New Role</button>
         </div>
 
@@ -196,20 +200,8 @@
 
         function showMessage(msg, isError = false) {
             const el = document.getElementById('message-area');
-            el.innerHTML = `<div class="alert ${isError ? 'alert-danger' : 'alert-success'}">${msg}</div>`;
+            el.innerHTML = `<div class="alert ${isError ? '' : 'alert-success'}" style="${isError ? 'background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;' : ''}">${msg}</div>`;
             setTimeout(() => { el.innerHTML = ''; }, 4000);
-        }
-
-        async function apiFetch(url, opts = {}) {
-            const token = Auth.getToken();
-            return fetch(url, {
-                ...opts,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                    ...(opts.headers || {})
-                }
-            });
         }
 
         async function loadPermissions() {

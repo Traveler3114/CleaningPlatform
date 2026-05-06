@@ -37,6 +37,7 @@
         document.getElementById('year').textContent = new Date().getFullYear();
 
         if (!injectAdminHeader('bookings')) { /* redirected to login */ }
+        if (!Auth.requirePermission('pages.bookings')) { /* redirected */ }
 
         const dateInput = document.getElementById('date-input');
         let showAll = false;
