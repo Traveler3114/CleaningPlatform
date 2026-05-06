@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace VechileCleaningAPI.Migrations
 {
     /// <inheritdoc />
@@ -47,6 +49,21 @@ namespace VechileCleaningAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Roles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    IsProtected = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Roles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -57,7 +74,7 @@ namespace VechileCleaningAPI.Migrations
                     Username = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RoleName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -81,10 +98,77 @@ namespace VechileCleaningAPI.Migrations
                     table.PrimaryKey("PK_WeeklySchedules", x => x.Id);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "RolePermissions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RoleId = table.Column<int>(type: "int", nullable: false),
+                    PermissionKey = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RolePermissions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RolePermissions_Roles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "Roles",
+                columns: new[] { "Id", "CreatedAt", "IsProtected", "Name" },
+                values: new object[,]
+                {
+                    { 1, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), true, "Owner" },
+                    { 2, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), false, "Dispatcher" },
+                    { 3, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), false, "Cleaner" }
+                });
+
             migrationBuilder.InsertData(
                 table: "Users",
-                columns: new[] { "Id", "CreatedAt", "IsActive", "Name", "PasswordHash", "Role", "Surname", "Username" },
+                columns: new[] { "Id", "CreatedAt", "IsActive", "Name", "PasswordHash", "RoleName", "Surname", "Username" },
                 values: new object[] { 1, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), true, "Owner", "$2y$10$qZKh.FlEZrHNSyAcazlNdOyBMHA.SJSfnLDoPtuFKt9Mrj99tdNEe", "Owner", "User", "owner" });
+
+            migrationBuilder.InsertData(
+                table: "RolePermissions",
+                columns: new[] { "Id", "PermissionKey", "RoleId" },
+                values: new object[,]
+                {
+                    { 1, "pages.daily", 1 },
+                    { 2, "pages.bookings", 1 },
+                    { 3, "pages.schedule", 1 },
+                    { 4, "pages.users", 1 },
+                    { 5, "pages.roles", 1 },
+                    { 6, "actions.booking.updateStatus", 1 },
+                    { 7, "actions.schedule.edit", 1 },
+                    { 8, "actions.override.manage", 1 },
+                    { 9, "actions.user.create", 1 },
+                    { 10, "actions.user.toggleActive", 1 },
+                    { 11, "actions.role.manage", 1 },
+                    { 12, "pages.daily", 2 },
+                    { 13, "pages.bookings", 2 },
+                    { 14, "pages.schedule", 2 },
+                    { 15, "actions.booking.updateStatus", 2 },
+                    { 16, "actions.schedule.edit", 2 },
+                    { 17, "actions.override.manage", 2 },
+                    { 18, "pages.daily", 3 },
+                    { 19, "pages.bookings", 3 }
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RolePermissions_RoleId",
+                table: "RolePermissions",
+                column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Roles_Name",
+                table: "Roles",
+                column: "Name",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -97,10 +181,16 @@ namespace VechileCleaningAPI.Migrations
                 name: "DateOverrides");
 
             migrationBuilder.DropTable(
+                name: "RolePermissions");
+
+            migrationBuilder.DropTable(
                 name: "Users");
 
             migrationBuilder.DropTable(
                 name: "WeeklySchedules");
+
+            migrationBuilder.DropTable(
+                name: "Roles");
         }
     }
 }
