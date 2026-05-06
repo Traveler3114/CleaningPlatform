@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Schedule — Vehicle Cleaning Admin</title>
+    <script src="../js/auth.js"></script>
     <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -11,6 +12,7 @@
         <div class="header-inner">
             <span class="brand">🚗 Vehicle Cleaning Admin</span>
             <nav class="main-nav">
+                <button class="btn btn-sm" onclick="logout()" style="margin-left:auto;">Logout</button>
                 <a href="/admin/index.html" class="nav-link">Daily View</a>
                 <a href="/admin/bookings.html" class="nav-link">Bookings</a>
                 <a href="/admin/schedule.html" class="nav-link active">Schedule</a>
@@ -80,7 +82,7 @@
             const section = document.getElementById('schedule-section');
             section.innerHTML = '<div class="alert alert-info">Loading…</div>';
             try {
-                const res = await fetch('/api/schedule');
+                const res = await authFetch('/api/schedule');
                 const result = await res.json();
                 if (!result.success || !result.data) {
                     section.innerHTML = '<div class="alert alert-info">Failed to load schedule.</div>';
@@ -124,7 +126,7 @@
             const endHour = parseInt(document.getElementById('new-end').value, 10);
             const capacity = parseInt(document.getElementById('new-cap').value, 10);
             try {
-                const res = await fetch('/api/schedule', {
+                const res = await authFetch('/api/schedule', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ dayOfWeek, startHour, endHour, capacity })
@@ -147,7 +149,7 @@
             const endHour = parseInt(document.getElementById(`end-${dayOfWeek}`).value, 10);
             const capacity = parseInt(document.getElementById(`cap-${dayOfWeek}`).value, 10);
             try {
-                const res = await fetch(`/api/schedule/${dayOfWeek}`, {
+                const res = await authFetch(`/api/schedule/${dayOfWeek}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ dayOfWeek, startHour, endHour, capacity })
@@ -166,7 +168,7 @@
         async function deleteDay(dayOfWeek) {
             if (!confirm(`Remove ${DAY_NAMES[dayOfWeek]} from the schedule?`)) return;
             try {
-                const res = await fetch(`/api/schedule/${dayOfWeek}`, { method: 'DELETE' });
+                const res = await authFetch(`/api/schedule/${dayOfWeek}`, { method: 'DELETE' });
                 const result = await res.json();
                 if (result.success) {
                     showMessage('Day removed.');

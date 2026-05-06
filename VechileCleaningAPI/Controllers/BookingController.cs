@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VechileCleaningAPI.Common;
 using VechileCleaningAPI.Dtos;
@@ -7,6 +8,7 @@ namespace VechileCleaningAPI.Controllers;
 
 [ApiController]
 [Route("api/bookings")]
+[Authorize(Roles = "Owner,Dispatcher")]
 public class BookingController : ControllerBase
 {
     private readonly BookingManager _manager;

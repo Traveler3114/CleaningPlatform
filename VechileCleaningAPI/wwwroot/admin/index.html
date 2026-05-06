@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Daily View — Vehicle Cleaning Admin</title>
+    <script src="../js/auth.js"></script>
     <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -11,6 +12,7 @@
         <div class="header-inner">
             <span class="brand">🚗 Vehicle Cleaning Admin</span>
             <nav class="main-nav">
+                <button class="btn btn-sm" onclick="logout()" style="margin-left:auto;">Logout</button>
                 <a href="/admin/index.html" class="nav-link active">Daily View</a>
                 <a href="/admin/bookings.html" class="nav-link">Bookings</a>
                 <a href="/admin/schedule.html" class="nav-link">Schedule</a>
@@ -67,7 +69,7 @@
         async function loadOverride(date) {
             const section = document.getElementById('override-section');
             try {
-                const res = await fetch('/api/overrides');
+                const res = await authFetch('/api/overrides');
                 const result = await res.json();
                 if (!result.success) { section.innerHTML = ''; return; }
 
@@ -130,7 +132,7 @@
                 capacity: capVal !== '' ? parseInt(capVal, 10) : null,
             };
             try {
-                const res = await fetch('/api/overrides', {
+                const res = await authFetch('/api/overrides', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -149,7 +151,7 @@
         async function deleteOverride(id, date) {
             if (!confirm('Remove override for this date?')) return;
             try {
-                const res = await fetch(`/api/overrides/${id}`, { method: 'DELETE' });
+                const res = await authFetch(`/api/overrides/${id}`, { method: 'DELETE' });
                 const result = await res.json();
                 if (result.success) {
                     await loadPage();
@@ -165,7 +167,7 @@
             const section = document.getElementById('slots-section');
             section.innerHTML = '<div class="alert alert-info">Loading slots…</div>';
             try {
-                const res = await fetch(`/api/availability?date=${date}`);
+                const res = await authFetch(`/api/availability?date=${date}`);
                 const result = await res.json();
                 if (!result.success || !result.data || result.data.length === 0) {
                     section.innerHTML = '<div class="alert alert-info">No slots available for this date (day is closed or no schedule found).</div>';
@@ -198,7 +200,7 @@
         async function loadBookings(date) {
             const section = document.getElementById('bookings-section');
             try {
-                const res = await fetch(`/api/bookings?date=${date}`);
+                const res = await authFetch(`/api/bookings?date=${date}`);
                 const result = await res.json();
                 if (!result.success || !result.data || result.data.length === 0) {
                     section.innerHTML = '';

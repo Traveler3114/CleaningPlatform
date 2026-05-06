@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VechileCleaningAPI.Common;
 using VechileCleaningAPI.Dtos;
@@ -7,6 +8,7 @@ namespace VechileCleaningAPI.Controllers;
 
 [ApiController]
 [Route("api/schedule")]
+[Authorize(Roles = "Owner,Dispatcher")]
 public class ScheduleController : ControllerBase
 {
     private readonly ScheduleManager _manager;
@@ -15,6 +17,7 @@ public class ScheduleController : ControllerBase
     {
         _manager = manager;
     }
+
 
     [HttpGet]
     public async Task<OperationResult<List<WeeklyScheduleDto>>> Get()
