@@ -234,6 +234,7 @@
             }
         }
 
+        //  CORRECTED CODE (For your cards grid display)
         function renderRole(r) {
             const pagePerms = r.permissions.filter(p => p.startsWith('pages.'));
             const actionPerms = r.permissions.filter(p => p.startsWith('actions.'));
@@ -244,35 +245,51 @@
                 ? `<button class="btn btn-sm btn-danger" onclick="confirmDelete(${r.id}, '${escHtml(r.name)}')">Delete</button>`
                 : '';
             const protectedBadge = r.isProtected ? `<span class="badge-protected">Protected</span>` : '';
-            return `
-                <div class="role-card" id="role-card-${r.id}">
-                    <div class="role-card-header">
-                        <div>
-                            <div class="role-name">${escHtml(r.name)} ${protectedBadge}</div>
-                            <div class="role-meta">${r.permissions.length} permission${r.permissions.length !== 1 ? 's' : ''}</div>
-                        </div>
-                        <div class="role-actions">${editBtn}${deleteBtn}</div>
-                    </div>
-                    <div class="permissions-grid">
-                        ${pagePerms.map(p => `<span class="perm-badge page">${p}</span>`).join('')}
-                        ${actionPerms.map(p => `<span class="perm-badge">${p}</span>`).join('')}
-                        ${r.permissions.length === 0 ? '<span style="color:#aaa;font-size:0.8rem;">No permissions assigned</span>' : ''}
-                    </div>
-                </div>`;
+
+            return `             
+        <div class="role-card" id="role-card-${r.id}">                 
+            <div class="role-card-header">                     
+                <div>                         
+                    <div class="role-name">${escHtml(r.name)} ${protectedBadge}</div>                         
+                    <div class="role-meta">${r.permissions.length} permission${r.permissions.length !== 1 ? 's' : ''}</div>                     
+                </div>                     
+                <div class="role-actions">${editBtn}${deleteBtn}</div>                 
+            </div>                 
+            <div class="permissions-grid">                     
+                ${pagePerms.map(p => {
+                const meta = PERMISSIONS[p];
+                return `<span class="perm-badge page">${meta ? meta.label : p}</span>`;
+            }).join('')}                     
+                
+                ${actionPerms.map(p => {
+                const meta = PERMISSIONS[p];
+                return `<span class="perm-badge">${meta ? meta.label : p}</span>`;
+            }).join('')}                     
+                
+                ${r.permissions.length === 0 ? '<span style="color:#aaa;font-size:0.8rem;">No permissions assigned</span>' : ''}                 
+            </div>             
+        </div>`;
         }
 
         function escHtml(str) {
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
+        //  CORRECTED CODE (For your modal checklist)
         function buildPermChecklist(selected = []) {
             const container = document.getElementById('perm-checklist');
-            container.innerHTML = allPermissions.map(p => `
-                <label>
-                    <input type="checkbox" value="${p.key}" ${selected.includes(p.key) ? 'checked' : ''} />
-                    <span title="${escHtml(p.description)}">${p.key}</span>
-                </label>
-            `).join('');
+            container.innerHTML = allPermissions.map(p => {
+                // Look up the clean name from your permissions.js object using the key string
+                const meta = PERMISSIONS[p.key];
+                const cleanName = meta ? meta.label : p.key;
+
+                return `
+            <label style="display: block; margin-bottom: 6px;">                 
+                <input type="checkbox" value="${p.key}" ${selected.includes(p.key) ? 'checked' : ''} />                 
+                <span title="${escHtml(p.description)}"><strong>${cleanName}</strong></span>
+            </label>         
+        `;
+            }).join('');
         }
 
         function openCreateModal() {
