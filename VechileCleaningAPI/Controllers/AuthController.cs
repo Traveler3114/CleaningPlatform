@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using VechileCleaningAPI.Common;
 using VechileCleaningAPI.Dtos;
 using VechileCleaningAPI.Managers;
@@ -18,17 +17,18 @@ public class AuthController : ControllerBase
         _authManager = authManager;
     }
 
+    // POST /api/auth/register — Owner only
     [Authorize(Roles = "Owner")]
     [HttpPost("register")]
     public async Task<ActionResult<OperationResult<string>>> Register(CreateUserDto request)
     {
         var result = await _authManager.RegisterAsync(request);
-        if(!result.Success)
+        if (!result.Success)
             return BadRequest(result);
         return Ok(result);
     }
 
-    // POST /auth/login
+    // POST /api/auth/login — public
     [HttpPost("login")]
     public async Task<ActionResult<OperationResult<string>>> Login(LoginDto request)
     {

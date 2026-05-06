@@ -4,19 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bookings — Vehicle Cleaning Admin</title>
-    <script src="../js/auth.js"></script>
     <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
     <header class="admin-header">
         <div class="header-inner">
-            <span class="brand">🚗 Vehicle Cleaning Admin</span>
-            <nav class="main-nav">
-                <button class="btn btn-sm" onclick="logout()" style="margin-left:auto;">Logout</button>
-                <a href="/admin/index.html" class="nav-link">Daily View</a>
-                <a href="/admin/bookings.html" class="nav-link active">Bookings</a>
-                <a href="/admin/schedule.html" class="nav-link">Schedule</a>
-            </nav>
+            <!-- Injected by auth.js -->
         </div>
     </header>
 
@@ -38,8 +31,11 @@
         <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
     </footer>
 
+    <script src="../js/auth.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        if (!injectAdminHeader('bookings')) { /* redirected to login */ }
 
         const dateInput = document.getElementById('date-input');
         let showAll = false;
@@ -67,7 +63,7 @@
             section.innerHTML = '<div class="alert alert-info">Loading…</div>';
             const url = showAll ? '/api/bookings' : `/api/bookings?date=${dateInput.value}`;
             try {
-                const res = await authFetch(url);
+                const res = await apiFetch(url);
                 const result = await res.json();
                 if (!result.success || !result.data || result.data.length === 0) {
                     section.innerHTML = '<div class="alert alert-info">No bookings found.</div>';
@@ -114,9 +110,8 @@
             const form = e.target;
             const status = form.querySelector('[name=status]').value;
             try {
-                const res = await authFetch(`/api/bookings/${id}/status`, {
+                const res = await apiFetch(`/api/bookings/${id}/status`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status })
                 });
                 const result = await res.json();

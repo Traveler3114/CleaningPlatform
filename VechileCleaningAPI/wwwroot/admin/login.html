@@ -3,25 +3,23 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — Vehicle Cleaning Admin</title>
-    <link rel="stylesheet" href="../css/style.css" />
+    <title>Admin Login — Vehicle Cleaning</title>
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f4ff;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #f4f6f9;
         }
 
-        .login-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
-            padding: 2.5rem;
+        .login-wrap {
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            padding: 1rem;
         }
 
         .login-brand {
@@ -29,113 +27,158 @@
             margin-bottom: 2rem;
         }
 
+        .login-brand .icon {
+            font-size: 2.8rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
         .login-brand h1 {
             font-size: 1.5rem;
             color: #1a237e;
-            margin-bottom: 0.25rem;
+            font-weight: 700;
         }
 
         .login-brand p {
-            font-size: 0.85rem;
             color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(26, 35, 126, 0.12);
+            padding: 2.5rem 2rem;
         }
 
         .form-group {
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.25rem;
         }
 
         .form-group label {
             display: block;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: #333;
             margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .form-group input {
             width: 100%;
-            padding: 0.65rem 0.9rem;
+            padding: 0.75rem 1rem;
             border: 2px solid #dde3f0;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 1rem;
             outline: none;
-            transition: border-color 0.2s;
-            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            color: #222;
         }
 
         .form-group input:focus {
             border-color: #3949ab;
+            box-shadow: 0 0 0 3px rgba(57, 73, 171, 0.12);
         }
 
         .btn-login {
             width: 100%;
-            padding: 0.75rem;
             background: #1a237e;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
+            padding: 0.85rem;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
             margin-top: 0.5rem;
         }
 
-        .btn-login:hover {
-            background: #3949ab;
-        }
-
-        .btn-login:disabled {
-            background: #aaa;
-            cursor: not-allowed;
-        }
+        .btn-login:hover { background: #3949ab; transform: translateY(-1px); }
+        .btn-login:active { transform: none; }
+        .btn-login:disabled { background: #aaa; cursor: not-allowed; transform: none; }
 
         .error-msg {
-            color: #e53935;
+            background: #fce4ec;
+            color: #c62828;
+            border-radius: 8px;
+            padding: 0.65rem 1rem;
             font-size: 0.88rem;
-            margin-top: 0.75rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .error-msg.visible { display: block; }
+
+        .login-footer {
             text-align: center;
+            margin-top: 1.5rem;
+            color: #999;
+            font-size: 0.8rem;
         }
     </style>
 </head>
 <body>
-    <div class="login-card">
+    <div class="login-wrap">
         <div class="login-brand">
-            <h1>🚗 Vehicle Cleaning</h1>
-            <p>Admin Panel — Staff Login</p>
+            <span class="icon">🚗</span>
+            <h1>Vehicle Cleaning</h1>
+            <p>Admin Dashboard — Sign in to continue</p>
         </div>
 
-        <form id="login-form">
+        <div class="login-card">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" placeholder="Enter your username" autocomplete="username" required />
+                <input type="text" id="username" placeholder="Enter your username" autocomplete="username" />
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" required />
+                <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
             </div>
-            <p id="error-msg" class="error-msg"></p>
-            <button type="submit" class="btn-login" id="login-btn">Sign In</button>
-        </form>
+            <button class="btn-login" id="login-btn">Sign In</button>
+            <div class="error-msg" id="error-msg"></div>
+        </div>
+
+        <div class="login-footer">
+            &copy; <span id="year"></span> Vehicle Cleaning Admin
+        </div>
     </div>
 
     <script>
-        // If already logged in, redirect to admin
-        if (localStorage.getItem('auth_token')) {
-            window.location.href = '/admin/index.html';
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // If already logged in, redirect
+        const existing = localStorage.getItem('vc_admin_token');
+        if (existing) window.location.href = '/admin/index.html';
+
+        const usernameEl = document.getElementById('username');
+        const passwordEl = document.getElementById('password');
+        const loginBtn = document.getElementById('login-btn');
+        const errorEl = document.getElementById('error-msg');
+
+        function showError(msg) {
+            errorEl.textContent = msg;
+            errorEl.classList.add('visible');
         }
 
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        function clearError() {
+            errorEl.classList.remove('visible');
+        }
 
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorEl = document.getElementById('error-msg');
-            const btn = document.getElementById('login-btn');
+        async function doLogin() {
+            clearError();
+            const username = usernameEl.value.trim();
+            const password = passwordEl.value;
 
-            errorEl.textContent = '';
-            btn.disabled = true;
-            btn.textContent = 'Signing in...';
+            if (!username || !password) {
+                showError('Please enter both username and password.');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in…';
 
             try {
                 const res = await fetch('/api/auth/login', {
@@ -147,17 +190,39 @@
                 const result = await res.json();
 
                 if (result.success && result.data) {
-                    localStorage.setItem('auth_token', result.data);
-                    window.location.href = '/admin/index.html';
+                    const token = result.data;
+
+                    // Decode JWT to get user info
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+
+                    // Fetch full user profile
+                    const meRes = await fetch('/api/users/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const meResult = await meRes.json();
+
+                    if (meResult.success && meResult.data) {
+                        localStorage.setItem('vc_admin_token', token);
+                        localStorage.setItem('vc_admin_user', JSON.stringify(meResult.data));
+                        window.location.href = '/admin/index.html';
+                    } else {
+                        showError('Could not load user profile.');
+                    }
                 } else {
-                    errorEl.textContent = result.message || 'Invalid username or password.';
+                    showError(result.message || 'Invalid username or password.');
                 }
-            } catch (err) {
-                errorEl.textContent = 'Network error. Please try again.';
+            } catch (e) {
+                showError('Network error. Please try again.');
             } finally {
-                btn.disabled = false;
-                btn.textContent = 'Sign In';
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
             }
+        }
+
+        loginBtn.addEventListener('click', doLogin);
+
+        [usernameEl, passwordEl].forEach(el => {
+            el.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
         });
     </script>
 </body>

@@ -9,7 +9,6 @@ using VechileCleaningAPI.Managers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -26,6 +25,7 @@ builder.Services.AddScoped<ScheduleManager>();
 builder.Services.AddScoped<DateOverrideManager>();
 builder.Services.AddScoped<AuthManager>();
 builder.Services.AddScoped<TokenManager>();
+builder.Services.AddScoped<UserManager>();   // <-- new
 
 builder.Services.AddCors(options =>
 {

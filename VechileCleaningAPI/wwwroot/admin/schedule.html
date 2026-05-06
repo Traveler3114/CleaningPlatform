@@ -4,19 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Schedule — Vehicle Cleaning Admin</title>
-    <script src="../js/auth.js"></script>
     <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
     <header class="admin-header">
         <div class="header-inner">
-            <span class="brand">🚗 Vehicle Cleaning Admin</span>
-            <nav class="main-nav">
-                <button class="btn btn-sm" onclick="logout()" style="margin-left:auto;">Logout</button>
-                <a href="/admin/index.html" class="nav-link">Daily View</a>
-                <a href="/admin/bookings.html" class="nav-link">Bookings</a>
-                <a href="/admin/schedule.html" class="nav-link active">Schedule</a>
-            </nav>
+            <!-- Injected by auth.js -->
         </div>
     </header>
 
@@ -59,30 +52,30 @@
         <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
     </footer>
 
+    <script src="../js/auth.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Schedule visible to Owner and Dispatcher only
+        if (!Auth.requireRole('Owner', 'Dispatcher')) { /* redirected */ }
+        injectAdminHeader('schedule');
 
         const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
         function showMessage(msg, isError) {
             const el = document.getElementById('message-area');
-            el.innerHTML = `<div class="alert ${isError ? 'alert-danger' : 'alert-success'}">${msg}</div>`;
+            el.innerHTML = `<div class="alert ${isError ? '' : 'alert-success'}" style="${isError ? 'background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;' : ''}">${msg}</div>`;
             setTimeout(() => { el.innerHTML = ''; }, 3000);
         }
 
-        function showAddForm() {
-            document.getElementById('add-form').style.display = '';
-        }
-
-        function hideAddForm() {
-            document.getElementById('add-form').style.display = 'none';
-        }
+        function showAddForm() { document.getElementById('add-form').style.display = ''; }
+        function hideAddForm() { document.getElementById('add-form').style.display = 'none'; }
 
         async function loadSchedule() {
             const section = document.getElementById('schedule-section');
             section.innerHTML = '<div class="alert alert-info">Loading…</div>';
             try {
-                const res = await authFetch('/api/schedule');
+                const res = await fetch('/api/schedule');
                 const result = await res.json();
                 if (!result.success || !result.data) {
                     section.innerHTML = '<div class="alert alert-info">Failed to load schedule.</div>';
@@ -95,9 +88,9 @@
                 let rows = result.data.map(day => `
                     <tr>
                         <td><strong>${DAY_NAMES[day.dayOfWeek]}</strong></td>
-                        <td><input type="number" class="small-input" id="start-${day.dayOfWeek}" value="${day.startHour}" min="0" max="23" aria-label="Start hour for ${DAY_NAMES[day.dayOfWeek]}" /></td>
-                        <td><input type="number" class="small-input" id="end-${day.dayOfWeek}" value="${day.endHour}" min="1" max="24" aria-label="End hour for ${DAY_NAMES[day.dayOfWeek]}" /></td>
-                        <td><input type="number" class="small-input" id="cap-${day.dayOfWeek}" value="${day.capacity}" min="1" max="99" aria-label="Capacity for ${DAY_NAMES[day.dayOfWeek]}" /></td>
+                        <td><input type="number" class="small-input" id="start-${day.dayOfWeek}" value="${day.startHour}" min="0" max="23" /></td>
+                        <td><input type="number" class="small-input" id="end-${day.dayOfWeek}" value="${day.endHour}" min="1" max="24" /></td>
+                        <td><input type="number" class="small-input" id="cap-${day.dayOfWeek}" value="${day.capacity}" min="1" max="99" /></td>
                         <td>
                             <button class="btn btn-sm" onclick="saveDay(${day.dayOfWeek})">Save</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteDay(${day.dayOfWeek})">Delete</button>
@@ -126,9 +119,8 @@
             const endHour = parseInt(document.getElementById('new-end').value, 10);
             const capacity = parseInt(document.getElementById('new-cap').value, 10);
             try {
-                const res = await authFetch('/api/schedule', {
+                const res = await apiFetch('/api/schedule', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ dayOfWeek, startHour, endHour, capacity })
                 });
                 const result = await res.json();
@@ -149,16 +141,15 @@
             const endHour = parseInt(document.getElementById(`end-${dayOfWeek}`).value, 10);
             const capacity = parseInt(document.getElementById(`cap-${dayOfWeek}`).value, 10);
             try {
-                const res = await authFetch(`/api/schedule/${dayOfWeek}`, {
+                const res = await apiFetch(`/api/schedule/${dayOfWeek}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ dayOfWeek, startHour, endHour, capacity })
                 });
                 const result = await res.json();
                 if (result.success) {
                     showMessage('Schedule updated.');
                 } else {
-                    showMessage(result.message || 'Failed to update schedule.', true);
+                    showMessage(result.message || 'Failed to update.', true);
                 }
             } catch (err) {
                 showMessage('Network error.', true);
@@ -168,7 +159,7 @@
         async function deleteDay(dayOfWeek) {
             if (!confirm(`Remove ${DAY_NAMES[dayOfWeek]} from the schedule?`)) return;
             try {
-                const res = await authFetch(`/api/schedule/${dayOfWeek}`, { method: 'DELETE' });
+                const res = await apiFetch(`/api/schedule/${dayOfWeek}`, { method: 'DELETE' });
                 const result = await res.json();
                 if (result.success) {
                     showMessage('Day removed.');
