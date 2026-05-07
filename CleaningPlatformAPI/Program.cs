@@ -28,7 +28,7 @@ builder.Services.AddScoped<ScheduleManager>();
 builder.Services.AddScoped<DateOverrideManager>();
 builder.Services.AddScoped<AuthManager>();
 builder.Services.AddScoped<TokenManager>();
-builder.Services.AddScoped<UserManager>();
+builder.Services.AddScoped<EmployeeManager>();
 builder.Services.AddScoped<RoleManager>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();

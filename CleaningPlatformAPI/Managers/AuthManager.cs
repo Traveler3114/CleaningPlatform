@@ -27,7 +27,7 @@ public class AuthManager
         if (!roleExists)
             return OperationResult<string>.Fail("Invalid role name.");
 
-        var user = new User
+        var user = new Employee
         {
             Username = dto.Username,
             Name = dto.Name,

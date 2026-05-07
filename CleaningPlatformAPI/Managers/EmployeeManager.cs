@@ -5,11 +5,11 @@ using CleaningPlatformAPI.Dtos;
 
 namespace CleaningPlatformAPI.Managers;
 
-public class UserManager
+public class EmployeeManager
 {
     private readonly AppDbContext _db;
 
-    public UserManager(AppDbContext db)
+    public EmployeeManager(AppDbContext db)
     {
         _db = db;
     }
@@ -63,7 +63,7 @@ public class UserManager
         return OperationResult<UserDto>.Ok(MapToDto(user, permissions));
     }
 
-    private static UserDto MapToDto(Entities.User u, List<string> permissions) => new()
+    private static UserDto MapToDto(Entities.Employee u, List<string> permissions) => new()
     {
         Id = u.Id,
         Name = u.Name,

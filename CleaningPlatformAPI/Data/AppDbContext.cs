@@ -17,7 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<WeeklySchedule> WeeklySchedules => Set<WeeklySchedule>();
     public DbSet<DateOverride> DateOverrides => Set<DateOverride>();
     public DbSet<Booking> Bookings => Set<Booking>();
-    public DbSet<User> Users => Set<User>();
+    public DbSet<Employee> Users => Set<Employee>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
@@ -51,7 +51,7 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         // Seed owner user
-        modelBuilder.Entity<User>().HasData(new User
+        modelBuilder.Entity<Employee>().HasData(new Employee
         {
             Id = 1,
             Username = "owner",

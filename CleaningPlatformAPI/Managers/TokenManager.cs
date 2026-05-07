@@ -15,7 +15,7 @@ public class TokenManager
         _config = config;
     }
 
-    public string CreateToken(User user, List<string> permissions)
+    public string CreateToken(Employee user, List<string> permissions)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

@@ -10,11 +10,11 @@ namespace CleaningPlatformAPI.Controllers;
 [ApiController]
 [Route("api/users")]
 [Authorize]
-public class UserController : ControllerBase
+public class EmployeeController : ControllerBase
 {
-    private readonly UserManager _userManager;
+    private readonly EmployeeManager _userManager;
 
-    public UserController(UserManager userManager)
+    public EmployeeController(EmployeeManager userManager)
     {
         _userManager = userManager;
     }
