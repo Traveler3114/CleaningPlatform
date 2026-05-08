@@ -112,7 +112,9 @@ public class BookingManager
             ?? b.Client?.Contacts?.FirstOrDefault()?.Phone
             ?? string.Empty,
         Date = b.ScheduledDate,
-        Hour = b.ScheduledTimeSlot?.Hours ?? 0,
+        Hour = b.ScheduledTimeSlot.HasValue
+            ? (int)Math.Round(b.ScheduledTimeSlot.Value.TotalHours, MidpointRounding.AwayFromZero)
+            : 0,
         Status = b.Status,
         CreatedAt = b.CreatedAt
     };
