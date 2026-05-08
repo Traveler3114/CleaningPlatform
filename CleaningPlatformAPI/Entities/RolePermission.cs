@@ -1,9 +1,20 @@
-namespace CleaningPlatformAPI.Entities;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class RolePermission
+namespace CleaningPlatformAPI.Entities
 {
-    public int Id { get; set; }
-    public int RoleId { get; set; }
-    public string PermissionKey { get; set; } = string.Empty;
-    public Role Role { get; set; } = null!;
+    [Table("RolePermissions")]
+    public class RolePermission
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int RoleId { get; set; }
+
+        [Required, MaxLength(100)]
+        public string PermissionKey { get; set; }
+
+        [ForeignKey(nameof(RoleId))]
+        public Role Role { get; set; }
+    }
 }

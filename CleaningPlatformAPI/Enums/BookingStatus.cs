@@ -1,3 +1,10 @@
 ﻿namespace CleaningPlatformAPI.Enums;
 
-public enum BookingStatus { Reserved, Cancelled, Completed }
+public enum BookingStatus
+{
+    Pending,
+    Confirmed,
+    InProgress,
+    Completed,
+    Cancelled
+}

@@ -30,6 +30,7 @@ builder.Services.AddScoped<AuthManager>();
 builder.Services.AddScoped<TokenManager>();
 builder.Services.AddScoped<EmployeeManager>();
 builder.Services.AddScoped<RoleManager>();
+builder.Services.AddScoped<ServiceCatalogManager>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 

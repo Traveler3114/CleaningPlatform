@@ -83,7 +83,7 @@
                             ${Auth.can('actions.booking.updateStatus') ? `
                             <form class="inline-form" onsubmit="updateStatus(event, ${b.id})">
                                 <select name="status" class="status-select" aria-label="Update status for booking ${b.id}">
-                                    ${['Reserved','Cancelled','Completed'].map(s =>
+                                    ${['Pending','Confirmed','InProgress','Completed','Cancelled'].map(s =>
                                         `<option value="${s}"${b.status === s ? ' selected' : ''}>${s}</option>`
                                     ).join('')}
                                 </select>
