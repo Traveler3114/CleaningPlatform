@@ -15,7 +15,7 @@ namespace CleaningPlatformAPI.Entities
         public bool IsProtected { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        public ICollection<RolePermission> Permissions { get; set; } = new List<RolePermission>();
         public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+        public ICollection<RolePermission> Permissions { get; set; } = new List<RolePermission>();
     }
 }

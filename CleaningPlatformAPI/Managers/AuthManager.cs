@@ -31,8 +31,8 @@ public class AuthManager
         if (string.IsNullOrWhiteSpace(roleName))
             return OperationResult<string>.Fail("Role is required.");
 
-        var roleExists = await _db.Roles.AnyAsync(r => r.Name == roleName);
-        if (!roleExists)
+        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+        if (role == null)
             return OperationResult<string>.Fail("Invalid role name.");
 
         var firstName = dto.FirstName.Trim();
@@ -46,7 +46,7 @@ public class AuthManager
             FirstName = firstName,
             LastName = lastName,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Role = roleName,
+            RoleId = role.Id,        // Use RoleId, not a string
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -60,17 +60,20 @@ public class AuthManager
     public async Task<OperationResult<string>> LoginAsync(LoginDto dto)
     {
         var email = dto.Email.Trim();
-        var user = await _db.Employees.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _db.Employees
+            .Include(e => e.Role)       // Include the navigation property
+            .FirstOrDefaultAsync(u => u.Email == email);
+
         if (user == null || !user.IsActive)
             return OperationResult<string>.Fail("Invalid credentials.");
 
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             return OperationResult<string>.Fail("Invalid credentials.");
 
-        var permissions = await _db.Roles
-            .Where(r => r.Name == user.Role)
-            .SelectMany(r => r.Permissions)
-            .Select(p => p.PermissionKey)
+        //  Use Role.Id to get permissions
+        var permissions = await _db.RolePermissions
+            .Where(rp => rp.RoleId == user.RoleId)
+            .Select(rp => rp.PermissionKey)
             .ToListAsync();
 
         var token = _tokenManager.CreateToken(user, permissions);

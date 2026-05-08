@@ -21,16 +21,18 @@ public class TokenManager
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiry = DateTime.UtcNow.AddHours(double.Parse(_config["Jwt:ExpiryHours"]!));
 
+        var roleName = user.Role?.Name ?? string.Empty;   // ✅ Get role name from navigation
+
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim("email", user.Email),
-            new Claim(ClaimTypes.Role, user.Role),
+            new Claim(ClaimTypes.Role, roleName),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         // Owner gets all permissions via role claim; others get explicit permission claims
-        if (user.Role != "Owner")
+        if (roleName != "Owner")
         {
             foreach (var permission in permissions)
                 claims.Add(new Claim("permission", permission));

@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using System;
 using CleaningPlatformAPI.Entities;
 
 namespace CleaningPlatformAPI.Data
@@ -27,7 +26,53 @@ namespace CleaningPlatformAPI.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // === Booking → VehicleBookingDetails (1-to-1) ===
+            // ============================
+            // Decimal precision configuration (prevents truncation warnings)
+            // ============================
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.HourlyRate)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<ServiceCatalog>()
+                .Property(s => s.PriceMin).HasPrecision(10, 2);
+            modelBuilder.Entity<ServiceCatalog>()
+                .Property(s => s.PriceMax).HasPrecision(10, 2);
+            modelBuilder.Entity<ServiceCatalog>()
+                .Property(s => s.PriceAvg).HasPrecision(10, 2);
+            modelBuilder.Entity<ServiceCatalog>()
+                .Property(s => s.DefaultMarginPct).HasPrecision(5, 2);
+
+            modelBuilder.Entity<BookingService>()
+                .Property(bs => bs.EstimatedPrice).HasPrecision(10, 2);
+            modelBuilder.Entity<BookingService>()
+                .Property(bs => bs.FinalPrice).HasPrecision(10, 2);
+            modelBuilder.Entity<BookingService>()
+                .Property(bs => bs.Quantity).HasPrecision(10, 2);
+
+            modelBuilder.Entity<BoatBookingDetails>()
+                .Property(b => b.LengthMeters).HasPrecision(5, 2);
+
+            // (BookingView properties are read from database, no precision needed)
+
+            // ============================
+            // Relationships
+            // ============================
+
+            // Employee → Role
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Role)
+                .WithMany(r => r.Employees)
+                .HasForeignKey(e => e.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Role → RolePermissions
+            modelBuilder.Entity<RolePermission>()
+                .HasOne(rp => rp.Role)
+                .WithMany(r => r.Permissions)
+                .HasForeignKey(rp => rp.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Booking → VehicleBookingDetails (1-to-1)
             modelBuilder.Entity<VehicleBookingDetails>()
                 .HasKey(v => v.BookingId);
             modelBuilder.Entity<VehicleBookingDetails>()
@@ -36,7 +81,7 @@ namespace CleaningPlatformAPI.Data
                 .HasForeignKey<VehicleBookingDetails>(v => v.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // === Booking → SiteDetail (1-to-1) ===
+            // Booking → SiteDetail (1-to-1)
             modelBuilder.Entity<SiteDetail>()
                 .HasKey(s => s.BookingId);
             modelBuilder.Entity<SiteDetail>()
@@ -45,7 +90,7 @@ namespace CleaningPlatformAPI.Data
                 .HasForeignKey<SiteDetail>(s => s.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // === Booking → BoatBookingDetails (1-to-1) ===
+            // Booking → BoatBookingDetails (1-to-1)
             modelBuilder.Entity<BoatBookingDetails>()
                 .HasKey(b => b.BookingId);
             modelBuilder.Entity<BoatBookingDetails>()
@@ -54,37 +99,37 @@ namespace CleaningPlatformAPI.Data
                 .HasForeignKey<BoatBookingDetails>(b => b.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // === Booking → BookingServices (1-to-many) ===
+            // Booking → BookingServices (1-to-many)
             modelBuilder.Entity<BookingService>()
                 .HasOne(bs => bs.Booking)
                 .WithMany(b => b.BookingServices)
                 .HasForeignKey(bs => bs.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // === BookingService → ServiceCatalog ===
+            // BookingService → ServiceCatalog
             modelBuilder.Entity<BookingService>()
                 .HasOne(bs => bs.ServiceCatalog)
                 .WithMany(sc => sc.BookingServices)
                 .HasForeignKey(bs => bs.ServiceCatalogId);
 
-            // === Client → Contacts (1-to-many) ===
+            // Client → Contacts (1-to-many)
             modelBuilder.Entity<Contact>()
                 .HasOne(c => c.Client)
                 .WithMany(cl => cl.Contacts)
                 .HasForeignKey(c => c.ClientId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // === Employee → Bookings ===
+            // Employee → Bookings (assigned employee)
             modelBuilder.Entity<Booking>()
                 .HasOne(b => b.AssignedEmployee)
                 .WithMany(e => e.Bookings)
                 .HasForeignKey(b => b.AssignedEmployeeId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // === View (keyless) ===
+            // View (keyless)
             modelBuilder.Entity<BookingView>().ToView("vw_Bookings").HasNoKey();
 
-            // === Global DateTime precision (optional) ===
+            // Global DateTime precision (optional)
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
                 foreach (var property in entityType.GetProperties())
