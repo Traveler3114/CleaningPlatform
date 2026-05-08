@@ -225,8 +225,8 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Username</label>
-                <input type="text" id="new-username" placeholder="Login username" autocomplete="off" />
+                <label>Email</label>
+                <input type="email" id="new-username" placeholder="name@example.com" autocomplete="off" />
             </div>
             <div class="form-group">
                 <label>Password</label>
@@ -272,8 +272,8 @@
             return 'badge-' + (role || '').toLowerCase();
         }
 
-        function getInitials(name, surname) {
-            return ((name?.[0] || '') + (surname?.[0] || '')).toUpperCase();
+        function getInitials(firstName, lastName) {
+            return ((firstName?.[0] || '') + (lastName?.[0] || '')).toUpperCase();
         }
 
         async function loadUsers() {
@@ -295,7 +295,7 @@
                 const total = users.length;
                 const active = users.filter(u => u.isActive).length;
                 const byRole = {};
-                users.forEach(u => { byRole[u.roleName] = (byRole[u.roleName] || 0) + 1; });
+                    users.forEach(u => { byRole[u.role] = (byRole[u.role] || 0) + 1; });
 
                 document.getElementById('stats-row').innerHTML = `
                     <div class="stat-card">
@@ -318,7 +318,7 @@
 
                 const rows = users.map(u => {
                     const isYou = u.id === currentUser?.id;
-                    const initials = getInitials(u.name, u.surname);
+                    const initials = getInitials(u.firstName, u.lastName);
                     const canToggle = !isYou && Auth.can('actions.user.toggleActive');
 
                     return `
@@ -328,15 +328,15 @@
                                     <div class="user-avatar">${initials}</div>
                                     <div>
                                         <div class="full-name">
-                                            ${u.name} ${u.surname}
+                                            ${u.firstName} ${u.lastName}
                                             ${isYou ? '<span class="you-badge">You</span>' : ''}
                                         </div>
-                                        <div class="username">@${u.username}</div>
+                                        <div class="username">${u.email}</div>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <span class="badge ${getRoleClass(u.roleName)}">${u.roleName}</span>
+                                <span class="badge ${getRoleClass(u.role)}">${u.role}</span>
                             </td>
                             <td>
                                 <span class="badge ${u.isActive ? 'badge-completed' : 'badge-cancelled'}">
@@ -430,13 +430,13 @@
         document.getElementById('modal-submit').addEventListener('click', async () => {
             modalError.textContent = '';
 
-            const name = document.getElementById('new-name').value.trim();
-            const surname = document.getElementById('new-surname').value.trim();
-            const username = document.getElementById('new-username').value.trim();
+            const firstName = document.getElementById('new-name').value.trim();
+            const lastName = document.getElementById('new-surname').value.trim();
+            const email = document.getElementById('new-username').value.trim();
             const password = document.getElementById('new-password').value;
             const role = document.getElementById('new-role').value;
 
-            if (!name || !surname || !username || !password || !role) {
+            if (!firstName || !lastName || !email || !password || !role) {
                 modalError.textContent = 'All fields are required.';
                 return;
             }
@@ -453,13 +453,13 @@
             try {
                 const res = await apiFetch('/api/auth/register', {
                     method: 'POST',
-                    body: JSON.stringify({ name, surname, username, password, roleName: role })
+                    body: JSON.stringify({ firstName, lastName, email, password, role })
                 });
                 const result = await res.json();
 
                 if (result.success) {
                     modal.classList.remove('open');
-                    showMessage(`Account for ${name} ${surname} created successfully.`);
+                    showMessage(`Account for ${firstName} ${lastName} created successfully.`);
                     await loadUsers();
                 } else {
                     modalError.textContent = result.message || 'Failed to create account.';

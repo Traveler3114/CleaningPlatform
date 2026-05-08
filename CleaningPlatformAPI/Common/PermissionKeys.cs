@@ -14,6 +14,8 @@ public static class PermissionKeys
     public const string ActionsUserCreate = "actions.user.create";
     public const string ActionsUserToggleActive = "actions.user.toggleActive";
     public const string ActionsRoleManage = "actions.role.manage";
+    public const string ActionsServiceCatalogEdit = "actions.serviceCatalog.edit";
+    public const string ActionsServiceCatalogManage = "actions.serviceCatalog.manage";
 
     public static readonly string[] All =
     [
@@ -27,7 +29,9 @@ public static class PermissionKeys
         ActionsOverrideManage,
         ActionsUserCreate,
         ActionsUserToggleActive,
-        ActionsRoleManage
+        ActionsRoleManage,
+        ActionsServiceCatalogEdit,
+        ActionsServiceCatalogManage
     ];
 
     public static readonly Dictionary<string, (string DisplayName, string Description, string Category)> Meta = new()
@@ -43,5 +47,7 @@ public static class PermissionKeys
         [ActionsUserCreate]           = ("Create User Accounts",      "Can create new user accounts",          "Users"),
         [ActionsUserToggleActive]     = ("Activate/Deactivate Users", "Can toggle user active status",         "Users"),
         [ActionsRoleManage]           = ("Manage Roles",              "Can create, edit and delete roles",     "Roles"),
+        [ActionsServiceCatalogEdit]   = ("Edit Service Catalog",      "Can update service pricing and details","Services"),
+        [ActionsServiceCatalogManage] = ("Manage Services",           "Can add or remove services",            "Services"),
     };
 }

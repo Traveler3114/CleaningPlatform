@@ -20,13 +20,21 @@ public class BookingManager
 
     public async Task<List<BookingDto>> GetBookingsAsync(DateTime date)
     {
-        var bookings = await _db.Bookings.Where(b => b.Date.Date == date.Date).ToListAsync();
+        var bookings = await _db.Bookings
+            .Include(b => b.Client)
+            .ThenInclude(c => c.Contacts)
+            .Where(b => b.ScheduledDate.Date == date.Date)
+            .ToListAsync();
         return bookings.Select(MapToDto).ToList();
     }
 
     public async Task<List<BookingDto>> GetAllBookingsAsync()
     {
-        var bookings = await _db.Bookings.OrderByDescending(b => b.Date).ToListAsync();
+        var bookings = await _db.Bookings
+            .Include(b => b.Client)
+            .ThenInclude(c => c.Contacts)
+            .OrderByDescending(b => b.ScheduledDate)
+            .ToListAsync();
         return bookings.Select(MapToDto).ToList();
     }
 
@@ -39,14 +47,42 @@ public class BookingManager
         if (slot.Available <= 0)
             return OperationResult<BookingDto>.Fail("No capacity available for this slot.");
 
+        var customerName = dto.CustomerName.Trim();
+        var phone = dto.Phone.Trim();
+        if (string.IsNullOrWhiteSpace(customerName) || string.IsNullOrWhiteSpace(phone))
+            return OperationResult<BookingDto>.Fail("Customer name and phone are required.");
+
+        var now = DateTime.UtcNow;
+        var client = new Client
+        {
+            ClientName = customerName,
+            Type = "OneTime",
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+            Contacts = new List<Contact>
+            {
+                new()
+                {
+                    ContactName = customerName,
+                    Phone = phone,
+                    IsPrimary = true,
+                    IsActive = true,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                }
+            }
+        };
+
         var booking = new Booking
         {
-            CustomerName = dto.CustomerName,
-            Phone = dto.Phone,
-            Date = dto.Date.Date,
-            Hour = dto.Hour,
-            Status = BookingStatus.Reserved,
-            CreatedAt = DateTime.UtcNow
+            Client = client,
+            ServiceType = "Vehicle",
+            ScheduledDate = dto.Date.Date,
+            ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
+            Status = BookingStatus.Confirmed.ToString(),
+            CreatedAt = now,
+            UpdatedAt = now
         };
         _db.Bookings.Add(booking);
         await _db.SaveChangesAsync();
@@ -60,7 +96,10 @@ public class BookingManager
         var booking = await _db.Bookings.FindAsync(id);
         if (booking == null)
             return OperationResult<BookingDto>.Fail("Booking not found.");
-        booking.Status = bookingStatus;
+        booking.Status = bookingStatus.ToString();
+        if (bookingStatus == BookingStatus.Completed)
+            booking.CompletedAt = DateTime.UtcNow;
+        booking.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         return OperationResult<BookingDto>.Ok(MapToDto(booking));
     }
@@ -68,11 +107,13 @@ public class BookingManager
     private static BookingDto MapToDto(Booking b) => new()
     {
         Id = b.Id,
-        CustomerName = b.CustomerName,
-        Phone = b.Phone,
-        Date = b.Date,
-        Hour = b.Hour,
-        Status = b.Status.ToString(),
+        CustomerName = b.Client?.ClientName ?? "Unknown",
+        Phone = b.Client?.Contacts?.FirstOrDefault(c => c.IsPrimary)?.Phone
+            ?? b.Client?.Contacts?.FirstOrDefault()?.Phone
+            ?? string.Empty,
+        Date = b.ScheduledDate,
+        Hour = b.ScheduledTimeSlot.HasValue ? (int)b.ScheduledTimeSlot.Value.TotalHours : 0,
+        Status = b.Status,
         CreatedAt = b.CreatedAt
     };
 }

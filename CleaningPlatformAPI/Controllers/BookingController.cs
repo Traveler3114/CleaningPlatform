@@ -28,6 +28,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     public async Task<OperationResult<BookingDto>> Post([FromBody] CreateBookingDto dto)
     {
         return await _manager.CreateBookingAsync(dto);

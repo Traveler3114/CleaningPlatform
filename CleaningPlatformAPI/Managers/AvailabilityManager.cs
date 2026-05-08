@@ -32,21 +32,23 @@ public class AvailabilityManager
         int defaultCapacity = dateOverride?.Capacity ?? schedule.Capacity;
 
         var bookings = await _db.Bookings
-            .Where(b => b.Date.Date == date.Date && b.Status != BookingStatus.Cancelled)
+            .Where(b => b.ScheduledDate.Date == date.Date && b.Status != BookingStatus.Cancelled.ToString())
             .ToListAsync();
 
         var slots = new List<AvailabilityDto>();
 
         for (int h = startHour; h < endHour; h++)
         {
-            int booked = bookings.Count(b => b.Hour == h);
+            int booked = bookings.Count(b => b.ScheduledTimeSlot.HasValue &&
+                                             (int)b.ScheduledTimeSlot.Value.TotalHours == h);
 
             slots.Add(new AvailabilityDto
             {
                 Hour = h,
                 Capacity = defaultCapacity,
                 Booked = booked,
-                Available = Math.Max(0, defaultCapacity - booked)
+                Available = Math.Max(0, defaultCapacity - booked),
+                IsClosed = defaultCapacity == 0
             });
         }
         return slots;

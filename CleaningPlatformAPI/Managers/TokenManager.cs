@@ -24,13 +24,13 @@ public class TokenManager
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim("username", user.Username),
-            new Claim(ClaimTypes.Role, user.RoleName),
+            new Claim("email", user.Email),
+            new Claim(ClaimTypes.Role, user.Role),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         // Owner gets all permissions via role claim; others get explicit permission claims
-        if (user.RoleName != "Owner")
+        if (user.Role != "Owner")
         {
             foreach (var permission in permissions)
                 claims.Add(new Claim("permission", permission));

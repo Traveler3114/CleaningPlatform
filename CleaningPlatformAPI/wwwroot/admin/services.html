@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Services — Vehicle Cleaning Admin</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+    <header class="admin-header">
+        <div class="header-inner">
+            <!-- Injected by auth.js -->
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <div class="page-header">
+            <h1>Service Catalog</h1>
+            <button class="btn" id="add-service-btn" onclick="showAddForm()">+ Add Service</button>
+        </div>
+
+        <div id="message-area"></div>
+
+        <div id="add-form" class="card" style="display:none;margin-bottom:1rem;padding:1rem;">
+            <h2 class="section-title">New Service</h2>
+            <form onsubmit="addService(event)">
+                <div class="form-row">
+                    <label>Code: <input type="text" id="new-code" class="small-input" placeholder="SC-01" /></label>
+                    <label>Name: <input type="text" id="new-name" class="small-input" placeholder="Exterior Wash" /></label>
+                    <label>Category: <input type="text" id="new-category" class="small-input" placeholder="Vehicle" /></label>
+                    <label>Unit: <input type="text" id="new-unit" class="small-input" placeholder="per car" /></label>
+                </div>
+                <div class="form-row" style="margin-top:0.6rem;">
+                    <label>Min Price: <input type="number" step="0.01" id="new-price-min" class="small-input" /></label>
+                    <label>Max Price: <input type="number" step="0.01" id="new-price-max" class="small-input" /></label>
+                    <label>Avg Price: <input type="number" step="0.01" id="new-price-avg" class="small-input" /></label>
+                    <label>Margin %: <input type="number" step="0.01" id="new-margin" class="small-input" /></label>
+                    <label><input type="checkbox" id="new-active" checked /> Active</label>
+                    <button type="submit" class="btn btn-sm">Save</button>
+                    <button type="button" class="btn btn-sm" onclick="hideAddForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="services-section"></div>
+    </main>
+
+    <footer class="admin-footer">
+        <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
+    </footer>
+
+    <script src="../js/permissions.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        if (!Auth.requireAuth()) { /* redirected */ }
+
+        const canEdit = Auth.can('actions.serviceCatalog.edit');
+        const canManage = Auth.can('actions.serviceCatalog.manage');
+
+        if (!canEdit && !canManage) {
+            window.location.href = '/admin/index.html';
+        }
+
+        injectAdminHeader('services');
+
+        if (!canManage) {
+            document.getElementById('add-service-btn').style.display = 'none';
+        }
+
+        function showMessage(msg, isError) {
+            const el = document.getElementById('message-area');
+            el.innerHTML = `<div class="alert ${isError ? '' : 'alert-success'}" style="${isError ? 'background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;' : ''}">${msg}</div>`;
+            setTimeout(() => { el.innerHTML = ''; }, 3000);
+        }
+
+        function showAddForm() { document.getElementById('add-form').style.display = ''; }
+        function hideAddForm() { document.getElementById('add-form').style.display = 'none'; }
+
+        function parseNumber(value) {
+            const trimmed = value.trim();
+            return trimmed === '' ? null : parseFloat(trimmed);
+        }
+
+        async function loadServices() {
+            const section = document.getElementById('services-section');
+            section.innerHTML = '<div class="alert alert-info">Loading…</div>';
+            try {
+                const res = await apiFetch('/api/services');
+                const result = await res.json();
+                if (!result.success) {
+                    section.innerHTML = '<div class="alert alert-info">Failed to load services.</div>';
+                    return;
+                }
+                if (!result.data || result.data.length === 0) {
+                    section.innerHTML = '<div class="alert alert-info">No services found.</div>';
+                    return;
+                }
+                const rows = result.data.map(s => `
+                    <tr>
+                        <td><input type="text" id="code-${s.id}" class="small-input" value="${s.catalogCode}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="text" id="name-${s.id}" class="small-input" value="${s.name}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="text" id="category-${s.id}" class="small-input" value="${s.category || ''}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="text" id="unit-${s.id}" class="small-input" value="${s.unit || ''}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="number" step="0.01" id="min-${s.id}" class="small-input" value="${s.priceMin ?? ''}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="number" step="0.01" id="max-${s.id}" class="small-input" value="${s.priceMax ?? ''}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="number" step="0.01" id="avg-${s.id}" class="small-input" value="${s.priceAvg ?? ''}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="number" step="0.01" id="margin-${s.id}" class="small-input" value="${s.defaultMarginPct ?? ''}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="checkbox" id="active-${s.id}" ${s.isActive ? 'checked' : ''} ${canEdit ? '' : 'disabled'} /></td>
+                        <td>
+                            ${canEdit ? `<button class="btn btn-sm" onclick="saveService(${s.id})">Save</button>` : ''}
+                            ${canManage ? `<button class="btn btn-sm btn-danger" onclick="deleteService(${s.id})">Delete</button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+
+                section.innerHTML = `
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th><th>Name</th><th>Category</th><th>Unit</th>
+                                <th>Min</th><th>Max</th><th>Avg</th><th>Margin %</th><th>Active</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            } catch (e) {
+                section.innerHTML = '<div class="alert alert-info">Error loading services.</div>';
+            }
+        }
+
+        async function addService(e) {
+            e.preventDefault();
+            const catalogCode = document.getElementById('new-code').value.trim();
+            const name = document.getElementById('new-name').value.trim();
+            const category = document.getElementById('new-category').value.trim();
+            const unit = document.getElementById('new-unit').value.trim();
+            const priceMin = parseNumber(document.getElementById('new-price-min').value);
+            const priceMax = parseNumber(document.getElementById('new-price-max').value);
+            const priceAvg = parseNumber(document.getElementById('new-price-avg').value);
+            const defaultMarginPct = parseNumber(document.getElementById('new-margin').value);
+            const isActive = document.getElementById('new-active').checked;
+
+            if (!catalogCode || !name) {
+                showMessage('Catalog code and name are required.', true);
+                return;
+            }
+
+            try {
+                const res = await apiFetch('/api/services', {
+                    method: 'POST',
+                    body: JSON.stringify({ catalogCode, name, category, unit, priceMin, priceMax, priceAvg, defaultMarginPct, isActive })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    hideAddForm();
+                    showMessage('Service added.');
+                    await loadServices();
+                } else {
+                    showMessage(result.message || 'Failed to add service.', true);
+                }
+            } catch (err) {
+                showMessage('Network error.', true);
+            }
+        }
+
+        async function saveService(id) {
+            const catalogCode = document.getElementById(`code-${id}`).value.trim();
+            const name = document.getElementById(`name-${id}`).value.trim();
+            const category = document.getElementById(`category-${id}`).value.trim();
+            const unit = document.getElementById(`unit-${id}`).value.trim();
+            const priceMin = parseNumber(document.getElementById(`min-${id}`).value);
+            const priceMax = parseNumber(document.getElementById(`max-${id}`).value);
+            const priceAvg = parseNumber(document.getElementById(`avg-${id}`).value);
+            const defaultMarginPct = parseNumber(document.getElementById(`margin-${id}`).value);
+            const isActive = document.getElementById(`active-${id}`).checked;
+
+            if (!catalogCode || !name) {
+                showMessage('Catalog code and name are required.', true);
+                return;
+            }
+
+            try {
+                const res = await apiFetch(`/api/services/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ catalogCode, name, category, unit, priceMin, priceMax, priceAvg, defaultMarginPct, isActive })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showMessage('Service updated.');
+                    await loadServices();
+                } else {
+                    showMessage(result.message || 'Failed to update service.', true);
+                }
+            } catch (err) {
+                showMessage('Network error.', true);
+            }
+        }
+
+        async function deleteService(id) {
+            if (!confirm('Delete this service?')) return;
+            try {
+                const res = await apiFetch(`/api/services/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    showMessage('Service deleted.');
+                    await loadServices();
+                } else {
+                    showMessage(result.message || 'Failed to delete service.', true);
+                }
+            } catch (err) {
+                showMessage('Network error.', true);
+            }
+        }
+
+        loadServices();
+    </script>
+</body>
+</html>

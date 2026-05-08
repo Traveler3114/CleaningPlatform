@@ -167,9 +167,9 @@ Otherwise:
 - Id
 - CustomerName
 - Phone
-- Date
-- Hour
-- Status (Reserved, Cancelled, Completed)
+- ScheduledDate
+- ScheduledHour
+- Status (Pending, Confirmed, InProgress, Completed, Cancelled)
 
 ---
 
