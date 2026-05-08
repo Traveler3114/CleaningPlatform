@@ -14,7 +14,7 @@
 ['cs', 'js', 'html', 'css', 'cpp', 'py']
 
 ## Top Keywords
-['div', 'class', 'rem', 'public', 'const', 'new', 'using', 'int', 'string', 'date', 'return', 'name', 'role', 'await', 'cleaningplatformapi', 'var', 'result', 'btn', 'user', 'color', 'get', 'font', 'set', 'document', 'getelementbyid', 'operationresult', 'background', 'border', 'property', 'permissionkey']
+['div', 'class', 'rem', 'public', 'const', 'new', 'using', 'int', 'string', 'return', 'date', 'name', 'role', 'await', 'cleaningplatformapi', 'var', 'result', 'btn', 'color', 'get', 'font', 'user', 'set', 'document', 'getelementbyid', 'operationresult', 'background', 'border', 'property', 'permissionkey']
 
 ## Notes
 - Multi-ignore system enabled
