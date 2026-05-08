@@ -264,7 +264,16 @@
 
         function showMessage(msg, isError) {
             const el = document.getElementById('message-area');
-            el.innerHTML = `<div class="alert ${isError ? '' : 'alert-success'}" style="${isError ? 'background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;' : ''}">${msg}</div>`;
+            el.innerHTML = '';
+            const alert = document.createElement('div');
+            alert.className = `alert ${isError ? '' : 'alert-success'}`;
+            if (isError) {
+                alert.style.background = '#fce4ec';
+                alert.style.color = '#c62828';
+                alert.style.border = '1px solid #ef9a9a';
+            }
+            alert.textContent = msg;
+            el.appendChild(alert);
             setTimeout(() => { el.innerHTML = ''; }, 3000);
         }
 

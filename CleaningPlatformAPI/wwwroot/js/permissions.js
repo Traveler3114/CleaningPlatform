@@ -15,5 +15,5 @@ const PERMISSIONS = {
     'actions.user.toggleActive':    { label: 'Activate/Deactivate Users',  category: 'Users' },
     'actions.role.manage':          { label: 'Manage Roles',               category: 'Roles' },
     'actions.serviceCatalog.edit':  { label: 'Edit Service Catalog',       category: 'Services' },
-    'actions.serviceCatalog.manage':{ label: 'Manage Services',            category: 'Services' },
+    'actions.serviceCatalog.manage': { label: 'Manage Services',            category: 'Services' },
 };

@@ -21,7 +21,7 @@ namespace CleaningPlatformAPI.Entities
         public TimeSpan? ScheduledTimeSlot { get; set; }
 
         [Required, MaxLength(50)]
-        public string Status { get; set; }   // Pending, Confirmed, InProgress, Completed, Cancelled
+        public string Status { get; set; }   // Stored as string: Pending, Confirmed, InProgress, Completed, Cancelled
 
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }
