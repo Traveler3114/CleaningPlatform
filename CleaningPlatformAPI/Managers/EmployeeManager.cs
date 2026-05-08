@@ -16,25 +16,25 @@ public class EmployeeManager
 
     public async Task<List<UserDto>> GetAllUsersAsync()
     {
-        var users = await _db.Users
-            .OrderBy(u => u.RoleName)
-            .ThenBy(u => u.Surname)
+        var users = await _db.Employees
+            .OrderBy(u => u.Role)
+            .ThenBy(u => u.LastName)
             .ToListAsync();
 
         var rolePermissions = await _db.Roles
             .Include(r => r.Permissions)
             .ToDictionaryAsync(r => r.Name, r => r.Permissions.Select(p => p.PermissionKey).ToList());
 
-        return users.Select(u => MapToDto(u, rolePermissions.GetValueOrDefault(u.RoleName, new List<string>()))).ToList();
+        return users.Select(u => MapToDto(u, rolePermissions.GetValueOrDefault(u.Role, new List<string>()))).ToList();
     }
 
     public async Task<UserDto?> GetByIdAsync(int id)
     {
-        var user = await _db.Users.FindAsync(id);
+        var user = await _db.Employees.FindAsync(id);
         if (user == null) return null;
 
         var permissions = await _db.Roles
-            .Where(r => r.Name == user.RoleName)
+            .Where(r => r.Name == user.Role)
             .SelectMany(r => r.Permissions)
             .Select(p => p.PermissionKey)
             .ToListAsync();
@@ -47,15 +47,16 @@ public class EmployeeManager
         if (id == requestingUserId)
             return OperationResult<UserDto>.Fail("You cannot deactivate your own account.");
 
-        var user = await _db.Users.FindAsync(id);
+        var user = await _db.Employees.FindAsync(id);
         if (user == null)
             return OperationResult<UserDto>.Fail("User not found.");
 
         user.IsActive = !user.IsActive;
+        user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
         var permissions = await _db.Roles
-            .Where(r => r.Name == user.RoleName)
+            .Where(r => r.Name == user.Role)
             .SelectMany(r => r.Permissions)
             .Select(p => p.PermissionKey)
             .ToListAsync();
@@ -66,10 +67,10 @@ public class EmployeeManager
     private static UserDto MapToDto(Entities.Employee u, List<string> permissions) => new()
     {
         Id = u.Id,
-        Name = u.Name,
-        Surname = u.Surname,
-        Username = u.Username,
-        RoleName = u.RoleName,
+        FirstName = u.FirstName,
+        LastName = u.LastName,
+        Email = u.Email,
+        Role = u.Role,
         IsActive = u.IsActive,
         CreatedAt = u.CreatedAt,
         Permissions = permissions

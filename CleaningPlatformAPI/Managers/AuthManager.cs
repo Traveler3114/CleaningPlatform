@@ -19,33 +19,48 @@ public class AuthManager
 
     public async Task<OperationResult<string>> RegisterAsync(CreateUserDto dto)
     {
-        var existing = await _db.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
-        if (existing != null)
-            return OperationResult<string>.Fail("Username already taken.");
+        var email = dto.Email.Trim();
+        if (string.IsNullOrWhiteSpace(email))
+            return OperationResult<string>.Fail("Email is required.");
 
-        var roleExists = await _db.Roles.AnyAsync(r => r.Name == dto.RoleName);
+        var existing = await _db.Employees.FirstOrDefaultAsync(u => u.Email == email);
+        if (existing != null)
+            return OperationResult<string>.Fail("Email already taken.");
+
+        var roleName = dto.Role.Trim();
+        if (string.IsNullOrWhiteSpace(roleName))
+            return OperationResult<string>.Fail("Role is required.");
+
+        var roleExists = await _db.Roles.AnyAsync(r => r.Name == roleName);
         if (!roleExists)
             return OperationResult<string>.Fail("Invalid role name.");
 
+        var firstName = dto.FirstName.Trim();
+        var lastName = dto.LastName.Trim();
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+            return OperationResult<string>.Fail("First and last name are required.");
+
         var user = new Employee
         {
-            Username = dto.Username,
-            Name = dto.Name,
-            Surname = dto.Surname,
+            Email = email,
+            FirstName = firstName,
+            LastName = lastName,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            RoleName = dto.RoleName,
+            Role = roleName,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
-        _db.Users.Add(user);
+        _db.Employees.Add(user);
         await _db.SaveChangesAsync();
         return OperationResult<string>.Ok("User created.");
     }
 
     public async Task<OperationResult<string>> LoginAsync(LoginDto dto)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == dto.Username);
+        var email = dto.Email.Trim();
+        var user = await _db.Employees.FirstOrDefaultAsync(u => u.Email == email);
         if (user == null || !user.IsActive)
             return OperationResult<string>.Fail("Invalid credentials.");
 
@@ -53,7 +68,7 @@ public class AuthManager
             return OperationResult<string>.Fail("Invalid credentials.");
 
         var permissions = await _db.Roles
-            .Where(r => r.Name == user.RoleName)
+            .Where(r => r.Name == user.Role)
             .SelectMany(r => r.Permissions)
             .Select(p => p.PermissionKey)
             .ToListAsync();

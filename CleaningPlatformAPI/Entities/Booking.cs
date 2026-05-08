@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CleaningPlatformAPI.Entites
+namespace CleaningPlatformAPI.Entities
 {
     [Table("Bookings")]
     public class Booking
@@ -21,7 +21,7 @@ namespace CleaningPlatformAPI.Entites
         public TimeSpan? ScheduledTimeSlot { get; set; }
 
         [Required, MaxLength(50)]
-        public string Status { get; set; }   // Pending, Confirmed, InProgress, Completed, Cancelled
+        public string Status { get; set; }   // Stored as string: Pending, Confirmed, InProgress, Completed, Cancelled
 
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }

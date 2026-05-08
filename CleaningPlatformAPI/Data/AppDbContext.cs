@@ -1,13 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using System;
+using CleaningPlatformAPI.Entities;
 
-namespace CleaningPlatformAPI.Entites
+namespace CleaningPlatformAPI.Data
 {
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Employee> Employees { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Contact> Contacts { get; set; }
         public DbSet<ServiceCatalog> ServiceCatalog { get; set; }
@@ -17,6 +20,8 @@ namespace CleaningPlatformAPI.Entites
         public DbSet<SiteDetail> SiteDetail { get; set; }
         public DbSet<BoatBookingDetails> BoatBookingDetails { get; set; }
         public DbSet<BookingView> BookingView { get; set; }
+        public DbSet<WeeklySchedule> WeeklySchedules { get; set; }
+        public DbSet<DateOverride> DateOverrides { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

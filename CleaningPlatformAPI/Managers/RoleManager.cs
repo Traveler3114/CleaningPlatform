@@ -120,8 +120,8 @@ public class RoleManager
         if (role.IsProtected)
             return OperationResult<string>.Fail("This role is protected and cannot be deleted.");
 
-        var assignedUsers = await _db.Users
-            .Where(u => u.RoleName == role.Name)
+        var assignedUsers = await _db.Employees
+            .Where(u => u.Role == role.Name)
             .ToListAsync();
 
         if (assignedUsers.Count > 0)

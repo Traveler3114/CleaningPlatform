@@ -29,7 +29,7 @@ const Auth = {
     },
 
     getRole() {
-        return this.getUser()?.roleName || null;
+        return this.getUser()?.role || null;
     },
 
     getPermissions() {
@@ -86,7 +86,7 @@ function injectAdminHeader(activePage) {
     if (!Auth.requireAuth()) return false;
 
     const user = Auth.getUser();
-    const role = user?.roleName || '';
+    const role = user?.role || '';
 
     const header = document.querySelector('.admin-header');
     if (!header) return true;
@@ -99,16 +99,21 @@ function injectAdminHeader(activePage) {
         { href: '/admin/index.html',    label: 'Daily View', key: 'daily',    perm: 'pages.daily' },
         { href: '/admin/bookings.html', label: 'Bookings',   key: 'bookings', perm: 'pages.bookings' },
         { href: '/admin/schedule.html', label: 'Schedule',   key: 'schedule', perm: 'pages.schedule' },
+        { href: '/admin/services.html', label: 'Services',   key: 'services', perms: ['actions.serviceCatalog.edit', 'actions.serviceCatalog.manage'] },
         { href: '/admin/users.html',    label: 'Users',      key: 'users',    perm: 'pages.users' },
         { href: '/admin/roles.html',    label: 'Roles',      key: 'roles',    perm: 'pages.roles' },
     ];
 
     const navHtml = navLinks
-        .filter(link => Auth.can(link.perm))
+        .filter(link => {
+            if (link.perm) return Auth.can(link.perm);
+            if (link.perms) return link.perms.some(p => Auth.can(p));
+            return true;
+        })
         .map(link => `<a href="${link.href}" class="nav-link${link.key === activePage ? ' active' : ''}">${link.label}</a>`)
         .join('');
 
-    const fullName = user ? `${user.name} ${user.surname}` : 'Unknown';
+    const fullName = user ? `${user.firstName} ${user.lastName}` : 'Unknown';
     const roleLabel = role || 'Unknown';
 
     inner.innerHTML = `

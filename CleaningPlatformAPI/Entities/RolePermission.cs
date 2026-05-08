@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CleaningPlatformAPI.Entites
+namespace CleaningPlatformAPI.Entities
 {
     [Table("RolePermissions")]
     public class RolePermission

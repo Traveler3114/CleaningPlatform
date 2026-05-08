@@ -1,7 +1,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 
-namespace CleaningPlatformAPI.Entites
+namespace CleaningPlatformAPI.Entities
 {
     [Keyless]
     public class BookingView
