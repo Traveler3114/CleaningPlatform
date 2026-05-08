@@ -80,7 +80,7 @@ public class BookingManager
             ServiceType = "Vehicle",
             ScheduledDate = dto.Date.Date,
             ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
-            Status = BookingStatus.Confirmed.ToString(),
+            Status = BookingStatus.Pending.ToString(),
             CreatedAt = now,
             UpdatedAt = now
         };

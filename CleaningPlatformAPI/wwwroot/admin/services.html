@@ -71,7 +71,16 @@
 
         function showMessage(msg, isError) {
             const el = document.getElementById('message-area');
-            el.innerHTML = `<div class="alert ${isError ? '' : 'alert-success'}" style="${isError ? 'background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;' : ''}">${msg}</div>`;
+            el.innerHTML = '';
+            const alert = document.createElement('div');
+            alert.className = `alert ${isError ? '' : 'alert-success'}`;
+            if (isError) {
+                alert.style.background = '#fce4ec';
+                alert.style.color = '#c62828';
+                alert.style.border = '1px solid #ef9a9a';
+            }
+            alert.textContent = msg;
+            el.appendChild(alert);
             setTimeout(() => { el.innerHTML = ''; }, 3000);
         }
 
@@ -81,6 +90,15 @@
         function parseNumber(value) {
             const trimmed = value.trim();
             return trimmed === '' ? null : parseFloat(trimmed);
+        }
+
+        function escAttr(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         async function loadServices() {
@@ -97,23 +115,34 @@
                     section.innerHTML = '<div class="alert alert-info">No services found.</div>';
                     return;
                 }
-                const rows = result.data.map(s => `
+                const rows = result.data.map(s => {
+                    const code = escAttr(s.catalogCode);
+                    const name = escAttr(s.name);
+                    const category = escAttr(s.category || '');
+                    const unit = escAttr(s.unit || '');
+                    const priceMin = escAttr(s.priceMin ?? '');
+                    const priceMax = escAttr(s.priceMax ?? '');
+                    const priceAvg = escAttr(s.priceAvg ?? '');
+                    const margin = escAttr(s.defaultMarginPct ?? '');
+
+                    return `
                     <tr>
-                        <td><input type="text" id="code-${s.id}" class="small-input" value="${s.catalogCode}" ${canEdit ? '' : 'disabled'} /></td>
-                        <td><input type="text" id="name-${s.id}" class="small-input" value="${s.name}" ${canEdit ? '' : 'disabled'} /></td>
-                        <td><input type="text" id="category-${s.id}" class="small-input" value="${s.category || ''}" ${canEdit ? '' : 'disabled'} /></td>
-                        <td><input type="text" id="unit-${s.id}" class="small-input" value="${s.unit || ''}" ${canEdit ? '' : 'disabled'} /></td>
-                        <td><input type="number" step="0.01" id="min-${s.id}" class="small-input" value="${s.priceMin ?? ''}" ${canEdit ? '' : 'disabled'} /></td>
-                        <td><input type="number" step="0.01" id="max-${s.id}" class="small-input" value="${s.priceMax ?? ''}" ${canEdit ? '' : 'disabled'} /></td>
-                        <td><input type="number" step="0.01" id="avg-${s.id}" class="small-input" value="${s.priceAvg ?? ''}" ${canEdit ? '' : 'disabled'} /></td>
-                        <td><input type="number" step="0.01" id="margin-${s.id}" class="small-input" value="${s.defaultMarginPct ?? ''}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="text" id="code-${s.id}" class="small-input" value="${code}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="text" id="name-${s.id}" class="small-input" value="${name}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="text" id="category-${s.id}" class="small-input" value="${category}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="text" id="unit-${s.id}" class="small-input" value="${unit}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="number" step="0.01" id="min-${s.id}" class="small-input" value="${priceMin}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="number" step="0.01" id="max-${s.id}" class="small-input" value="${priceMax}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="number" step="0.01" id="avg-${s.id}" class="small-input" value="${priceAvg}" ${canEdit ? '' : 'disabled'} /></td>
+                        <td><input type="number" step="0.01" id="margin-${s.id}" class="small-input" value="${margin}" ${canEdit ? '' : 'disabled'} /></td>
                         <td><input type="checkbox" id="active-${s.id}" ${s.isActive ? 'checked' : ''} ${canEdit ? '' : 'disabled'} /></td>
                         <td>
                             ${canEdit ? `<button class="btn btn-sm" onclick="saveService(${s.id})">Save</button>` : ''}
                             ${canManage ? `<button class="btn btn-sm btn-danger" onclick="deleteService(${s.id})">Delete</button>` : ''}
                         </td>
                     </tr>
-                `).join('');
+                `;
+                }).join('');
 
                 section.innerHTML = `
                     <table class="admin-table">

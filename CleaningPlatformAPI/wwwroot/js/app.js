@@ -265,7 +265,7 @@ function renderConfirmation() {
         <p><strong>Date:</strong> ${dateStr}</p>
         <p><strong>Time:</strong> ${formatHour(state.selectedHour)}</p>
         <p><strong>Booking ID:</strong> #${state.booking?.id || 'N/A'}</p>
-        <p><strong>Status:</strong> ${state.booking?.status || 'Confirmed'}</p>
+        <p><strong>Status:</strong> ${state.booking?.status || 'Pending'}</p>
     `;
 }
 
