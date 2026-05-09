@@ -102,7 +102,7 @@
                 .replace(/'/g, '&#39;');
         }
 
-        function typeBadge(type) {
+        function clientTypeBadge(type) {
             return `<span class="badge badge-${String(type).toLowerCase()}">${esc(type)}</span>`;
         }
 
@@ -156,7 +156,7 @@
                 const rows = clients.map(c => `
                     <tr>
                         <td>${esc(c.clientName)}</td>
-                        <td>${typeBadge(c.type)}</td>
+                        <td>${clientTypeBadge(c.type)}</td>
                         <td>${esc(c.primaryContactName || '-')}</td>
                         <td>${esc(c.primaryContactPhone || '-')}</td>
                         <td>${c.totalBookings || 0}</td>
