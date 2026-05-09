@@ -77,6 +77,12 @@
         const params = new URLSearchParams(window.location.search);
         const searchInput = document.getElementById('search-input');
         const typeFilter = document.getElementById('type-filter');
+        const clientTypeSelect = document.getElementById('client-type');
+        const CLIENT_TYPES = ['OneTime', 'RepeatIndividual', 'RepeatBusiness'];
+        const CREATE_TYPES = ['RepeatIndividual', 'RepeatBusiness'];
+
+        typeFilter.innerHTML = `<option value=\"\">All</option>${CLIENT_TYPES.map(type => `<option value=\"${type}\">${type}</option>`).join('')}`;
+        clientTypeSelect.innerHTML = CREATE_TYPES.map(type => `<option value=\"${type}\">${type}</option>`).join('');
 
         searchInput.value = params.get('search') || '';
         typeFilter.value = params.get('type') || '';

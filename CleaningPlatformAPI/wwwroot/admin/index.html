@@ -73,8 +73,8 @@
 
                 const today = todayStr();
                 const now = new Date();
-                const year = now.getUTCFullYear();
-                const month = now.getUTCMonth();
+                const year = now.getFullYear();
+                const month = now.getMonth();
 
                 const todayCount = bookings.filter(b => normalizeDate(b.date) === today).length;
                 const pendingCount = bookings.filter(b => String(b.status).toLowerCase() === 'pending').length;
@@ -82,7 +82,7 @@
                 const completedMonthCount = bookings.filter(b => {
                     if (String(b.status).toLowerCase() !== 'completed') return false;
                     const d = new Date(b.date);
-                    return !Number.isNaN(d.getTime()) && d.getUTCFullYear() === year && d.getUTCMonth() === month;
+                    return !Number.isNaN(d.getTime()) && d.getFullYear() === year && d.getMonth() === month;
                 }).length;
 
                 document.getElementById('kpi-today').textContent = todayCount;

@@ -325,7 +325,13 @@
             }
         });
 
-        Promise.all([loadEmployees(), loadServiceCatalog(), loadBooking()]);
+        (async () => {
+            try {
+                await Promise.all([loadEmployees(), loadServiceCatalog(), loadBooking()]);
+            } catch {
+                showMessage('Failed to initialize booking detail page.', true);
+            }
+        })();
         window.removeService = removeService;
         window.updateServicePrice = updateServicePrice;
     </script>

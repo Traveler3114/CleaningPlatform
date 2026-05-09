@@ -249,7 +249,7 @@ public class BookingManager
             ? (int)Math.Round(b.ScheduledTimeSlot.Value.TotalHours)
             : 0,
         Status = b.Status,
-        ServicesCount = b.BookingServices.Count,
+        ServicesCount = b.BookingServices?.Count ?? 0,
         CreatedAt = b.CreatedAt,
         ClientName = b.Client?.ClientName ?? "",
         ClientPhone = b.Client?.Contacts?.FirstOrDefault()?.Phone ?? "",
