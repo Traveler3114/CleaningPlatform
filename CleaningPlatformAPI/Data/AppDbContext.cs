@@ -12,9 +12,14 @@ namespace CleaningPlatformAPI.Data
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Contact> Contacts { get; set; }
+        public DbSet<Site> Sites { get; set; }
         public DbSet<ServiceCatalog> ServiceCatalog { get; set; }
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<BookingService> BookingServices { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<InvoiceLine> InvoiceLines { get; set; }
+        public DbSet<InvoiceBooking> InvoiceBookings { get; set; }
+        public DbSet<Payment> Payments { get; set; }
         public DbSet<VehicleBookingDetails> VehicleBookingDetails { get; set; }
         public DbSet<SiteDetail> SiteDetail { get; set; }
         public DbSet<BoatBookingDetails> BoatBookingDetails { get; set; }
@@ -48,6 +53,32 @@ namespace CleaningPlatformAPI.Data
                 .Property(bs => bs.FinalPrice).HasPrecision(10, 2);
             modelBuilder.Entity<BookingService>()
                 .Property(bs => bs.Quantity).HasPrecision(10, 2);
+
+            modelBuilder.Entity<Site>()
+                .Property(s => s.FloorAreaM2).HasPrecision(10, 2);
+
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.SubTotal).HasPrecision(10, 2);
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.DiscountAmount).HasPrecision(10, 2);
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.VatPct).HasPrecision(5, 2);
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.VatAmount).HasPrecision(10, 2);
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.TotalAmount).HasPrecision(10, 2);
+
+            modelBuilder.Entity<InvoiceLine>()
+                .Property(il => il.Quantity).HasPrecision(10, 2);
+            modelBuilder.Entity<InvoiceLine>()
+                .Property(il => il.UnitPrice).HasPrecision(10, 2);
+            modelBuilder.Entity<InvoiceLine>()
+                .Property(il => il.DiscountPct).HasPrecision(5, 2);
+            modelBuilder.Entity<InvoiceLine>()
+                .Property(il => il.VatPct).HasPrecision(5, 2);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.Amount).HasPrecision(10, 2);
 
             modelBuilder.Entity<BoatBookingDetails>()
                 .Property(b => b.LengthMeters).HasPrecision(5, 2);
@@ -119,12 +150,77 @@ namespace CleaningPlatformAPI.Data
                 .HasForeignKey(c => c.ClientId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Client → Sites (1-to-many)
+            modelBuilder.Entity<Site>()
+                .HasOne(s => s.Client)
+                .WithMany(c => c.Sites)
+                .HasForeignKey(s => s.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Employee → Bookings (assigned employee)
             modelBuilder.Entity<Booking>()
                 .HasOne(b => b.AssignedEmployee)
                 .WithMany(e => e.Bookings)
                 .HasForeignKey(b => b.AssignedEmployeeId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Site → Bookings
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.Site)
+                .WithMany(s => s.Bookings)
+                .HasForeignKey(b => b.SiteId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Client → Invoices
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.Client)
+                .WithMany(c => c.Invoices)
+                .HasForeignKey(i => i.ClientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Employee → Invoices (created by)
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.CreatedByEmployee)
+                .WithMany()
+                .HasForeignKey(i => i.CreatedByEmployeeId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Invoice → Lines
+            modelBuilder.Entity<InvoiceLine>()
+                .HasOne(il => il.Invoice)
+                .WithMany(i => i.Lines)
+                .HasForeignKey(il => il.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Invoice → Payments
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Invoice)
+                .WithMany(i => i.Payments)
+                .HasForeignKey(p => p.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.RecordedByEmployee)
+                .WithMany()
+                .HasForeignKey(p => p.RecordedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Invoice ↔ Booking junction
+            modelBuilder.Entity<InvoiceBooking>()
+                .HasOne(ib => ib.Invoice)
+                .WithMany(i => i.InvoiceBookings)
+                .HasForeignKey(ib => ib.InvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InvoiceBooking>()
+                .HasOne(ib => ib.Booking)
+                .WithMany(b => b.InvoiceBookings)
+                .HasForeignKey(ib => ib.BookingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<InvoiceBooking>()
+                .HasIndex(ib => ib.BookingId)
+                .IsUnique();
 
             // View (keyless)
             modelBuilder.Entity<BookingView>().ToView("vw_Bookings").HasNoKey();

@@ -12,6 +12,7 @@ namespace CleaningPlatformAPI.Entities
         public int Id { get; set; }
 
         public int ClientId { get; set; }
+        public int? SiteId { get; set; }
         public int? AssignedEmployeeId { get; set; }
 
         [Required, MaxLength(50)]
@@ -32,6 +33,9 @@ namespace CleaningPlatformAPI.Entities
         [ForeignKey(nameof(ClientId))]
         public Client Client { get; set; }
 
+        [ForeignKey(nameof(SiteId))]
+        public Site? Site { get; set; }
+
         [ForeignKey(nameof(AssignedEmployeeId))]
         public Employee? AssignedEmployee { get; set; }
 
@@ -40,5 +44,6 @@ namespace CleaningPlatformAPI.Entities
         public BoatBookingDetails? BoatDetails { get; set; }
 
         public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
+        public ICollection<InvoiceBooking> InvoiceBookings { get; set; } = new List<InvoiceBooking>();
     }
 }

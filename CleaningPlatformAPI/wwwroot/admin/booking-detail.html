@@ -81,10 +81,15 @@
                         ${['Pending','Confirmed','InProgress','Completed','Cancelled'].map(s => `<option value="${s}"${booking.status === s ? ' selected' : ''}>${s}</option>`).join('')}
                     </select>
                     <button class="btn btn-sm" id="save-status-btn">Save</button>
+                    ${booking.status === 'Completed' ? '<button class="btn btn-sm" id="generate-invoice-btn">Generate Invoice</button>' : ''}
                 </div>
             `;
 
             document.getElementById('save-status-btn').addEventListener('click', updateStatus);
+            const generateBtn = document.getElementById('generate-invoice-btn');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', generateInvoice);
+            }
         }
 
         function renderClientInfo() {
@@ -270,6 +275,25 @@
                 renderClientInfo();
                 renderAssignment();
                 renderServices();
+            } catch {
+                showMessage('Network error.', true);
+            }
+        }
+
+        async function generateInvoice() {
+            try {
+                const res = await apiFetch(`/api/invoices/from-booking/${bookingId}`, {
+                    method: 'POST'
+                });
+                const result = await res.json();
+                if (!res.ok || !result?.id) {
+                    showMessage((typeof result === 'string' ? result : result?.message) || 'Failed to generate invoice.', true);
+                    return;
+                }
+                showMessage('Invoice generated.');
+                setTimeout(() => {
+                    window.location.href = `/admin/invoice-detail.html?id=${result.id}`;
+                }, 400);
             } catch {
                 showMessage('Network error.', true);
             }

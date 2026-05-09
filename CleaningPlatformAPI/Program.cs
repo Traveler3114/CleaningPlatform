@@ -32,6 +32,7 @@ builder.Services.AddScoped<EmployeeManager>();
 builder.Services.AddScoped<RoleManager>();
 builder.Services.AddScoped<ServiceCatalogManager>();
 builder.Services.AddScoped<ClientManager>();
+builder.Services.AddScoped<InvoiceManager>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
