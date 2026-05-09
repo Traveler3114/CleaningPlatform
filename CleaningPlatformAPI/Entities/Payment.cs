@@ -25,7 +25,7 @@ namespace CleaningPlatformAPI.Entities
         public DateTime CreatedAt { get; set; }
 
         [ForeignKey(nameof(InvoiceId))]
-        public Invoice Invoice { get; set; }
+        public Invoice Invoice { get; set; } = null!;
 
         [ForeignKey(nameof(RecordedBy))]
         public Employee? RecordedByEmployee { get; set; }

@@ -13,9 +13,9 @@ namespace CleaningPlatformAPI.Entities
         public int BookingId { get; set; }
 
         [ForeignKey(nameof(InvoiceId))]
-        public Invoice Invoice { get; set; }
+        public Invoice Invoice { get; set; } = null!;
 
         [ForeignKey(nameof(BookingId))]
-        public Booking Booking { get; set; }
+        public Booking Booking { get; set; } = null!;
     }
 }

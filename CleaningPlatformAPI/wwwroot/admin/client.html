@@ -162,8 +162,8 @@
                         <td><input id="site-notes-${site.id}" class="text-input" value="${esc(site.accessNotes || '')}" /></td>
                         <td><input id="site-active-${site.id}" type="checkbox" ${site.isActive ? 'checked' : ''} /></td>
                         <td>
-                            <button class="btn btn-sm" onclick="saveSite(${site.id})">Save</button>
-                            ${site.isActive ? `<button class="btn btn-sm" onclick="deactivateSite(${site.id})">Deactivate</button>` : ''}
+                            <button class="btn btn-sm save-site-btn" data-site-id="${site.id}">Save</button>
+                            ${site.isActive ? `<button class="btn btn-sm deactivate-site-btn" data-site-id="${site.id}">Deactivate</button>` : ''}
                         </td>
                     </tr>
                 `).join('');
@@ -180,6 +180,13 @@
                     </table>
                 `;
             }
+
+            document.querySelectorAll('.save-site-btn').forEach(btn => {
+                btn.addEventListener('click', () => saveSite(Number(btn.dataset.siteId)));
+            });
+            document.querySelectorAll('.deactivate-site-btn').forEach(btn => {
+                btn.addEventListener('click', () => deactivateSite(Number(btn.dataset.siteId)));
+            });
 
             document.getElementById('sites-add-form').innerHTML = `
                 <h3 class="section-title">+ Add Site</h3>
@@ -251,7 +258,7 @@
                     <td><input class="text-input" data-contact-field="email" data-index="${index}" value="${esc(contact.email || '')}" /></td>
                     <td><input type="radio" name="primary-contact" data-contact-field="isPrimary" data-index="${index}" ${contact.isPrimary ? 'checked' : ''} /></td>
                     <td><input type="checkbox" data-contact-field="isActive" data-index="${index}" ${contact.isActive ? 'checked' : ''} /></td>
-                    <td><button type="button" class="btn btn-sm" onclick="removeContactRow(${index})">Remove</button></td>
+                    <td><button type="button" class="btn btn-sm remove-contact-row-btn" data-index="${index}">Remove</button></td>
                 </tr>
             `).join('');
 
@@ -273,6 +280,9 @@
             document.querySelectorAll('#contact-editor [data-contact-field]').forEach(input => {
                 input.addEventListener('input', onContactFieldChanged);
                 input.addEventListener('change', onContactFieldChanged);
+            });
+            document.querySelectorAll('.remove-contact-row-btn').forEach(btn => {
+                btn.addEventListener('click', () => removeContactRow(Number(btn.dataset.index)));
             });
         }
 
@@ -536,10 +546,6 @@
         document.getElementById('new-booking-btn').addEventListener('click', () => {
             window.location.href = '/admin/bookings.html';
         });
-
-        window.saveSite = saveSite;
-        window.deactivateSite = deactivateSite;
-        window.removeContactRow = removeContactRow;
 
         loadClient();
     </script>

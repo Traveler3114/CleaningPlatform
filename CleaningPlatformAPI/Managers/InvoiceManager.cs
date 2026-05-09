@@ -166,15 +166,11 @@ public class InvoiceManager
             .Where(p => p.InvoiceId == invoiceId)
             .SumAsync(p => p.Amount);
 
-        if (paidAmount <= 0)
-        {
-            invoice.Status = "Sent";
-        }
-        else if (paidAmount >= invoice.TotalAmount)
+        if (paidAmount >= invoice.TotalAmount)
         {
             invoice.Status = "Paid";
         }
-        else
+        else if (paidAmount > 0)
         {
             invoice.Status = "PartiallyPaid";
         }

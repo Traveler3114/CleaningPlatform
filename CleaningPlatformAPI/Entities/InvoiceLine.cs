@@ -13,7 +13,7 @@ namespace CleaningPlatformAPI.Entities
         public int InvoiceId { get; set; }
 
         [Required, MaxLength(500)]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public decimal Quantity { get; set; }
         public decimal UnitPrice { get; set; }
@@ -27,6 +27,6 @@ namespace CleaningPlatformAPI.Entities
         public DateTime CreatedAt { get; set; }
 
         [ForeignKey(nameof(InvoiceId))]
-        public Invoice Invoice { get; set; }
+        public Invoice Invoice { get; set; } = null!;
     }
 }

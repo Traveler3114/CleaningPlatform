@@ -12,7 +12,7 @@ namespace CleaningPlatformAPI.Entities
         public int Id { get; set; }
 
         [Required, MaxLength(50)]
-        public string InvoiceNumber { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
 
         public int ClientId { get; set; }
         public DateTime IssueDate { get; set; }
@@ -24,7 +24,7 @@ namespace CleaningPlatformAPI.Entities
         public decimal TotalAmount { get; set; }
 
         [Required, MaxLength(50)]
-        public string Status { get; set; }
+        public string Status { get; set; } = "Draft";
 
         public string? Notes { get; set; }
         public int? CreatedByEmployeeId { get; set; }
@@ -32,7 +32,7 @@ namespace CleaningPlatformAPI.Entities
         public DateTime UpdatedAt { get; set; }
 
         [ForeignKey(nameof(ClientId))]
-        public Client Client { get; set; }
+        public Client Client { get; set; } = null!;
 
         [ForeignKey(nameof(CreatedByEmployeeId))]
         public Employee? CreatedByEmployee { get; set; }

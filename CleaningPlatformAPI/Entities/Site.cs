@@ -14,10 +14,10 @@ namespace CleaningPlatformAPI.Entities
         public int ClientId { get; set; }
 
         [Required, MaxLength(200)]
-        public string SiteName { get; set; }
+        public string SiteName { get; set; } = string.Empty;
 
         [Required, MaxLength(500)]
-        public string Address { get; set; }
+        public string Address { get; set; } = string.Empty;
 
         [MaxLength(100)]
         public string? City { get; set; }
@@ -35,7 +35,7 @@ namespace CleaningPlatformAPI.Entities
         public DateTime UpdatedAt { get; set; }
 
         [ForeignKey(nameof(ClientId))]
-        public Client Client { get; set; }
+        public Client Client { get; set; } = null!;
 
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }
