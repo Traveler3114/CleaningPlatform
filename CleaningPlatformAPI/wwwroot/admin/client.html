@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Client Profile — Vehicle Cleaning Admin</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+    <header class="admin-header"><div class="header-inner"></div></header>
+
+    <main class="admin-main">
+        <div id="message-area"></div>
+
+        <section class="detail-section" id="client-header-section">
+            <div class="page-header">
+                <div>
+                    <h1 id="client-name">Client</h1>
+                    <div id="client-badges" style="margin-top:0.4rem;"></div>
+                </div>
+                <div class="inline-form">
+                    <button id="edit-client-btn" class="btn btn-sm">Edit</button>
+                    <select id="type-convert-select" class="status-select">
+                        <option value="">Convert Type...</option>
+                        <option value="OneTime">OneTime</option>
+                        <option value="RepeatIndividual">RepeatIndividual</option>
+                        <option value="RepeatBusiness">RepeatBusiness</option>
+                    </select>
+                    <button id="new-booking-btn" class="btn btn-sm" style="display:none;">New Booking</button>
+                </div>
+            </div>
+            <div id="client-edit-area" class="card-lite" style="display:none;"></div>
+        </section>
+
+        <section class="detail-section">
+            <h2 class="section-title">Contacts</h2>
+            <div id="contacts-table"></div>
+            <div class="alert alert-info">Contact CRUD coming soon.</div>
+        </section>
+
+        <section class="detail-section">
+            <h2 class="section-title">Booking History</h2>
+            <div id="bookings-table"></div>
+        </section>
+    </main>
+
+    <footer class="admin-footer">
+        <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
+    </footer>
+
+    <script src="../js/permissions.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        if (!injectAdminHeader('clients')) { /* redirected */ }
+        if (!Auth.requirePermission('pages.clients')) { /* redirected */ }
+
+        const clientId = Number(new URLSearchParams(window.location.search).get('id'));
+        if (!clientId) {
+            window.location.href = '/admin/clients.html';
+        }
+
+        let client = null;
+
+        function esc(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function badgeClass(value) {
+            return `badge-${String(value || '').toLowerCase()}`;
+        }
+
+        function statusBadge(active) {
+            return `<span class="badge ${active ? 'badge-active' : 'badge-inactive'}">${active ? 'Active' : 'Inactive'}</span>`;
+        }
+
+        function showMessage(message, isError = false) {
+            const area = document.getElementById('message-area');
+            area.innerHTML = `<div class="alert ${isError ? '' : 'alert-success'}">${esc(message)}</div>`;
+            if (isError) {
+                const alert = area.querySelector('.alert');
+                alert.style.background = '#fce4ec';
+                alert.style.color = '#c62828';
+                alert.style.border = '1px solid #ef9a9a';
+            }
+            setTimeout(() => { area.innerHTML = ''; }, 3000);
+        }
+
+        function renderHeader() {
+            document.title = `${client.clientName} — Client Profile`;
+            document.getElementById('client-name').textContent = client.clientName;
+            document.getElementById('client-badges').innerHTML = `
+                <span class="badge ${badgeClass(client.type)}">${esc(client.type)}</span>
+                ${statusBadge(client.isActive)}
+            `;
+
+            const newBookingBtn = document.getElementById('new-booking-btn');
+            newBookingBtn.style.display = (client.type === 'RepeatIndividual' || client.type === 'RepeatBusiness') ? '' : 'none';
+        }
+
+        function renderContacts() {
+            const contacts = Array.isArray(client.contacts) ? client.contacts : [];
+            if (!contacts.length) {
+                document.getElementById('contacts-table').innerHTML = '<div class="alert alert-info">No contacts found.</div>';
+                return;
+            }
+
+            const rows = contacts.map(c => `
+                <tr>
+                    <td>${esc(c.contactName)}</td>
+                    <td>${esc(c.role || '-')}</td>
+                    <td>${esc(c.phone || '-')}</td>
+                    <td>${esc(c.email || '-')}</td>
+                    <td>${c.isPrimary ? '<span class="badge badge-active">Primary</span>' : ''}</td>
+                    <td>${statusBadge(c.isActive)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('contacts-table').innerHTML = `
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th><th>Primary</th><th>Active</th></tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function renderBookings() {
+            const bookings = Array.isArray(client.bookings) ? client.bookings : [];
+            if (!bookings.length) {
+                document.getElementById('bookings-table').innerHTML = '<div class="alert alert-info">No bookings found.</div>';
+                return;
+            }
+
+            const rows = bookings.map(b => `
+                <tr>
+                    <td>${String(b.date || '').slice(0, 10)}</td>
+                    <td>${b.hour}:00</td>
+                    <td><span class="badge badge-${String(b.status).toLowerCase()}">${esc(b.status)}</span></td>
+                    <td>${b.servicesCount || 0}</td>
+                    <td><a class="btn btn-sm" href="/admin/booking-detail.html?id=${b.id}">View</a></td>
+                </tr>
+            `).join('');
+
+            document.getElementById('bookings-table').innerHTML = `
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Date</th><th>Time</th><th>Status</th><th>Services</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function showEditArea() {
+            const area = document.getElementById('client-edit-area');
+            area.style.display = '';
+            area.innerHTML = `
+                <h3 class="section-title">Edit Client</h3>
+                <div class="form-grid two-col">
+                    <label>Client Name <input id="edit-client-name" class="text-input" value="${esc(client.clientName)}" /></label>
+                    <label>OIB <input id="edit-oib" class="text-input" value="${esc(client.oib || '')}" /></label>
+                    <label>Payment Terms <input id="edit-payment-terms" class="text-input" value="${esc(client.paymentTerms || '')}" /></label>
+                    <label>Notes <input id="edit-notes" class="text-input" value="${esc(client.notes || '')}" /></label>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-sm" onclick="showMessage('Client edit save endpoint is coming soon.');">Save</button>
+                    <button class="btn btn-sm" onclick="document.getElementById('client-edit-area').style.display='none'">Cancel</button>
+                </div>
+            `;
+        }
+
+        async function convertType(newType) {
+            if (!newType || newType === client.type) return;
+            if (!confirm(`Convert client to ${newType}?`)) {
+                document.getElementById('type-convert-select').value = '';
+                return;
+            }
+
+            try {
+                const res = await apiFetch(`/api/clients/${clientId}/type`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ newType })
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    showMessage('Client type updated.');
+                    await loadClient();
+                } else {
+                    showMessage(result?.message || 'Failed to update type.', true);
+                }
+            } catch {
+                showMessage('Network error.', true);
+            } finally {
+                document.getElementById('type-convert-select').value = '';
+            }
+        }
+
+        async function loadClient() {
+            try {
+                const res = await apiFetch(`/api/clients/${clientId}`);
+                if (!res.ok) {
+                    showMessage('Client not found.', true);
+                    setTimeout(() => { window.location.href = '/admin/clients.html'; }, 1000);
+                    return;
+                }
+                client = await res.json();
+                renderHeader();
+                renderContacts();
+                renderBookings();
+            } catch {
+                showMessage('Failed to load client.', true);
+            }
+        }
+
+        document.getElementById('edit-client-btn').addEventListener('click', showEditArea);
+        document.getElementById('type-convert-select').addEventListener('change', (e) => convertType(e.target.value));
+        document.getElementById('new-booking-btn').addEventListener('click', () => {
+            showMessage('New Booking modal is coming soon.');
+        });
+
+        loadClient();
+    </script>
+</body>
+</html>

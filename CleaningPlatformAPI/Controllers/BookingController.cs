@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Dtos;
 using CleaningPlatformAPI.Managers;
 
@@ -58,9 +59,60 @@ public class BookingController : ControllerBase
             return BadRequest(result.Message);
         return Ok(result.Data);
     }
+
+    [HttpPut("{id:int}/assign")]
+    [Authorize(Policy = "actions.booking.updateStatus")]
+    public async Task<ActionResult<OperationResult<BookingDetailDto>>> AssignEmployee(int id, [FromBody] BookingAssignDto dto)
+    {
+        var result = await _bookingManager.AssignEmployeeAsync(id, dto.EmployeeId);
+        if (!result.Success)
+            return BadRequest(result);
+        return Ok(result);
+    }
+
+    [HttpPost("{id:int}/services")]
+    [Authorize(Policy = "actions.booking.updateStatus")]
+    public async Task<ActionResult<OperationResult<BookingDetailDto>>> AddService(int id, [FromBody] AddBookingServiceDto dto)
+    {
+        var result = await _bookingManager.AddServiceAsync(
+            id,
+            dto.ServiceCatalogId,
+            dto.EstimatedPrice,
+            dto.Quantity,
+            dto.FinalPrice,
+            dto.Notes);
+        if (!result.Success)
+            return BadRequest(result);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id:int}/services/{serviceId:int}")]
+    [Authorize(Policy = "actions.booking.updateStatus")]
+    public async Task<ActionResult<OperationResult<string>>> RemoveService(int id, int serviceId)
+    {
+        var result = await _bookingManager.RemoveServiceAsync(id, serviceId);
+        if (!result.Success)
+            return BadRequest(result);
+        return Ok(result);
+    }
+
+    [HttpPut("{id:int}/services/{serviceId:int}")]
+    [Authorize(Policy = "actions.booking.updateStatus")]
+    public async Task<ActionResult<OperationResult<BookingDetailDto>>> UpdateServicePrice(int id, int serviceId, [FromBody] UpdateBookingServicePriceDto dto)
+    {
+        var result = await _bookingManager.UpdateServicePriceAsync(id, serviceId, dto.FinalPrice);
+        if (!result.Success)
+            return BadRequest(result);
+        return Ok(result);
+    }
 }
 
 public class StatusUpdateRequest
 {
     public string Status { get; set; } = string.Empty;
+}
+
+public class UpdateBookingServicePriceDto
+{
+    public decimal? FinalPrice { get; set; }
 }

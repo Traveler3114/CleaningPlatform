@@ -16,6 +16,7 @@ public class BookingDetailDto : BookingDto
 
 public class BookingServiceDto
 {
+    public int Id { get; set; }
     public int ServiceCatalogId { get; set; }
     public string ServiceName { get; set; } = string.Empty;
     public decimal? EstimatedPrice { get; set; }

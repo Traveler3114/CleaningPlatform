@@ -4,6 +4,7 @@
 
 const PERMISSIONS = {
     'pages.daily':                  { label: 'Daily View Page',            category: 'Pages' },
+    'pages.clients':                { label: 'Clients Page',               category: 'Pages' },
     'pages.bookings':               { label: 'Bookings Page',              category: 'Pages' },
     'pages.schedule':               { label: 'Schedule Page',              category: 'Pages' },
     'pages.users':                  { label: 'Users Page',                 category: 'Pages' },

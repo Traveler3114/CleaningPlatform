@@ -36,6 +36,14 @@ public class EmployeeController : ControllerBase
         return Ok(OperationResult<UserDto>.Ok(user));
     }
 
+    // GET /api/employees — list active employees for dropdowns
+    [HttpGet("/api/employees")]
+    public async Task<ActionResult<OperationResult<List<EmployeeSimpleDto>>>> GetActiveEmployees()
+    {
+        var employees = await _userManager.GetActiveEmployeesAsync();
+        return Ok(OperationResult<List<EmployeeSimpleDto>>.Ok(employees));
+    }
+
     // GET /api/users — list all users
     [HttpGet]
     [Authorize(Policy = "actions.user.toggleActive")]
