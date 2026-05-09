@@ -74,19 +74,16 @@ public class BookingController : ControllerBase
     [Authorize(Policy = "actions.booking.updateStatus")]
     public async Task<ActionResult<OperationResult<BookingDetailDto>>> AddService(int id, [FromBody] AddBookingServiceDto dto)
     {
-        var addResult = await _bookingManager.AddServiceAsync(id, dto.ServiceCatalogId, dto.EstimatedPrice, dto.Quantity);
-        if (!addResult.Success)
-            return BadRequest(addResult);
-
-        if (dto.FinalPrice.HasValue && addResult.Data?.Services.LastOrDefault() is { } addedService)
-        {
-            var finalResult = await _bookingManager.UpdateServicePriceAsync(id, addedService.Id, dto.FinalPrice);
-            if (!finalResult.Success)
-                return BadRequest(finalResult);
-            return Ok(finalResult);
-        }
-
-        return Ok(addResult);
+        var result = await _bookingManager.AddServiceAsync(
+            id,
+            dto.ServiceCatalogId,
+            dto.EstimatedPrice,
+            dto.Quantity,
+            dto.FinalPrice,
+            dto.Notes);
+        if (!result.Success)
+            return BadRequest(result);
+        return Ok(result);
     }
 
     [HttpDelete("{id:int}/services/{serviceId:int}")]

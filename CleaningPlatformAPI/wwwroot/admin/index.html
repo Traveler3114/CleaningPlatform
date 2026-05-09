@@ -8,9 +8,7 @@
 </head>
 <body>
     <header class="admin-header">
-        <div class="header-inner">
-            <!-- Injected by auth.js -->
-        </div>
+        <div class="header-inner"></div>
     </header>
 
     <main class="admin-main">
@@ -21,6 +19,13 @@
                 <input type="date" id="date-input" class="date-input" />
             </div>
         </div>
+
+        <section class="kpi-grid" id="kpi-grid">
+            <div class="kpi-card"><span>Today's total bookings</span><strong id="kpi-today">0</strong></div>
+            <div class="kpi-card"><span>Pending bookings</span><strong id="kpi-pending">0</strong></div>
+            <div class="kpi-card"><span>Confirmed bookings</span><strong id="kpi-confirmed">0</strong></div>
+            <div class="kpi-card"><span>Completed this month</span><strong id="kpi-completed-month">0</strong></div>
+        </section>
 
         <div id="override-section"></div>
         <div id="slots-section"></div>
@@ -35,32 +40,63 @@
     <script src="../js/auth.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
-
-        if (!injectAdminHeader('daily')) { /* redirected to login */ }
+        if (!injectAdminHeader('daily')) { /* redirected */ }
 
         const dateInput = document.getElementById('date-input');
 
         function todayStr() {
-            const d = new Date();
-            return d.toISOString().slice(0, 10);
-        }
-
-        dateInput.value = todayStr();
-        dateInput.addEventListener('change', loadPage);
-
-        function formatHour(h) {
-            const ampm = h >= 12 ? 'PM' : 'AM';
-            const hour = h % 12 === 0 ? 12 : h % 12;
-            return `${hour}:00 ${ampm}`;
+            return new Date().toISOString().slice(0, 10);
         }
 
         function badge(status) {
-            return `<span class="badge badge-${status.toLowerCase()}">${status}</span>`;
+            return `<span class="badge badge-${String(status).toLowerCase()}">${status}</span>`;
+        }
+
+        function unwrapData(result) {
+            if (Array.isArray(result)) return result;
+            if (result && typeof result === 'object' && 'success' in result) {
+                return result.success ? (result.data || []) : [];
+            }
+            return [];
+        }
+
+        function normalizeDate(dateValue) {
+            if (!dateValue) return '';
+            return String(dateValue).slice(0, 10);
+        }
+
+        async function loadKpis() {
+            try {
+                const res = await apiFetch('/api/bookings');
+                const raw = await res.json();
+                const bookings = unwrapData(raw);
+
+                const today = todayStr();
+                const now = new Date();
+                const year = now.getUTCFullYear();
+                const month = now.getUTCMonth();
+
+                const todayCount = bookings.filter(b => normalizeDate(b.date) === today).length;
+                const pendingCount = bookings.filter(b => String(b.status).toLowerCase() === 'pending').length;
+                const confirmedCount = bookings.filter(b => String(b.status).toLowerCase() === 'confirmed').length;
+                const completedMonthCount = bookings.filter(b => {
+                    if (String(b.status).toLowerCase() !== 'completed') return false;
+                    const d = new Date(b.date);
+                    return !Number.isNaN(d.getTime()) && d.getUTCFullYear() === year && d.getUTCMonth() === month;
+                }).length;
+
+                document.getElementById('kpi-today').textContent = todayCount;
+                document.getElementById('kpi-pending').textContent = pendingCount;
+                document.getElementById('kpi-confirmed').textContent = confirmedCount;
+                document.getElementById('kpi-completed-month').textContent = completedMonthCount;
+            } catch {
+                document.getElementById('kpi-grid').insertAdjacentHTML('afterend', '<div class="alert alert-info">Failed to load KPI data.</div>');
+            }
         }
 
         async function loadPage() {
             const date = dateInput.value;
-            await Promise.all([loadOverride(date), loadSlots(date), loadBookings(date)]);
+            await Promise.all([loadKpis(), loadOverride(date), loadSlots(date), loadBookings(date)]);
         }
 
         async function loadOverride(date) {
@@ -68,7 +104,10 @@
             try {
                 const res = await apiFetch('/api/overrides');
                 const result = await res.json();
-                if (!result.success) { section.innerHTML = ''; return; }
+                if (!result.success) {
+                    section.innerHTML = '';
+                    return;
+                }
 
                 const override = result.data.find(o => o.date && o.date.slice(0, 10) === date);
 
@@ -82,7 +121,7 @@
                         <div class="alert alert-info" style="display:flex;align-items:center;gap:1rem;">
                             <strong>Override active:</strong> ${details}
                             ${Auth.can('actions.override.manage')
-                                ? `<button class="btn btn-sm btn-danger" onclick="deleteOverride(${override.id}, '${date}')">Remove Override</button>`
+                                ? `<button class="btn btn-sm btn-danger" onclick="deleteOverride(${override.id})">Remove Override</button>`
                                 : ''}
                         </div>
                         <div id="override-form-area"></div>
@@ -97,7 +136,7 @@
                         <div id="override-form-area"></div>
                     `;
                 }
-            } catch (e) {
+            } catch {
                 section.innerHTML = '';
             }
         }
@@ -121,34 +160,28 @@
 
         async function saveOverride(e, date) {
             e.preventDefault();
-            const isFullyClosed = document.getElementById('ov-closed').checked;
-            const startVal = document.getElementById('ov-start').value;
-            const endVal = document.getElementById('ov-end').value;
-            const capVal = document.getElementById('ov-cap').value;
             const payload = {
                 date,
-                isFullyClosed,
-                startHour: startVal !== '' ? parseInt(startVal, 10) : null,
-                endHour: endVal !== '' ? parseInt(endVal, 10) : null,
-                capacity: capVal !== '' ? parseInt(capVal, 10) : null,
+                isFullyClosed: document.getElementById('ov-closed').checked,
+                startHour: document.getElementById('ov-start').value === '' ? null : parseInt(document.getElementById('ov-start').value, 10),
+                endHour: document.getElementById('ov-end').value === '' ? null : parseInt(document.getElementById('ov-end').value, 10),
+                capacity: document.getElementById('ov-cap').value === '' ? null : parseInt(document.getElementById('ov-cap').value, 10)
             };
+
             try {
-                const res = await apiFetch('/api/overrides', {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
+                const res = await apiFetch('/api/overrides', { method: 'POST', body: JSON.stringify(payload) });
                 const result = await res.json();
                 if (result.success) {
                     await loadPage();
                 } else {
                     alert(result.message || 'Failed to save override.');
                 }
-            } catch (err) {
+            } catch {
                 alert('Network error.');
             }
         }
 
-        async function deleteOverride(id, date) {
+        async function deleteOverride(id) {
             if (!confirm('Remove override for this date?')) return;
             try {
                 const res = await apiFetch(`/api/overrides/${id}`, { method: 'DELETE' });
@@ -158,7 +191,7 @@
                 } else {
                     alert(result.message || 'Failed to remove override.');
                 }
-            } catch (err) {
+            } catch {
                 alert('Network error.');
             }
         }
@@ -170,10 +203,11 @@
                 const res = await fetch(`/api/availability?date=${date}`);
                 const result = await res.json();
                 if (!result.success || !result.data || result.data.length === 0) {
-                    section.innerHTML = '<div class="alert alert-info">No slots available for this date (day is closed or no schedule found).</div>';
+                    section.innerHTML = '<div class="alert alert-info">No slots available for this date.</div>';
                     return;
                 }
-                let rows = result.data.map(slot => `
+
+                const rows = result.data.map(slot => `
                     <tr class="${slot.available === 0 ? 'row-full' : ''}">
                         <td>${slot.hour}:00</td>
                         <td>${slot.capacity}</td>
@@ -182,17 +216,17 @@
                         <td>${slot.available === 0 ? badge('Full') : badge('Open')}</td>
                     </tr>
                 `).join('');
+
                 section.innerHTML = `
+                    <h2 class="section-title">Slots</h2>
                     <table class="admin-table">
                         <thead>
-                            <tr>
-                                <th>Hour</th><th>Capacity</th><th>Booked</th><th>Available</th><th>Status</th>
-                            </tr>
+                            <tr><th>Hour</th><th>Capacity</th><th>Booked</th><th>Available</th><th>Status</th></tr>
                         </thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
-            } catch (e) {
+            } catch {
                 section.innerHTML = '<div class="alert alert-info">Error loading slots.</div>';
             }
         }
@@ -201,35 +235,45 @@
             const section = document.getElementById('bookings-section');
             try {
                 const res = await apiFetch(`/api/bookings?date=${date}`);
-                const result = await res.json();
-                if (!result.success || !result.data || result.data.length === 0) {
+                const raw = await res.json();
+                const bookings = unwrapData(raw);
+
+                if (!bookings.length) {
                     section.innerHTML = '';
                     return;
                 }
-                const d = new Date(date + 'T00:00:00');
-                const heading = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                let rows = result.data.map(b => `
+
+                const heading = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                });
+
+                const rows = bookings.map(b => `
                     <tr>
+                        <td>${b.id}</td>
                         <td>${b.customerName}</td>
                         <td>${b.phone}</td>
                         <td>${b.hour}:00</td>
                         <td>${badge(b.status)}</td>
+                        <td><a class="btn btn-sm" href="/admin/booking-detail.html?id=${b.id}">View</a></td>
                     </tr>
                 `).join('');
+
                 section.innerHTML = `
                     <h2 class="section-title">Bookings for ${heading}</h2>
                     <table class="admin-table">
                         <thead>
-                            <tr><th>Name</th><th>Phone</th><th>Hour</th><th>Status</th></tr>
+                            <tr><th>ID</th><th>Name</th><th>Phone</th><th>Hour</th><th>Status</th><th>Actions</th></tr>
                         </thead>
                         <tbody>${rows}</tbody>
                     </table>
                 `;
-            } catch (e) {
+            } catch {
                 section.innerHTML = '';
             }
         }
 
+        dateInput.value = todayStr();
+        dateInput.addEventListener('change', loadPage);
         loadPage();
     </script>
 </body>

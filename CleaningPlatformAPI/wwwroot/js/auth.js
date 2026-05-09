@@ -97,6 +97,7 @@ function injectAdminHeader(activePage) {
     // Permission-based nav visibility
     const navLinks = [
         { href: '/admin/index.html',    label: 'Daily View', key: 'daily',    perm: 'pages.daily' },
+        { href: '/admin/clients.html',  label: 'Clients',    key: 'clients',  perm: 'pages.clients' },
         { href: '/admin/bookings.html', label: 'Bookings',   key: 'bookings', perm: 'pages.bookings' },
         { href: '/admin/schedule.html', label: 'Schedule',   key: 'schedule', perm: 'pages.schedule' },
         { href: '/admin/services.html', label: 'Services',   key: 'services', perms: ['actions.serviceCatalog.edit', 'actions.serviceCatalog.manage'] },

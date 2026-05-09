@@ -142,7 +142,13 @@ public class BookingManager
             : OperationResult<BookingDetailDto>.Ok(detail);
     }
 
-    public async Task<OperationResult<BookingDetailDto>> AddServiceAsync(int bookingId, int serviceCatalogId, decimal? estimatedPrice, decimal quantity)
+    public async Task<OperationResult<BookingDetailDto>> AddServiceAsync(
+        int bookingId,
+        int serviceCatalogId,
+        decimal? estimatedPrice,
+        decimal quantity,
+        decimal? finalPrice = null,
+        string? notes = null)
     {
         if (quantity <= 0)
             return OperationResult<BookingDetailDto>.Fail("Quantity must be greater than zero.");
@@ -160,7 +166,9 @@ public class BookingManager
             BookingId = bookingId,
             ServiceCatalogId = serviceCatalogId,
             EstimatedPrice = estimatedPrice,
-            Quantity = quantity
+            FinalPrice = finalPrice,
+            Quantity = quantity,
+            Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim()
         });
 
         booking.UpdatedAt = DateTime.UtcNow;

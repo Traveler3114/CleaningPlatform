@@ -167,6 +167,9 @@ body {
 .badge-cleaner    { background: #e8f5e9; color: #2e7d32; }
 .badge-finance    { background: #fff8e1; color: #f57f17; }
 .badge-client     { background: #fce4ec; color: #c62828; }
+.badge-onetime          { background: #f5f5f5; color: #616161; }
+.badge-repeatindividual { background: #e3f2fd; color: #1565c0; }
+.badge-repeatbusiness   { background: #ede7f6; color: #6a1b9a; }
 
 /* Buttons */
 .btn {
@@ -216,6 +219,100 @@ body {
 
 /* Section Title */
 .section-title { font-size: 1.2rem; color: #1a237e; margin-bottom: 1rem; margin-top: 0.5rem; }
+
+.kpi-grid,
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1.25rem;
+}
+
+.kpi-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.kpi-card span {
+    font-size: 0.8rem;
+    color: #616161;
+}
+
+.kpi-card strong {
+    font-size: 1.45rem;
+    color: #1a237e;
+}
+
+.card-lite,
+.detail-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.text-input {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 0.45rem 0.6rem;
+    min-width: 200px;
+    font-size: 0.9rem;
+}
+
+.form-grid {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.form-grid.two-col {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: #424242;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-panel {
+    width: min(720px, 100%);
+    background: white;
+    border-radius: 10px;
+    padding: 1rem 1rem 1.2rem;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+}
+
+.modal-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
 
 /* Footer */
 .admin-footer {
