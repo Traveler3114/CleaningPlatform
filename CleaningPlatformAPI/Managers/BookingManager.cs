@@ -119,9 +119,103 @@ public class BookingManager
         return OperationResult<BookingDto>.Ok(MapToDto(booking));
     }
 
+    public async Task<OperationResult<BookingDetailDto>> AssignEmployeeAsync(int bookingId, int? employeeId)
+    {
+        var booking = await _db.Bookings.FindAsync(bookingId);
+        if (booking == null)
+            return OperationResult<BookingDetailDto>.Fail("Booking not found.");
+
+        if (employeeId.HasValue)
+        {
+            var employeeExists = await _db.Employees.AnyAsync(e => e.Id == employeeId.Value && e.IsActive);
+            if (!employeeExists)
+                return OperationResult<BookingDetailDto>.Fail("Employee not found or inactive.");
+        }
+
+        booking.AssignedEmployeeId = employeeId;
+        booking.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        var detail = await GetBookingDetailByIdAsync(bookingId);
+        return detail == null
+            ? OperationResult<BookingDetailDto>.Fail("Booking not found.")
+            : OperationResult<BookingDetailDto>.Ok(detail);
+    }
+
+    public async Task<OperationResult<BookingDetailDto>> AddServiceAsync(int bookingId, int serviceCatalogId, decimal? estimatedPrice, decimal quantity)
+    {
+        if (quantity <= 0)
+            return OperationResult<BookingDetailDto>.Fail("Quantity must be greater than zero.");
+
+        var booking = await _db.Bookings.FindAsync(bookingId);
+        if (booking == null)
+            return OperationResult<BookingDetailDto>.Fail("Booking not found.");
+
+        var serviceExists = await _db.ServiceCatalog.AnyAsync(s => s.Id == serviceCatalogId);
+        if (!serviceExists)
+            return OperationResult<BookingDetailDto>.Fail("Service not found.");
+
+        _db.BookingServices.Add(new BookingService
+        {
+            BookingId = bookingId,
+            ServiceCatalogId = serviceCatalogId,
+            EstimatedPrice = estimatedPrice,
+            Quantity = quantity
+        });
+
+        booking.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        var detail = await GetBookingDetailByIdAsync(bookingId);
+        return detail == null
+            ? OperationResult<BookingDetailDto>.Fail("Booking not found.")
+            : OperationResult<BookingDetailDto>.Ok(detail);
+    }
+
+    public async Task<OperationResult<string>> RemoveServiceAsync(int bookingId, int bookingServiceId)
+    {
+        var bookingService = await _db.BookingServices
+            .FirstOrDefaultAsync(bs => bs.Id == bookingServiceId && bs.BookingId == bookingId);
+
+        if (bookingService == null)
+            return OperationResult<string>.Fail("Booking service not found.");
+
+        _db.BookingServices.Remove(bookingService);
+
+        var booking = await _db.Bookings.FindAsync(bookingId);
+        if (booking != null)
+            booking.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return OperationResult<string>.Ok("Service removed.");
+    }
+
+    public async Task<OperationResult<BookingDetailDto>> UpdateServicePriceAsync(int bookingId, int bookingServiceId, decimal? finalPrice)
+    {
+        var bookingService = await _db.BookingServices
+            .FirstOrDefaultAsync(bs => bs.Id == bookingServiceId && bs.BookingId == bookingId);
+
+        if (bookingService == null)
+            return OperationResult<BookingDetailDto>.Fail("Booking service not found.");
+
+        bookingService.FinalPrice = finalPrice;
+
+        var booking = await _db.Bookings.FindAsync(bookingId);
+        if (booking != null)
+            booking.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        var detail = await GetBookingDetailByIdAsync(bookingId);
+        return detail == null
+            ? OperationResult<BookingDetailDto>.Fail("Booking not found.")
+            : OperationResult<BookingDetailDto>.Ok(detail);
+    }
+
     public static BookingDto MapToDto(Booking b) => new()
     {
         Id = b.Id,
+        ClientId = b.ClientId,
         CustomerName = b.Client?.ClientName ?? "Unknown",
         Phone = b.Client?.Contacts?.FirstOrDefault(c => c.IsPrimary)?.Phone
             ?? b.Client?.Contacts?.FirstOrDefault()?.Phone
@@ -131,12 +225,14 @@ public class BookingManager
             ? (int)Math.Round(b.ScheduledTimeSlot.Value.TotalHours, MidpointRounding.AwayFromZero)
             : 0,
         Status = b.Status,
+        ServicesCount = b.BookingServices?.Count ?? 0,
         CreatedAt = b.CreatedAt
     };
 
     private static BookingDetailDto MapToDetailDto(Booking b) => new()
     {
         Id = b.Id,
+        ClientId = b.ClientId,
         CustomerName = b.Client?.ClientName ?? "Unknown",
         Phone = b.Client?.Contacts?.FirstOrDefault(c => c.IsPrimary)?.Phone
             ?? b.Client?.Contacts?.FirstOrDefault()?.Phone ?? "",
@@ -145,6 +241,7 @@ public class BookingManager
             ? (int)Math.Round(b.ScheduledTimeSlot.Value.TotalHours)
             : 0,
         Status = b.Status,
+        ServicesCount = b.BookingServices.Count,
         CreatedAt = b.CreatedAt,
         ClientName = b.Client?.ClientName ?? "",
         ClientPhone = b.Client?.Contacts?.FirstOrDefault()?.Phone ?? "",
@@ -155,6 +252,7 @@ public class BookingManager
             : null,
         Services = b.BookingServices.Select(bs => new BookingServiceDto
         {
+            Id = bs.Id,
             ServiceCatalogId = bs.ServiceCatalogId,
             ServiceName = bs.ServiceCatalog?.Name ?? "",
             EstimatedPrice = bs.EstimatedPrice,

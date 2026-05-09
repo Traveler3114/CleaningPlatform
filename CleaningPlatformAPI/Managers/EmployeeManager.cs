@@ -45,6 +45,23 @@ public class EmployeeManager
         return MapToDto(user, permissions);
     }
 
+    public async Task<List<EmployeeSimpleDto>> GetActiveEmployeesAsync()
+    {
+        return await _db.Employees
+            .Include(e => e.Role)
+            .Where(e => e.IsActive)
+            .OrderBy(e => e.FirstName)
+            .ThenBy(e => e.LastName)
+            .Select(e => new EmployeeSimpleDto
+            {
+                Id = e.Id,
+                FirstName = e.FirstName,
+                LastName = e.LastName,
+                Role = e.Role != null ? e.Role.Name : string.Empty
+            })
+            .ToListAsync();
+    }
+
     public async Task<OperationResult<UserDto>> ToggleActiveAsync(int id, int requestingUserId)
     {
         if (id == requestingUserId)
