@@ -1,24 +1,25 @@
-IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'CleaningPlatformDB')
+SET NOCOUNT ON;
+GO
+
+USE master;
+GO
+
+IF DB_ID('CleaningPlatformDB') IS NOT NULL
 BEGIN
     ALTER DATABASE CleaningPlatformDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
     DROP DATABASE CleaningPlatformDB;
-END
+END;
 GO
+
 CREATE DATABASE CleaningPlatformDB;
 GO
 USE CleaningPlatformDB;
 GO
--- ============================================================
--- CLEANING PLATFORM – FULL SCHEMA (FIXED & ENHANCED)
--- Includes: Employees, Clients, Contacts, Sites, ServiceCatalog,
---           Bookings, BookingServices, child detail tables,
---           Roles, RolePermissions, WeeklySchedule, DateOverride,
---           Invoices, InvoiceLines, Payments, sequences, triggers.
--- ============================================================
 
 -- ============================================================
--- 1. Employees
+-- CLEANING PLATFORM – FULL SCHEMA (FIXED & ENHANCED)
 -- ============================================================
+
 CREATE TABLE Employees (
     Id                  INT             PRIMARY KEY IDENTITY(1,1),
     Email               NVARCHAR(255)   NOT NULL UNIQUE,
@@ -37,20 +38,16 @@ GO
 CREATE INDEX IX_Employees_Email ON Employees(Email);
 GO
 
--- ============================================================
--- 2. Clients
--- ============================================================
 CREATE TABLE Clients (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     ClientName      NVARCHAR(200)   NOT NULL,
-    Type            NVARCHAR(50)    NOT NULL,   -- 'OneTime', 'RepeatIndividual', 'RepeatBusiness'
+    Type            NVARCHAR(50)    NOT NULL,
     Oib             NVARCHAR(50)    NULL,
-    PaymentTerms    NVARCHAR(100)   NULL,       -- e.g. 'Net30', 'Net15', 'DueOnReceipt'
+    PaymentTerms    NVARCHAR(100)   NULL,
     Notes           NVARCHAR(MAX)   NULL,
     IsActive        BIT             NOT NULL DEFAULT 1,
     CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
-
     CONSTRAINT CHK_Client_Type CHECK (Type IN ('OneTime', 'RepeatIndividual', 'RepeatBusiness'))
 );
 GO
@@ -58,9 +55,6 @@ CREATE INDEX IX_Clients_Name ON Clients(ClientName);
 CREATE INDEX IX_Clients_Type ON Clients(Type);
 GO
 
--- ============================================================
--- 3. Contacts
--- ============================================================
 CREATE TABLE Contacts (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     ClientId        INT             NOT NULL,
@@ -73,16 +67,12 @@ CREATE TABLE Contacts (
     IsActive        BIT             NOT NULL DEFAULT 1,
     CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
-
     CONSTRAINT FK_Contact_Client FOREIGN KEY (ClientId) REFERENCES Clients(Id) ON DELETE CASCADE
 );
 GO
 CREATE INDEX IX_Contacts_ClientId ON Contacts(ClientId);
 GO
 
--- ============================================================
--- 4. Sites
--- ============================================================
 CREATE TABLE Sites (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     ClientId        INT             NOT NULL,
@@ -96,7 +86,6 @@ CREATE TABLE Sites (
     IsActive        BIT             NOT NULL DEFAULT 1,
     CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
-
     CONSTRAINT FK_Site_Client FOREIGN KEY (ClientId) REFERENCES Clients(Id) ON DELETE CASCADE,
     CONSTRAINT CHK_Site_Type CHECK (SiteType IN ('Office', 'Stairwell', 'Garage', 'Facility', 'Boat', 'Vehicle', 'Other') OR SiteType IS NULL)
 );
@@ -105,9 +94,6 @@ CREATE INDEX IX_Sites_ClientId ON Sites(ClientId);
 CREATE INDEX IX_Sites_Type     ON Sites(SiteType);
 GO
 
--- ============================================================
--- 5. ServiceCatalog
--- ============================================================
 CREATE TABLE ServiceCatalog (
     Id                  INT             PRIMARY KEY IDENTITY(1,1),
     CatalogCode         NVARCHAR(10)    NOT NULL UNIQUE,
@@ -126,7 +112,6 @@ GO
 CREATE INDEX IX_ServiceCatalog_Code ON ServiceCatalog(CatalogCode);
 GO
 
--- Seed full catalog (26 services)
 INSERT INTO ServiceCatalog (CatalogCode, Name, Category, Unit, PriceMin, PriceMax, PriceAvg, DefaultMarginPct) VALUES
 ('A-01', 'Čišćenje stubišta — Osnovno (1x/tjed.)',       'Stubišta',  'Mj/objekt',    36.00,    80.00,    55.00,  45.0),
 ('A-02', 'Čišćenje stubišta — Standard (+ tepih)',        'Stubišta',  'Mj/objekt',    80.00,   170.00,   110.00,  42.0),
@@ -156,9 +141,6 @@ INSERT INTO ServiceCatalog (CatalogCode, Name, Category, Unit, PriceMin, PriceMa
 ('C-04', 'Uniforme — pranje hotelskih/medicinskih',      'Upsell',    'Mj/ugovor',   100.00,   300.00,   180.00,  50.0);
 GO
 
--- ============================================================
--- 6. Roles & RolePermissions
--- ============================================================
 CREATE TABLE Roles (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     Name            NVARCHAR(100)   NOT NULL UNIQUE,
@@ -187,7 +169,6 @@ CREATE INDEX IX_RolePermissions_Key    ON RolePermissions(PermissionKey);
 GO
 
 INSERT INTO RolePermissions (RoleId, PermissionKey)
--- Admin
 SELECT r.Id, 'clients.view'       FROM Roles r WHERE r.Name = 'Admin' UNION ALL
 SELECT r.Id, 'clients.manage'     FROM Roles r WHERE r.Name = 'Admin' UNION ALL
 SELECT r.Id, 'sites.view'         FROM Roles r WHERE r.Name = 'Admin' UNION ALL
@@ -197,34 +178,24 @@ SELECT r.Id, 'bookings.manage'    FROM Roles r WHERE r.Name = 'Admin' UNION ALL
 SELECT r.Id, 'invoices.view'      FROM Roles r WHERE r.Name = 'Admin' UNION ALL
 SELECT r.Id, 'invoices.manage'    FROM Roles r WHERE r.Name = 'Admin' UNION ALL
 SELECT r.Id, 'reports.view'       FROM Roles r WHERE r.Name = 'Admin' UNION ALL
--- Dispatcher
 SELECT r.Id, 'clients.view'       FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
 SELECT r.Id, 'sites.view'         FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
 SELECT r.Id, 'bookings.view'      FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
 SELECT r.Id, 'bookings.assign'    FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
 SELECT r.Id, 'bookings.manage'    FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
--- Employee
 SELECT r.Id, 'bookings.view'      FROM Roles r WHERE r.Name = 'Employee'   UNION ALL
--- Finance
 SELECT r.Id, 'clients.view'       FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
 SELECT r.Id, 'invoices.view'      FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
 SELECT r.Id, 'invoices.manage'    FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
 SELECT r.Id, 'payments.manage'    FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
 SELECT r.Id, 'reports.view'       FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
--- Owner gets all via application logic (all.access flag)
 SELECT r.Id, 'all.access'         FROM Roles r WHERE r.Name = 'Owner';
 GO
 
--- ============================================================
--- 7. Add RoleId to Employees
--- ============================================================
 ALTER TABLE Employees ADD RoleId INT NOT NULL DEFAULT 1;
 ALTER TABLE Employees ADD CONSTRAINT FK_Employee_Role FOREIGN KEY (RoleId) REFERENCES Roles(Id);
 GO
 
--- ============================================================
--- 8. WeeklySchedule
--- ============================================================
 CREATE TABLE WeeklySchedule (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     DayOfWeek       INT             NOT NULL,
@@ -242,18 +213,15 @@ CREATE UNIQUE INDEX IX_WeeklySchedule_DayOfWeek ON WeeklySchedule(DayOfWeek);
 GO
 
 INSERT INTO WeeklySchedule (DayOfWeek, StartHour, EndHour, Capacity) VALUES
-(1, 8, 17, 3),   -- Monday
-(2, 8, 17, 3),   -- Tuesday
-(3, 8, 17, 3),   -- Wednesday
-(4, 8, 17, 3),   -- Thursday
-(5, 8, 17, 3),   -- Friday
-(6, 9, 14, 1),   -- Saturday
-(0, 0,  0, 0);   -- Sunday closed
+(1, 8, 17, 3),
+(2, 8, 17, 3),
+(3, 8, 17, 3),
+(4, 8, 17, 3),
+(5, 8, 17, 3),
+(6, 9, 14, 1),
+(0, 0,  0, 0);
 GO
 
--- ============================================================
--- 9. DateOverride
--- ============================================================
 CREATE TABLE DateOverride (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     Date            DATE            NOT NULL,
@@ -268,15 +236,12 @@ GO
 CREATE UNIQUE INDEX IX_DateOverride_Date ON DateOverride(Date);
 GO
 
--- ============================================================
--- 10. Bookings (with fixed CompletedAt constraint)
--- ============================================================
 CREATE TABLE Bookings (
     Id                  INT             PRIMARY KEY IDENTITY(1,1),
     ClientId            INT             NOT NULL,
     SiteId              INT             NULL,
     AssignedEmployeeId  INT             NULL,
-    ServiceType         NVARCHAR(50)    NOT NULL,           -- 'Vehicle', 'SiteBased', 'Boat'
+    ServiceType         NVARCHAR(50)    NOT NULL,
     ScheduledDate       DATE            NOT NULL,
     ScheduledTimeSlot   TIME            NULL,
     Status              NVARCHAR(50)    NOT NULL DEFAULT 'Pending',
@@ -284,13 +249,11 @@ CREATE TABLE Bookings (
     CreatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     CompletedAt         DATETIME2       NULL,
-
     CONSTRAINT FK_Booking_Client    FOREIGN KEY (ClientId)           REFERENCES Clients(Id),
     CONSTRAINT FK_Booking_Site      FOREIGN KEY (SiteId)             REFERENCES Sites(Id),
     CONSTRAINT FK_Booking_Employee  FOREIGN KEY (AssignedEmployeeId) REFERENCES Employees(Id),
     CONSTRAINT CHK_Booking_ServiceType CHECK (ServiceType IN ('Vehicle', 'SiteBased', 'Boat')),
     CONSTRAINT CHK_Booking_Status      CHECK (Status IN ('Pending', 'Confirmed', 'InProgress', 'Completed', 'Cancelled')),
-    -- Fixed: only requires CompletedAt when status is 'Completed' (does not force NULL otherwise)
     CONSTRAINT CHK_Booking_CompletedAt CHECK (Status != 'Completed' OR CompletedAt IS NOT NULL)
 );
 GO
@@ -302,9 +265,6 @@ CREATE INDEX IX_Bookings_ScheduledDate ON Bookings(ScheduledDate);
 CREATE INDEX IX_Bookings_Status        ON Bookings(Status);
 GO
 
--- ============================================================
--- 11. BookingServices
--- ============================================================
 CREATE TABLE BookingServices (
     Id                  INT             PRIMARY KEY IDENTITY(1,1),
     BookingId           INT             NOT NULL,
@@ -313,7 +273,6 @@ CREATE TABLE BookingServices (
     FinalPrice          DECIMAL(10,2)   NULL,
     Quantity            DECIMAL(10,2)   NOT NULL DEFAULT 1,
     Notes               NVARCHAR(MAX)   NULL,
-
     CONSTRAINT FK_BookingService_Booking FOREIGN KEY (BookingId)        REFERENCES Bookings(Id)       ON DELETE CASCADE,
     CONSTRAINT FK_BookingService_Catalog FOREIGN KEY (ServiceCatalogId) REFERENCES ServiceCatalog(Id)
 );
@@ -321,9 +280,6 @@ GO
 CREATE INDEX IX_BookingServices_Booking ON BookingServices(BookingId);
 GO
 
--- ============================================================
--- 12. VehicleBookingDetails
--- ============================================================
 CREATE TABLE VehicleBookingDetails (
     BookingId       INT             PRIMARY KEY,
     LicensePlate    NVARCHAR(20)    NOT NULL,
@@ -335,9 +291,6 @@ GO
 CREATE INDEX IX_VehicleDetails_License ON VehicleBookingDetails(LicensePlate);
 GO
 
--- ============================================================
--- 13. BoatBookingDetails
--- ============================================================
 CREATE TABLE BoatBookingDetails (
     BookingId       INT             PRIMARY KEY,
     BoatType        NVARCHAR(100)   NOT NULL,
@@ -347,18 +300,12 @@ CREATE TABLE BoatBookingDetails (
 );
 GO
 
--- ============================================================
--- 14. Invoice Number Sequence
--- ============================================================
 CREATE SEQUENCE InvoiceNumberSeq
     START WITH 1
     INCREMENT BY 1
     NO CYCLE;
 GO
 
--- ============================================================
--- 15. Invoices (renumbered, with trigger for auto-number)
--- ============================================================
 CREATE TABLE Invoices (
     Id                  INT             PRIMARY KEY IDENTITY(1,1),
     InvoiceNumber       NVARCHAR(50)    NOT NULL UNIQUE,
@@ -375,7 +322,6 @@ CREATE TABLE Invoices (
     CreatedByEmployeeId INT             NULL,
     CreatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
-
     CONSTRAINT FK_Invoice_Client      FOREIGN KEY (ClientId)            REFERENCES Clients(Id),
     CONSTRAINT FK_Invoice_CreatedBy   FOREIGN KEY (CreatedByEmployeeId) REFERENCES Employees(Id),
     CONSTRAINT CHK_Invoice_Status     CHECK (Status IN ('Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue', 'WrittenOff')),
@@ -387,30 +333,10 @@ CREATE TABLE Invoices (
 );
 GO
 
-CREATE TRIGGER trg_Invoices_AutoNumber
-ON Invoices
-INSTEAD OF INSERT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    INSERT INTO Invoices (
-        InvoiceNumber, ClientId, IssueDate, DueDate, SubTotal,
-        DiscountAmount, VatPct, VatAmount, TotalAmount, Status,
-        Notes, CreatedByEmployeeId, CreatedAt, UpdatedAt
-    )
-    SELECT
-        CONCAT(
-            'INV-',
-            YEAR(GETUTCDATE()),
-            '-',
-            FORMAT(NEXT VALUE FOR InvoiceNumberSeq, '0000')
-        ),
-        ClientId, IssueDate, DueDate, SubTotal,
-        DiscountAmount, VatPct, VatAmount, TotalAmount, Status,
-        Notes, CreatedByEmployeeId, CreatedAt, UpdatedAt
-    FROM inserted;
-END;
+ALTER TABLE Invoices
+ADD CONSTRAINT DF_Invoices_InvoiceNumber
+DEFAULT (CONCAT('INV-', YEAR(GETUTCDATE()), '-', FORMAT(NEXT VALUE FOR InvoiceNumberSeq, '0000')))
+FOR InvoiceNumber;
 GO
 
 CREATE INDEX IX_Invoices_ClientId  ON Invoices(ClientId);
@@ -419,9 +345,6 @@ CREATE INDEX IX_Invoices_IssueDate ON Invoices(IssueDate);
 CREATE INDEX IX_Invoices_DueDate   ON Invoices(DueDate);
 GO
 
--- ============================================================
--- 16. InvoiceLines (new table)
--- ============================================================
 CREATE TABLE InvoiceLines (
     Id          INT             PRIMARY KEY IDENTITY(1,1),
     InvoiceId   INT             NOT NULL,
@@ -430,10 +353,9 @@ CREATE TABLE InvoiceLines (
     UnitPrice   DECIMAL(10,2)   NOT NULL,
     DiscountPct DECIMAL(5,2)    NULL DEFAULT 0,
     VatPct      DECIMAL(5,2)    NOT NULL DEFAULT 0,
-    SourceType  NVARCHAR(50)    NULL,      -- 'Booking', 'Manual', 'CreditNote'
-    SourceId    INT             NULL,      -- BookingId if SourceType = 'Booking'
+    SourceType  NVARCHAR(50)    NULL,
+    SourceId    INT             NULL,
     CreatedAt   DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
-
     CONSTRAINT FK_InvoiceLine_Invoice FOREIGN KEY (InvoiceId) REFERENCES Invoices(Id) ON DELETE CASCADE,
     CONSTRAINT CHK_InvoiceLine_Source CHECK (SourceType IN ('Booking', 'Manual', 'CreditNote') OR SourceType IS NULL),
     CONSTRAINT CHK_InvoiceLine_QtyPrice CHECK (Quantity > 0 AND UnitPrice >= 0),
@@ -445,14 +367,10 @@ CREATE INDEX IX_InvoiceLines_InvoiceId ON InvoiceLines(InvoiceId);
 CREATE INDEX IX_InvoiceLines_Source    ON InvoiceLines(SourceType, SourceId);
 GO
 
--- ============================================================
--- 17. InvoiceBookings (kept for backward compatibility / quick lookup)
--- ============================================================
 CREATE TABLE InvoiceBookings (
     Id          INT     PRIMARY KEY IDENTITY(1,1),
     InvoiceId   INT     NOT NULL,
     BookingId   INT     NOT NULL,
-
     CONSTRAINT FK_InvoiceBooking_Invoice FOREIGN KEY (InvoiceId) REFERENCES Invoices(Id) ON DELETE CASCADE,
     CONSTRAINT FK_InvoiceBooking_Booking FOREIGN KEY (BookingId) REFERENCES Bookings(Id),
     CONSTRAINT UQ_InvoiceBooking UNIQUE (BookingId)
@@ -462,9 +380,6 @@ CREATE INDEX IX_InvoiceBookings_InvoiceId ON InvoiceBookings(InvoiceId);
 CREATE INDEX IX_InvoiceBookings_BookingId ON InvoiceBookings(BookingId);
 GO
 
--- ============================================================
--- 18. Payments
--- ============================================================
 CREATE TABLE Payments (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     InvoiceId       INT             NOT NULL,
@@ -475,7 +390,6 @@ CREATE TABLE Payments (
     Notes           NVARCHAR(MAX)   NULL,
     RecordedBy      INT             NULL,
     CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
-
     CONSTRAINT FK_Payment_Invoice    FOREIGN KEY (InvoiceId)   REFERENCES Invoices(Id)   ON DELETE CASCADE,
     CONSTRAINT FK_Payment_RecordedBy FOREIGN KEY (RecordedBy)  REFERENCES Employees(Id),
     CONSTRAINT CHK_Payment_Amount    CHECK (Amount > 0),
@@ -486,9 +400,6 @@ CREATE INDEX IX_Payments_InvoiceId ON Payments(InvoiceId);
 CREATE INDEX IX_Payments_Date      ON Payments(PaymentDate);
 GO
 
--- ============================================================
--- 19. View – vw_Bookings (updated to include InvoiceLines? Not needed, remains same)
--- ============================================================
 CREATE VIEW vw_Bookings AS
 SELECT
     b.Id                                                    AS BookingId,
@@ -555,9 +466,6 @@ LEFT  JOIN VehicleBookingDetails v   ON b.Id = v.BookingId
 LEFT  JOIN BoatBookingDetails    bt  ON b.Id = bt.BookingId;
 GO
 
--- ============================================================
--- 20. View – vw_InvoiceSummary (fixed DaysOverdue)
--- ============================================================
 CREATE VIEW vw_InvoiceSummary AS
 SELECT
     i.Id                                        AS InvoiceId,
@@ -578,7 +486,6 @@ SELECT
              AND i.Status NOT IN ('Paid','WrittenOff') THEN 1
         ELSE 0
     END                                         AS IsOverdue,
-    -- Fixed: returns 0 instead of negative days
     CASE 
         WHEN i.DueDate < CAST(GETUTCDATE() AS DATE) 
         THEN DATEDIFF(DAY, i.DueDate, CAST(GETUTCDATE() AS DATE))
@@ -596,8 +503,9 @@ LEFT  JOIN (
 GO
 
 -- ============================================================
--- 21. Seed: Owner employee
+-- SEED DATA
 -- ============================================================
+
 INSERT INTO Employees (Email, PasswordHash, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, CreatedAt, UpdatedAt, RoleId)
 VALUES (
     'owner@cleaningplatform.com',
@@ -613,4 +521,238 @@ VALUES (
     '2026-01-01T00:00:00Z',
     (SELECT Id FROM Roles WHERE Name = 'Owner')
 );
+GO
+
+WITH N AS (
+    SELECT TOP (50) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO Employees (Email, PasswordHash, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, RoleId)
+SELECT
+    CONCAT('employee', n, '@cleaningplatform.com'),
+    '$2y$10$qZKh.FlEZrHNSyAcazlNdOyBMHA.SJSfnLDoPtuFKt9Mrj99tdNEe',
+    CHOOSE((n % 10) + 1, 'Matej','Ana','Ivan','Luka','Sara','Petra','Niko','Tina','Filip','Maja'),
+    CHOOSE((n % 10) + 1, 'Kovac','Horvat','Novak','Maric','Klaric','Botic','Skoko','Jukic','Peric','Skoric'),
+    CONCAT('+385 9', RIGHT('0000000' + CAST(n AS VARCHAR(7)), 7)),
+    CONCAT('EMP-', RIGHT('000' + CAST(n + 1 AS VARCHAR(3)), 3)),
+    CAST(25 + (n % 15) AS DECIMAL(10,2)),
+    2 + (n % 4),
+    CASE WHEN n % 12 = 0 THEN 0 ELSE 1 END,
+    (SELECT Id FROM Roles WHERE Name = CHOOSE((n % 4) + 1, 'Admin', 'Dispatcher', 'Employee', 'Finance'))
+FROM N;
+GO
+
+WITH N AS (
+    SELECT TOP (40) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO Clients (ClientName, Type, Oib, PaymentTerms, Notes, IsActive)
+SELECT
+    CONCAT('Client ', n),
+    CHOOSE((n % 3) + 1, 'OneTime', 'RepeatIndividual', 'RepeatBusiness'),
+    RIGHT('00000000000' + CAST(10000000000 + n AS VARCHAR(11)), 11),
+    CHOOSE((n % 4) + 1, 'Net30', 'Net15', 'DueOnReceipt', 'Net45'),
+    CONCAT('Mock client notes for client ', n),
+    CASE WHEN n % 15 = 0 THEN 0 ELSE 1 END
+FROM N;
+GO
+
+INSERT INTO Contacts (ClientId, ContactName, Role, Phone, Email, Address, IsPrimary, IsActive)
+SELECT
+    c.Id,
+    CONCAT('Contact ', c.Id),
+    'Primary',
+    CONCAT('+385 98', RIGHT('000000' + CAST(c.Id AS VARCHAR(6)), 6)),
+    CONCAT('contact', c.Id, '@client.com'),
+    CONCAT('Main Street ', c.Id, ', Zagreb'),
+    1,
+    1
+FROM Clients c;
+GO
+
+INSERT INTO Contacts (ClientId, ContactName, Role, Phone, Email, Address, IsPrimary, IsActive)
+SELECT
+    c.Id,
+    CONCAT('Alt Contact ', c.Id),
+    'Secondary',
+    CONCAT('+385 99', RIGHT('000000' + CAST(c.Id AS VARCHAR(6)), 6)),
+    CONCAT('alt', c.Id, '@client.com'),
+    CONCAT('Second Street ', c.Id, ', Split'),
+    0,
+    1
+FROM Clients c
+WHERE c.Id % 3 = 0;
+GO
+
+WITH SiteNums AS (
+    SELECT 1 AS s UNION ALL SELECT 2 UNION ALL SELECT 3
+)
+INSERT INTO Sites (ClientId, SiteName, Address, City, PostalCode, SiteType, FloorAreaM2, AccessNotes, IsActive)
+SELECT
+    c.Id,
+    CONCAT('Site ', c.Id, '-', s.s),
+    CONCAT('Site Address ', c.Id, '-', s.s),
+    CHOOSE((c.Id % 5) + 1, 'Zagreb', 'Split', 'Rijeka', 'Osijek', 'Zadar'),
+    RIGHT('10000' + CAST((c.Id * 7 + s.s) AS VARCHAR(5)), 5),
+    CHOOSE(((c.Id + s.s) % 7) + 1, 'Office', 'Stairwell', 'Garage', 'Facility', 'Boat', 'Vehicle', 'Other'),
+    CAST(50 + (c.Id * 3 + s.s * 10) AS DECIMAL(10,2)),
+    CONCAT('Access notes for site ', c.Id, '-', s.s),
+    1
+FROM Clients c
+JOIN SiteNums s ON s.s <= CASE WHEN c.Id % 4 = 0 THEN 3 WHEN c.Id % 2 = 0 THEN 2 ELSE 1 END;
+GO
+
+WITH N AS (
+    SELECT TOP (20) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO DateOverride (Date, StartHour, EndHour, Capacity, IsFullyClosed)
+SELECT
+    DATEADD(DAY, n * 5, '2026-01-05'),
+    CASE WHEN n % 5 = 0 THEN NULL ELSE 9 END,
+    CASE WHEN n % 5 = 0 THEN NULL ELSE 14 END,
+    CASE WHEN n % 4 = 0 THEN NULL ELSE 2 END,
+    CASE WHEN n % 5 = 0 THEN 1 ELSE 0 END
+FROM N;
+GO
+
+WITH N AS (
+    SELECT TOP (120) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO Bookings (
+    ClientId, SiteId, AssignedEmployeeId, ServiceType, ScheduledDate, ScheduledTimeSlot, Status, Notes, CreatedAt, UpdatedAt, CompletedAt
+)
+SELECT
+    ((n - 1) % (SELECT COUNT(*) FROM Clients)) + 1,
+    CASE WHEN n % 5 = 0 THEN NULL ELSE ((n - 1) % (SELECT COUNT(*) FROM Sites)) + 1 END,
+    CASE WHEN n % 7 = 0 THEN NULL ELSE ((n - 1) % (SELECT COUNT(*) FROM Employees)) + 1 END,
+    CHOOSE((n % 3) + 1, 'Vehicle', 'SiteBased', 'Boat'),
+    DATEADD(DAY, (n % 60) - 20, CAST('2026-05-01' AS DATE)),
+    CASE WHEN n % 4 = 0 THEN NULL ELSE CAST(CONCAT(8 + (n % 8), ':00') AS TIME) END,
+    s.Status,
+    CONCAT('Mock booking note ', n),
+    DATEADD(DAY, -1 * (n % 30), GETUTCDATE()),
+    GETUTCDATE(),
+    CASE WHEN s.Status = 'Completed' THEN DATEADD(DAY, -1, GETUTCDATE()) ELSE NULL END
+FROM N
+CROSS APPLY (SELECT CHOOSE((n % 5) + 1, 'Pending', 'Confirmed', 'InProgress', 'Completed', 'Cancelled') AS Status) s;
+GO
+
+WITH S AS (
+    SELECT 1 AS s UNION ALL SELECT 2
+)
+INSERT INTO BookingServices (BookingId, ServiceCatalogId, EstimatedPrice, FinalPrice, Quantity, Notes)
+SELECT
+    b.Id,
+    ((b.Id + s.s) % (SELECT COUNT(*) FROM ServiceCatalog)) + 1,
+    CAST(20 + ((b.Id + s.s) % 50) * 5 AS DECIMAL(10,2)),
+    CASE WHEN b.Status = 'Completed' THEN CAST(25 + ((b.Id + s.s) % 50) * 5 AS DECIMAL(10,2)) ELSE NULL END,
+    CAST(1 + (b.Id % 3) AS DECIMAL(10,2)),
+    CONCAT('Service note for booking ', b.Id, ' item ', s.s)
+FROM Bookings b
+CROSS JOIN S;
+GO
+
+INSERT INTO VehicleBookingDetails (BookingId, LicensePlate, CarModel, Notes)
+SELECT
+    b.Id,
+    CONCAT('ZG', RIGHT('0000' + CAST(b.Id AS VARCHAR(4)), 4), 'CP'),
+    CHOOSE((b.Id % 6) + 1, 'Skoda Octavia', 'VW Golf', 'Toyota Corolla', 'Renault Clio', 'Audi A4', 'Ford Focus'),
+    CONCAT('Vehicle details for booking ', b.Id)
+FROM Bookings b
+WHERE b.ServiceType = 'Vehicle';
+GO
+
+INSERT INTO BoatBookingDetails (BookingId, BoatType, LengthMeters, Notes)
+SELECT
+    b.Id,
+    CHOOSE((b.Id % 5) + 1, 'Sailboat', 'Yacht', 'Motorboat', 'Catamaran', 'Fishing'),
+    CAST(6 + (b.Id % 12) AS DECIMAL(5,2)),
+    CONCAT('Boat details for booking ', b.Id)
+FROM Bookings b
+WHERE b.ServiceType = 'Boat';
+GO
+
+-- Invoice creation + mapping
+DECLARE @InvoiceMap TABLE (BookingId INT, InvoiceId INT);
+
+WITH BookingTotals AS (
+    SELECT
+        b.Id AS BookingId,
+        b.ClientId,
+        b.AssignedEmployeeId,
+        b.ScheduledDate,
+        b.Status,
+        SUM(bs.EstimatedPrice * bs.Quantity) AS SubTotal
+    FROM Bookings b
+    JOIN BookingServices bs ON bs.BookingId = b.Id
+    WHERE b.Id % 2 = 0
+    GROUP BY b.Id, b.ClientId, b.AssignedEmployeeId, b.ScheduledDate, b.Status
+)
+MERGE Invoices AS target
+USING BookingTotals AS src
+ON 1 = 0
+WHEN NOT MATCHED THEN
+    INSERT (
+        ClientId, IssueDate, DueDate, SubTotal, DiscountAmount,
+        VatPct, VatAmount, TotalAmount, Status, Notes, CreatedByEmployeeId
+    )
+    VALUES (
+        src.ClientId,
+        src.ScheduledDate,
+        DATEADD(DAY, 15, src.ScheduledDate),
+        src.SubTotal,
+        CASE WHEN src.BookingId % 5 = 0 THEN 10 ELSE 0 END,
+        25,
+        ROUND((src.SubTotal - CASE WHEN src.BookingId % 5 = 0 THEN 10 ELSE 0 END) * 0.25, 2),
+        ROUND((src.SubTotal - CASE WHEN src.BookingId % 5 = 0 THEN 10 ELSE 0 END) * 1.25, 2),
+        CHOOSE((src.BookingId % 5) + 1, 'Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue'),
+        CONCAT('Invoice for booking ', src.BookingId),
+        src.AssignedEmployeeId
+    )
+OUTPUT src.BookingId, inserted.Id INTO @InvoiceMap (BookingId, InvoiceId);
+
+INSERT INTO InvoiceBookings (InvoiceId, BookingId)
+SELECT InvoiceId, BookingId
+FROM @InvoiceMap;
+
+INSERT INTO InvoiceLines (InvoiceId, Description, Quantity, UnitPrice, DiscountPct, VatPct, SourceType, SourceId)
+SELECT
+    im.InvoiceId,
+    CONCAT('Service ', sc.CatalogCode, ' - ', sc.Name),
+    bs.Quantity,
+    CAST(CASE WHEN bs.EstimatedPrice IS NULL THEN 0 ELSE bs.EstimatedPrice END / NULLIF(bs.Quantity, 0) AS DECIMAL(10,2)),
+    CASE WHEN bs.BookingId % 6 = 0 THEN 5 ELSE 0 END,
+    25,
+    'Booking',
+    bs.BookingId
+FROM @InvoiceMap im
+JOIN BookingServices bs ON bs.BookingId = im.BookingId
+JOIN ServiceCatalog sc ON sc.Id = bs.ServiceCatalogId;
+
+INSERT INTO InvoiceLines (InvoiceId, Description, Quantity, UnitPrice, DiscountPct, VatPct, SourceType, SourceId)
+SELECT
+    i.Id,
+    'Administrative fee',
+    1,
+    15.00,
+    0,
+    25,
+    'Manual',
+    NULL
+FROM Invoices i
+WHERE i.Id % 4 = 0;
+
+INSERT INTO Payments (InvoiceId, PaymentDate, Amount, Method, Reference, Notes, RecordedBy)
+SELECT
+    i.Id,
+    DATEADD(DAY, 2, i.IssueDate),
+    CASE WHEN i.Status = 'PartiallyPaid' THEN ROUND(i.TotalAmount * 0.5, 2) ELSE i.TotalAmount END,
+    CHOOSE((i.Id % 4) + 1, 'BankTransfer', 'Cash', 'Card', 'Other'),
+    CONCAT('PAY-', i.InvoiceNumber),
+    CONCAT('Payment for invoice ', i.InvoiceNumber),
+    i.CreatedByEmployeeId
+FROM Invoices i
+WHERE i.Status IN ('Paid', 'PartiallyPaid');
 GO
