@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoices — Vehicle Cleaning Admin</title>
+    <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+    <header class="admin-header"><div class="header-inner"></div></header>
+
+    <main class="admin-main">
+        <div class="page-header">
+            <h1>Invoices</h1>
+        </div>
+
+        <div id="message-area"></div>
+
+        <section class="detail-section" id="create-from-booking"></section>
+        <section class="detail-section" id="invoices-list"></section>
+    </main>
+
+    <footer class="admin-footer">
+        <p>&copy; <span id="year"></span> Vehicle Cleaning Admin</p>
+    </footer>
+
+    <script src="../js/permissions.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        if (!injectAdminHeader('invoices')) { /* redirected */ }
+        if (!Auth.requirePermission('pages.bookings')) { /* redirected */ }
+
+        const canGenerate = Auth.can('actions.booking.updateStatus');
+
+        function esc(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function showMessage(message, isError = false) {
+            const area = document.getElementById('message-area');
+            area.innerHTML = `<div class="alert ${isError ? '' : 'alert-success'}">${esc(message)}</div>`;
+            if (isError) {
+                const alert = area.querySelector('.alert');
+                alert.style.background = '#fce4ec';
+                alert.style.color = '#c62828';
+                alert.style.border = '1px solid #ef9a9a';
+            }
+            setTimeout(() => { area.innerHTML = ''; }, 3500);
+        }
+
+        function renderCreateSection() {
+            if (!canGenerate) {
+                document.getElementById('create-from-booking').innerHTML =
+                    '<div class="alert alert-info">You do not have permission to generate invoices.</div>';
+                return;
+            }
+
+            document.getElementById('create-from-booking').innerHTML = `
+                <h2 class="section-title">Create from Completed Booking</h2>
+                <div class="inline-form" style="flex-wrap:wrap;">
+                    <label for="booking-id-input">Booking ID</label>
+                    <input id="booking-id-input" type="number" min="1" class="small-input" placeholder="e.g. 102" />
+                    <button id="generate-btn" class="btn btn-sm">Generate Invoice</button>
+                </div>
+            `;
+
+            document.getElementById('generate-btn').addEventListener('click', generateFromBooking);
+        }
+
+        async function generateFromBooking() {
+            const bookingId = Number(document.getElementById('booking-id-input').value);
+            if (!bookingId) {
+                showMessage('Enter a valid booking id.', true);
+                return;
+            }
+
+            try {
+                const res = await apiFetch('/api/invoices/from-booking', {
+                    method: 'POST',
+                    body: JSON.stringify({ bookingId })
+                });
+                const result = await res.json();
+                if (!res.ok || !result?.id) {
+                    showMessage(typeof result === 'string' ? result : (result?.message || 'Failed to generate invoice.'), true);
+                    return;
+                }
+
+                showMessage(`Invoice ${result.invoiceNumber} created.`);
+                await loadInvoices();
+            } catch {
+                showMessage('Network error while creating invoice.', true);
+            }
+        }
+
+        async function loadInvoices() {
+            const section = document.getElementById('invoices-list');
+            section.innerHTML = '<div class="alert alert-info">Loading invoices…</div>';
+
+            try {
+                const res = await apiFetch('/api/invoices');
+                const data = await res.json();
+
+                if (!res.ok) {
+                    section.innerHTML = '<div class="alert alert-info">Failed to load invoices.</div>';
+                    return;
+                }
+
+                if (!Array.isArray(data) || data.length === 0) {
+                    section.innerHTML = '<div class="alert alert-info">No invoices found.</div>';
+                    return;
+                }
+
+                const rows = data.map(invoice => `
+                    <tr>
+                        <td>${esc(invoice.invoiceNumber)}</td>
+                        <td><a href="/admin/client.html?id=${invoice.clientId}">${esc(invoice.clientName || '-')}</a></td>
+                        <td>${String(invoice.issueDate || '').slice(0, 10)}</td>
+                        <td>${String(invoice.dueDate || '').slice(0, 10)}</td>
+                        <td>${Number(invoice.totalAmount || 0).toFixed(2)}</td>
+                        <td>${Number(invoice.paidAmount || 0).toFixed(2)}</td>
+                        <td>${Number(invoice.balanceDue || 0).toFixed(2)}</td>
+                        <td><span class="badge badge-${String(invoice.status || '').toLowerCase()}">${esc(invoice.status || '')}</span></td>
+                        <td>${invoice.bookingCount || 0}</td>
+                        <td><a class="btn btn-sm" href="/admin/invoice-detail.html?id=${invoice.id}">View</a></td>
+                    </tr>
+                `).join('');
+
+                section.innerHTML = `
+                    <h2 class="section-title">Invoice List</h2>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th><th>Client</th><th>Issue Date</th><th>Due Date</th>
+                                <th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Bookings</th><th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            } catch {
+                section.innerHTML = '<div class="alert alert-info">Network error while loading invoices.</div>';
+            }
+        }
+
+        renderCreateSection();
+        loadInvoices();
+    </script>
+</body>
+</html>

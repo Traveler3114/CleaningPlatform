@@ -57,6 +57,55 @@ public class ClientController : ControllerBase
             return BadRequest(result.Message);
         return Ok(result.Data);
     }
+
+    [HttpPut("{id:int}")]
+    [Authorize(Policy = PermissionKeys.PagesClients)]
+    public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateClientProfileDto dto)
+    {
+        var result = await _clientManager.UpdateProfileAsync(id, dto);
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result.Data);
+    }
+
+    [HttpGet("{id:int}/sites")]
+    public async Task<IActionResult> GetSites(int id)
+    {
+        var result = await _clientManager.GetSitesAsync(id);
+        if (!result.Success)
+            return NotFound(result.Message);
+        return Ok(result.Data);
+    }
+
+    [HttpPost("{id:int}/sites")]
+    [Authorize(Policy = PermissionKeys.PagesClients)]
+    public async Task<IActionResult> CreateSite(int id, [FromBody] UpsertSiteDto dto)
+    {
+        var result = await _clientManager.CreateSiteAsync(id, dto);
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result.Data);
+    }
+
+    [HttpPut("{id:int}/sites/{siteId:int}")]
+    [Authorize(Policy = PermissionKeys.PagesClients)]
+    public async Task<IActionResult> UpdateSite(int id, int siteId, [FromBody] UpsertSiteDto dto)
+    {
+        var result = await _clientManager.UpdateSiteAsync(id, siteId, dto);
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result.Data);
+    }
+
+    [HttpDelete("{id:int}/sites/{siteId:int}")]
+    [Authorize(Policy = PermissionKeys.PagesClients)]
+    public async Task<IActionResult> DeactivateSite(int id, int siteId)
+    {
+        var result = await _clientManager.DeactivateSiteAsync(id, siteId);
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result.Data);
+    }
 }
 
 // Simple request DTO (can be in the same file or a separate one)

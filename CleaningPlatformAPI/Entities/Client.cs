@@ -30,6 +30,8 @@ namespace CleaningPlatformAPI.Entities
 
         // Navigation
         public ICollection<Contact> Contacts { get; set; } = new List<Contact>();
+        public ICollection<Site> Sites { get; set; } = new List<Site>();
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+        public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     }
 }
