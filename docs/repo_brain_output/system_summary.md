@@ -2,7 +2,7 @@
 # PROJECT SUMMARY
 
 ## Files analyzed
-82
+103
 
 ## Files ignored
 32
@@ -14,7 +14,7 @@
 ['cs', 'js', 'html', 'css', 'cpp', 'py']
 
 ## Top Keywords
-['public', 'class', 'div', 'const', 'rem', 'get', 'set', 'string', 'using', 'new', 'int', 'return', 'role', 'name', 'await', 'var', 'cleaningplatformapi', 'result', 'date', 'btn', 'document', 'getelementbyid', 'operationresult', 'system', 'color', 'font', 'label', 'user', 'input', 'table']
+['public', 'class', 'get', 'div', 'set', 'string', 'const', 'return', 'int', 'await', 'result', 'new', 'rem', 'using', 'var', 'document', 'getelementbyid', 'btn', 'value', 'name', 'client', 'dto', 'type', 'role', 'booking', 'input', 'cleaningplatformapi', 'operationresult', 'date', 'label']
 
 ## Notes
 - Multi-ignore system enabled

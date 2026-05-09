@@ -21,15 +21,16 @@ public class BookingController : ControllerBase
     }
 
     [HttpGet]
+    [HttpGet]
     public async Task<IActionResult> Get([FromQuery] DateTime? date)
     {
         if (date.HasValue)
         {
             var bookings = await _bookingManager.GetBookingsAsync(date.Value);
-            return Ok(bookings);
+            return Ok(OperationResult<List<BookingDto>>.Ok(bookings));
         }
         var all = await _bookingManager.GetAllBookingsAsync();
-        return Ok(all);
+        return Ok(OperationResult<List<BookingDto>>.Ok(all));
     }
 
     [HttpGet("{id:int}")]
