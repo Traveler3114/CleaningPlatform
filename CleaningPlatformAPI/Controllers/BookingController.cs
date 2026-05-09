@@ -1,6 +1,7 @@
+// CleaningPlatformAPI/Controllers/BookingController.cs
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Dtos;
 using CleaningPlatformAPI.Managers;
 
@@ -11,38 +12,55 @@ namespace CleaningPlatformAPI.Controllers;
 [Authorize]
 public class BookingController : ControllerBase
 {
-    private readonly BookingManager _manager;
+    private readonly BookingManager _bookingManager;
 
-    public BookingController(BookingManager manager)
+    public BookingController(BookingManager bookingManager)
     {
-        _manager = manager;
+        _bookingManager = bookingManager;
     }
 
     [HttpGet]
-    public async Task<OperationResult<List<BookingDto>>> Get([FromQuery] DateTime? date)
+    public async Task<IActionResult> Get([FromQuery] DateTime? date)
     {
-        var bookings = date.HasValue
-            ? await _manager.GetBookingsAsync(date.Value)
-            : await _manager.GetAllBookingsAsync();
-        return OperationResult<List<BookingDto>>.Ok(bookings);
+        if (date.HasValue)
+        {
+            var bookings = await _bookingManager.GetBookingsAsync(date.Value);
+            return Ok(bookings);
+        }
+        var all = await _bookingManager.GetAllBookingsAsync();
+        return Ok(all);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var detail = await _bookingManager.GetBookingDetailByIdAsync(id);
+        if (detail is null)
+            return NotFound("Booking not found.");
+        return Ok(detail);
     }
 
     [HttpPost]
-    [AllowAnonymous]
-    public async Task<OperationResult<BookingDto>> Post([FromBody] CreateBookingDto dto)
+    public async Task<IActionResult> Post([FromBody] CreateBookingDto dto)
     {
-        return await _manager.CreateBookingAsync(dto);
+        var result = await _bookingManager.CreateBookingAsync(dto);
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result.Data);
     }
 
-    [HttpPut("{id}/status")]
+    [HttpPut("{id:int}/status")]
     [Authorize(Policy = "actions.booking.updateStatus")]
-    public async Task<OperationResult<BookingDto>> UpdateStatus(int id, [FromBody] UpdateStatusRequest request)
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] StatusUpdateRequest request)
     {
-        return await _manager.UpdateStatusAsync(id, request.Status);
+        var result = await _bookingManager.UpdateStatusAsync(id, request.Status);
+        if (!result.Success)
+            return BadRequest(result.Message);
+        return Ok(result.Data);
     }
 }
 
-public class UpdateStatusRequest
+public class StatusUpdateRequest
 {
     public string Status { get; set; } = string.Empty;
 }

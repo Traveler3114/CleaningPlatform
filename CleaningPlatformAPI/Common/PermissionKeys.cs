@@ -7,6 +7,7 @@ public static class PermissionKeys
     public const string PagesSchedule = "pages.schedule";
     public const string PagesUsers = "pages.users";
     public const string PagesRoles = "pages.roles";
+    public const string PagesClients= "pages.clients";
 
     public const string ActionsBookingUpdateStatus = "actions.booking.updateStatus";
     public const string ActionsScheduleEdit = "actions.schedule.edit";
@@ -24,6 +25,7 @@ public static class PermissionKeys
         PagesSchedule,
         PagesUsers,
         PagesRoles,
+        PagesClients,
         ActionsBookingUpdateStatus,
         ActionsScheduleEdit,
         ActionsOverrideManage,
@@ -41,6 +43,7 @@ public static class PermissionKeys
         [PagesSchedule]               = ("Schedule Page",             "Can access the weekly schedule editor", "Pages"),
         [PagesUsers]                  = ("Users Page",                "Can access the users management page",  "Pages"),
         [PagesRoles]                  = ("Roles Page",                "Can access the roles management page",  "Pages"),
+        [PagesClients]                = ("Clients Page",              "Can access the clients management page", "Pages"),
         [ActionsBookingUpdateStatus]  = ("Update Booking Status",     "Can update the status of bookings",     "Bookings"),
         [ActionsScheduleEdit]         = ("Edit Schedule",             "Can edit the weekly schedule",          "Schedule"),
         [ActionsOverrideManage]       = ("Manage Date Overrides",     "Can manage date-specific overrides",    "Schedule"),

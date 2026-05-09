@@ -1,3 +1,5 @@
+// CleaningPlatformAPI/Managers/BookingManager.cs
+
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Dtos;
@@ -36,6 +38,19 @@ public class BookingManager
             .OrderByDescending(b => b.ScheduledDate)
             .ToListAsync();
         return bookings.Select(MapToDto).ToList();
+    }
+
+    public async Task<BookingDetailDto?> GetBookingDetailByIdAsync(int id)
+    {
+        var booking = await _db.Bookings
+            .Include(b => b.Client)
+                .ThenInclude(c => c.Contacts)
+            .Include(b => b.AssignedEmployee)
+            .Include(b => b.BookingServices)
+                .ThenInclude(bs => bs.ServiceCatalog)
+            .FirstOrDefaultAsync(b => b.Id == id);
+
+        return booking is null ? null : MapToDetailDto(booking);
     }
 
     public async Task<OperationResult<BookingDto>> CreateBookingAsync(CreateBookingDto dto)
@@ -104,7 +119,7 @@ public class BookingManager
         return OperationResult<BookingDto>.Ok(MapToDto(booking));
     }
 
-    private static BookingDto MapToDto(Booking b) => new()
+    public static BookingDto MapToDto(Booking b) => new()
     {
         Id = b.Id,
         CustomerName = b.Client?.ClientName ?? "Unknown",
@@ -117,5 +132,35 @@ public class BookingManager
             : 0,
         Status = b.Status,
         CreatedAt = b.CreatedAt
+    };
+
+    private static BookingDetailDto MapToDetailDto(Booking b) => new()
+    {
+        Id = b.Id,
+        CustomerName = b.Client?.ClientName ?? "Unknown",
+        Phone = b.Client?.Contacts?.FirstOrDefault(c => c.IsPrimary)?.Phone
+            ?? b.Client?.Contacts?.FirstOrDefault()?.Phone ?? "",
+        Date = b.ScheduledDate,
+        Hour = b.ScheduledTimeSlot.HasValue
+            ? (int)Math.Round(b.ScheduledTimeSlot.Value.TotalHours)
+            : 0,
+        Status = b.Status,
+        CreatedAt = b.CreatedAt,
+        ClientName = b.Client?.ClientName ?? "",
+        ClientPhone = b.Client?.Contacts?.FirstOrDefault()?.Phone ?? "",
+        ClientEmail = b.Client?.Contacts?.FirstOrDefault()?.Email,
+        AssignedEmployeeId = b.AssignedEmployeeId,
+        AssignedEmployeeName = b.AssignedEmployee != null
+            ? $"{b.AssignedEmployee.FirstName} {b.AssignedEmployee.LastName}"
+            : null,
+        Services = b.BookingServices.Select(bs => new BookingServiceDto
+        {
+            ServiceCatalogId = bs.ServiceCatalogId,
+            ServiceName = bs.ServiceCatalog?.Name ?? "",
+            EstimatedPrice = bs.EstimatedPrice,
+            FinalPrice = bs.FinalPrice,
+            Quantity = bs.Quantity,
+            Notes = bs.Notes
+        }).ToList()
     };
 }
