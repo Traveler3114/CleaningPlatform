@@ -229,9 +229,7 @@ public class BookingManager
             ?? b.Client?.Contacts?.FirstOrDefault()?.Phone
             ?? string.Empty,
         Date = b.ScheduledDate,
-        Hour = b.ScheduledTimeSlot.HasValue
-            ? (int)Math.Round(b.ScheduledTimeSlot.Value.TotalHours, MidpointRounding.AwayFromZero)
-            : 0,
+        Hour = b.ScheduledTimeSlot?.Hours ?? 0,
         Status = b.Status,
         ServicesCount = b.BookingServices?.Count ?? 0,
         CreatedAt = b.CreatedAt
@@ -245,9 +243,7 @@ public class BookingManager
         Phone = b.Client?.Contacts?.FirstOrDefault(c => c.IsPrimary)?.Phone
             ?? b.Client?.Contacts?.FirstOrDefault()?.Phone ?? "",
         Date = b.ScheduledDate,
-        Hour = b.ScheduledTimeSlot.HasValue
-            ? (int)Math.Round(b.ScheduledTimeSlot.Value.TotalHours)
-            : 0,
+        Hour = b.ScheduledTimeSlot?.Hours ?? 0,
         Status = b.Status,
         ServicesCount = b.BookingServices?.Count ?? 0,
         CreatedAt = b.CreatedAt,

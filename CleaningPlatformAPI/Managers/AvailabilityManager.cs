@@ -39,8 +39,7 @@ public class AvailabilityManager
 
         for (int h = startHour; h < endHour; h++)
         {
-            int booked = bookings.Count(b => b.ScheduledTimeSlot.HasValue &&
-                                             (int)Math.Round(b.ScheduledTimeSlot.Value.TotalHours, MidpointRounding.AwayFromZero) == h);
+            int booked = bookings.Count(b => b.ScheduledTimeSlot.HasValue && b.ScheduledTimeSlot.Value.Hours == h);
 
             slots.Add(new AvailabilityDto
             {
