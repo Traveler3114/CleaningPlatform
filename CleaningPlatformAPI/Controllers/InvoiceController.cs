@@ -21,66 +21,51 @@ public class InvoiceController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.PagesBookings)]
-    public async Task<IActionResult> GetAll()
+    public async Task<OperationResult<List<InvoiceSummaryDto>>> GetAll()
     {
         var invoices = await _invoiceManager.GetAllAsync();
-        return Ok(invoices);
+        return OperationResult<List<InvoiceSummaryDto>>.Ok(invoices);
     }
 
     [HttpGet("{id:int}")]
     [Authorize(Policy = PermissionKeys.PagesBookings)]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<OperationResult<InvoiceDetailDto>> GetById(int id)
     {
         var invoice = await _invoiceManager.GetByIdAsync(id);
-        if (invoice == null)
-            return NotFound("Invoice not found.");
-        return Ok(invoice);
+        return invoice is null
+            ? OperationResult<InvoiceDetailDto>.Fail("Invoice not found.")
+            : OperationResult<InvoiceDetailDto>.Ok(invoice);
     }
 
     [HttpPost("from-booking/{bookingId:int}")]
     [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
-    public async Task<IActionResult> CreateFromBooking(int bookingId)
+    public async Task<OperationResult<InvoiceDetailDto>> CreateFromBooking(int bookingId)
     {
         var employeeId = ParseCurrentEmployeeId();
-        var result = await _invoiceManager.CreateFromBookingAsync(bookingId, employeeId);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _invoiceManager.CreateFromBookingAsync(bookingId, employeeId);
     }
 
     [HttpPost("from-booking")]
     [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
-    public async Task<IActionResult> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingDto dto)
+    public async Task<OperationResult<InvoiceDetailDto>> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingDto dto)
     {
         if (dto.BookingId <= 0)
-            return BadRequest("Booking id is required.");
-
-        var employeeId = ParseCurrentEmployeeId();
-        var result = await _invoiceManager.CreateFromBookingAsync(dto.BookingId, employeeId);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+            return OperationResult<InvoiceDetailDto>.Fail("Booking id is required.");
+        return await _invoiceManager.CreateFromBookingAsync(dto.BookingId, ParseCurrentEmployeeId());
     }
 
     [HttpPost("{id:int}/payments")]
     [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
-    public async Task<IActionResult> RecordPayment(int id, [FromBody] RecordPaymentDto dto)
+    public async Task<OperationResult<InvoiceDetailDto>> RecordPayment(int id, [FromBody] RecordPaymentDto dto)
     {
-        var employeeId = ParseCurrentEmployeeId();
-        var result = await _invoiceManager.RecordPaymentAsync(id, dto, employeeId);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _invoiceManager.RecordPaymentAsync(id, dto, ParseCurrentEmployeeId());
     }
 
     [HttpPut("{id:int}/status")]
     [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
-    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateInvoiceStatusDto dto)
+    public async Task<OperationResult<InvoiceDetailDto>> UpdateStatus(int id, [FromBody] UpdateInvoiceStatusDto dto)
     {
-        var result = await _invoiceManager.UpdateStatusAsync(id, dto.Status);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _invoiceManager.UpdateStatusAsync(id, dto.Status);
     }
 
     private int? ParseCurrentEmployeeId()

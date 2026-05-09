@@ -17,24 +17,16 @@ public class AuthController : ControllerBase
         _authManager = authManager;
     }
 
-    // POST /api/auth/register — requires actions.user.create permission
     [Authorize(Policy = "actions.user.create")]
     [HttpPost("register")]
-    public async Task<ActionResult<OperationResult<string>>> Register(CreateUserDto request)
+    public async Task<OperationResult<string>> Register(CreateUserDto request)
     {
-        var result = await _authManager.RegisterAsync(request);
-        if (!result.Success)
-            return BadRequest(result);
-        return Ok(result);
+        return await _authManager.RegisterAsync(request);
     }
 
-    // POST /api/auth/login — public
     [HttpPost("login")]
-    public async Task<ActionResult<OperationResult<string>>> Login(LoginDto request)
+    public async Task<OperationResult<string>> Login(LoginDto request)
     {
-        var result = await _authManager.LoginAsync(request);
-        if (!result.Success)
-            return Unauthorized(result);
-        return Ok(result);
+        return await _authManager.LoginAsync(request);
     }
 }

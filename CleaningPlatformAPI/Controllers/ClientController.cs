@@ -21,94 +21,72 @@ public class ClientController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(
+    public async Task<OperationResult<List<ClientDto>>> GetAll(
         [FromQuery] string? search,
         [FromQuery] string? type)
     {
         var clients = await _clientManager.GetAllAsync(search, type);
-        return Ok(clients);
+        return OperationResult<List<ClientDto>>.Ok(clients);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<OperationResult<ClientProfileDto>> GetById(int id)
     {
         var client = await _clientManager.GetByIdAsync(id);
-        if (client == null)
-            return NotFound("Client not found.");
-        return Ok(client);
+        return client is null
+            ? OperationResult<ClientProfileDto>.Fail("Client not found.")
+            : OperationResult<ClientProfileDto>.Ok(client);
     }
 
     [HttpPost]
     [Authorize(Policy = PermissionKeys.PagesClients)]
-    public async Task<IActionResult> Create([FromBody] CreateClientDto dto)
+    public async Task<OperationResult<ClientDto>> Create([FromBody] CreateClientDto dto)
     {
-        var result = await _clientManager.CreateAsync(dto);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _clientManager.CreateAsync(dto);
     }
 
     [HttpPut("{id:int}/type")]
     [Authorize(Policy = PermissionKeys.PagesClients)]
-    public async Task<IActionResult> UpdateType(int id, [FromBody] UpdateTypeRequest request)
+    public async Task<OperationResult<ClientDto>> UpdateType(int id, [FromBody] UpdateTypeRequest request)
     {
-        var result = await _clientManager.UpdateTypeAsync(id, request.NewType);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _clientManager.UpdateTypeAsync(id, request.NewType);
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Policy = PermissionKeys.PagesClients)]
-    public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateClientProfileDto dto)
+    public async Task<OperationResult<ClientProfileDto>> UpdateProfile(int id, [FromBody] UpdateClientProfileDto dto)
     {
-        var result = await _clientManager.UpdateProfileAsync(id, dto);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _clientManager.UpdateProfileAsync(id, dto);
     }
 
     [HttpGet("{id:int}/sites")]
-    public async Task<IActionResult> GetSites(int id)
+    public async Task<OperationResult<List<SiteDto>>> GetSites(int id)
     {
-        var result = await _clientManager.GetSitesAsync(id);
-        if (!result.Success)
-            return NotFound(result.Message);
-        return Ok(result.Data);
+        return await _clientManager.GetSitesAsync(id);
     }
 
     [HttpPost("{id:int}/sites")]
     [Authorize(Policy = PermissionKeys.PagesClients)]
-    public async Task<IActionResult> CreateSite(int id, [FromBody] UpsertSiteDto dto)
+    public async Task<OperationResult<SiteDto>> CreateSite(int id, [FromBody] UpsertSiteDto dto)
     {
-        var result = await _clientManager.CreateSiteAsync(id, dto);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _clientManager.CreateSiteAsync(id, dto);
     }
 
     [HttpPut("{id:int}/sites/{siteId:int}")]
     [Authorize(Policy = PermissionKeys.PagesClients)]
-    public async Task<IActionResult> UpdateSite(int id, int siteId, [FromBody] UpsertSiteDto dto)
+    public async Task<OperationResult<SiteDto>> UpdateSite(int id, int siteId, [FromBody] UpsertSiteDto dto)
     {
-        var result = await _clientManager.UpdateSiteAsync(id, siteId, dto);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _clientManager.UpdateSiteAsync(id, siteId, dto);
     }
 
     [HttpDelete("{id:int}/sites/{siteId:int}")]
     [Authorize(Policy = PermissionKeys.PagesClients)]
-    public async Task<IActionResult> DeactivateSite(int id, int siteId)
+    public async Task<OperationResult<SiteDto>> DeactivateSite(int id, int siteId)
     {
-        var result = await _clientManager.DeactivateSiteAsync(id, siteId);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _clientManager.DeactivateSiteAsync(id, siteId);
     }
 }
 
-// Simple request DTO (can be in the same file or a separate one)
 public class UpdateTypeRequest
 {
     public string NewType { get; set; } = string.Empty;

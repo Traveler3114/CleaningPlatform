@@ -19,55 +19,47 @@ public class EmployeeController : ControllerBase
         _userManager = userManager;
     }
 
-    // GET /api/users/me — returns current user profile with permissions
     [HttpGet("me")]
-    public async Task<ActionResult<OperationResult<UserDto>>> Me()
+    public async Task<OperationResult<UserDto>> Me()
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                   ?? User.FindFirst("sub")?.Value;
 
         if (!int.TryParse(sub, out var userId))
-            return Unauthorized(OperationResult<UserDto>.Fail("Invalid token."));
+            return OperationResult<UserDto>.Fail("Invalid token.");
 
         var user = await _userManager.GetByIdAsync(userId);
         if (user == null)
-            return NotFound(OperationResult<UserDto>.Fail("User not found."));
+            return OperationResult<UserDto>.Fail("User not found.");
 
-        return Ok(OperationResult<UserDto>.Ok(user));
+        return OperationResult<UserDto>.Ok(user);
     }
 
-    // GET /api/employees — list active employees for dropdowns
     [HttpGet("/api/employees")]
-    public async Task<ActionResult<OperationResult<List<EmployeeSimpleDto>>>> GetActiveEmployees()
+    public async Task<OperationResult<List<EmployeeSimpleDto>>> GetActiveEmployees()
     {
         var employees = await _userManager.GetActiveEmployeesAsync();
-        return Ok(OperationResult<List<EmployeeSimpleDto>>.Ok(employees));
+        return OperationResult<List<EmployeeSimpleDto>>.Ok(employees);
     }
 
-    // GET /api/users — list all users
     [HttpGet]
     [Authorize(Policy = "actions.user.toggleActive")]
-    public async Task<ActionResult<OperationResult<List<UserDto>>>> GetAll()
+    public async Task<OperationResult<List<UserDto>>> GetAll()
     {
         var users = await _userManager.GetAllUsersAsync();
-        return Ok(OperationResult<List<UserDto>>.Ok(users));
+        return OperationResult<List<UserDto>>.Ok(users);
     }
 
-    // PUT /api/users/{id}/toggle — toggle user active status
     [HttpPut("{id}/toggle")]
     [Authorize(Policy = "actions.user.toggleActive")]
-    public async Task<ActionResult<OperationResult<UserDto>>> Toggle(int id)
+    public async Task<OperationResult<UserDto>> Toggle(int id)
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                   ?? User.FindFirst("sub")?.Value;
 
         if (!int.TryParse(sub, out var requestingUserId))
-            return Unauthorized(OperationResult<UserDto>.Fail("Invalid token."));
+            return OperationResult<UserDto>.Fail("Invalid token.");
 
-        var result = await _userManager.ToggleActiveAsync(id, requestingUserId);
-        if (!result.Success)
-            return BadRequest(result);
-
-        return Ok(result);
+        return await _userManager.ToggleActiveAsync(id, requestingUserId);
     }
 }

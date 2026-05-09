@@ -21,90 +21,71 @@ public class BookingController : ControllerBase
     }
 
     [HttpGet]
-    [HttpGet]
-    public async Task<IActionResult> Get([FromQuery] DateTime? date)
+    public async Task<OperationResult<List<BookingDto>>> Get([FromQuery] DateTime? date)
     {
         if (date.HasValue)
         {
             var bookings = await _bookingManager.GetBookingsAsync(date.Value);
-            return Ok(OperationResult<List<BookingDto>>.Ok(bookings));
+            return OperationResult<List<BookingDto>>.Ok(bookings);
         }
         var all = await _bookingManager.GetAllBookingsAsync();
-        return Ok(OperationResult<List<BookingDto>>.Ok(all));
+        return OperationResult<List<BookingDto>>.Ok(all);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<OperationResult<BookingDetailDto>> GetById(int id)
     {
         var detail = await _bookingManager.GetBookingDetailByIdAsync(id);
-        if (detail is null)
-            return NotFound("Booking not found.");
-        return Ok(detail);
+        return detail is null
+            ? OperationResult<BookingDetailDto>.Fail("Booking not found.")
+            : OperationResult<BookingDetailDto>.Ok(detail);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Post([FromBody] CreateBookingDto dto)
+    public async Task<OperationResult<BookingDto>> Post([FromBody] CreateBookingDto dto)
     {
-        var result = await _bookingManager.CreateBookingAsync(dto);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _bookingManager.CreateBookingAsync(dto);
     }
 
     [HttpPut("{id:int}/status")]
     [Authorize(Policy = "actions.booking.updateStatus")]
-    public async Task<IActionResult> UpdateStatus(int id, [FromBody] StatusUpdateRequest request)
+    public async Task<OperationResult<BookingDto>> UpdateStatus(int id, [FromBody] StatusUpdateRequest request)
     {
-        var result = await _bookingManager.UpdateStatusAsync(id, request.Status);
-        if (!result.Success)
-            return BadRequest(result.Message);
-        return Ok(result.Data);
+        return await _bookingManager.UpdateStatusAsync(id, request.Status);
     }
 
     [HttpPut("{id:int}/assign")]
     [Authorize(Policy = "actions.booking.updateStatus")]
-    public async Task<ActionResult<OperationResult<BookingDetailDto>>> AssignEmployee(int id, [FromBody] BookingAssignDto dto)
+    public async Task<OperationResult<BookingDetailDto>> AssignEmployee(int id, [FromBody] BookingAssignDto dto)
     {
-        var result = await _bookingManager.AssignEmployeeAsync(id, dto.EmployeeId);
-        if (!result.Success)
-            return BadRequest(result);
-        return Ok(result);
+        return await _bookingManager.AssignEmployeeAsync(id, dto.EmployeeId);
     }
 
     [HttpPost("{id:int}/services")]
     [Authorize(Policy = "actions.booking.updateStatus")]
-    public async Task<ActionResult<OperationResult<BookingDetailDto>>> AddService(int id, [FromBody] AddBookingServiceDto dto)
+    public async Task<OperationResult<BookingDetailDto>> AddService(int id, [FromBody] AddBookingServiceDto dto)
     {
-        var result = await _bookingManager.AddServiceAsync(
+        return await _bookingManager.AddServiceAsync(
             id,
             dto.ServiceCatalogId,
             dto.EstimatedPrice,
             dto.Quantity,
             dto.FinalPrice,
             dto.Notes);
-        if (!result.Success)
-            return BadRequest(result);
-        return Ok(result);
     }
 
     [HttpDelete("{id:int}/services/{serviceId:int}")]
     [Authorize(Policy = "actions.booking.updateStatus")]
-    public async Task<ActionResult<OperationResult<string>>> RemoveService(int id, int serviceId)
+    public async Task<OperationResult<string>> RemoveService(int id, int serviceId)
     {
-        var result = await _bookingManager.RemoveServiceAsync(id, serviceId);
-        if (!result.Success)
-            return BadRequest(result);
-        return Ok(result);
+        return await _bookingManager.RemoveServiceAsync(id, serviceId);
     }
 
     [HttpPut("{id:int}/services/{serviceId:int}")]
     [Authorize(Policy = "actions.booking.updateStatus")]
-    public async Task<ActionResult<OperationResult<BookingDetailDto>>> UpdateServicePrice(int id, int serviceId, [FromBody] UpdateBookingServicePriceDto dto)
+    public async Task<OperationResult<BookingDetailDto>> UpdateServicePrice(int id, int serviceId, [FromBody] UpdateBookingServicePriceDto dto)
     {
-        var result = await _bookingManager.UpdateServicePriceAsync(id, serviceId, dto.FinalPrice);
-        if (!result.Success)
-            return BadRequest(result);
-        return Ok(result);
+        return await _bookingManager.UpdateServicePriceAsync(id, serviceId, dto.FinalPrice);
     }
 }
 
