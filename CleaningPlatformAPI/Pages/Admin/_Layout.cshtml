@@ -1,37 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="~/css/admin.css" /> @* Matches the theme variables *@
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Vehicle Cleaning Admin</title>
+    <link rel="stylesheet" href="~/css/style.css" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header class="admin-header">
-        <nav class="header-inner">
-            @* Use .header-inner for flex spacing *@
-            <div class="brand-group">
-                <strong class="brand">🚗 Admin Portal</strong>
-                @if (User.Identity.IsAuthenticated)
+        <div class="header-inner">
+            <span class="brand">🚗 Vehicle Cleaning Admin</span>
+            <nav class="main-nav">
+                @if (User.Identity?.IsAuthenticated == true)
                 {
-                    <div class="main-nav">
-                        <a asp-page="/Admin/Index" class="nav-link">Dashboard</a>
-                        <a asp-page="/Admin/Bookings" class="nav-link">Bookings</a>
-                        <a asp-page="/Admin/Clients" class="nav-link">Clients</a>
+                    <a asp-page="/Admin/Index"
+                       class="nav-link @(ViewData["ActivePage"]?.ToString() == "daily" ? "active" : "")">Daily View</a>
+                    <a asp-page="/Admin/Bookings"
+                       class="nav-link @(ViewData["ActivePage"]?.ToString() == "bookings" ? "active" : "")">Bookings</a>
+                    <a asp-page="/Admin/Clients"
+                       class="nav-link @(ViewData["ActivePage"]?.ToString() == "clients" ? "active" : "")">Clients</a>
+                }
+            </nav>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="user-pill">
+                    <div class="user-pill-info">
+                        <span class="user-pill-name">@User.Identity.Name</span>
+                        <span class="user-pill-role">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
                     </div>
-                }
-            </div>
-            <div class="user-pill">
-                @if (User.Identity.IsAuthenticated)
-                {
-                    <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout">
-                        <button type="submit" class="btn btn-sm btn-outline-light">Sign Out</button>
+                    <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout" style="margin:0;">
+                        <button type="submit" class="logout-btn">Sign out</button>
                     </form>
-                }
-            </div>
-        </nav>
+                </div>
+            }
+        </div>
     </header>
 
     <main class="admin-main">
-        @* Adds padding and centering from admin.css *@
         @RenderBody()
     </main>
+
+    <footer class="admin-footer">
+        <p>&copy; @DateTime.Now.Year Vehicle Cleaning Admin</p>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,100 +1,280 @@
-@page
+@page "{id:int}"
 @model CleaningPlatformAPI.Pages.Admin.ClientDetailModel
 @{
-    ViewData["Title"] = "Client Detail";
+    ViewData["Title"] = Model.Client != null ? Model.Client.ClientName : "Client";
+    ViewData["ActivePage"] = "clients";
 }
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert" style="background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;">
+        @Model.ErrorMessage
+    </div>
+}
+
 @if (Model.Client == null)
 {
-    <h1>Client not found</h1>
+    <div class="alert alert-info">Client not found.</div>
     return;
 }
-<h1>@Model.Client.ClientName</h1>
-@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
-<form method="post" asp-page-handler="UpdateType">
-    <input type="hidden" asp-for="Id" />
-    <select name="newType"><option>OneTime</option><option>RepeatIndividual</option><option>RepeatBusiness</option></select>
-    <button type="submit">Update Type</button>
-</form>
-<h2>Profile</h2>
-<form method="post" asp-page-handler="UpdateProfile" id="profileForm">
-    <input type="hidden" asp-for="Id" />
-    <input asp-for="Profile.ClientName" />
-    <input asp-for="Profile.Oib" placeholder="OIB" />
-    <input asp-for="Profile.PaymentTerms" placeholder="Payment terms" />
-    <textarea asp-for="Profile.Notes"></textarea>
-    <input type="hidden" asp-for="ContactsJson" id="contactsJson" />
-    <button type="submit">Save Profile</button>
-</form>
-<h3>Contacts</h3>
-<table id="contactsTable"><tbody>
-@for (var i = 0; i < Model.Client.Contacts.Count; i++)
-{
-    var c = Model.Client.Contacts[i];
-    <tr>
-        <td><input data-field="id" value="@c.Id" /></td>
-        <td><input data-field="contactName" value="@c.ContactName" /></td>
-        <td><input data-field="phone" value="@c.Phone" /></td>
-        <td><input data-field="email" value="@c.Email" /></td>
-        <td><input data-field="role" value="@c.Role" /></td>
-        <td><input data-field="address" value="@c.Address" /></td>
-        <td><input data-field="isPrimary" type="checkbox" @(c.IsPrimary ? "checked" : "") /></td>
-        <td><input data-field="isActive" type="checkbox" @(c.IsActive ? "checked" : "") /></td>
-        <td><button type="button" onclick="this.closest('tr').remove()">Remove</button></td>
-    </tr>
-}
-</tbody></table>
-<button type="button" id="addContact">Add Contact</button>
-<h3>Sites</h3>
-<ul>
-@foreach (var s in Model.Client.Sites)
-{
-    <li>
-        @s.SiteName - @s.Address (@(s.IsActive ? "Active" : "Inactive"))
-        <form method="post" asp-page-handler="DeactivateSite" style="display:inline">
+
+@* ===== Client Header ===== *@
+<section class="detail-section" id="client-header-section">
+    <div class="page-header">
+        <div>
+            <h1>@Model.Client.ClientName</h1>
+            <div style="margin-top:0.4rem;">
+                <span class="badge badge-@Model.Client.Type.ToLower()">@Model.Client.Type</span>
+                <span class="badge @(Model.Client.IsActive ? "badge-active" : "badge-inactive")">
+                    @(Model.Client.IsActive ? "Active" : "Inactive")
+                </span>
+            </div>
+        </div>
+        <div class="inline-form" style="flex-wrap:wrap;">
+            <button class="btn btn-sm"
+                    onclick="document.getElementById('client-edit-area').style.display=''">Edit</button>
+            <form method="post" asp-page-handler="UpdateType" style="display:contents;">
+                <input type="hidden" asp-for="Id" />
+                <select name="newType" class="status-select"
+                        onchange="if(this.value && confirm('Convert client to '+this.value+'?')) this.form.submit(); else this.value='';">
+                    <option value="">Convert Type...</option>
+                    <option value="OneTime">OneTime</option>
+                    <option value="RepeatIndividual">RepeatIndividual</option>
+                    <option value="RepeatBusiness">RepeatBusiness</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    @* ===== Edit Panel ===== *@
+    <div id="client-edit-area" class="card-lite" style="display:none; margin-top:1rem;">
+        <h3 class="section-title">Edit Client &amp; Contacts</h3>
+        <form method="post" asp-page-handler="UpdateProfile" id="profileForm">
             <input type="hidden" asp-for="Id" />
-            <input type="hidden" name="siteId" value="@s.Id" />
-            <button type="submit">Deactivate</button>
+            <input type="hidden" asp-for="ContactsJson" id="contactsJson" />
+            <div class="form-grid two-col">
+                <label>Client Name <input asp-for="Profile.ClientName" class="text-input" /></label>
+                <label>OIB <input asp-for="Profile.Oib" class="text-input" placeholder="OIB" /></label>
+                <label>Payment Terms <input asp-for="Profile.PaymentTerms" class="text-input" placeholder="e.g. Net30" /></label>
+                <label>Notes <input asp-for="Profile.Notes" class="text-input" /></label>
+            </div>
+
+            <h4 class="section-title" style="margin-top:1rem;">Contacts</h4>
+            <table class="admin-table" id="contactsTable">
+                <thead>
+                    <tr>
+                        <th>Name</th><th>Role</th><th>Phone</th><th>Email</th>
+                        <th>Primary</th><th>Active</th><th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Profile.Contacts.Count; i++)
+                    {
+                        var c = Model.Profile.Contacts[i];
+                        <tr>
+                            <td><input data-field="id" value="@c.Id" style="display:none" />
+                                <input data-field="contactName" class="text-input" value="@c.ContactName" /></td>
+                            <td><input data-field="role" class="small-input" value="@c.Role" /></td>
+                            <td><input data-field="phone" class="small-input" value="@c.Phone" /></td>
+                            <td><input data-field="email" class="text-input" value="@c.Email" /></td>
+                            <td><input data-field="isPrimary" type="radio" name="primary-contact" @(c.IsPrimary ? "checked" : "") /></td>
+                            <td><input data-field="isActive" type="checkbox" @(c.IsActive ? "checked" : "") /></td>
+                            <td><button type="button" class="btn btn-sm"
+                                        onclick="if(document.querySelectorAll('#contactsTable tbody tr').length>1) this.closest('tr').remove(); else alert('At least one contact required.');">Remove</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-sm" id="addContact" style="margin-top:0.5rem;">+ Add Contact</button>
+
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-sm">Save</button>
+                <button type="button" class="btn btn-sm"
+                        onclick="document.getElementById('client-edit-area').style.display='none'">Cancel</button>
+            </div>
         </form>
-    </li>
-}
-</ul>
-<form method="post" asp-page-handler="AddSite">
-    <input type="hidden" asp-for="Id" />
-    <input asp-for="NewSite.SiteName" placeholder="Site name" />
-    <input asp-for="NewSite.Address" placeholder="Address" />
-    <input asp-for="NewSite.City" placeholder="City" />
-    <button type="submit">Add Site</button>
-</form>
+    </div>
+</section>
+
+@* ===== Contacts ===== *@
+<section class="detail-section">
+    <h2 class="section-title">Contacts</h2>
+    @if (!Model.Client.Contacts.Any())
+    {
+        <div class="alert alert-info">No contacts found.</div>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+                <tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th><th>Primary</th><th>Active</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.Client.Contacts)
+                {
+                    <tr class="@(!c.IsActive ? "row-inactive" : "")">
+                        <td>@c.ContactName</td>
+                        <td>@(c.Role ?? "-")</td>
+                        <td>@(c.Phone ?? "-")</td>
+                        <td>@(c.Email ?? "-")</td>
+                        <td>@(c.IsPrimary ? "<span class=\"badge badge-active\">Primary</span>" : "-")</td>
+                        <td>
+                            <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
+                                @(c.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="alert alert-info">Use Edit to update client and contacts in one save action.</div>
+    }
+</section>
+
+@* ===== Sites ===== *@
+<section class="detail-section">
+    <h2 class="section-title">Sites</h2>
+    @if (!Model.Client.Sites.Any())
+    {
+        <div class="alert alert-info">No sites found for this client.</div>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Site Name</th><th>Address</th><th>City</th><th>Type</th><th>Active</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Client.Sites)
+                {
+                    <tr class="@(!s.IsActive ? "row-inactive" : "")">
+                        <td>@s.SiteName</td>
+                        <td>@s.Address</td>
+                        <td>@(s.City ?? "-")</td>
+                        <td>@(s.SiteType ?? "-")</td>
+                        <td>
+                            <span class="badge @(s.IsActive ? "badge-active" : "badge-inactive")">
+                                @(s.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td>
+                            @if (s.IsActive)
+                            {
+                                <form method="post" asp-page-handler="DeactivateSite"
+                                      onsubmit="return confirm('Deactivate this site?');"
+                                      style="display:inline;">
+                                    <input type="hidden" asp-for="Id" />
+                                    <input type="hidden" name="siteId" value="@s.Id" />
+                                    <button type="submit" class="btn btn-sm">Deactivate</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <div class="card-lite" style="margin-top:1rem;">
+        <h3 class="section-title">+ Add Site</h3>
+        <form method="post" asp-page-handler="AddSite">
+            <input type="hidden" asp-for="Id" />
+            <div class="form-grid two-col">
+                <label>Site Name <input asp-for="NewSite.SiteName" class="text-input" required /></label>
+                <label>Address <input asp-for="NewSite.Address" class="text-input" required /></label>
+                <label>City <input asp-for="NewSite.City" class="text-input" /></label>
+                <label>Postal Code <input asp-for="NewSite.PostalCode" class="text-input" /></label>
+                <label>Type
+                    <select asp-for="NewSite.SiteType" class="status-select">
+                        <option value="">—</option>
+                        @foreach (var t in new[] { "Office","Stairwell","Garage","Facility","Boat","Vehicle","Other" })
+                        {
+                            <option value="@t">@t</option>
+                        }
+                    </select>
+                </label>
+                <label>Floor Area m² <input asp-for="NewSite.FloorAreaM2" type="number" step="0.01" min="0" class="text-input" /></label>
+                <label style="grid-column:1 / -1;">
+                    Access Notes <input asp-for="NewSite.AccessNotes" class="text-input" />
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-sm">Add Site</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+@* ===== Booking History ===== *@
+<section class="detail-section">
+    <h2 class="section-title">Booking History</h2>
+    @if (!Model.Client.Bookings.Any())
+    {
+        <div class="alert alert-info">No bookings found.</div>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+                <tr><th>Date</th><th>Time</th><th>Status</th><th>Services</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model.Client.Bookings)
+                {
+                    <tr>
+                        <td>@b.Date.ToString("yyyy-MM-dd")</td>
+                        <td>@b.Hour:00</td>
+                        <td><span class="badge badge-@b.Status.ToLower()">@b.Status</span></td>
+                        <td>@b.ServicesCount</td>
+                        <td>
+                            <a asp-page="/Admin/BookingDetail" asp-route-id="@b.Id" class="btn btn-sm">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
 @section Scripts {
 <script>
-(() => {
-  const tableBody = document.querySelector('#contactsTable tbody');
-  const addBtn = document.getElementById('addContact');
-  const form = document.getElementById('profileForm');
-  addBtn.addEventListener('click', () => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td><input data-field="id" /></td><td><input data-field="contactName" /></td><td><input data-field="phone" /></td><td><input data-field="email" /></td><td><input data-field="role" /></td><td><input data-field="address" /></td><td><input data-field="isPrimary" type="checkbox" /></td><td><input data-field="isActive" type="checkbox" checked /></td><td><button type="button">Remove</button></td>`;
-    tr.querySelector('button').addEventListener('click', () => tr.remove());
-    tableBody.appendChild(tr);
-  });
+(function() {
+    const tableBody = document.querySelector('#contactsTable tbody');
+    const form = document.getElementById('profileForm');
 
-  form.addEventListener('submit', () => {
-    const contacts = Array.from(tableBody.querySelectorAll('tr')).map(row => {
-      const q = (name) => row.querySelector(`[data-field="${name}"]`);
-      const id = q('id').value;
-      return {
-        id: id ? parseInt(id, 10) : null,
-        contactName: q('contactName').value || '',
-        phone: q('phone').value || '',
-        email: q('email').value || null,
-        role: q('role').value || null,
-        address: q('address').value || null,
-        isPrimary: q('isPrimary').checked,
-        isActive: q('isActive').checked
-      };
+    document.getElementById('addContact').addEventListener('click', () => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input data-field="id" style="display:none" /><input data-field="contactName" class="text-input" /></td>
+            <td><input data-field="role" class="small-input" /></td>
+            <td><input data-field="phone" class="small-input" /></td>
+            <td><input data-field="email" class="text-input" /></td>
+            <td><input data-field="isPrimary" type="radio" name="primary-contact" /></td>
+            <td><input data-field="isActive" type="checkbox" checked /></td>
+            <td><button type="button" class="btn btn-sm" onclick="if(document.querySelectorAll('#contactsTable tbody tr').length>1) this.closest('tr').remove(); else alert('At least one contact required.');">Remove</button></td>
+        `;
+        tableBody.appendChild(tr);
     });
-    document.getElementById('contactsJson').value = JSON.stringify(contacts);
-  });
+
+    form.addEventListener('submit', () => {
+        const contacts = Array.from(tableBody.querySelectorAll('tr')).map(row => {
+            const q = name => row.querySelector(`[data-field="${name}"]`);
+            const id = q('id').value;
+            return {
+                id: id ? parseInt(id, 10) : null,
+                contactName: q('contactName').value || '',
+                phone: q('phone').value || '',
+                email: q('email').value || null,
+                role: q('role').value || null,
+                address: null,
+                isPrimary: q('isPrimary').checked,
+                isActive: q('isActive').checked
+            };
+        });
+        document.getElementById('contactsJson').value = JSON.stringify(contacts);
+    });
 })();
 </script>
 }
