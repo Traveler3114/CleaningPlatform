@@ -60,17 +60,18 @@
 @* ===== Client Info ===== *@
 <section class="detail-section">
     <h2 class="section-title">Client Info</h2>
-    <p><strong>Name:</strong>
+    <p>
+        <strong>Name:</strong>
         @if (Model.Booking.ClientId > 0)
         {
-            <a href="/Admin/ClientDetail?id=@Model.Booking.ClientId">@(Model.Booking.ClientName ?? Model.Booking.CustomerName)</a>
+            <a href="/Admin/ClientDetail?id=@Model.Booking.ClientId">@Model.Booking.ClientName</a>
         }
         else
         {
-            @(Model.Booking.ClientName ?? Model.Booking.CustomerName)
+            @Model.Booking.ClientName
         }
     </p>
-    <p><strong>Phone:</strong> @(Model.Booking.ClientPhone ?? Model.Booking.Phone ?? "-")</p>
+    <p><strong>Phone:</strong> @(Model.Booking.ClientPhone ?? "-")</p>
     <p><strong>Email:</strong> @(Model.Booking.ClientEmail ?? "-")</p>
 </section>
 

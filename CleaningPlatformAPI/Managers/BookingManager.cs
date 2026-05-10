@@ -224,10 +224,7 @@ public class BookingManager
     {
         Id = b.Id,
         ClientId = b.ClientId,
-        CustomerName = b.Client?.ClientName ?? "Unknown",
-        Phone = b.Client?.Contacts?.FirstOrDefault(c => c.IsPrimary)?.Phone
-            ?? b.Client?.Contacts?.FirstOrDefault()?.Phone
-            ?? string.Empty,
+        ClientName = b.Client?.ClientName ?? "Unknown",
         Date = b.ScheduledDate,
         Hour = b.ScheduledTimeSlot?.Hours ?? 0,
         Status = b.Status,
@@ -239,9 +236,6 @@ public class BookingManager
     {
         Id = b.Id,
         ClientId = b.ClientId,
-        CustomerName = b.Client?.ClientName ?? "Unknown",
-        Phone = b.Client?.Contacts?.FirstOrDefault(c => c.IsPrimary)?.Phone
-            ?? b.Client?.Contacts?.FirstOrDefault()?.Phone ?? "",
         Date = b.ScheduledDate,
         Hour = b.ScheduledTimeSlot?.Hours ?? 0,
         Status = b.Status,

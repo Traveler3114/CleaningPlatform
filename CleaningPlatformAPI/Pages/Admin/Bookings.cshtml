@@ -36,8 +36,7 @@ else
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Name</th>
-                <th>Phone</th>
+                <th>Client</th>
                 <th>Date</th>
                 <th>Hour</th>
                 <th>Status</th>
@@ -49,8 +48,11 @@ else
             {
                 <tr class="booking-row" data-href="@Url.Page("/Admin/BookingDetail", new { id = b.Id })" title="Click to open booking detail">
                     <td><a asp-page="/Admin/BookingDetail" asp-route-id="@b.Id" class="link">@b.Id</a></td>
-                    <td>@b.CustomerName</td>
-                    <td>@b.Phone</td>
+                    <td>
+                        <a asp-page="/Admin/ClientDetail" asp-route-id="@b.ClientId" class="link">
+                            @b.ClientName
+                        </a>
+                    </td>
                     <td>@b.Date.ToString("yyyy-MM-dd")</td>
                     <td>@b.Hour:00</td>
                     <td>
