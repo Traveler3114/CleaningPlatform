@@ -1,11 +1,13 @@
 @page
 @model CleaningPlatformAPI.Pages.Admin.RolesModel
+@using System.Text.Json
 @{
     ViewData["Title"] = "Roles";
     ViewData["ActivePage"] = "roles";
 }
 <div class="page-header">
     <h1>Roles</h1>
+    <button type="button" class="btn" id="new-role-btn">+ New Role</button>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
@@ -20,58 +22,157 @@
             <th>ID</th>
             <th>Name</th>
             <th>Permissions</th>
-            <th></th>
         </tr>
         </thead>
         <tbody>
         @foreach (var r in Model.Roles)
         {
-            <tr>
+            var permissionNames = r.Permissions
+                .Select(p => Model.PermissionDisplayNames.GetValueOrDefault(p, p))
+                .ToList();
+            <tr class="role-row @(r.IsProtected ? "role-protected" : "")"
+                data-role-id="@r.Id"
+                data-role-name="@r.Name"
+                data-role-protected="@r.IsProtected.ToString().ToLowerInvariant()"
+                data-role-permissions="@string.Join("|", r.Permissions)"
+                title="@(r.IsProtected ? "Protected role (read-only)" : "Click to edit")">
                 <td>@r.Id</td>
-                <td>@r.Name</td>
-                <td class="permissions-cell">@string.Join(", ", r.Permissions)</td>
                 <td>
-                    <form method="post" asp-page-handler="Delete" class="inline-form">
-                        <input type="hidden" name="id" value="@r.Id" />
-                        <button type="submit" class="btn btn-sm">Delete</button>
-                    </form>
+                    @r.Name
+                    @if (r.IsProtected)
+                    {
+                        <span class="badge badge-protected" style="margin-left:0.4rem;">Protected</span>
+                    }
                 </td>
+                <td class="permissions-cell">@string.Join(", ", permissionNames)</td>
             </tr>
         }
         </tbody>
     </table>
 </section>
 
-<section class="card-lite">
-    <h2 class="section-title">Create Role</h2>
-    <form method="post" asp-page-handler="Create" class="form-grid">
-        <label>
-            Role name
-            <input name="name" placeholder="Role name" class="text-input" required />
-        </label>
-        <div class="permission-grid">
-            @foreach (var p in Model.AvailablePermissions)
-            {
-                <label class="checkbox-label"><input type="checkbox" name="permissions" value="@p.Key" class="checkbox" /> @p.DisplayName</label>
-            }
-        </div>
-        <div class="modal-actions"><button type="submit" class="btn btn-sm">Create</button></div>
-    </form>
-</section>
+<div id="role-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;"
+     onclick="if(event.target===this) closeRoleModal()">
+    <div class="modal-panel" style="background:white; border-radius:8px; width:min(900px,95vw); max-height:90vh; overflow:auto; padding:1rem;">
+        <h2 class="section-title" id="role-modal-title">Create Role</h2>
 
-<section class="card-lite">
-    <h2 class="section-title">Update Role</h2>
-    <form method="post" asp-page-handler="Update" class="form-grid">
-        <div class="inline-form wrap">
-            <input type="number" name="id" placeholder="Role ID" class="small-input" required />
-            <input name="name" placeholder="New name" class="text-input" required />
-        </div>
-        <div class="permission-grid">
-            @foreach (var p in Model.AvailablePermissions)
-            {
-                <label class="checkbox-label"><input type="checkbox" name="permissions" value="@p.Key" class="checkbox" /> @p.DisplayName</label>
-            }
-        </div>
-        <div class="modal-actions"><button type="submit" class="btn btn-sm">Update</button></div>
-    </form>
-</section>
+        <form method="post" asp-page-handler="Create" id="role-create-form" class="form-grid">
+            <label>
+                Role name
+                <input name="name" id="create-role-name" placeholder="Role name" class="text-input" required />
+            </label>
+            <div class="permission-grid">
+                @foreach (var p in Model.AvailablePermissions)
+                {
+                    <label class="checkbox-label"><input type="checkbox" name="permissions" value="@p.Key" class="checkbox create-role-permission" /> @p.DisplayName</label>
+                }
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-sm">Create</button>
+                <button type="button" class="btn btn-sm" onclick="closeRoleModal()">Cancel</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="Update" id="role-update-form" class="form-grid" style="display:none;">
+            <input type="hidden" name="id" id="update-role-id" />
+            <label>
+                Role name
+                <input name="name" id="update-role-name" placeholder="Role name" class="text-input" required />
+            </label>
+            <div class="permission-grid">
+                @foreach (var p in Model.AvailablePermissions)
+                {
+                    <label class="checkbox-label"><input type="checkbox" name="permissions" value="@p.Key" class="checkbox update-role-permission" /> @p.DisplayName</label>
+                }
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-sm">Update</button>
+                <button type="button" class="btn btn-sm" onclick="closeRoleModal()">Cancel</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="Delete" id="role-delete-form" class="inline-form" style="display:none; margin-top:0.75rem;">
+            <input type="hidden" name="id" id="delete-role-id" />
+            <button type="submit" class="btn btn-sm" onclick="return confirm('Delete this role?')">Delete</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const modal = document.getElementById('role-modal');
+    const modalTitle = document.getElementById('role-modal-title');
+    const createForm = document.getElementById('role-create-form');
+    const updateForm = document.getElementById('role-update-form');
+    const deleteForm = document.getElementById('role-delete-form');
+
+    const createName = document.getElementById('create-role-name');
+    const updateId = document.getElementById('update-role-id');
+    const updateName = document.getElementById('update-role-name');
+    const deleteId = document.getElementById('delete-role-id');
+
+    const clearChecks = (selector) => {
+        document.querySelectorAll(selector).forEach(cb => cb.checked = false);
+    };
+
+    const setChecks = (selector, permissions) => {
+        clearChecks(selector);
+        document.querySelectorAll(selector).forEach(cb => {
+            cb.checked = permissions.includes(cb.value);
+        });
+    };
+
+    const openCreate = () => {
+        modalTitle.textContent = 'Create Role';
+        createForm.style.display = '';
+        updateForm.style.display = 'none';
+        deleteForm.style.display = 'none';
+        createName.value = '';
+        clearChecks('.create-role-permission');
+        modal.style.display = 'flex';
+    };
+
+    const openEdit = (role) => {
+        if (role.isProtected) {
+            return;
+        }
+
+        modalTitle.textContent = `Edit Role: ${role.name}`;
+        createForm.style.display = 'none';
+        updateForm.style.display = '';
+        deleteForm.style.display = '';
+
+        updateId.value = role.id;
+        updateName.value = role.name;
+        deleteId.value = role.id;
+        setChecks('.update-role-permission', role.permissions);
+
+        modal.style.display = 'flex';
+    };
+
+    window.closeRoleModal = () => {
+        modal.style.display = 'none';
+    };
+
+    document.getElementById('new-role-btn').addEventListener('click', openCreate);
+
+    document.querySelectorAll('.role-row').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => {
+            const permissions = (row.dataset.rolePermissions || '')
+                .split('|')
+                .map(p => p.trim())
+                .filter(Boolean);
+
+            openEdit({
+                id: row.dataset.roleId,
+                name: row.dataset.roleName,
+                permissions,
+                isProtected: row.dataset.roleProtected === 'true'
+            });
+        });
+    });
+})();
+</script>
+}

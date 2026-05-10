@@ -6,6 +6,7 @@
 }
 <div class="page-header">
     <h1>Services</h1>
+    <button type="button" class="btn" id="new-service-btn">+ Create Service</button>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
@@ -21,24 +22,22 @@
             <th>Code</th>
             <th>Name</th>
             <th>Active</th>
-            <th></th>
         </tr>
         </thead>
         <tbody>
         @foreach (var s in Model.Services)
         {
-            <tr class="@(!s.IsActive ? "row-inactive" : "")">
+            <tr class="service-row @(!s.IsActive ? "row-inactive" : "")"
+                data-service-id="@s.Id"
+                data-service-code="@s.CatalogCode"
+                data-service-name="@s.Name"
+                data-service-active="@s.IsActive.ToString().ToLowerInvariant()"
+                title="Click to edit">
                 <td>@s.Id</td>
                 <td>@s.CatalogCode</td>
                 <td>@s.Name</td>
                 <td>
                     <span class="badge @(s.IsActive ? "badge-active" : "badge-inactive")">@(s.IsActive ? "Active" : "Inactive")</span>
-                </td>
-                <td>
-                    <form method="post" asp-page-handler="Delete" class="inline-form">
-                        <input type="hidden" name="id" value="@s.Id" />
-                        <button type="submit" class="btn btn-sm">Delete</button>
-                    </form>
                 </td>
             </tr>
         }
@@ -46,21 +45,111 @@
     </table>
 </section>
 
-<section class="card-lite">
-    <h2 class="section-title">Create Service</h2>
-    <form method="post" asp-page-handler="Create" class="inline-form wrap">
-        <input asp-for="NewService.CatalogCode" placeholder="Code" class="small-input" required />
-        <input asp-for="NewService.Name" placeholder="Name" class="text-input" required />
-        <button type="submit" class="btn btn-sm">Create</button>
-    </form>
-</section>
+<div id="service-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;"
+     onclick="if(event.target===this) closeServiceModal()">
+    <div class="modal-panel" style="background:white; border-radius:8px; width:min(900px,95vw); max-height:90vh; overflow:auto; padding:1rem;">
+        <h2 class="section-title" id="service-modal-title">Create Service</h2>
 
-<section class="card-lite">
-    <h2 class="section-title">Update Service</h2>
-    <form method="post" asp-page-handler="Update" class="inline-form wrap">
-        <input type="number" name="id" placeholder="Service ID" class="small-input" required />
-        <input asp-for="EditService.CatalogCode" placeholder="Code" class="small-input" required />
-        <input asp-for="EditService.Name" placeholder="Name" class="text-input" required />
-        <button type="submit" class="btn btn-sm">Update</button>
-    </form>
-</section>
+        <form method="post" asp-page-handler="Create" id="service-create-form" class="form-grid two-col">
+            <label>
+                Code
+                <input asp-for="NewService.CatalogCode" class="small-input" required />
+            </label>
+            <label>
+                Name
+                <input asp-for="NewService.Name" class="text-input" required />
+            </label>
+            <label class="checkbox-label full-span">
+                <input asp-for="NewService.IsActive" type="checkbox" class="checkbox" />
+                Active
+            </label>
+            <div class="modal-actions full-span">
+                <button type="submit" class="btn btn-sm">Create</button>
+                <button type="button" class="btn btn-sm" onclick="closeServiceModal()">Cancel</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="Update" id="service-update-form" class="form-grid two-col" style="display:none;">
+            <input type="hidden" name="id" id="edit-service-id" />
+            <label>
+                Code
+                <input asp-for="EditService.CatalogCode" id="edit-service-code" class="small-input" required />
+            </label>
+            <label>
+                Name
+                <input asp-for="EditService.Name" id="edit-service-name" class="text-input" required />
+            </label>
+            <label class="checkbox-label full-span">
+                <input asp-for="EditService.IsActive" id="edit-service-active" type="checkbox" class="checkbox" />
+                Active
+            </label>
+            <div class="modal-actions full-span">
+                <button type="submit" class="btn btn-sm">Update</button>
+                <button type="button" class="btn btn-sm" onclick="closeServiceModal()">Cancel</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="Delete" id="service-delete-form" class="inline-form" style="display:none; margin-top:0.75rem;">
+            <input type="hidden" name="id" id="delete-service-id" />
+            <button type="submit" class="btn btn-sm" onclick="return confirm('Delete this service?')">Delete</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const modal = document.getElementById('service-modal');
+    const modalTitle = document.getElementById('service-modal-title');
+    const createForm = document.getElementById('service-create-form');
+    const updateForm = document.getElementById('service-update-form');
+    const deleteForm = document.getElementById('service-delete-form');
+
+    const openCreate = () => {
+        modalTitle.textContent = 'Create Service';
+        createForm.style.display = '';
+        updateForm.style.display = 'none';
+        deleteForm.style.display = 'none';
+        createForm.reset();
+        const newServiceActive = document.getElementById('NewService_IsActive');
+        if (newServiceActive) {
+            newServiceActive.checked = true;
+        }
+        modal.style.display = 'flex';
+    };
+
+    const openEdit = (service) => {
+        modalTitle.textContent = `Edit Service: ${service.name}`;
+        createForm.style.display = 'none';
+        updateForm.style.display = '';
+        deleteForm.style.display = '';
+
+        document.getElementById('edit-service-id').value = service.id;
+        document.getElementById('edit-service-code').value = service.code;
+        document.getElementById('edit-service-name').value = service.name;
+        document.getElementById('edit-service-active').checked = service.isActive;
+        document.getElementById('delete-service-id').value = service.id;
+
+        modal.style.display = 'flex';
+    };
+
+    window.closeServiceModal = () => {
+        modal.style.display = 'none';
+    };
+
+    document.getElementById('new-service-btn').addEventListener('click', openCreate);
+
+    document.querySelectorAll('.service-row').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => {
+            openEdit({
+                id: row.dataset.serviceId,
+                code: row.dataset.serviceCode || '',
+                name: row.dataset.serviceName || '',
+                isActive: row.dataset.serviceActive === 'true'
+            });
+        });
+    });
+})();
+</script>
+}

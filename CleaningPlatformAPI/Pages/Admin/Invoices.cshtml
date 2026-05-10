@@ -13,6 +13,14 @@
     <div class="alert alert-danger">@Model.ErrorMessage</div>
 }
 
+<section class="card-lite">
+    <h2 class="section-title">Generate from booking</h2>
+    <form method="post" asp-page-handler="GenerateFromBooking" class="inline-form wrap">
+        <input type="number" name="bookingId" placeholder="Booking ID" class="small-input" required />
+        <button type="submit" class="btn btn-sm">Generate</button>
+    </form>
+</section>
+
 <section class="detail-section">
     @if (Model.Invoices.Count == 0)
     {
@@ -42,12 +50,4 @@
             </tbody>
         </table>
     }
-</section>
-
-<section class="card-lite">
-    <h2 class="section-title">Generate from booking</h2>
-    <form method="post" asp-page-handler="GenerateFromBooking" class="inline-form wrap">
-        <input type="number" name="bookingId" placeholder="Booking ID" class="small-input" required />
-        <button type="submit" class="btn btn-sm">Generate</button>
-    </form>
 </section>

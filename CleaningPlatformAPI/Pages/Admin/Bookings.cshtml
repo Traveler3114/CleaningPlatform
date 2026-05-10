@@ -47,8 +47,8 @@ else
         <tbody>
             @foreach (var b in Model.Bookings)
             {
-                <tr>
-                    <td>@b.Id</td>
+                <tr class="booking-row" data-href="@Url.Page("/Admin/BookingDetail", new { id = b.Id })" title="Click to open booking detail">
+                    <td><a asp-page="/Admin/BookingDetail" asp-route-id="@b.Id" class="link">@b.Id</a></td>
                     <td>@b.CustomerName</td>
                     <td>@b.Phone</td>
                     <td>@b.Date.ToString("yyyy-MM-dd")</td>
@@ -62,7 +62,14 @@ else
                             <select name="status" class="status-select" aria-label="Update status for booking @b.Id">
                                 @foreach (var s in new[] { "Pending", "Confirmed", "InProgress", "Completed", "Cancelled" })
                                 {
-                                    //<option value="@s" @(b.Status == s ? "selected" : "")>@s</option>
+                                    if (b.Status == s)
+                                    {
+                                        <option value="@s" selected="selected">@s</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@s">@s</option>
+                                    }
                                 }
                             </select>
                             <button type="submit" class="btn btn-sm">Save</button>
@@ -72,4 +79,23 @@ else
             }
         </tbody>
     </table>
+}
+
+@section Scripts {
+<script>
+(function () {
+    document.querySelectorAll('.booking-row').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', (event) => {
+            if (event.target.closest('a, button, select, input, form, label')) {
+                return;
+            }
+            const href = row.dataset.href;
+            if (href) {
+                window.location.href = href;
+            }
+        });
+    });
+})();
+</script>
 }
