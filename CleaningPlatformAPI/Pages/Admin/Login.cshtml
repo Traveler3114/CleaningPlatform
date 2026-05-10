@@ -10,25 +10,25 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin Login</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
 </head>
-<body>
-<main style="max-width:420px;margin:4rem auto;">
+<body class="login-page">
+<main class="login-card">
     <h1>Admin Login</h1>
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
-        <p style="color:#b00020;">@Model.ErrorMessage</p>
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
     }
-    <form method="post">
+    <form method="post" class="form-grid">
         <div>
             <label asp-for="Email"></label>
-            <input asp-for="Email" required />
+            <input asp-for="Email" class="text-input full-width" required />
         </div>
         <div>
             <label asp-for="Password"></label>
-            <input asp-for="Password" type="password" required />
+            <input asp-for="Password" type="password" class="text-input full-width" required />
         </div>
-        <button type="submit">Sign in</button>
+        <button type="submit" class="btn">Sign in</button>
     </form>
 </main>
 </body>

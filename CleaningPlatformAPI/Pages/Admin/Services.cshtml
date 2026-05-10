@@ -2,36 +2,65 @@
 @model CleaningPlatformAPI.Pages.Admin.ServicesModel
 @{
     ViewData["Title"] = "Services";
+    ViewData["ActivePage"] = "services";
 }
-<h1>Services</h1>
-@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
-<table>
-<thead><tr><th>Code</th><th>Name</th><th>Active</th><th></th></tr></thead>
-<tbody>
-@foreach (var s in Model.Services)
+<div class="page-header">
+    <h1>Services</h1>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
 {
-    <tr>
-        <td>@s.CatalogCode</td><td>@s.Name</td><td>@s.IsActive</td>
-        <td>
-            <form method="post" asp-page-handler="Delete" style="display:inline">
-                <input type="hidden" name="id" value="@s.Id" />
-                <button type="submit">Delete</button>
-            </form>
-        </td>
-    </tr>
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
 }
-</tbody>
-</table>
-<h2>Create Service</h2>
-<form method="post" asp-page-handler="Create">
-    <input asp-for="NewService.CatalogCode" placeholder="Code" />
-    <input asp-for="NewService.Name" placeholder="Name" />
-    <button type="submit">Create</button>
-</form>
-<h2>Update Service</h2>
-<form method="post" asp-page-handler="Update">
-    <input type="number" name="id" placeholder="Service ID" />
-    <input asp-for="EditService.CatalogCode" placeholder="Code" />
-    <input asp-for="EditService.Name" placeholder="Name" />
-    <button type="submit">Update</button>
-</form>
+
+<section class="detail-section">
+    <table class="admin-table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Active</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var s in Model.Services)
+        {
+            <tr class="@(!s.IsActive ? "row-inactive" : "")">
+                <td>@s.Id</td>
+                <td>@s.CatalogCode</td>
+                <td>@s.Name</td>
+                <td>
+                    <span class="badge @(s.IsActive ? "badge-active" : "badge-inactive")">@(s.IsActive ? "Active" : "Inactive")</span>
+                </td>
+                <td>
+                    <form method="post" asp-page-handler="Delete" class="inline-form">
+                        <input type="hidden" name="id" value="@s.Id" />
+                        <button type="submit" class="btn btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+
+<section class="card-lite">
+    <h2 class="section-title">Create Service</h2>
+    <form method="post" asp-page-handler="Create" class="inline-form wrap">
+        <input asp-for="NewService.CatalogCode" placeholder="Code" class="small-input" required />
+        <input asp-for="NewService.Name" placeholder="Name" class="text-input" required />
+        <button type="submit" class="btn btn-sm">Create</button>
+    </form>
+</section>
+
+<section class="card-lite">
+    <h2 class="section-title">Update Service</h2>
+    <form method="post" asp-page-handler="Update" class="inline-form wrap">
+        <input type="number" name="id" placeholder="Service ID" class="small-input" required />
+        <input asp-for="EditService.CatalogCode" placeholder="Code" class="small-input" required />
+        <input asp-for="EditService.Name" placeholder="Name" class="text-input" required />
+        <button type="submit" class="btn btn-sm">Update</button>
+    </form>
+</section>
