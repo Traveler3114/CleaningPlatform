@@ -20,6 +20,7 @@ public class RolesModel : PageModel
 
     public List<RoleDto> Roles { get; set; } = [];
     public List<AvailablePermissionDto> AvailablePermissions { get; set; } = [];
+    public Dictionary<string, string> PermissionDisplayNames { get; set; } = new();
 
     [TempData]
     public string? ErrorMessage { get; set; }
@@ -63,5 +64,6 @@ public class RolesModel : PageModel
     {
         Roles = await _roleManager.GetAllRolesAsync();
         AvailablePermissions = _roleManager.GetAvailablePermissions();
+        PermissionDisplayNames = AvailablePermissions.ToDictionary(p => p.Key, p => p.DisplayName);
     }
 }

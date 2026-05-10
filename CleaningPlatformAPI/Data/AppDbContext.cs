@@ -45,6 +45,8 @@ namespace CleaningPlatformAPI.Data
             modelBuilder.Entity<ServiceCatalog>()
                 .Property(s => s.PriceAvg).HasPrecision(10, 2);
             modelBuilder.Entity<ServiceCatalog>()
+                .Property(s => s.DefaultPrice).HasPrecision(10, 2);
+            modelBuilder.Entity<ServiceCatalog>()
                 .Property(s => s.DefaultMarginPct).HasPrecision(5, 2);
 
             modelBuilder.Entity<BookingService>()

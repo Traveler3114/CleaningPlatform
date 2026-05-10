@@ -1,5 +1,6 @@
 @page
 @model CleaningPlatformAPI.Pages.Admin.IndexModel
+@using System.Text.Json
 @{
     ViewData["Title"] = "Daily View";
     ViewData["ActivePage"] = "daily";
@@ -86,35 +87,91 @@
 </section>
 
 <section class="card-lite">
-    <h2 class="section-title">Date Override</h2>
-    <form method="post" asp-page-handler="SaveOverride" class="form-grid two-col">
-        <input type="hidden" asp-for="SelectedDate" />
-        <label>
-            Start hour
-            <input asp-for="OverrideStartHour" type="number" class="text-input" />
-        </label>
-        <label>
-            End hour
-            <input asp-for="OverrideEndHour" type="number" class="text-input" />
-        </label>
-        <label>
-            Capacity
-            <input asp-for="OverrideCapacity" type="number" class="text-input" />
-        </label>
-        <label class="checkbox-label">
-            <input asp-for="OverrideClosed" type="checkbox" class="checkbox" />
-            Closed for whole day
-        </label>
-        <div class="modal-actions">
-            <button type="submit" class="btn btn-sm">Save Override</button>
-        </div>
-    </form>
-    @if (Model.TodayOverride != null)
-    {
-        <form method="post" asp-page-handler="DeleteOverride" class="inline-form">
-            <input type="hidden" asp-for="SelectedDate" />
-            <input type="hidden" name="id" value="@Model.TodayOverride.Id" />
-            <button type="submit" class="btn btn-sm">Delete Override</button>
-        </form>
-    }
+    <div class="page-header" style="margin-bottom:0;">
+        <h2 class="section-title" style="margin-bottom:0;">Date Override</h2>
+        <button type="button" class="btn btn-sm" id="open-override-modal">Date Override</button>
+    </div>
 </section>
+
+<div id="override-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;"
+     onclick="if(event.target===this) closeOverrideModal()">
+    <div class="modal-panel" style="background:white; border-radius:8px; width:min(700px,95vw); max-height:90vh; overflow:auto; padding:1rem;">
+        <h2 class="section-title" id="override-modal-title">Save Date Override</h2>
+
+        <form method="post" asp-page-handler="SaveOverride" class="form-grid two-col" id="override-save-form">
+            <input type="hidden" asp-for="SelectedDate" />
+            <label>
+                Start hour
+                <input asp-for="OverrideStartHour" type="number" class="text-input" id="override-start" />
+            </label>
+            <label>
+                End hour
+                <input asp-for="OverrideEndHour" type="number" class="text-input" id="override-end" />
+            </label>
+            <label>
+                Capacity
+                <input asp-for="OverrideCapacity" type="number" class="text-input" id="override-capacity" />
+            </label>
+            <label class="checkbox-label">
+                <input asp-for="OverrideClosed" type="checkbox" class="checkbox" id="override-closed" />
+                Closed for whole day
+            </label>
+            <div class="modal-actions full-span">
+                <button type="submit" class="btn btn-sm" id="override-save-btn">Save Override</button>
+                <button type="button" class="btn btn-sm" onclick="closeOverrideModal()">Cancel</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="DeleteOverride" class="inline-form" id="override-delete-form" style="margin-top:0.75rem; display:none;">
+            <input type="hidden" asp-for="SelectedDate" />
+            <input type="hidden" name="id" id="override-id" value="@(Model.TodayOverride?.Id)" />
+            <button type="submit" class="btn btn-sm" onclick="return confirm('Delete override for this date?')">Delete Override</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const modal = document.getElementById('override-modal');
+    const title = document.getElementById('override-modal-title');
+    const deleteForm = document.getElementById('override-delete-form');
+    const saveButton = document.getElementById('override-save-btn');
+
+    const startInput = document.getElementById('override-start');
+    const endInput = document.getElementById('override-end');
+    const capacityInput = document.getElementById('override-capacity');
+    const closedInput = document.getElementById('override-closed');
+    const idInput = document.getElementById('override-id');
+
+    const currentOverride = @Html.Raw(JsonSerializer.Serialize(Model.TodayOverride));
+
+    document.getElementById('open-override-modal').addEventListener('click', () => {
+        if (currentOverride) {
+            title.textContent = 'Update Date Override';
+            saveButton.textContent = 'Update Override';
+            deleteForm.style.display = '';
+            idInput.value = currentOverride.Id;
+            startInput.value = currentOverride.StartHour ?? '';
+            endInput.value = currentOverride.EndHour ?? '';
+            capacityInput.value = currentOverride.Capacity ?? '';
+            closedInput.checked = currentOverride.IsFullyClosed === true;
+        } else {
+            title.textContent = 'Create Date Override';
+            saveButton.textContent = 'Save Override';
+            deleteForm.style.display = 'none';
+            idInput.value = '';
+            startInput.value = '';
+            endInput.value = '';
+            capacityInput.value = '';
+            closedInput.checked = false;
+        }
+        modal.style.display = 'flex';
+    });
+
+    window.closeOverrideModal = () => {
+        modal.style.display = 'none';
+    };
+})();
+</script>
+}
