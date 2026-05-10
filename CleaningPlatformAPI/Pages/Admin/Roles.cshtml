@@ -2,37 +2,76 @@
 @model CleaningPlatformAPI.Pages.Admin.RolesModel
 @{
     ViewData["Title"] = "Roles";
+    ViewData["ActivePage"] = "roles";
 }
-<h1>Roles</h1>
-@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
-<ul>
-@foreach (var r in Model.Roles)
+<div class="page-header">
+    <h1>Roles</h1>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
 {
-    <li>
-        <strong>@r.Name</strong> (@r.Permissions.Count perms)
-        <form method="post" asp-page-handler="Delete" style="display:inline">
-            <input type="hidden" name="id" value="@r.Id" />
-            <button type="submit">Delete</button>
-        </form>
-    </li>
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
 }
-</ul>
-<h2>Create Role</h2>
-<form method="post" asp-page-handler="Create">
-    <input name="name" placeholder="Role name" />
-    @foreach (var p in Model.AvailablePermissions)
-    {
-        <label><input type="checkbox" name="permissions" value="@p.Key" /> @p.DisplayName</label>
-    }
-    <button type="submit">Create</button>
-</form>
-<h2>Update Role</h2>
-<form method="post" asp-page-handler="Update">
-    <input type="number" name="id" placeholder="Role ID" />
-    <input name="name" placeholder="New name" />
-    @foreach (var p in Model.AvailablePermissions)
-    {
-        <label><input type="checkbox" name="permissions" value="@p.Key" /> @p.DisplayName</label>
-    }
-    <button type="submit">Update</button>
-</form>
+
+<section class="detail-section">
+    <table class="admin-table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Permissions</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var r in Model.Roles)
+        {
+            <tr>
+                <td>@r.Id</td>
+                <td>@r.Name</td>
+                <td class="permissions-cell">@string.Join(", ", r.Permissions)</td>
+                <td>
+                    <form method="post" asp-page-handler="Delete" class="inline-form">
+                        <input type="hidden" name="id" value="@r.Id" />
+                        <button type="submit" class="btn btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+
+<section class="card-lite">
+    <h2 class="section-title">Create Role</h2>
+    <form method="post" asp-page-handler="Create" class="form-grid">
+        <label>
+            Role name
+            <input name="name" placeholder="Role name" class="text-input" required />
+        </label>
+        <div class="permission-grid">
+            @foreach (var p in Model.AvailablePermissions)
+            {
+                <label class="checkbox-label"><input type="checkbox" name="permissions" value="@p.Key" class="checkbox" /> @p.DisplayName</label>
+            }
+        </div>
+        <div class="modal-actions"><button type="submit" class="btn btn-sm">Create</button></div>
+    </form>
+</section>
+
+<section class="card-lite">
+    <h2 class="section-title">Update Role</h2>
+    <form method="post" asp-page-handler="Update" class="form-grid">
+        <div class="inline-form wrap">
+            <input type="number" name="id" placeholder="Role ID" class="small-input" required />
+            <input name="name" placeholder="New name" class="text-input" required />
+        </div>
+        <div class="permission-grid">
+            @foreach (var p in Model.AvailablePermissions)
+            {
+                <label class="checkbox-label"><input type="checkbox" name="permissions" value="@p.Key" class="checkbox" /> @p.DisplayName</label>
+            }
+        </div>
+        <div class="modal-actions"><button type="submit" class="btn btn-sm">Update</button></div>
+    </form>
+</section>
