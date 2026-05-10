@@ -1,0 +1,27 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.InvoiceDetailModel
+@{
+    ViewData["Title"] = "Invoice Detail";
+}
+@if (Model.Invoice == null)
+{
+    <h1>Invoice not found</h1>
+    return;
+}
+<h1>@Model.Invoice.InvoiceNumber</h1>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
+<p>Status: @Model.Invoice.Status | Balance: @Model.Invoice.BalanceDue</p>
+<form method="post" asp-page-handler="UpdateStatus">
+    <input type="hidden" asp-for="Id" />
+    <select name="status"><option>Draft</option><option>Sent</option><option>PartiallyPaid</option><option>Paid</option><option>Overdue</option><option>WrittenOff</option></select>
+    <button type="submit">Update Status</button>
+</form>
+<form method="post" asp-page-handler="RecordPayment">
+    <input type="hidden" asp-for="Id" />
+    <input type="date" name="paymentDate" />
+    <input type="number" name="amount" step="0.01" placeholder="Amount" />
+    <input name="method" placeholder="Method" value="BankTransfer" />
+    <input name="reference" placeholder="Reference" />
+    <input name="notes" placeholder="Notes" />
+    <button type="submit">Record Payment</button>
+</form>

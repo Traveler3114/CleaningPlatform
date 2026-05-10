@@ -1,0 +1,38 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.RolesModel
+@{
+    ViewData["Title"] = "Roles";
+}
+<h1>Roles</h1>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
+<ul>
+@foreach (var r in Model.Roles)
+{
+    <li>
+        <strong>@r.Name</strong> (@r.Permissions.Count perms)
+        <form method="post" asp-page-handler="Delete" style="display:inline">
+            <input type="hidden" name="id" value="@r.Id" />
+            <button type="submit">Delete</button>
+        </form>
+    </li>
+}
+</ul>
+<h2>Create Role</h2>
+<form method="post" asp-page-handler="Create">
+    <input name="name" placeholder="Role name" />
+    @foreach (var p in Model.AvailablePermissions)
+    {
+        <label><input type="checkbox" name="permissions" value="@p.Key" /> @p.DisplayName</label>
+    }
+    <button type="submit">Create</button>
+</form>
+<h2>Update Role</h2>
+<form method="post" asp-page-handler="Update">
+    <input type="number" name="id" placeholder="Role ID" />
+    <input name="name" placeholder="New name" />
+    @foreach (var p in Model.AvailablePermissions)
+    {
+        <label><input type="checkbox" name="permissions" value="@p.Key" /> @p.DisplayName</label>
+    }
+    <button type="submit">Update</button>
+</form>

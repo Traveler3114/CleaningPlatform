@@ -1,0 +1,26 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.InvoicesModel
+@{
+    ViewData["Title"] = "Invoices";
+}
+<h1>Invoices</h1>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
+<table>
+<thead><tr><th>#</th><th>Client</th><th>Status</th><th>Total</th></tr></thead>
+<tbody>
+@foreach (var i in Model.Invoices)
+{
+    <tr>
+        <td><a asp-page="/Admin/InvoiceDetail" asp-route-id="@i.Id">@i.InvoiceNumber</a></td>
+        <td>@i.ClientName</td>
+        <td>@i.Status</td>
+        <td>@i.TotalAmount</td>
+    </tr>
+}
+</tbody>
+</table>
+<h2>Generate from booking</h2>
+<form method="post" asp-page-handler="GenerateFromBooking">
+    <input type="number" name="bookingId" placeholder="Booking ID" />
+    <button type="submit">Generate</button>
+</form>

@@ -1,0 +1,39 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.ScheduleModel
+@{
+    ViewData["Title"] = "Schedule";
+}
+<h1>Schedule</h1>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
+<table>
+<thead><tr><th>Day</th><th>Start</th><th>End</th><th>Capacity</th><th></th></tr></thead>
+<tbody>
+@foreach (var d in Model.Schedule)
+{
+    <tr>
+        <td>@d.DayOfWeek</td><td>@d.StartHour</td><td>@d.EndHour</td><td>@d.Capacity</td>
+        <td>
+            <form method="post" asp-page-handler="DeleteDay" style="display:inline">
+                <input type="hidden" name="dayOfWeek" value="@d.DayOfWeek" />
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+    </tr>
+}
+</tbody>
+</table>
+<h2>Add / Update Day</h2>
+<form method="post" asp-page-handler="AddDay">
+    <input asp-for="DayInput.DayOfWeek" placeholder="Day (0-6)" />
+    <input asp-for="DayInput.StartHour" placeholder="Start" />
+    <input asp-for="DayInput.EndHour" placeholder="End" />
+    <input asp-for="DayInput.Capacity" placeholder="Capacity" />
+    <button type="submit">Add</button>
+</form>
+<form method="post" asp-page-handler="UpdateDay">
+    <input asp-for="DayInput.DayOfWeek" placeholder="Day (0-6)" />
+    <input asp-for="DayInput.StartHour" placeholder="Start" />
+    <input asp-for="DayInput.EndHour" placeholder="End" />
+    <input asp-for="DayInput.Capacity" placeholder="Capacity" />
+    <button type="submit">Update</button>
+</form>

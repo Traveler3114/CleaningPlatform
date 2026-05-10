@@ -1,0 +1,32 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.ClientsModel
+@{
+    ViewData["Title"] = "Clients";
+}
+<h1>Clients</h1>
+<form method="get">
+    <input asp-for="Search" placeholder="Search" />
+    <select asp-for="TypeFilter">
+        <option value="">All</option>
+        <option>OneTime</option>
+        <option>RepeatIndividual</option>
+        <option>RepeatBusiness</option>
+    </select>
+    <button type="submit">Filter</button>
+</form>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
+<ul>
+@foreach (var c in Model.Clients)
+{
+    <li><a asp-page="/Admin/ClientDetail" asp-route-id="@c.Id">@c.ClientName</a> (@c.Type)</li>
+}
+</ul>
+<h2>Create Client</h2>
+<form method="post" asp-page-handler="Create">
+    <input asp-for="NewClient.ClientName" placeholder="Name" />
+    <input asp-for="NewClient.PrimaryContactName" placeholder="Primary contact" />
+    <input asp-for="NewClient.PrimaryContactPhone" placeholder="Phone" />
+    <input asp-for="NewClient.PrimaryContactEmail" placeholder="Email" />
+    <select asp-for="NewClient.Type"><option>RepeatIndividual</option><option>RepeatBusiness</option></select>
+    <button type="submit">Create</button>
+</form>

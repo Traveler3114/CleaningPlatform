@@ -1,0 +1,65 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.BookingDetailModel
+@{
+    ViewData["Title"] = "Booking Detail";
+}
+@if (Model.Booking == null)
+{
+    <h1>Booking not found</h1>
+    return;
+}
+<h1>Booking #@Model.Booking.Id</h1>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
+<p>@Model.Booking.CustomerName - @Model.Booking.Status</p>
+<form method="post" asp-page-handler="UpdateStatus">
+    <input type="hidden" name="id" value="@Model.Booking.Id" />
+    <select name="status"><option>Pending</option><option>Confirmed</option><option>InProgress</option><option>Completed</option><option>Cancelled</option></select>
+    <button type="submit">Update Status</button>
+</form>
+<form method="post" asp-page-handler="AssignEmployee">
+    <input type="hidden" name="id" value="@Model.Booking.Id" />
+    <select name="employeeId">
+        <option value="">Unassigned</option>
+        @foreach (var e in Model.ActiveEmployees)
+        {
+            <option value="@e.Id">@e.FullName</option>
+        }
+    </select>
+    <button type="submit">Assign</button>
+</form>
+<form method="post" asp-page-handler="AddService">
+    <input type="hidden" name="id" value="@Model.Booking.Id" />
+    <select name="serviceCatalogId">
+        @foreach (var s in Model.ServiceCatalog)
+        {
+            <option value="@s.Id">@s.Name</option>
+        }
+    </select>
+    <input name="quantity" type="number" step="0.01" value="1" />
+    <input name="estimatedPrice" type="number" step="0.01" placeholder="Est." />
+    <input name="notes" placeholder="Notes" />
+    <button type="submit">Add Service</button>
+</form>
+<ul>
+@foreach (var s in Model.Booking.Services)
+{
+    <li>
+        @s.ServiceName x @s.Quantity | Est: @s.EstimatedPrice | Final: @s.FinalPrice
+        <form method="post" asp-page-handler="UpdateServicePrice" style="display:inline">
+            <input type="hidden" name="id" value="@Model.Booking.Id" />
+            <input type="hidden" name="serviceId" value="@s.Id" />
+            <input name="finalPrice" type="number" step="0.01" placeholder="Final price" />
+            <button type="submit">Set Price</button>
+        </form>
+        <form method="post" asp-page-handler="RemoveService" style="display:inline" onsubmit="return confirm('Remove service?');">
+            <input type="hidden" name="id" value="@Model.Booking.Id" />
+            <input type="hidden" name="serviceId" value="@s.Id" />
+            <button type="submit">Remove</button>
+        </form>
+    </li>
+}
+</ul>
+<form method="post" asp-page-handler="GenerateInvoice">
+    <input type="hidden" name="id" value="@Model.Booking.Id" />
+    <button type="submit">Generate Invoice</button>
+</form>

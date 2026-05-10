@@ -1,0 +1,39 @@
+@using CleaningPlatformAPI.Common
+@using CleaningPlatformAPI.Extensions
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - Cleaning Platform Admin</title>
+    <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header>
+    <nav style="display:flex;gap:1rem;align-items:center;justify-content:space-between;padding:1rem;">
+        <div style="display:flex;gap:1rem;align-items:center;">
+            <strong>CleaningPlatform Admin</strong>
+            @if (User.HasPermission(PermissionKeys.PagesDaily)) { <a asp-page="/Admin/Index">Daily View</a> }
+            @if (User.HasPermission(PermissionKeys.PagesClients)) { <a asp-page="/Admin/Clients">Clients</a> }
+            @if (User.HasPermission(PermissionKeys.PagesBookings)) { <a asp-page="/Admin/Bookings">Bookings</a> }
+            @if (User.HasPermission(PermissionKeys.PagesBookings)) { <a asp-page="/Admin/Invoices">Invoices</a> }
+            @if (User.HasPermission(PermissionKeys.PagesSchedule)) { <a asp-page="/Admin/Schedule">Schedule</a> }
+            @if (User.HasPermission(PermissionKeys.ActionsServiceCatalogEdit) || User.HasPermission(PermissionKeys.ActionsServiceCatalogManage)) { <a asp-page="/Admin/Services">Services</a> }
+            @if (User.HasPermission(PermissionKeys.PagesUsers)) { <a asp-page="/Admin/Users">Users</a> }
+            @if (User.HasPermission(PermissionKeys.PagesRoles)) { <a asp-page="/Admin/Roles">Roles</a> }
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+            <span>@(User.Identity?.Name ?? "User")</span>
+            <span style="padding:.15rem .5rem;border:1px solid #ccc;border-radius:999px;">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</span>
+            <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout">
+                <button type="submit">Sign out</button>
+            </form>
+        </div>
+    </nav>
+</header>
+<main style="padding:1rem;">
+    @RenderBody()
+</main>
+@RenderSection("Scripts", required: false)
+</body>
+</html>

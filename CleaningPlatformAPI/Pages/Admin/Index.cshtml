@@ -1,0 +1,47 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Daily View";
+}
+<h1>Daily View</h1>
+<form method="get">
+    <label>Date</label>
+    <input type="date" asp-for="SelectedDate" onchange="this.form.submit()" />
+</form>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
+<div>
+    <strong>Pending:</strong> @Model.KpiPending |
+    <strong>Confirmed:</strong> @Model.KpiConfirmed |
+    <strong>Completed (month):</strong> @Model.KpiCompletedThisMonth
+</div>
+<h2>Bookings</h2>
+<ul>
+@foreach (var b in Model.TodaysBookings)
+{
+    <li>#@b.Id @b.CustomerName (@b.Hour:00:00) - @b.Status</li>
+}
+</ul>
+<h2>Slots</h2>
+<ul>
+@foreach (var s in Model.Slots)
+{
+    <li>@s.Hour:00:00 cap @s.Capacity booked @s.Booked available @s.Available</li>
+}
+</ul>
+<h2>Date Override</h2>
+<form method="post" asp-page-handler="SaveOverride">
+    <input type="hidden" asp-for="SelectedDate" />
+    <label>Start</label><input asp-for="OverrideStartHour" type="number" />
+    <label>End</label><input asp-for="OverrideEndHour" type="number" />
+    <label>Capacity</label><input asp-for="OverrideCapacity" type="number" />
+    <label>Closed</label><input asp-for="OverrideClosed" type="checkbox" />
+    <button type="submit">Save Override</button>
+</form>
+@if (Model.TodayOverride != null)
+{
+    <form method="post" asp-page-handler="DeleteOverride">
+        <input type="hidden" asp-for="SelectedDate" />
+        <input type="hidden" name="id" value="@Model.TodayOverride.Id" />
+        <button type="submit">Delete Override</button>
+    </form>
+}

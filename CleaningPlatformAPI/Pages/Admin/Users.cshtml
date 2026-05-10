@@ -1,0 +1,41 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.UsersModel
+@{
+    ViewData["Title"] = "Users";
+}
+<h1>Users</h1>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <p style="color:#b00020;">@Model.ErrorMessage</p> }
+<table>
+<thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Active</th><th></th></tr></thead>
+<tbody>
+@foreach (var u in Model.Users)
+{
+    <tr>
+        <td>@u.FirstName @u.LastName</td>
+        <td>@u.Email</td>
+        <td>@u.Role</td>
+        <td>@u.IsActive</td>
+        <td>
+            <form method="post" asp-page-handler="Toggle">
+                <input type="hidden" name="id" value="@u.Id" />
+                <button type="submit">Toggle</button>
+            </form>
+        </td>
+    </tr>
+}
+</tbody>
+</table>
+<h2>Create User</h2>
+<form method="post" asp-page-handler="Create">
+    <input asp-for="NewUser.FirstName" placeholder="First name" />
+    <input asp-for="NewUser.LastName" placeholder="Last name" />
+    <input asp-for="NewUser.Email" placeholder="Email" />
+    <input asp-for="NewUser.Password" type="password" placeholder="Password" />
+    <select asp-for="NewUser.Role">
+        @foreach (var r in Model.AvailableRoles)
+        {
+            <option>@r.Name</option>
+        }
+    </select>
+    <button type="submit">Create</button>
+</form>

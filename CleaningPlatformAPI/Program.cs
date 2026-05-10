@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -18,6 +19,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 builder.Services.AddOpenApi();
+builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -44,8 +46,18 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = "MultiScheme";
+    options.DefaultAuthenticateScheme = "MultiScheme";
+    options.DefaultChallengeScheme = "MultiScheme";
+})
+.AddPolicyScheme("MultiScheme", "MultiScheme", options =>
+{
+    options.ForwardDefaultSelector = ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api"))
+            return JwtBearerDefaults.AuthenticationScheme;
+        return CookieAuthenticationDefaults.AuthenticationScheme;
+    };
 })
 .AddJwtBearer(options =>
 {
@@ -60,6 +72,13 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
+})
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+{
+    options.LoginPath = "/Admin/Login";
+    options.AccessDeniedPath = "/Admin/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.SlidingExpiration = true;
 });
 
 builder.Services.AddAuthorization(options =>
@@ -90,7 +109,8 @@ app.UseAuthorization();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.MapControllers();
-app.MapGet("/admin", () => Results.Redirect("/admin/index.html"));
+app.MapRazorPages();
+app.MapGet("/admin", () => Results.Redirect("/Admin/Index"));
 app.MapFallbackToFile("index.html");
 
 // Ensure DB created and seeded
