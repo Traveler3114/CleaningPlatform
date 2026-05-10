@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
@@ -59,16 +61,56 @@ public class AuthManager
 
     public async Task<OperationResult<string>> LoginAsync(LoginDto dto)
     {
+        var auth = await ValidateLoginAsync(dto);
+        if (!auth.Success || auth.Data is null)
+            return OperationResult<string>.Fail(auth.Message ?? "Invalid credentials.");
+
+        var user = auth.Data.User;
+        var permissions = auth.Data.Permissions;
+        var token = _tokenManager.CreateToken(user, permissions);
+        return OperationResult<string>.Ok(token);
+    }
+
+    public async Task<OperationResult<List<Claim>>> GetClaimsAsync(LoginDto dto)
+    {
+        var auth = await ValidateLoginAsync(dto);
+        if (!auth.Success || auth.Data is null)
+            return OperationResult<List<Claim>>.Fail(auth.Message ?? "Invalid credentials.");
+
+        var user = auth.Data.User;
+        var permissions = auth.Data.Permissions;
+        var roleName = user.Role?.Name ?? string.Empty;
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}".Trim()),
+            new Claim(ClaimTypes.Role, roleName)
+        };
+
+        if (roleName != "Owner")
+        {
+            foreach (var permission in permissions)
+                claims.Add(new Claim("permission", permission));
+        }
+
+        return OperationResult<List<Claim>>.Ok(claims);
+    }
+
+    private async Task<OperationResult<LoginContext>> ValidateLoginAsync(LoginDto dto)
+    {
         var email = dto.Email.Trim();
         var user = await _db.Employees
             .Include(e => e.Role)       // Include the navigation property
             .FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null || !user.IsActive)
-            return OperationResult<string>.Fail("Invalid credentials.");
+            return OperationResult<LoginContext>.Fail("Invalid credentials.");
 
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-            return OperationResult<string>.Fail("Invalid credentials.");
+            return OperationResult<LoginContext>.Fail("Invalid credentials.");
 
         //  Use Role.Id to get permissions
         var permissions = await _db.RolePermissions
@@ -76,7 +118,16 @@ public class AuthManager
             .Select(rp => rp.PermissionKey)
             .ToListAsync();
 
-        var token = _tokenManager.CreateToken(user, permissions);
-        return OperationResult<string>.Ok(token);
+        return OperationResult<LoginContext>.Ok(new LoginContext
+        {
+            User = user,
+            Permissions = permissions
+        });
+    }
+
+    private sealed class LoginContext
+    {
+        public required Employee User { get; init; }
+        public required List<string> Permissions { get; init; }
     }
 }

@@ -1,0 +1,175 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.ScheduleModel
+@{
+    ViewData["Title"] = "Schedule";
+    ViewData["ActivePage"] = "schedule";
+    var dayNames = new[]
+    {
+        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+    };
+}
+<div class="page-header">
+    <h1>Schedule</h1>
+    <button type="button" class="btn" id="add-day-btn">+ Add Day</button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<section class="detail-section">
+    <table class="admin-table">
+        <thead>
+        <tr>
+            <th>Day</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Capacity</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var d in Model.Schedule)
+        {
+            var dayName = d.DayOfWeek >= 0 && d.DayOfWeek <= 6 ? dayNames[d.DayOfWeek] : d.DayOfWeek.ToString();
+            <tr class="schedule-row"
+                data-day="@d.DayOfWeek"
+                data-start="@d.StartHour"
+                data-end="@d.EndHour"
+                data-capacity="@d.Capacity"
+                data-day-name="@dayName"
+                title="Click to edit">
+                <td>@dayName</td>
+                <td>@d.StartHour</td>
+                <td>@d.EndHour</td>
+                <td>@d.Capacity</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+
+<div id="schedule-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;"
+     onclick="if(event.target===this) closeScheduleModal()">
+    <div class="modal-panel" style="background:white; border-radius:8px; width:min(700px,95vw); max-height:90vh; overflow:auto; padding:1rem;">
+        <h2 class="section-title" id="schedule-modal-title">Add Day</h2>
+
+        <form method="post" asp-page-handler="AddDay" id="schedule-add-form" class="form-grid two-col">
+            <label>
+                Day
+                <select name="DayInput.DayOfWeek" id="add-day-of-week" class="status-select">
+                    @for (var i = 0; i < dayNames.Length; i++)
+                    {
+                        <option value="@i">@dayNames[i]</option>
+                    }
+                </select>
+            </label>
+            <label>
+                Start Hour
+                <input name="DayInput.StartHour" id="add-start-hour" type="number" min="0" max="23" class="small-input" required />
+            </label>
+            <label>
+                End Hour
+                <input name="DayInput.EndHour" id="add-end-hour" type="number" min="0" max="23" class="small-input" required />
+            </label>
+            <label>
+                Capacity
+                <input name="DayInput.Capacity" id="add-capacity" type="number" min="0" class="small-input" required />
+            </label>
+            <div class="modal-actions full-span">
+                <button type="submit" class="btn btn-sm">Add</button>
+                <button type="button" class="btn btn-sm" onclick="closeScheduleModal()">Cancel</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="UpdateDay" id="schedule-update-form" class="form-grid two-col" style="display:none;">
+            <input type="hidden" name="dayOfWeek" id="update-day-key" />
+            <label>
+                Day
+                <select name="DayInput.DayOfWeek" id="update-day-of-week" class="status-select">
+                    @for (var i = 0; i < dayNames.Length; i++)
+                    {
+                        <option value="@i">@dayNames[i]</option>
+                    }
+                </select>
+            </label>
+            <label>
+                Start Hour
+                <input name="DayInput.StartHour" id="update-start-hour" type="number" min="0" max="23" class="small-input" required />
+            </label>
+            <label>
+                End Hour
+                <input name="DayInput.EndHour" id="update-end-hour" type="number" min="0" max="23" class="small-input" required />
+            </label>
+            <label>
+                Capacity
+                <input name="DayInput.Capacity" id="update-capacity" type="number" min="0" class="small-input" required />
+            </label>
+            <div class="modal-actions full-span">
+                <button type="submit" class="btn btn-sm">Update</button>
+                <button type="button" class="btn btn-sm" onclick="closeScheduleModal()">Cancel</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="DeleteDay" id="schedule-delete-form" class="inline-form" style="display:none; margin-top:0.75rem;">
+            <input type="hidden" name="dayOfWeek" id="delete-day-key" />
+            <button type="submit" class="btn btn-sm" onclick="return confirm('Delete this day from schedule?')">Delete</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const modal = document.getElementById('schedule-modal');
+    const title = document.getElementById('schedule-modal-title');
+    const addForm = document.getElementById('schedule-add-form');
+    const updateForm = document.getElementById('schedule-update-form');
+    const deleteForm = document.getElementById('schedule-delete-form');
+
+    const openAdd = () => {
+        title.textContent = 'Add Day';
+        addForm.style.display = '';
+        updateForm.style.display = 'none';
+        deleteForm.style.display = 'none';
+        addForm.reset();
+        modal.style.display = 'flex';
+    };
+
+    const openEdit = (day) => {
+        title.textContent = `Edit ${day.dayName}`;
+        addForm.style.display = 'none';
+        updateForm.style.display = '';
+        deleteForm.style.display = '';
+
+        document.getElementById('update-day-key').value = day.day;
+        document.getElementById('update-day-of-week').value = day.day;
+        document.getElementById('update-start-hour').value = day.start;
+        document.getElementById('update-end-hour').value = day.end;
+        document.getElementById('update-capacity').value = day.capacity;
+        document.getElementById('delete-day-key').value = day.day;
+
+        modal.style.display = 'flex';
+    };
+
+    window.closeScheduleModal = () => {
+        modal.style.display = 'none';
+    };
+
+    document.getElementById('add-day-btn').addEventListener('click', openAdd);
+
+    document.querySelectorAll('.schedule-row').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => {
+            openEdit({
+                day: row.dataset.day,
+                start: row.dataset.start,
+                end: row.dataset.end,
+                capacity: row.dataset.capacity,
+                dayName: row.dataset.dayName
+            });
+        });
+    });
+})();
+</script>
+}

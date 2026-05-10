@@ -1,0 +1,142 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.ClientsModel
+@{
+    ViewData["Title"] = "Clients";
+    ViewData["ActivePage"] = "clients";
+}
+
+<div class="page-header">
+    <h1>Clients</h1>
+    <button class="btn" onclick="document.getElementById('new-client-modal').style.display='flex'">+ New Client</button>
+</div>
+
+<div class="filter-row card-lite" style="margin-bottom:1.5rem;">
+    <form method="get" style="display:contents;">
+        <input asp-for="Search" type="text" placeholder="Search by name or phone" class="text-input" />
+        <select asp-for="TypeFilter" class="status-select">
+            <option value="">All</option>
+            <option value="OneTime">OneTime</option>
+            <option value="RepeatIndividual">RepeatIndividual</option>
+            <option value="RepeatBusiness">RepeatBusiness</option>
+        </select>
+        <button type="submit" class="btn btn-sm">Apply</button>
+    </form>
+</div>
+
+<section class="kpi-grid">
+    <div class="kpi-card"><span>Total clients</span><strong>@Model.Clients.Count</strong></div>
+    <div class="kpi-card"><span>OneTime</span><strong>@Model.Clients.Count(c => c.Type == "OneTime")</strong></div>
+    <div class="kpi-card"><span>RepeatIndividual</span><strong>@Model.Clients.Count(c => c.Type == "RepeatIndividual")</strong></div>
+    <div class="kpi-card"><span>RepeatBusiness</span><strong>@Model.Clients.Count(c => c.Type == "RepeatBusiness")</strong></div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert" style="background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;">
+        @Model.ErrorMessage
+    </div>
+}
+
+@if (!Model.Clients.Any())
+{
+    <div class="alert alert-info">No clients found.</div>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Primary Contact</th>
+                <th>Phone</th>
+                <th>Total Bookings</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model.Clients)
+            {
+                <tr>
+                    <td>@c.ClientName</td>
+                    <td><span class="badge badge-@c.Type.ToLower()">@c.Type</span></td>
+                    <td>@(c.PrimaryContactName ?? "-")</td>
+                    <td>@(c.PrimaryContactPhone ?? "-")</td>
+                    <td>@c.TotalBookings</td>
+                    <td>@c.CreatedAt.ToString("dd MMM yyyy")</td>
+                    <td>
+                        <a asp-page="/Admin/ClientDetail" asp-route-id="@c.Id" class="btn btn-sm">View</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@* ===== New Client Modal ===== *@
+<div id="new-client-modal" class="modal-backdrop" style="display:none;"
+     onclick="if(event.target===this) this.style.display='none'">
+    <div class="modal-panel">
+        <h2 class="section-title">New Client</h2>
+        <form method="post" asp-page-handler="Create">
+            <div class="form-grid two-col">
+                <label>
+                    Client Name
+                    <input asp-for="NewClient.ClientName" class="text-input" placeholder="Client name" required />
+                </label>
+                <label>
+                    Type
+                    <select asp-for="NewClient.Type" class="status-select" id="client-type-select">
+                        <option value="RepeatIndividual">RepeatIndividual</option>
+                        <option value="RepeatBusiness">RepeatBusiness</option>
+                    </select>
+                </label>
+                <label>
+                    Primary Contact Name
+                    <input asp-for="NewClient.PrimaryContactName" class="text-input" placeholder="Contact name" required />
+                </label>
+                <label>
+                    Phone
+                    <input asp-for="NewClient.PrimaryContactPhone" class="text-input" placeholder="Phone number" required />
+                </label>
+                <label>
+                    Email
+                    <input asp-for="NewClient.PrimaryContactEmail" class="text-input" placeholder="Email (optional)" />
+                </label>
+                <label id="oib-field">
+                    OIB
+                    <input asp-for="NewClient.Oib" class="text-input" placeholder="OIB" />
+                </label>
+                <label id="payment-terms-field">
+                    Payment Terms
+                    <input asp-for="NewClient.PaymentTerms" class="text-input" placeholder="e.g. Net30" />
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-sm">Save Client</button>
+                <button type="button" class="btn btn-sm"
+                        onclick="document.getElementById('new-client-modal').style.display='none'">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function() {
+    const typeSelect = document.getElementById('client-type-select');
+    const oibField = document.getElementById('oib-field');
+    const ptField = document.getElementById('payment-terms-field');
+
+    function sync() {
+        const isBusiness = typeSelect.value === 'RepeatBusiness';
+        oibField.style.display = isBusiness ? '' : 'none';
+        ptField.style.display = isBusiness ? '' : 'none';
+    }
+
+    typeSelect.addEventListener('change', sync);
+    sync();
+})();
+</script>
+}

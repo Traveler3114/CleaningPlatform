@@ -1,0 +1,177 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.IndexModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Daily View";
+    ViewData["ActivePage"] = "daily";
+}
+<div class="page-header">
+    <h1>Daily View</h1>
+    <form method="get" class="date-form">
+        <label for="SelectedDate">Date</label>
+        <input id="SelectedDate" type="date" asp-for="SelectedDate" class="date-input" onchange="this.form.submit()" />
+    </form>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<section class="kpi-grid">
+    <div class="kpi-card"><span>Pending</span><strong>@Model.KpiPending</strong></div>
+    <div class="kpi-card"><span>Confirmed</span><strong>@Model.KpiConfirmed</strong></div>
+    <div class="kpi-card"><span>Completed this month</span><strong>@Model.KpiCompletedThisMonth</strong></div>
+</section>
+
+<section class="detail-section">
+    <h2 class="section-title">Bookings</h2>
+    @if (Model.TodaysBookings.Count == 0)
+    {
+        <div class="alert alert-info">No bookings found for selected date.</div>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Client</th>
+                <th>Time</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var b in Model.TodaysBookings)
+            {
+                <tr>
+                    <td>#@b.Id</td>
+                    <td>@b.CustomerName</td>
+                    <td>@b.Hour:00</td>
+                    <td><span class="badge badge-@b.Status.ToLower()">@b.Status</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>
+
+<section class="detail-section">
+    <h2 class="section-title">Slots</h2>
+    <table class="admin-table">
+        <thead>
+        <tr>
+            <th>Hour</th>
+            <th>Capacity</th>
+            <th>Booked</th>
+            <th>Available</th>
+            <th>State</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var s in Model.Slots)
+        {
+            var isFull = !s.IsClosed && s.Available <= 0;
+            var state = s.IsClosed ? "Closed" : isFull ? "Full" : "Open";
+            var stateClass = s.IsClosed ? "closed" : isFull ? "full" : "open";
+            <tr class="@(s.IsClosed ? "row-closed" : isFull ? "row-full" : "")">
+                <td>@s.Hour:00</td>
+                <td>@s.Capacity</td>
+                <td>@s.Booked</td>
+                <td>@s.Available</td>
+                <td><span class="badge badge-@stateClass">@state</span></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+
+<section class="card-lite">
+    <div class="page-header" style="margin-bottom:0;">
+        <h2 class="section-title" style="margin-bottom:0;">Date Override</h2>
+        <button type="button" class="btn btn-sm" id="open-override-modal">Date Override</button>
+    </div>
+</section>
+
+<div id="override-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;"
+     onclick="if(event.target===this) closeOverrideModal()">
+    <div class="modal-panel" style="background:white; border-radius:8px; width:min(700px,95vw); max-height:90vh; overflow:auto; padding:1rem;">
+        <h2 class="section-title" id="override-modal-title">Save Date Override</h2>
+
+        <form method="post" asp-page-handler="SaveOverride" class="form-grid two-col" id="override-save-form">
+            <input type="hidden" asp-for="SelectedDate" />
+            <label>
+                Start hour
+                <input asp-for="OverrideStartHour" type="number" class="text-input" id="override-start" />
+            </label>
+            <label>
+                End hour
+                <input asp-for="OverrideEndHour" type="number" class="text-input" id="override-end" />
+            </label>
+            <label>
+                Capacity
+                <input asp-for="OverrideCapacity" type="number" class="text-input" id="override-capacity" />
+            </label>
+            <label class="checkbox-label">
+                <input asp-for="OverrideClosed" type="checkbox" class="checkbox" id="override-closed" />
+                Closed for whole day
+            </label>
+            <div class="modal-actions full-span">
+                <button type="submit" class="btn btn-sm" id="override-save-btn">Save Override</button>
+                <button type="button" class="btn btn-sm" onclick="closeOverrideModal()">Cancel</button>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="DeleteOverride" class="inline-form" id="override-delete-form" style="margin-top:0.75rem; display:none;">
+            <input type="hidden" asp-for="SelectedDate" />
+            <input type="hidden" name="id" id="override-id" value="@(Model.TodayOverride?.Id)" />
+            <button type="submit" class="btn btn-sm" onclick="return confirm('Delete override for this date?')">Delete Override</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const modal = document.getElementById('override-modal');
+    const title = document.getElementById('override-modal-title');
+    const deleteForm = document.getElementById('override-delete-form');
+    const saveButton = document.getElementById('override-save-btn');
+
+    const startInput = document.getElementById('override-start');
+    const endInput = document.getElementById('override-end');
+    const capacityInput = document.getElementById('override-capacity');
+    const closedInput = document.getElementById('override-closed');
+    const idInput = document.getElementById('override-id');
+
+    const currentOverride = @Html.Raw(JsonSerializer.Serialize(Model.TodayOverride));
+
+    document.getElementById('open-override-modal').addEventListener('click', () => {
+        if (currentOverride) {
+            title.textContent = 'Update Date Override';
+            saveButton.textContent = 'Update Override';
+            deleteForm.style.display = '';
+            idInput.value = currentOverride.Id;
+            startInput.value = currentOverride.StartHour ?? '';
+            endInput.value = currentOverride.EndHour ?? '';
+            capacityInput.value = currentOverride.Capacity ?? '';
+            closedInput.checked = currentOverride.IsFullyClosed === true;
+        } else {
+            title.textContent = 'Create Date Override';
+            saveButton.textContent = 'Save Override';
+            deleteForm.style.display = 'none';
+            idInput.value = '';
+            startInput.value = '';
+            endInput.value = '';
+            capacityInput.value = '';
+            closedInput.checked = false;
+        }
+        modal.style.display = 'flex';
+    });
+
+    window.closeOverrideModal = () => {
+        modal.style.display = 'none';
+    };
+})();
+</script>
+}

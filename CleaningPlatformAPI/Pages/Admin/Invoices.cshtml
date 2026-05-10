@@ -1,0 +1,53 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.InvoicesModel
+@{
+    ViewData["Title"] = "Invoices";
+    ViewData["ActivePage"] = "invoices";
+}
+<div class="page-header">
+    <h1>Invoices</h1>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<section class="card-lite">
+    <h2 class="section-title">Generate from booking</h2>
+    <form method="post" asp-page-handler="GenerateFromBooking" class="inline-form wrap">
+        <input type="number" name="bookingId" placeholder="Booking ID" class="small-input" required />
+        <button type="submit" class="btn btn-sm">Generate</button>
+    </form>
+</section>
+
+<section class="detail-section">
+    @if (Model.Invoices.Count == 0)
+    {
+        <div class="alert alert-info">No invoices found.</div>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Client</th>
+                <th>Status</th>
+                <th>Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var i in Model.Invoices)
+            {
+                <tr>
+                    <td><a asp-page="/Admin/InvoiceDetail" asp-route-id="@i.Id" class="link">@i.InvoiceNumber</a></td>
+                    <td>@i.ClientName</td>
+                    <td><span class="badge badge-@i.Status.ToLower()">@i.Status</span></td>
+                    <td>@i.TotalAmount</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+</section>

@@ -1,0 +1,88 @@
+@using System.Security.Claims
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Vehicle Cleaning Admin</title>
+    <link rel="stylesheet" href="~/css/admin.css" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    @{
+        var activePage = ViewData["ActivePage"]?.ToString();
+        var roleName = User.FindFirst(ClaimTypes.Role)?.Value;
+        bool IsOwner() => string.Equals(roleName, "Owner", StringComparison.OrdinalIgnoreCase);
+        bool CanView(string permission) => IsOwner() || User.HasPermission(permission);
+    }
+    <header class="admin-header">
+        <div class="header-inner">
+            <span class="brand">🚗 Vehicle Cleaning Admin</span>
+            <nav class="main-nav">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (CanView(PermissionKeys.PagesDaily))
+                    {
+                        <a asp-page="/Admin/Index"
+                           class="nav-link @(activePage == "daily" ? "active" : "")">Daily View</a>
+                    }
+                    @if (CanView(PermissionKeys.PagesBookings))
+                    {
+                        <a asp-page="/Admin/Bookings"
+                           class="nav-link @(activePage == "bookings" ? "active" : "")">Bookings</a>
+                        <a asp-page="/Admin/Invoices"
+                           class="nav-link @(activePage == "invoices" ? "active" : "")">Invoices</a>
+                    }
+                    @if (CanView(PermissionKeys.PagesClients))
+                    {
+                        <a asp-page="/Admin/Clients"
+                           class="nav-link @(activePage == "clients" ? "active" : "")">Clients</a>
+                    }
+                    @if (CanView(PermissionKeys.PagesSchedule))
+                    {
+                        <a asp-page="/Admin/Schedule"
+                           class="nav-link @(activePage == "schedule" ? "active" : "")">Schedule</a>
+                    }
+                    @if (IsOwner() || User.HasPermission(PermissionKeys.ActionsServiceCatalogEdit) || User.HasPermission(PermissionKeys.ActionsServiceCatalogManage))
+                    {
+                        <a asp-page="/Admin/Services"
+                           class="nav-link @(activePage == "services" ? "active" : "")">Services</a>
+                    }
+                    @if (CanView(PermissionKeys.PagesUsers))
+                    {
+                        <a asp-page="/Admin/Users"
+                           class="nav-link @(activePage == "users" ? "active" : "")">Users</a>
+                    }
+                    @if (CanView(PermissionKeys.PagesRoles))
+                    {
+                        <a asp-page="/Admin/Roles"
+                           class="nav-link @(activePage == "roles" ? "active" : "")">Roles</a>
+                    }
+                }
+            </nav>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="user-pill">
+                    <div class="user-pill-info">
+                        <span class="user-pill-name">@User.Identity.Name</span>
+                        <span class="user-pill-role">@roleName</span>
+                    </div>
+                    <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout" class="logout-form">
+                        <button type="submit" class="logout-btn">Sign out</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </header>
+
+    <main class="admin-main">
+        @RenderBody()
+    </main>
+
+    <footer class="admin-footer">
+        <p>&copy; @DateTime.Now.Year Vehicle Cleaning Admin</p>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

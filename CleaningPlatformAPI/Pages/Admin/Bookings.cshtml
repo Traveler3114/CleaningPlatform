@@ -1,0 +1,101 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.BookingsModel
+@{
+    ViewData["Title"] = "Bookings";
+    ViewData["ActivePage"] = "bookings";
+}
+
+<div class="page-header">
+    <h1>Bookings</h1>
+    <div class="date-form">
+        <form method="get" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <label for="DateFilter">Select Date:</label>
+            <input type="date" id="DateFilter" name="DateFilter"
+                   value="@Model.DateFilter?.ToString("yyyy-MM-dd")"
+                   class="date-input" />
+            <button type="submit" class="btn btn-sm">Filter</button>
+            <a asp-page="/Admin/Bookings" class="btn btn-sm">Show All</a>
+        </form>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert" style="background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;">
+        @Model.ErrorMessage
+    </div>
+}
+
+@if (!Model.Bookings.Any())
+{
+    <div class="alert alert-info">No bookings found.</div>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Date</th>
+                <th>Hour</th>
+                <th>Status</th>
+                <th>Update Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var b in Model.Bookings)
+            {
+                <tr class="booking-row" data-href="@Url.Page("/Admin/BookingDetail", new { id = b.Id })" title="Click to open booking detail">
+                    <td><a asp-page="/Admin/BookingDetail" asp-route-id="@b.Id" class="link">@b.Id</a></td>
+                    <td>@b.CustomerName</td>
+                    <td>@b.Phone</td>
+                    <td>@b.Date.ToString("yyyy-MM-dd")</td>
+                    <td>@b.Hour:00</td>
+                    <td>
+                        <span class="badge badge-@b.Status.ToLower()">@b.Status</span>
+                    </td>
+                    <td>
+                        <form method="post" asp-page-handler="UpdateStatus" class="inline-form">
+                            <input type="hidden" name="id" value="@b.Id" />
+                            <select name="status" class="status-select" aria-label="Update status for booking @b.Id">
+                                @foreach (var s in new[] { "Pending", "Confirmed", "InProgress", "Completed", "Cancelled" })
+                                {
+                                    if (b.Status == s)
+                                    {
+                                        <option value="@s" selected="selected">@s</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@s">@s</option>
+                                    }
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-sm">Save</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+<script>
+(function () {
+    document.querySelectorAll('.booking-row').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', (event) => {
+            if (event.target.closest('a, button, select, input, form, label')) {
+                return;
+            }
+            const href = row.dataset.href;
+            if (href) {
+                window.location.href = href;
+            }
+        });
+    });
+})();
+</script>
+}

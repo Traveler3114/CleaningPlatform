@@ -1,0 +1,99 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.UsersModel
+@{
+    ViewData["Title"] = "Users";
+    ViewData["ActivePage"] = "users";
+}
+<div class="page-header">
+    <h1>Users</h1>
+    <button type="button" class="btn" id="new-user-btn">+ New User</button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+<section class="detail-section">
+    <table class="admin-table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Active</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var u in Model.Users)
+        {
+            <tr class="@(!u.IsActive ? "row-inactive" : "")">
+                <td>@u.FirstName @u.LastName</td>
+                <td>@u.Email</td>
+                <td><span class="badge badge-@u.Role.ToLower()">@u.Role</span></td>
+                <td>
+                    <form method="post" asp-page-handler="Toggle" class="inline-form">
+                        <input type="hidden" name="id" value="@u.Id" />
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox" @(u.IsActive ? "checked" : null) onchange="this.form.submit()" />
+                            Active
+                        </label>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</section>
+
+<div id="new-user-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;"
+     onclick="if(event.target===this) closeUserModal()">
+    <div class="modal-panel" style="background:white; border-radius:8px; width:min(900px,95vw); max-height:90vh; overflow:auto; padding:1rem;">
+        <h2 class="section-title">Create User</h2>
+        <form method="post" asp-page-handler="Create" class="form-grid two-col">
+            <label>
+                First name
+                <input asp-for="NewUser.FirstName" placeholder="First name" class="text-input" required />
+            </label>
+            <label>
+                Last name
+                <input asp-for="NewUser.LastName" placeholder="Last name" class="text-input" required />
+            </label>
+            <label>
+                Email
+                <input asp-for="NewUser.Email" placeholder="Email" class="text-input" required />
+            </label>
+            <label>
+                Password
+                <input asp-for="NewUser.Password" type="password" placeholder="Password" class="text-input" required />
+            </label>
+            <label>
+                Role
+                <select asp-for="NewUser.Role" class="status-select">
+                    @foreach (var r in Model.AvailableRoles)
+                    {
+                        <option>@r.Name</option>
+                    }
+                </select>
+            </label>
+            <div class="modal-actions full-span">
+                <button type="submit" class="btn btn-sm">Create</button>
+                <button type="button" class="btn btn-sm" onclick="closeUserModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const modal = document.getElementById('new-user-modal');
+    document.getElementById('new-user-btn').addEventListener('click', () => {
+        modal.style.display = 'flex';
+    });
+    window.closeUserModal = () => {
+        modal.style.display = 'none';
+    };
+})();
+</script>
+}
