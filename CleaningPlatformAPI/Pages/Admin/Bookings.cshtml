@@ -47,8 +47,8 @@ else
         <tbody>
             @foreach (var b in Model.Bookings)
             {
-                <tr>
-                    <td>@b.Id</td>
+                <tr class="booking-row" data-href="@Url.Page("/Admin/BookingDetail", new { id = b.Id })" title="Click to open booking detail">
+                    <td><a asp-page="/Admin/BookingDetail" asp-route-id="@b.Id" class="link">@b.Id</a></td>
                     <td>@b.CustomerName</td>
                     <td>@b.Phone</td>
                     <td>@b.Date.ToString("yyyy-MM-dd")</td>
@@ -72,4 +72,23 @@ else
             }
         </tbody>
     </table>
+}
+
+@section Scripts {
+<script>
+(function () {
+    document.querySelectorAll('.booking-row').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', (event) => {
+            if (event.target.closest('a, button, select, input, form, label')) {
+                return;
+            }
+            const href = row.dataset.href;
+            if (href) {
+                window.location.href = href;
+            }
+        });
+    });
+})();
+</script>
 }

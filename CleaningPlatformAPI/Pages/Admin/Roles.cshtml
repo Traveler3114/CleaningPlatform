@@ -30,14 +30,20 @@
             var permissionNames = r.Permissions
                 .Select(p => Model.PermissionDisplayNames.GetValueOrDefault(p, p))
                 .ToList();
-            <tr class="@(r.IsProtected ? "row-inactive" : "role-row")"
+            <tr class="role-row @(r.IsProtected ? "role-protected" : "")"
                 data-role-id="@r.Id"
                 data-role-name="@r.Name"
                 data-role-protected="@r.IsProtected.ToString().ToLowerInvariant()"
                 data-role-permissions="@string.Join("|", r.Permissions)"
-                title="@(r.IsProtected ? "Protected role" : "Click to edit")">
+                title="@(r.IsProtected ? "Protected role (read-only)" : "Click to edit")">
                 <td>@r.Id</td>
-                <td>@r.Name</td>
+                <td>
+                    @r.Name
+                    @if (r.IsProtected)
+                    {
+                        <span class="badge badge-protected" style="margin-left:0.4rem;">Protected</span>
+                    }
+                </td>
                 <td class="permissions-cell">@string.Join(", ", permissionNames)</td>
             </tr>
         }

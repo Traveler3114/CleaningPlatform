@@ -12,6 +12,18 @@ namespace CleaningPlatformAPI.Pages.Admin;
 public class RolesModel : PageModel
 {
     private readonly RoleManager _roleManager;
+    private static readonly Dictionary<string, string> LegacyPermissionDisplayNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["clients.view"] = "View Clients",
+        ["clients.manage"] = "Manage Clients",
+        ["sites.view"] = "View Sites",
+        ["sites.manage"] = "Manage Sites",
+        ["bookings.view"] = "View Bookings",
+        ["bookings.manage"] = "Manage Bookings",
+        ["invoices.view"] = "View Invoices",
+        ["invoices.manage"] = "Manage Invoices",
+        ["reports.view"] = "View Reports"
+    };
 
     public RolesModel(RoleManager roleManager)
     {
@@ -65,5 +77,9 @@ public class RolesModel : PageModel
         Roles = await _roleManager.GetAllRolesAsync();
         AvailablePermissions = _roleManager.GetAvailablePermissions();
         PermissionDisplayNames = AvailablePermissions.ToDictionary(p => p.Key, p => p.DisplayName);
+        foreach (var legacy in LegacyPermissionDisplayNames)
+        {
+            PermissionDisplayNames.TryAdd(legacy.Key, legacy.Value);
+        }
     }
 }
