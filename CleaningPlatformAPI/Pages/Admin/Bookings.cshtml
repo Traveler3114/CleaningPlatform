@@ -62,7 +62,7 @@ else
                             <select name="status" class="status-select" aria-label="Update status for booking @b.Id">
                                 @foreach (var s in new[] { "Pending", "Confirmed", "InProgress", "Completed", "Cancelled" })
                                 {
-                                    <option value="@s" selected="@(b.Status == s ? "selected" : null)">@s</option>
+                                    <option value="@s" selected="@(b.Status == s)">@s</option>
                                 }
                             </select>
                             <button type="submit" class="btn btn-sm">Save</button>

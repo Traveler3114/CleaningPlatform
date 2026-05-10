@@ -34,7 +34,7 @@
             <select name="status" class="status-select">
                 @foreach (var s in new[] { "Pending", "Confirmed", "InProgress", "Completed", "Cancelled" })
                 {
-                    <option value="@s" selected="@(Model.Booking.Status == s ? "selected" : null)">@s</option>
+                    <option value="@s" selected="@(Model.Booking.Status == s)">@s</option>
                 }
             </select>
             <button type="submit" class="btn btn-sm">Save</button>
