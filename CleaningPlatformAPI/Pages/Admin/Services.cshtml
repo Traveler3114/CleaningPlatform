@@ -21,9 +21,6 @@
             <th>ID</th>
             <th>Code</th>
             <th>Name</th>
-            <th>Description</th>
-            <th>Default Price</th>
-            <th>Duration</th>
             <th>Active</th>
         </tr>
         </thead>
@@ -34,17 +31,11 @@
                 data-service-id="@s.Id"
                 data-service-code="@s.CatalogCode"
                 data-service-name="@s.Name"
-                data-service-description="@(s.Description ?? string.Empty)"
-                data-service-default-price="@(s.DefaultPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty)"
-                data-service-duration-minutes="@(s.DurationMinutes?.ToString() ?? string.Empty)"
                 data-service-active="@s.IsActive.ToString().ToLowerInvariant()"
                 title="Click to edit">
                 <td>@s.Id</td>
                 <td>@s.CatalogCode</td>
                 <td>@s.Name</td>
-                <td>@(string.IsNullOrWhiteSpace(s.Description) ? "-" : s.Description)</td>
-                <td>@(s.DefaultPrice?.ToString("0.00") ?? "-")</td>
-                <td>@(s.DurationMinutes?.ToString() ?? "-") min</td>
                 <td>
                     <span class="badge @(s.IsActive ? "badge-active" : "badge-inactive")">@(s.IsActive ? "Active" : "Inactive")</span>
                 </td>
@@ -68,18 +59,6 @@
                 Name
                 <input asp-for="NewService.Name" class="text-input" required />
             </label>
-            <label class="full-span">
-                Description
-                <input asp-for="NewService.Description" class="text-input" placeholder="Description" />
-            </label>
-            <label>
-                Default Price
-                <input asp-for="NewService.DefaultPrice" type="number" min="0" step="0.01" class="small-input" />
-            </label>
-            <label>
-                Duration (minutes)
-                <input asp-for="NewService.DurationMinutes" type="number" min="1" step="1" class="small-input" />
-            </label>
             <label class="checkbox-label full-span">
                 <input asp-for="NewService.IsActive" type="checkbox" class="checkbox" />
                 Active
@@ -99,18 +78,6 @@
             <label>
                 Name
                 <input asp-for="EditService.Name" id="edit-service-name" class="text-input" required />
-            </label>
-            <label class="full-span">
-                Description
-                <input asp-for="EditService.Description" id="edit-service-description" class="text-input" placeholder="Description" />
-            </label>
-            <label>
-                Default Price
-                <input asp-for="EditService.DefaultPrice" id="edit-service-default-price" type="number" min="0" step="0.01" class="small-input" />
-            </label>
-            <label>
-                Duration (minutes)
-                <input asp-for="EditService.DurationMinutes" id="edit-service-duration" type="number" min="1" step="1" class="small-input" />
             </label>
             <label class="checkbox-label full-span">
                 <input asp-for="EditService.IsActive" id="edit-service-active" type="checkbox" class="checkbox" />
@@ -160,9 +127,6 @@
         document.getElementById('edit-service-id').value = service.id;
         document.getElementById('edit-service-code').value = service.code;
         document.getElementById('edit-service-name').value = service.name;
-        document.getElementById('edit-service-description').value = service.description;
-        document.getElementById('edit-service-default-price').value = service.defaultPrice;
-        document.getElementById('edit-service-duration').value = service.durationMinutes;
         document.getElementById('edit-service-active').checked = service.isActive;
         document.getElementById('delete-service-id').value = service.id;
 
@@ -182,9 +146,6 @@
                 id: row.dataset.serviceId,
                 code: row.dataset.serviceCode || '',
                 name: row.dataset.serviceName || '',
-                description: row.dataset.serviceDescription || '',
-                defaultPrice: row.dataset.serviceDefaultPrice || '',
-                durationMinutes: row.dataset.serviceDurationMinutes || '',
                 isActive: row.dataset.serviceActive === 'true'
             });
         });

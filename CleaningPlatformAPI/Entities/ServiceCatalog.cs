@@ -16,13 +16,6 @@ namespace CleaningPlatformAPI.Entities
         [Required, MaxLength(200)]
         public string Name { get; set; }
 
-        [MaxLength(500)]
-        public string? Description { get; set; }
-
-        public decimal? DefaultPrice { get; set; }
-
-        public int? DurationMinutes { get; set; }
-
         [MaxLength(100)]
         public string? Category { get; set; }
 

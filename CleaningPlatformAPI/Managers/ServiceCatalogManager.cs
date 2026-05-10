@@ -41,9 +41,6 @@ public class ServiceCatalogManager
         {
             CatalogCode = code,
             Name = name,
-            Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim(),
-            DefaultPrice = dto.DefaultPrice,
-            DurationMinutes = dto.DurationMinutes,
             Category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim(),
             Unit = string.IsNullOrWhiteSpace(dto.Unit) ? null : dto.Unit.Trim(),
             PriceMin = dto.PriceMin,
@@ -81,9 +78,6 @@ public class ServiceCatalogManager
 
         entity.CatalogCode = code;
         entity.Name = name;
-        entity.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
-        entity.DefaultPrice = dto.DefaultPrice;
-        entity.DurationMinutes = dto.DurationMinutes;
         entity.Category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim();
         entity.Unit = string.IsNullOrWhiteSpace(dto.Unit) ? null : dto.Unit.Trim();
         entity.PriceMin = dto.PriceMin;
@@ -113,9 +107,6 @@ public class ServiceCatalogManager
         Id = s.Id,
         CatalogCode = s.CatalogCode,
         Name = s.Name,
-        Description = s.Description,
-        DefaultPrice = s.DefaultPrice,
-        DurationMinutes = s.DurationMinutes,
         Category = s.Category,
         Unit = s.Unit,
         PriceMin = s.PriceMin,
