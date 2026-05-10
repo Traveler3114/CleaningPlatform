@@ -81,14 +81,6 @@ public class ClientDetailModel : PageModel
         return RedirectToPage(new { id = Id });
     }
 
-    public async Task<IActionResult> OnPostUpdateTypeAsync(string newType)
-    {
-        var result = await _clientManager.UpdateTypeAsync(Id, newType);
-        if (!result.Success)
-            ErrorMessage = result.Message;
-
-        return RedirectToPage(new { id = Id });
-    }
 
     public async Task<IActionResult> OnPostAddSiteAsync()
     {

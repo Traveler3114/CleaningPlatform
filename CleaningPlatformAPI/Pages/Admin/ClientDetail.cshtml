@@ -33,16 +33,6 @@
         <div class="inline-form" style="flex-wrap:wrap;">
             <button class="btn btn-sm"
                     onclick="document.getElementById('client-edit-area').style.display=''">Edit</button>
-            <form method="post" asp-page-handler="UpdateType" style="display:contents;">
-                <input type="hidden" asp-for="Id" />
-                <select name="newType" class="status-select"
-                        onchange="if(this.value && confirm('Convert client to '+this.value+'?')) this.form.submit(); else this.value='';">
-                    <option value="">Convert Type...</option>
-                    <option value="OneTime">OneTime</option>
-                    <option value="RepeatIndividual">RepeatIndividual</option>
-                    <option value="RepeatBusiness">RepeatBusiness</option>
-                </select>
-            </form>
         </div>
     </div>
 

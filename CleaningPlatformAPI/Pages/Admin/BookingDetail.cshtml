@@ -84,9 +84,14 @@
             <option value="">Unassigned</option>
             @foreach (var e in Model.ActiveEmployees)
             {
-@*                 <option value="@e.Id" @(Model.Booking.AssignedEmployeeId == e.Id ? "selected" : "")>
-                    @e.FullName (@e.Role)
-                </option> *@
+                if (Model.Booking.AssignedEmployeeId == e.Id)
+                {
+                    <option value="@e.Id" selected>@e.FullName (@e.Role)</option>
+                }
+                else
+                {
+                    <option value="@e.Id">@e.FullName (@e.Role)</option>
+                }
             }
         </select>
         <button type="submit" class="btn btn-sm">Save</button>

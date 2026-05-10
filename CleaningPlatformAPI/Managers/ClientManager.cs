@@ -140,36 +140,6 @@ public class ClientManager
         return OperationResult<ClientDto>.Ok(resultDto);
     }
 
-    public async Task<OperationResult<ClientDto>> UpdateTypeAsync(int id, string newType)
-    {
-        var validTypes = new[] { "OneTime", "RepeatIndividual", "RepeatBusiness" };
-        if (!validTypes.Contains(newType))
-            return OperationResult<ClientDto>.Fail("Invalid client type.");
-
-        var client = await _db.Clients.FindAsync(id);
-        if (client == null)
-            return OperationResult<ClientDto>.Fail("Client not found.");
-
-        client.Type = newType;
-        client.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
-
-        var dto = new ClientDto
-        {
-            Id = client.Id,
-            ClientName = client.ClientName,
-            Type = client.Type,
-            Oib = client.Oib,
-            PaymentTerms = client.PaymentTerms,
-            Notes = client.Notes,
-            IsActive = client.IsActive,
-            CreatedAt = client.CreatedAt,
-            TotalBookings = await _db.Bookings.CountAsync(b => b.ClientId == client.Id)
-        };
-
-        return OperationResult<ClientDto>.Ok(dto);
-    }
-
     public async Task<OperationResult<ClientProfileDto>> UpdateProfileAsync(int id, UpdateClientProfileDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.ClientName))

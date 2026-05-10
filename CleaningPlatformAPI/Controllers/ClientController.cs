@@ -45,12 +45,6 @@ public class ClientController : ControllerBase
         return await _clientManager.CreateAsync(dto);
     }
 
-    [HttpPut("{id:int}/type")]
-    [Authorize(Policy = PermissionKeys.PagesClients)]
-    public async Task<OperationResult<ClientDto>> UpdateType(int id, [FromBody] UpdateTypeRequest request)
-    {
-        return await _clientManager.UpdateTypeAsync(id, request.NewType);
-    }
 
     [HttpPut("{id:int}")]
     [Authorize(Policy = PermissionKeys.PagesClients)]
@@ -85,9 +79,4 @@ public class ClientController : ControllerBase
     {
         return await _clientManager.DeactivateSiteAsync(id, siteId);
     }
-}
-
-public class UpdateTypeRequest
-{
-    public string NewType { get; set; } = string.Empty;
 }
