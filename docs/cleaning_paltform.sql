@@ -22,7 +22,7 @@ GO
 
 CREATE TABLE Employees (
     Id                  INT             PRIMARY KEY IDENTITY(1,1),
-    Email               NVARCHAR(255)   NOT NULL UNIQUE,
+    Username            NVARCHAR(100)   NOT NULL UNIQUE,
     PasswordHash        NVARCHAR(255)   NOT NULL,
     FirstName           NVARCHAR(100)   NOT NULL,
     LastName            NVARCHAR(100)   NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE Employees (
     UpdatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE()
 );
 GO
-CREATE INDEX IX_Employees_Email ON Employees(Email);
+CREATE UNIQUE INDEX IX_Employees_Username ON Employees(Username);
 GO
 
 CREATE TABLE Clients (
@@ -506,9 +506,9 @@ GO
 -- SEED DATA
 -- ============================================================
 
-INSERT INTO Employees (Email, PasswordHash, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, CreatedAt, UpdatedAt, RoleId)
+INSERT INTO Employees (Username, PasswordHash, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, CreatedAt, UpdatedAt, RoleId)
 VALUES (
-    'owner@cleaningplatform.com',
+    'owner',
     '$2y$10$qZKh.FlEZrHNSyAcazlNdOyBMHA.SJSfnLDoPtuFKt9Mrj99tdNEe',
     'Owner',
     'User',
@@ -526,10 +526,26 @@ GO
 WITH N AS (
     SELECT TOP (50) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
     FROM sys.all_objects
+),
+Seeded AS (
+    SELECT
+        n,
+        LOWER(
+            LEFT(CHOOSE((n % 10) + 1, 'Matej','Ana','Ivan','Luka','Sara','Petra','Niko','Tina','Filip','Maja'), 1)
+            + CHOOSE((n % 10) + 1, 'Kovac','Horvat','Novak','Maric','Klaric','Botic','Skoko','Jukic','Peric','Skoric')
+        ) AS BaseUsername,
+        ROW_NUMBER() OVER (
+            PARTITION BY LOWER(
+                LEFT(CHOOSE((n % 10) + 1, 'Matej','Ana','Ivan','Luka','Sara','Petra','Niko','Tina','Filip','Maja'), 1)
+                + CHOOSE((n % 10) + 1, 'Kovac','Horvat','Novak','Maric','Klaric','Botic','Skoko','Jukic','Peric','Skoric')
+            )
+            ORDER BY n
+        ) AS rn
+    FROM N
 )
-INSERT INTO Employees (Email, PasswordHash, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, RoleId)
+INSERT INTO Employees (Username, PasswordHash, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, RoleId)
 SELECT
-    CONCAT('employee', n, '@cleaningplatform.com'),
+    CASE WHEN rn = 1 THEN BaseUsername ELSE BaseUsername + CAST(rn AS NVARCHAR(10)) END,
     '$2y$10$qZKh.FlEZrHNSyAcazlNdOyBMHA.SJSfnLDoPtuFKt9Mrj99tdNEe',
     CHOOSE((n % 10) + 1, 'Matej','Ana','Ivan','Luka','Sara','Petra','Niko','Tina','Filip','Maja'),
     CHOOSE((n % 10) + 1, 'Kovac','Horvat','Novak','Maric','Klaric','Botic','Skoko','Jukic','Peric','Skoric'),
@@ -539,7 +555,7 @@ SELECT
     2 + (n % 4),
     CASE WHEN n % 12 = 0 THEN 0 ELSE 1 END,
     (SELECT Id FROM Roles WHERE Name = CHOOSE((n % 4) + 1, 'Admin', 'Dispatcher', 'Employee', 'Finance'))
-FROM N;
+FROM Seeded;
 GO
 
 WITH N AS (

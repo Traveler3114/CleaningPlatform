@@ -21,14 +21,6 @@ public class AuthManager
 
     public async Task<OperationResult<string>> RegisterAsync(CreateUserDto dto)
     {
-        var email = dto.Email.Trim();
-        if (string.IsNullOrWhiteSpace(email))
-            return OperationResult<string>.Fail("Email is required.");
-
-        var existing = await _db.Employees.FirstOrDefaultAsync(u => u.Email == email);
-        if (existing != null)
-            return OperationResult<string>.Fail("Email already taken.");
-
         var roleName = dto.Role.Trim();
         if (string.IsNullOrWhiteSpace(roleName))
             return OperationResult<string>.Fail("Role is required.");
@@ -42,13 +34,22 @@ public class AuthManager
         if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
             return OperationResult<string>.Fail("First and last name are required.");
 
+        var usernameBase = (firstName[..1] + lastName).ToLowerInvariant();
+        var username = usernameBase;
+        var counter = 2;
+        while (await _db.Employees.AnyAsync(u => u.Username == username))
+        {
+            username = usernameBase + counter;
+            counter++;
+        }
+
         var user = new Employee
         {
-            Email = email,
+            Username = username,
             FirstName = firstName,
             LastName = lastName,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            RoleId = role.Id,        // Use RoleId, not a string
+            RoleId = role.Id,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -85,8 +86,7 @@ public class AuthManager
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}".Trim()),
+            new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Role, roleName)
         };
 
@@ -101,10 +101,10 @@ public class AuthManager
 
     private async Task<OperationResult<LoginContext>> ValidateLoginAsync(LoginDto dto)
     {
-        var email = dto.Email.Trim();
+        var username = dto.Username.Trim();
         var user = await _db.Employees
-            .Include(e => e.Role)       // Include the navigation property
-            .FirstOrDefaultAsync(u => u.Email == email);
+            .Include(e => e.Role)
+            .FirstOrDefaultAsync(u => u.Username == username);
 
         if (user == null || !user.IsActive)
             return OperationResult<LoginContext>.Fail("Invalid credentials.");

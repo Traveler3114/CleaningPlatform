@@ -90,8 +90,8 @@ public class EmployeeManager
         Id = u.Id,
         FirstName = u.FirstName,
         LastName = u.LastName,
-        Email = u.Email,
-        Role = u.Role?.Name ?? string.Empty,   // ✅ Extract role name from navigation property
+        Username = u.Username,
+        Role = u.Role?.Name ?? string.Empty,
         IsActive = u.IsActive,
         CreatedAt = u.CreatedAt,
         Permissions = permissions
