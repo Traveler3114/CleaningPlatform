@@ -36,15 +36,9 @@ public class BookingDetailModel : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        var bookingTask = _bookingManager.GetBookingDetailByIdAsync(Id);
-        var employeesTask = _employeeManager.GetActiveEmployeesAsync();
-        var servicesTask = _serviceCatalogManager.GetAllAsync();
-
-        await Task.WhenAll(bookingTask, employeesTask, servicesTask);
-
-        Booking = bookingTask.Result;
-        ActiveEmployees = employeesTask.Result;
-        ServiceCatalog = servicesTask.Result;
+        Booking = await _bookingManager.GetBookingDetailByIdAsync(Id);
+        ActiveEmployees = await _employeeManager.GetActiveEmployeesAsync();
+        ServiceCatalog = await _serviceCatalogManager.GetAllAsync();
 
         return Booking == null ? NotFound() : Page();
     }
