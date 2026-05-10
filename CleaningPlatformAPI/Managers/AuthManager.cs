@@ -62,10 +62,11 @@ public class AuthManager
     public async Task<OperationResult<string>> LoginAsync(LoginDto dto)
     {
         var auth = await ValidateLoginAsync(dto);
-        if (!auth.Success || auth.Data == null)
+        if (!auth.Success || auth.Data is null)
             return OperationResult<string>.Fail(auth.Message ?? "Invalid credentials.");
 
-        var (user, permissions) = auth.Data.Value;
+        var user = auth.Data.User;
+        var permissions = auth.Data.Permissions;
         var token = _tokenManager.CreateToken(user, permissions);
         return OperationResult<string>.Ok(token);
     }
@@ -73,19 +74,20 @@ public class AuthManager
     public async Task<OperationResult<List<Claim>>> GetClaimsAsync(LoginDto dto)
     {
         var auth = await ValidateLoginAsync(dto);
-        if (!auth.Success || auth.Data == null)
+        if (!auth.Success || auth.Data is null)
             return OperationResult<List<Claim>>.Fail(auth.Message ?? "Invalid credentials.");
 
-        var (user, permissions) = auth.Data.Value;
+        var user = auth.Data.User;
+        var permissions = auth.Data.Permissions;
         var roleName = user.Role?.Name ?? string.Empty;
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}".Trim()),
-            new(ClaimTypes.Role, roleName)
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}".Trim()),
+            new Claim(ClaimTypes.Role, roleName)
         };
 
         if (roleName != "Owner")
@@ -97,7 +99,7 @@ public class AuthManager
         return OperationResult<List<Claim>>.Ok(claims);
     }
 
-    private async Task<OperationResult<(Employee User, List<string> Permissions)>> ValidateLoginAsync(LoginDto dto)
+    private async Task<OperationResult<LoginContext>> ValidateLoginAsync(LoginDto dto)
     {
         var email = dto.Email.Trim();
         var user = await _db.Employees
@@ -105,10 +107,10 @@ public class AuthManager
             .FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null || !user.IsActive)
-            return OperationResult<(Employee, List<string>)>.Fail("Invalid credentials.");
+            return OperationResult<LoginContext>.Fail("Invalid credentials.");
 
         if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-            return OperationResult<(Employee, List<string>)>.Fail("Invalid credentials.");
+            return OperationResult<LoginContext>.Fail("Invalid credentials.");
 
         //  Use Role.Id to get permissions
         var permissions = await _db.RolePermissions
@@ -116,6 +118,16 @@ public class AuthManager
             .Select(rp => rp.PermissionKey)
             .ToListAsync();
 
-        return OperationResult<(Employee, List<string>)>.Ok((user, permissions));
+        return OperationResult<LoginContext>.Ok(new LoginContext
+        {
+            User = user,
+            Permissions = permissions
+        });
+    }
+
+    private sealed class LoginContext
+    {
+        public required Employee User { get; init; }
+        public required List<string> Permissions { get; init; }
     }
 }
