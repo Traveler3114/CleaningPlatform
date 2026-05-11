@@ -80,7 +80,7 @@
                             <td>@b.Id</td>
                             <td>@b.ClientName</td>
                             <td>@b.Date.ToString("yyyy-MM-dd")</td>
-                            <td>@($"{b.Hour}:00")</td>
+                            <td>@($"{b.Hour:D2}:00")</td>
                             <td>@b.Status</td>
                             <td>
                                 <a asp-page="/Admin/BookingDetail" asp-route-id="@b.Id" class="btn btn-sm">Open</a>

@@ -133,7 +133,13 @@ public class BookingManager
     {
         if (!Enum.TryParse<BookingStatus>(status, true, out var bookingStatus))
             return OperationResult<BookingDto>.Fail("Invalid status.");
-        var booking = await _db.Bookings.FirstOrDefaultAsync(b => b.Id == id);
+        var booking = await _db.Bookings
+            .Include(b => b.Client)
+            .Include(b => b.BookingServices)
+            .Include(b => b.Assignments)
+                .ThenInclude(a => a.Employee)
+                    .ThenInclude(e => e.Role)
+            .FirstOrDefaultAsync(b => b.Id == id);
         if (booking == null)
             return OperationResult<BookingDto>.Fail("Booking not found.");
         booking.Status = bookingStatus.ToString();
@@ -141,18 +147,7 @@ public class BookingManager
             booking.CompletedAt = DateTime.UtcNow;
         booking.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
-
-        var updated = await _db.Bookings
-            .Include(b => b.Client)
-            .Include(b => b.BookingServices)
-            .Include(b => b.Assignments)
-                .ThenInclude(a => a.Employee)
-                    .ThenInclude(e => e.Role)
-            .FirstOrDefaultAsync(b => b.Id == id);
-
-        return updated == null
-            ? OperationResult<BookingDto>.Fail("Booking not found.")
-            : OperationResult<BookingDto>.Ok(MapToDto(updated));
+        return OperationResult<BookingDto>.Ok(MapToDto(booking));
     }
 
     public async Task<OperationResult<BookingDetailDto>> AddAssignmentAsync(int bookingId, int employeeId)
