@@ -87,9 +87,10 @@
 </div>
 
 <div id="user-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;"
+     role="dialog" aria-modal="true" aria-labelledby="user-modal-title"
      onclick="if(event.target===this) closeDetailUserModal()">
     <div class="modal-panel" style="background:white; border-radius:8px; width:min(700px,95vw); max-height:90vh; overflow:auto; padding:1rem;">
-        <h2 class="section-title">User Details</h2>
+        <h2 class="section-title" id="user-modal-title">User Details</h2>
 
         <div class="form-grid two-col">
             <label>
@@ -115,8 +116,11 @@
             <input type="hidden" name="userId" id="modal-user-id" />
             <label>
                 New Password
-                <input type="password" name="newPassword" placeholder="New password" class="text-input" required minlength="8" />
+                <input type="password" name="newPassword" placeholder="New password" class="text-input" required minlength="8"
+                       title="At least 8 characters, with one uppercase letter, one lowercase letter, and one digit."
+                       aria-describedby="reset-password-help" />
             </label>
+            <small id="reset-password-help">At least 8 characters, including uppercase, lowercase, and a number.</small>
             <div class="modal-actions">
                 <button type="submit" class="btn btn-sm">Reset Password</button>
                 <button type="button" class="btn btn-sm" onclick="closeDetailUserModal()">Close</button>

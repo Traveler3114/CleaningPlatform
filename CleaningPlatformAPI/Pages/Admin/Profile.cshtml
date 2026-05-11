@@ -39,12 +39,15 @@
         <form method="post" asp-page-handler="ChangePassword" class="form-grid">
             <label>
                 Current Password
-                <input type="password" name="currentPassword" class="text-input" required minlength="8" />
+                <input type="password" name="currentPassword" class="text-input" required />
             </label>
             <label>
                 New Password
-                <input type="password" name="newPassword" class="text-input" required minlength="8" />
+                <input type="password" name="newPassword" class="text-input" required minlength="8"
+                       title="At least 8 characters, with one uppercase letter, one lowercase letter, and one digit."
+                       aria-describedby="profile-password-help" />
             </label>
+            <small id="profile-password-help">At least 8 characters, including uppercase, lowercase, and a number.</small>
             <div>
                 <button type="submit" class="btn btn-sm">Change Password</button>
             </div>

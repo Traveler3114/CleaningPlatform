@@ -131,7 +131,7 @@ public class AuthManager
         if (string.IsNullOrWhiteSpace(dto.NewPassword))
             return OperationResult<string>.Fail("New password is required.");
         if (!IsValidPassword(dto.NewPassword))
-            return OperationResult<string>.Fail("New password must be at least 8 characters and include uppercase, lowercase, and a number.");
+            return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
 
         var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == dto.UserId);
         if (user == null)
@@ -152,7 +152,7 @@ public class AuthManager
         if (string.IsNullOrWhiteSpace(dto.NewPassword))
             return OperationResult<string>.Fail("New password is required.");
         if (!IsValidPassword(dto.NewPassword))
-            return OperationResult<string>.Fail("New password must be at least 8 characters and include uppercase, lowercase, and a number.");
+            return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
 
         var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == requestingUserId);
         if (user == null)

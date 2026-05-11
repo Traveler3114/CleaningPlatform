@@ -9,10 +9,12 @@ namespace CleaningPlatformAPI.Authorization;
 public class SecurityStampValidator
 {
     private readonly RequestDelegate _next;
+    private readonly ILogger<SecurityStampValidator> _logger;
 
-    public SecurityStampValidator(RequestDelegate next)
+    public SecurityStampValidator(RequestDelegate next, ILogger<SecurityStampValidator> logger)
     {
         _next = next;
+        _logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context, AppDbContext db)
@@ -35,6 +37,7 @@ public class SecurityStampValidator
         var claimStamp = context.User.FindFirst("security_stamp")?.Value;
         if (!userId.HasValue || string.IsNullOrWhiteSpace(claimStamp))
         {
+            _logger.LogWarning("Rejecting authenticated request due to missing user id or security_stamp claim.");
             await RejectAsync(context);
             return;
         }
@@ -46,6 +49,7 @@ public class SecurityStampValidator
 
         if (string.IsNullOrWhiteSpace(currentStamp) || !string.Equals(claimStamp, currentStamp, StringComparison.Ordinal))
         {
+            _logger.LogWarning("Rejecting request due to security stamp mismatch or missing DB stamp for user {UserId}.", userId.Value);
             await RejectAsync(context);
             return;
         }
