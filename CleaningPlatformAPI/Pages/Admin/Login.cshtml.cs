@@ -19,7 +19,7 @@ public class LoginModel : PageModel
     }
 
     [BindProperty]
-    public string Email { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 
     [BindProperty]
     public string Password { get; set; } = string.Empty;
@@ -36,7 +36,7 @@ public class LoginModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var result = await _auth.GetClaimsAsync(new LoginDto { Email = Email, Password = Password });
+        var result = await _auth.GetClaimsAsync(new LoginDto { Username = Username, Password = Password });
         if (!result.Success || result.Data == null)
         {
             ErrorMessage = result.Message ?? "Invalid credentials.";
