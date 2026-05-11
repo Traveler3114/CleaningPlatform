@@ -87,7 +87,8 @@ public class AuthManager
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, roleName)
+            new Claim(ClaimTypes.Role, roleName),
+            new Claim("security_stamp", user.SecurityStamp)
         };
 
         if (roleName != "Owner")
@@ -123,6 +124,61 @@ public class AuthManager
             User = user,
             Permissions = permissions
         });
+    }
+
+    public async Task<OperationResult<string>> ResetPasswordAsync(ResetPasswordDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.NewPassword))
+            return OperationResult<string>.Fail("New password is required.");
+        if (!IsValidPassword(dto.NewPassword))
+            return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
+
+        var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == dto.UserId);
+        if (user == null)
+            return OperationResult<string>.Fail("User not found.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        user.SecurityStamp = Guid.NewGuid().ToString();
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return OperationResult<string>.Ok("Password reset.");
+    }
+
+    public async Task<OperationResult<string>> ChangePasswordAsync(ChangePasswordDto dto, int requestingUserId)
+    {
+        if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+            return OperationResult<string>.Fail("Current password is required.");
+        if (string.IsNullOrWhiteSpace(dto.NewPassword))
+            return OperationResult<string>.Fail("New password is required.");
+        if (!IsValidPassword(dto.NewPassword))
+            return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
+
+        var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == requestingUserId);
+        if (user == null)
+            return OperationResult<string>.Fail("User not found.");
+
+        if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
+            return OperationResult<string>.Fail("Current password is incorrect.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        user.SecurityStamp = Guid.NewGuid().ToString();
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return OperationResult<string>.Ok("Password changed.");
+    }
+
+    private static bool IsValidPassword(string password)
+    {
+        if (password.Length < 8)
+            return false;
+
+        var hasUpper = password.Any(char.IsUpper);
+        var hasLower = password.Any(char.IsLower);
+        var hasDigit = password.Any(char.IsDigit);
+
+        return hasUpper && hasLower && hasDigit;
     }
 
     private sealed class LoginContext

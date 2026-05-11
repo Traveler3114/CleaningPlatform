@@ -18,6 +18,9 @@ namespace CleaningPlatformAPI.Entities
         public string PasswordHash { get; set; }
 
         [Required, MaxLength(100)]
+        public string SecurityStamp { get; set; } = Guid.NewGuid().ToString();
+
+        [Required, MaxLength(100)]
         public string FirstName { get; set; }
 
         [Required, MaxLength(100)]
