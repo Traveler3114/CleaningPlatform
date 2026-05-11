@@ -1,5 +1,7 @@
 @page "{id:int}"
 @model CleaningPlatformAPI.Pages.Admin.BookingDetailModel
+@using CleaningPlatformAPI.Common
+@using CleaningPlatformAPI.Extensions
 @{
     ViewData["Title"] = Model.Booking != null ? $"Booking #{Model.Booking.Id}" : "Booking Detail";
     ViewData["ActivePage"] = "bookings";
@@ -77,26 +79,45 @@
 
 @* ===== Employee Assignment ===== *@
 <section class="detail-section">
-    <h2 class="section-title">Employee Assignment</h2>
-    <p><strong>Current:</strong> @(Model.Booking.AssignedEmployeeName ?? "Unassigned")</p>
-    <form method="post" asp-page-handler="AssignEmployee" class="inline-form" style="flex-wrap:wrap;">
-        <input type="hidden" name="id" value="@Model.Booking.Id" />
-        <select name="employeeId" class="status-select">
-            <option value="">Unassigned</option>
-            @foreach (var e in Model.ActiveEmployees)
+    <h2 class="section-title">Employee Assignments</h2>
+    @if (Model.Booking.AssignedEmployees.Any())
+    {
+        <ul>
+            @foreach (var a in Model.Booking.AssignedEmployees)
             {
-                if (Model.Booking.AssignedEmployeeId == e.Id)
-                {
-                    <option value="@e.Id" selected>@e.FullName (@e.Role)</option>
-                }
-                else
+                <li style="margin-bottom:0.4rem;">
+                    @a.FullName (@a.Role)
+                    @if (User.HasPermission(PermissionKeys.ActionsBookingAssign))
+                    {
+                        <form method="post" asp-page-handler="RemoveAssignment" style="display:inline; margin-left:0.5rem;">
+                            <input type="hidden" name="id" value="@Model.Booking.Id" />
+                            <input type="hidden" name="assignmentId" value="@a.AssignmentId" />
+                            <button type="submit" class="btn btn-sm">Remove</button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p><strong>Current:</strong> Unassigned</p>
+    }
+
+    @if (User.HasPermission(PermissionKeys.ActionsBookingAssign))
+    {
+        <form method="post" asp-page-handler="AddAssignment" class="inline-form" style="flex-wrap:wrap;">
+            <input type="hidden" name="id" value="@Model.Booking.Id" />
+            <select name="employeeId" class="status-select" required>
+                <option value="">Select employee</option>
+                @foreach (var e in Model.ActiveEmployees)
                 {
                     <option value="@e.Id">@e.FullName (@e.Role)</option>
                 }
-            }
-        </select>
-        <button type="submit" class="btn btn-sm">Save</button>
-    </form>
+            </select>
+            <button type="submit" class="btn btn-sm">Add</button>
+        </form>
+    }
 </section>
 
 @* ===== Services ===== *@

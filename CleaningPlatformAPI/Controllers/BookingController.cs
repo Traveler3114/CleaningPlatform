@@ -54,11 +54,18 @@ public class BookingController : ControllerBase
         return await _bookingManager.UpdateStatusAsync(id, request.Status);
     }
 
-    [HttpPut("{id:int}/assign")]
-    [Authorize(Policy = "actions.booking.updateStatus")]
-    public async Task<OperationResult<BookingDetailDto>> AssignEmployee(int id, [FromBody] BookingAssignDto dto)
+    [HttpPost("{id:int}/assignments")]
+    [Authorize(Policy = PermissionKeys.ActionsBookingAssign)]
+    public async Task<OperationResult<BookingDetailDto>> AddAssignment(int id, [FromBody] BookingAssignDto dto)
     {
-        return await _bookingManager.AssignEmployeeAsync(id, dto.EmployeeId);
+        return await _bookingManager.AddAssignmentAsync(id, dto.EmployeeId);
+    }
+
+    [HttpDelete("{id:int}/assignments/{assignmentId:int}")]
+    [Authorize(Policy = PermissionKeys.ActionsBookingAssign)]
+    public async Task<OperationResult<string>> RemoveAssignment(int id, int assignmentId)
+    {
+        return await _bookingManager.RemoveAssignmentAsync(id, assignmentId);
     }
 
     [HttpPost("{id:int}/services")]

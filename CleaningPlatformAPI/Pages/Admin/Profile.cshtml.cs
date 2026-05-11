@@ -13,15 +13,18 @@ namespace CleaningPlatformAPI.Pages.Admin;
 public class ProfileModel : PageModel
 {
     private readonly EmployeeManager _employeeManager;
+    private readonly BookingManager _bookingManager;
     private readonly AuthManager _authManager;
 
-    public ProfileModel(EmployeeManager employeeManager, AuthManager authManager)
+    public ProfileModel(EmployeeManager employeeManager, BookingManager bookingManager, AuthManager authManager)
     {
         _employeeManager = employeeManager;
+        _bookingManager = bookingManager;
         _authManager = authManager;
     }
 
     public UserDto? CurrentUser { get; set; }
+    public List<BookingDto> AssignedBookings { get; set; } = [];
 
     [TempData]
     public string? ErrorMessage { get; set; }
@@ -36,6 +39,7 @@ public class ProfileModel : PageModel
         if (CurrentUser == null)
             return RedirectToPage("/Admin/Login");
 
+        AssignedBookings = await _bookingManager.GetAssignedBookingsForEmployeeAsync(userId.Value);
         return Page();
     }
 

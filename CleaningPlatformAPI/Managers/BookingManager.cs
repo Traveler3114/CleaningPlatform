@@ -24,7 +24,11 @@ public class BookingManager
     {
         var bookings = await _db.Bookings
             .Include(b => b.Client)
-            .ThenInclude(c => c.Contacts)
+                .ThenInclude(c => c.Contacts)
+            .Include(b => b.BookingServices)
+            .Include(b => b.Assignments)
+                .ThenInclude(a => a.Employee)
+                    .ThenInclude(e => e.Role)
             .Where(b => b.ScheduledDate.Date == date.Date)
             .ToListAsync();
         return bookings.Select(MapToDto).ToList();
@@ -34,7 +38,26 @@ public class BookingManager
     {
         var bookings = await _db.Bookings
             .Include(b => b.Client)
-            .ThenInclude(c => c.Contacts)
+                .ThenInclude(c => c.Contacts)
+            .Include(b => b.BookingServices)
+            .Include(b => b.Assignments)
+                .ThenInclude(a => a.Employee)
+                    .ThenInclude(e => e.Role)
+            .OrderByDescending(b => b.ScheduledDate)
+            .ToListAsync();
+        return bookings.Select(MapToDto).ToList();
+    }
+
+    public async Task<List<BookingDto>> GetAssignedBookingsForEmployeeAsync(int employeeId)
+    {
+        var bookings = await _db.Bookings
+            .Include(b => b.Client)
+                .ThenInclude(c => c.Contacts)
+            .Include(b => b.BookingServices)
+            .Include(b => b.Assignments.Where(a => a.EmployeeId == employeeId))
+                .ThenInclude(a => a.Employee)
+                    .ThenInclude(e => e.Role)
+            .Where(b => b.Assignments.Any(a => a.EmployeeId == employeeId))
             .OrderByDescending(b => b.ScheduledDate)
             .ToListAsync();
         return bookings.Select(MapToDto).ToList();
@@ -45,7 +68,9 @@ public class BookingManager
         var booking = await _db.Bookings
             .Include(b => b.Client)
                 .ThenInclude(c => c.Contacts)
-            .Include(b => b.AssignedEmployee)
+            .Include(b => b.Assignments)
+                .ThenInclude(a => a.Employee)
+                    .ThenInclude(e => e.Role)
             .Include(b => b.BookingServices)
                 .ThenInclude(bs => bs.ServiceCatalog)
             .FirstOrDefaultAsync(b => b.Id == id);
@@ -108,7 +133,13 @@ public class BookingManager
     {
         if (!Enum.TryParse<BookingStatus>(status, true, out var bookingStatus))
             return OperationResult<BookingDto>.Fail("Invalid status.");
-        var booking = await _db.Bookings.FindAsync(id);
+        var booking = await _db.Bookings
+            .Include(b => b.Client)
+            .Include(b => b.BookingServices)
+            .Include(b => b.Assignments)
+                .ThenInclude(a => a.Employee)
+                    .ThenInclude(e => e.Role)
+            .FirstOrDefaultAsync(b => b.Id == id);
         if (booking == null)
             return OperationResult<BookingDto>.Fail("Booking not found.");
         booking.Status = bookingStatus.ToString();
@@ -119,20 +150,27 @@ public class BookingManager
         return OperationResult<BookingDto>.Ok(MapToDto(booking));
     }
 
-    public async Task<OperationResult<BookingDetailDto>> AssignEmployeeAsync(int bookingId, int? employeeId)
+    public async Task<OperationResult<BookingDetailDto>> AddAssignmentAsync(int bookingId, int employeeId)
     {
-        var booking = await _db.Bookings.FindAsync(bookingId);
+        var booking = await _db.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId);
         if (booking == null)
             return OperationResult<BookingDetailDto>.Fail("Booking not found.");
 
-        if (employeeId.HasValue)
-        {
-            var employeeExists = await _db.Employees.AnyAsync(e => e.Id == employeeId.Value && e.IsActive);
-            if (!employeeExists)
-                return OperationResult<BookingDetailDto>.Fail("Employee not found or inactive.");
-        }
+        var employeeExists = await _db.Employees.AnyAsync(e => e.Id == employeeId && e.IsActive);
+        if (!employeeExists)
+            return OperationResult<BookingDetailDto>.Fail("Employee not found or inactive.");
 
-        booking.AssignedEmployeeId = employeeId;
+        var alreadyAssigned = await _db.BookingAssignments
+            .AnyAsync(a => a.BookingId == bookingId && a.EmployeeId == employeeId);
+        if (alreadyAssigned)
+            return OperationResult<BookingDetailDto>.Fail("Employee already assigned.");
+
+        _db.BookingAssignments.Add(new BookingAssignment
+        {
+            BookingId = bookingId,
+            EmployeeId = employeeId,
+            AssignedAt = DateTime.UtcNow
+        });
         booking.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
@@ -140,6 +178,27 @@ public class BookingManager
         return detail == null
             ? OperationResult<BookingDetailDto>.Fail("Booking not found.")
             : OperationResult<BookingDetailDto>.Ok(detail);
+    }
+
+    public async Task<OperationResult<string>> RemoveAssignmentAsync(int bookingId, int assignmentId)
+    {
+        var booking = await _db.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId);
+        if (booking == null)
+            return OperationResult<string>.Fail("Booking not found.");
+
+        if (string.Equals(booking.Status, BookingStatus.InProgress.ToString(), StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(booking.Status, BookingStatus.Completed.ToString(), StringComparison.OrdinalIgnoreCase))
+            return OperationResult<string>.Fail("Cannot remove assignment from an in-progress or completed booking.");
+
+        var assignment = await _db.BookingAssignments
+            .FirstOrDefaultAsync(a => a.Id == assignmentId && a.BookingId == bookingId);
+        if (assignment == null)
+            return OperationResult<string>.Fail("Assignment not found.");
+
+        _db.BookingAssignments.Remove(assignment);
+        booking.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+        return OperationResult<string>.Ok("Assignment removed.");
     }
 
     public async Task<OperationResult<BookingDetailDto>> AddServiceAsync(
@@ -229,6 +288,13 @@ public class BookingManager
         Hour = b.ScheduledTimeSlot?.Hours ?? 0,
         Status = b.Status,
         ServicesCount = b.BookingServices?.Count ?? 0,
+        AssignedEmployees = b.Assignments?.Select(a => new AssignedEmployeeDto
+        {
+            AssignmentId = a.Id,
+            EmployeeId = a.EmployeeId,
+            FullName = $"{a.Employee.FirstName} {a.Employee.LastName}".Trim(),
+            Role = a.Employee.Role?.Name ?? string.Empty
+        }).ToList() ?? new(),
         CreatedAt = b.CreatedAt
     };
 
@@ -244,10 +310,13 @@ public class BookingManager
         ClientName = b.Client?.ClientName ?? "",
         ClientPhone = b.Client?.Contacts?.FirstOrDefault()?.Phone ?? "",
         ClientEmail = b.Client?.Contacts?.FirstOrDefault()?.Email,
-        AssignedEmployeeId = b.AssignedEmployeeId,
-        AssignedEmployeeName = b.AssignedEmployee != null
-            ? $"{b.AssignedEmployee.FirstName} {b.AssignedEmployee.LastName}"
-            : null,
+        AssignedEmployees = b.Assignments?.Select(a => new AssignedEmployeeDto
+        {
+            AssignmentId = a.Id,
+            EmployeeId = a.EmployeeId,
+            FullName = $"{a.Employee.FirstName} {a.Employee.LastName}".Trim(),
+            Role = a.Employee.Role?.Name ?? string.Empty
+        }).ToList() ?? new(),
         Services = b.BookingServices.Select(bs => new BookingServiceDto
         {
             Id = bs.Id,
