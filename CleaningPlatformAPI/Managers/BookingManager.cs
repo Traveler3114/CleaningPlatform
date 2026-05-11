@@ -54,7 +54,7 @@ public class BookingManager
             .Include(b => b.Client)
                 .ThenInclude(c => c.Contacts)
             .Include(b => b.BookingServices)
-            .Include(b => b.Assignments)
+            .Include(b => b.Assignments.Where(a => a.EmployeeId == employeeId))
                 .ThenInclude(a => a.Employee)
                     .ThenInclude(e => e.Role)
             .Where(b => b.Assignments.Any(a => a.EmployeeId == employeeId))
