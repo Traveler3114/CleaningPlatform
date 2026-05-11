@@ -67,6 +67,23 @@ public class UsersModel : PageModel
         return RedirectToPage();
     }
 
+    public async Task<IActionResult> OnPostResetPasswordAsync(int userId, string newPassword)
+    {
+        if (!User.HasPermission(PermissionKeys.ActionsUserToggleActive))
+            return Forbid();
+
+        var result = await _authManager.ResetPasswordAsync(new ResetPasswordDto
+        {
+            UserId = userId,
+            NewPassword = newPassword
+        });
+
+        if (!result.Success)
+            ErrorMessage = result.Message;
+
+        return RedirectToPage();
+    }
+
     private async Task LoadAsync()
     {
         Users = await _employeeManager.GetAllUsersAsync();

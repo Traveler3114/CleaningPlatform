@@ -1,0 +1,53 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.ProfileModel
+@{
+    ViewData["Title"] = "My Profile";
+    ViewData["ActivePage"] = "profile";
+}
+
+<div class="page-header">
+    <h1>My Profile</h1>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (Model.CurrentUser != null)
+{
+    <section class="detail-section">
+        <h2 class="section-title">Account Info</h2>
+        <div class="form-grid two-col">
+            <label>
+                Username
+                <input class="text-input" value="@Model.CurrentUser.Username" readonly />
+            </label>
+            <label>
+                Full Name
+                <input class="text-input" value="@($"{Model.CurrentUser.FirstName} {Model.CurrentUser.LastName}")" readonly />
+            </label>
+            <label>
+                Role
+                <input class="text-input" value="@Model.CurrentUser.Role" readonly />
+            </label>
+        </div>
+    </section>
+
+    <section class="detail-section" style="margin-top:1rem;">
+        <h2 class="section-title">Change Password</h2>
+        <form method="post" asp-page-handler="ChangePassword" class="form-grid">
+            <label>
+                Current Password
+                <input type="password" name="currentPassword" class="text-input" required />
+            </label>
+            <label>
+                New Password
+                <input type="password" name="newPassword" class="text-input" required />
+            </label>
+            <div>
+                <button type="submit" class="btn btn-sm">Change Password</button>
+            </div>
+        </form>
+    </section>
+}

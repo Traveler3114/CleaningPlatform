@@ -64,7 +64,7 @@
             {
                 <div class="user-pill">
                     <div class="user-pill-info">
-                        <span class="user-pill-name">@User.Identity.Name</span>
+                        <a asp-page="/Admin/Profile" class="user-pill-name nav-link">@User.Identity.Name</a>
                         <span class="user-pill-role">@roleName</span>
                     </div>
                     <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout" class="logout-form">

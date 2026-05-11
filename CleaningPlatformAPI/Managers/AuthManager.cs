@@ -87,7 +87,8 @@ public class AuthManager
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, roleName)
+            new Claim(ClaimTypes.Role, roleName),
+            new Claim("security_stamp", user.SecurityStamp)
         };
 
         if (roleName != "Owner")
@@ -123,6 +124,45 @@ public class AuthManager
             User = user,
             Permissions = permissions
         });
+    }
+
+    public async Task<OperationResult<string>> ResetPasswordAsync(ResetPasswordDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.NewPassword))
+            return OperationResult<string>.Fail("New password is required.");
+
+        var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == dto.UserId);
+        if (user == null)
+            return OperationResult<string>.Fail("User not found.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        user.SecurityStamp = Guid.NewGuid().ToString();
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return OperationResult<string>.Ok("Password reset.");
+    }
+
+    public async Task<OperationResult<string>> ChangePasswordAsync(ChangePasswordDto dto, int requestingUserId)
+    {
+        if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+            return OperationResult<string>.Fail("Current password is required.");
+        if (string.IsNullOrWhiteSpace(dto.NewPassword))
+            return OperationResult<string>.Fail("New password is required.");
+
+        var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == requestingUserId);
+        if (user == null)
+            return OperationResult<string>.Fail("User not found.");
+
+        if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
+            return OperationResult<string>.Fail("Current password is incorrect.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        user.SecurityStamp = Guid.NewGuid().ToString();
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return OperationResult<string>.Ok("Password changed.");
     }
 
     private sealed class LoginContext

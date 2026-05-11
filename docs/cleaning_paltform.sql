@@ -24,6 +24,7 @@ CREATE TABLE Employees (
     Id                  INT             PRIMARY KEY IDENTITY(1,1),
     Username            NVARCHAR(100)   NOT NULL UNIQUE,
     PasswordHash        NVARCHAR(255)   NOT NULL,
+    SecurityStamp       NVARCHAR(100)   NOT NULL DEFAULT NEWID(),
     FirstName           NVARCHAR(100)   NOT NULL,
     LastName            NVARCHAR(100)   NOT NULL,
     Phone               NVARCHAR(50)    NULL,
@@ -506,10 +507,11 @@ GO
 -- SEED DATA
 -- ============================================================
 
-INSERT INTO Employees (Username, PasswordHash, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, CreatedAt, UpdatedAt, RoleId)
+INSERT INTO Employees (Username, PasswordHash, SecurityStamp, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, CreatedAt, UpdatedAt, RoleId)
 VALUES (
     'owner',
     '$2y$10$qZKh.FlEZrHNSyAcazlNdOyBMHA.SJSfnLDoPtuFKt9Mrj99tdNEe',
+    NEWID(),
     'Owner',
     'User',
     NULL,

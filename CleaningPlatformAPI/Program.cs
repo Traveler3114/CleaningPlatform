@@ -104,6 +104,7 @@ app.UseHttpsRedirection();
 app.UseCors();
 app.UseRouting();
 app.UseAuthentication();
+app.UseMiddleware<SecurityStampValidator>();
 app.UseAuthorization();
 
 app.UseDefaultFiles();
