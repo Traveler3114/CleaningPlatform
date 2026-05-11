@@ -1,283 +1,435 @@
-# Vehicle Cleaning System – Full Development Plan
 
-## Overview
+# Internal Cleaning Operations Platform
 
-This is a vehicle cleaning reservation system where customers can book time slots for services such as car washing and interior cleaning.
+A centralized operations platform for cleaning service businesses that combines CRM, booking management, workforce coordination, scheduling, SOP execution, invoicing, reporting, and customer operations into a single system.
 
-The system is designed with a strict separation:
+---
 
-- Backend handles all business logic
-- Frontends only display data and send requests
-- All clients communicate through one API (except the Razor Pages admin which uses managers directly)
+# Overview
+
+This platform is designed to replace fragmented tools and spreadsheets with one integrated operational system.
+
+The architecture follows a strict backend-driven approach:
+
+- Backend contains all business logic
+- Frontends are lightweight clients
+- Centralized API powers all applications
+- Operational data is managed from one source of truth
+
+The project currently includes:
+
+- ASP.NET Core API
+- Razor Pages admin dashboard
+- SQL Server database
+- .NET MAUI worker application
+- Web frontend for customer booking
+
+---
+
+# Core Objectives
+
+## Operational
+
+- Centralize bookings, jobs, employees, invoices, and reporting
+- Standardize workflows across teams
+- Reduce manual coordination
+- Improve scheduling visibility
+- Track service execution in real time
+
+## Financial
+
+- Accelerate invoicing
+- Improve receivables tracking
+- Generate operational and financial reporting
+- Reduce administrative overhead
+
+## Technical
+
+- Maintain strict separation of concerns
+- Keep business logic centralized
+- Support multiple frontend clients
+- Enable scalable module-based development
 
 ---
 
 # System Architecture
 
-## Backend (Core System)
+```text
+                    +---------------------+
+                    |  Customer Website   |
+                    |  HTML / CSS / JS    |
+                    +----------+----------+
+                               |
+                               v
++----------------+    +----------------------+    +----------------+
+| Worker Mobile  |    |   ASP.NET Core API   |    | Razor Pages    |
+| .NET MAUI App  +--->+ Business Logic Layer +<---+ Admin Dashboard|
++----------------+    +----------+-----------+    +----------------+
+                                  |
+                                  v
+                         +------------------+
+                         |   SQL Server     |
+                         |   Database       |
+                         +------------------+
+```
 
-Technology:
-- ASP.NET Core API
-- ASP.NET Core Razor Pages (Admin Dashboard)
+---
+
+# Technology Stack
+
+## Backend
+
+- ASP.NET Core Web API
+- ASP.NET Core Razor Pages
+- Entity Framework Core
 - Microsoft SQL Server
 
-Role:
-This is the brain of the system.
+## Frontend
 
-Responsibilities:
-- Booking creation and validation
-- Capacity management per time slot
-- Working hours configuration
-- Slot overrides (custom capacity per hour/day)
-- Preventing overbooking
-- Data storage and retrieval
+### Customer Booking Website
 
-Important rule:
-All business logic exists ONLY in the backend.
-
----
-
-## Frontend Applications
-
-The system has three frontend clients:
-
----
-
-## 1. Customer Website
-
-Technology:
 - HTML
 - CSS
 - JavaScript
 
-Purpose:
-Public booking interface for customers.
+### Internal Admin Dashboard
 
-Features:
-- Select date
-- View available time slots
-- Choose hour
-- Enter name and phone
-- Submit booking
-- Receive confirmation
+- Razor Pages
 
-Important:
-- No business logic
-- Only calls backend API
+### Worker Mobile Application
 
----
-
-## 2. Admin Dashboard (Razor Pages)
-
-Technology:
-- ASP.NET Core Razor Pages (inside the API project)
-
-Purpose:
-Internal management tool.
-
-Features:
-- View bookings per day
-- View occupancy per time slot
-- Modify slot capacity (overrides)
-- Configure working hours
-- Update booking status
-
-Important:
-- Uses managers/services directly (no HTTP calls to own API)
-- Lives in the same ASP.NET Core project as the API
-
----
-
-## 3. Worker Mobile App
-
-Technology:
 - .NET MAUI
 
-Purpose:
-Used by workers for daily operations.
+---
 
-Features:
-- View assigned jobs
-- See schedule grouped by hour
-- View customer details
-- Mark job status (optional)
+# Main Modules
 
-Important:
-- No scheduling logic inside app
-- Backend controls all rules
+## CRM & Client Management
+
+- Client profiles
+- Contact information
+- Site/location management
+- Contract and service tracking
+- Historical activity logs
 
 ---
 
-# System Architecture Diagram
+## Booking & Scheduling
 
-Backend:
-- ASP.NET Core API + Razor Pages + SQL Server
-
-Frontends:
-- Customer Website (HTML/JS)
-- Admin Dashboard (Razor Pages inside backend)
-- Worker App (.NET MAUI)
+- Service booking
+- Time-slot availability
+- Capacity management
+- Schedule planning
+- Working hour configuration
+- Slot overrides
+- Recurring scheduling support
 
 ---
 
-# Core Business Rules
+## Workforce Management
+
+- Employee assignments
+- Shift visibility
+- Mobile task execution
+- Job status tracking
+- Cleaner coordination
+- Attendance and accountability support
+
+---
+
+## SOP & Task Execution
+
+- Cleaning checklists
+- SOP attribution
+- Task verification
+- Proof-of-service workflows
+- Standardized operational execution
+
+---
+
+## Financial Operations
+
+- Invoice generation
+- Payment tracking
+- Revenue reporting
+- Receivables management
+- Client profitability visibility
+
+---
+
+# Business Rules
+
+## Backend as Source of Truth
+
+All validation, scheduling, and operational rules exist exclusively in the backend.
+
+Frontends only:
+
+- Display data
+- Send requests
+- Render UI
+
+---
 
 ## Working Hours
 
-Configurable per day:
+Working hours are configurable per day.
 
 Example:
-- Monday–Friday: 08:00–17:00
-- Saturday: 09:00–13:00
-- Sunday: Closed
 
-Stored in database and editable by admin.
-
----
-
-## Time Slots
-
-- Slot duration: 1 hour
-- Default capacity: 2 vehicles
-- Capacity can be overridden per slot
-
-Example:
-- 09:00 → 2 cars max
-- 10:00 → 2 cars max
+| Day | Hours |
+|---|---|
+| Monday–Friday | 08:00–17:00 |
+| Saturday | 09:00–13:00 |
+| Sunday | Closed |
 
 ---
 
 ## Booking Rules
 
-A booking is allowed only if:
+A booking is valid only when:
 
-- Within working hours
-- Slot is not closed
-- Capacity is not exceeded
-
-Otherwise:
-- Booking is rejected
+- The selected time is inside working hours
+- Slot capacity is available
+- Slot is not blocked or closed
+- Validation passes all business constraints
 
 ---
 
-# Data Models
+## Slot Capacity
+
+Default slot capacity can be overridden per hour or per date.
+
+Example:
+
+| Time Slot | Capacity |
+|---|---|
+| 09:00 | 2 |
+| 10:00 | 2 |
+| 11:00 | 0 (blocked) |
+
+---
+
+# Core Data Models
 
 ## Booking
 
+```text
 - Id
 - CustomerName
 - Phone
 - ScheduledDate
 - ScheduledHour
-- Status (Pending, Confirmed, InProgress, Completed, Cancelled)
-
----
-
-## SlotOverride
-
-- Id
-- Date
-- Hour
-- Capacity
-
-Purpose:
-Overrides default capacity or blocks slot (Capacity = 0)
+- Status
+```
 
 ---
 
 ## WorkingHours
 
+```text
 - Id
 - DayOfWeek
 - StartHour
 - EndHour
 - IsClosed
-
-Purpose:
-Defines weekly schedule
+```
 
 ---
 
-# System Flow
+## SlotOverride
+
+```text
+- Id
+- Date
+- Hour
+- Capacity
+```
+
+---
+
+# Frontend Applications
+
+## 1. Customer Website
+
+Public booking interface.
+
+### Features
+
+- View available time slots
+- Create bookings
+- Submit customer details
+- Receive confirmations
+
+---
+
+## 2. Admin Dashboard
+
+Internal management system built with Razor Pages.
+
+### Features
+
+- Manage bookings
+- Configure working hours
+- Adjust slot capacities
+- Review schedules
+- Monitor operations
+- Update statuses
+
+---
+
+## 3. Worker Mobile App
+
+Mobile application for operational staff.
+
+### Features
+
+- View assigned jobs
+- Access customer details
+- Review SOPs and checklists
+- Track completion
+- Update job status
+
+---
+
+# Scheduling Flow
 
 ## Customer Booking Flow
 
-1. Open website
-2. Select date
-3. Request available slots from backend
-4. Backend calculates availability
-5. User selects slot
-6. Enters details
-7. Sends booking request
-8. Backend validates and stores booking
+```text
+1. Customer selects date
+2. Frontend requests available slots
+3. Backend validates availability
+4. User submits booking
+5. Backend stores booking
+6. Confirmation returned to client
+```
 
 ---
 
 ## Availability Calculation
 
-For each slot:
+```text
+Available Capacity = Slot Capacity - Existing Bookings
+```
 
-- Get working hours for day
-- Check if closed
-- Apply slot override if exists
-- Otherwise use default capacity
-- Count bookings
-- Calculate remaining slots
+Validation process:
 
-Formula:
-Available = Capacity - Booked
-
----
-
-## Admin Flow (Razor Pages)
-
-- View bookings per day
-- Modify capacity (slot overrides)
-- Change working hours
-- Update booking status
+1. Load working hours
+2. Check if day is closed
+3. Apply slot overrides
+4. Count active bookings
+5. Calculate remaining capacity
+6. Return availability response
 
 ---
 
-## Worker Flow
+# Design Principles
 
-- Login to mobile app
-- View daily jobs
-- See grouped schedule
-- Update job status (optional)
+## Centralized Business Logic
 
----
-
-# Key Design Principles
-
-## Backend is source of truth
-All logic exists only in backend.
-
-## Frontends are dumb clients
-They only:
-- display data
-- send requests
-- render responses
-
-## Single API
-All external apps use the same backend API.
+All rules live in one place to avoid inconsistencies between applications.
 
 ---
 
-# Final Architecture
+## Modular Architecture
 
-                 BACKEND
-        ASP.NET Core API + Razor Pages + SQL Server
-                        |
-        --------------------------------
-        |              |               |
-Customer Web     Admin (Razor Pages)   Worker Mobile (.NET MAUI)
+Modules are separated by responsibility:
+
+- Scheduling
+- CRM
+- Finance
+- Workforce
+- Reporting
+- Operations
 
 ---
 
-# Summary
+## API-First Approach
 
-- 1 backend system (ASP.NET Core + Razor Pages + SQL Server)
-- 3 frontend clients (web + Razor Pages + mobile)
-- Fully API-driven for external clients
-- Flexible scheduling system
-- Scalable for real business use
+All external clients communicate through the backend API.
+
+---
+
+## Scalable Foundation
+
+The system is structured to support:
+
+- Additional mobile apps
+- Multi-location operations
+- Advanced analytics
+- Role-based permissions
+- Automation workflows
+- Future integrations
+
+---
+
+# Current Project Summary
+
+| Metric | Value |
+|---|---|
+| Files analyzed | 98 |
+| Modules | 16 |
+| Main languages | C#, JavaScript, HTML, CSS |
+| Architecture | Multi-client backend-driven system |
+
+---
+
+# Future Roadmap
+
+## Planned Enhancements
+
+- Authentication & role management
+- Real-time notifications
+- GPS job tracking
+- Advanced reporting dashboards
+- Automated invoicing workflows
+- Multi-tenant architecture
+- Customer portal
+- Analytics and KPI dashboards
+- Employee performance tracking
+- Calendar synchronization
+
+---
+
+# Development Philosophy
+
+The platform is being developed as a long-term operational foundation for internal business management.
+
+Primary focus areas:
+
+- Reliability
+- Maintainability
+- Scalability
+- Operational efficiency
+- Clear separation of concerns
+
+---
+
+# Repository Structure
+
+```text
+/Backend
+    /API
+    /Services
+    /Managers
+    /Data
+    /Entities
+
+/Frontend
+    /CustomerWebsite
+    /AdminDashboard
+
+/Mobile
+    /WorkerApp
+
+/Documentation
+```
+
+---
+
+# License
+
+Private internal business software.
+
+All rights reserved.

@@ -1,223 +1,213 @@
 graph TD
-    CleaningPlatform["CleaningPlatform"]
-    Index["Index"]
-    CleaningPlatform --> Index
-    Controllers["Controllers"]
-    InvoiceController["InvoiceController"]
-    Controllers --> InvoiceController
-    AvailabilityController["AvailabilityController"]
-    Controllers --> AvailabilityController
-    BookingController["BookingController"]
-    Controllers --> BookingController
-    ClientController["ClientController"]
-    Controllers --> ClientController
-    AuthController["AuthController"]
-    Controllers --> AuthController
-    EmployeeController["EmployeeController"]
-    Controllers --> EmployeeController
-    ScheduleController["ScheduleController"]
-    Controllers --> ScheduleController
-    DateOverrideController["DateOverrideController"]
-    Controllers --> DateOverrideController
-    RoleController["RoleController"]
-    Controllers --> RoleController
-    ServiceCatalogController["ServiceCatalogController"]
-    Controllers --> ServiceCatalogController
-    admin["admin"]
-    booking_detail["booking-detail"]
-    admin --> booking_detail
-    client["client"]
-    admin --> client
-    bookings["bookings"]
-    admin --> bookings
-    roles["roles"]
-    admin --> roles
-    login["login"]
-    admin --> login
-    invoice_detail["invoice-detail"]
-    admin --> invoice_detail
-    schedule["schedule"]
-    admin --> schedule
-    index["index"]
-    admin --> index
-    invoices["invoices"]
-    admin --> invoices
-    services["services"]
-    admin --> services
-    users["users"]
-    admin --> users
-    clients["clients"]
-    admin --> clients
-    Entities["Entities"]
-    WeeklySchedule["WeeklySchedule"]
-    Entities --> WeeklySchedule
-    BookingService["BookingService"]
-    Entities --> BookingService
-    Booking["Booking"]
-    Entities --> Booking
-    Client["Client"]
-    Entities --> Client
-    Payment["Payment"]
-    Entities --> Payment
-    BoatBookingDetails["BoatBookingDetails"]
-    Entities --> BoatBookingDetails
-    SiteDetail["SiteDetail"]
-    Entities --> SiteDetail
-    RolePermission["RolePermission"]
-    Entities --> RolePermission
-    InvoiceLine["InvoiceLine"]
-    Entities --> InvoiceLine
-    BookingView["BookingView"]
-    Entities --> BookingView
-    InvoiceBooking["InvoiceBooking"]
-    Entities --> InvoiceBooking
-    ServiceCatalog["ServiceCatalog"]
-    Entities --> ServiceCatalog
-    Role["Role"]
-    Entities --> Role
-    Employee["Employee"]
-    Entities --> Employee
-    Site["Site"]
-    Entities --> Site
-    DateOverride["DateOverride"]
-    Entities --> DateOverride
-    VehicleBookingDetails["VehicleBookingDetails"]
-    Entities --> VehicleBookingDetails
-    Invoice["Invoice"]
-    Entities --> Invoice
-    Contact["Contact"]
-    Entities --> Contact
-    net10_0["net10.0"]
-    VechileCleaningAPI_GlobalUsings_g["VechileCleaningAPI.GlobalUsings.g"]
-    net10_0 --> VechileCleaningAPI_GlobalUsings_g
-    VechileCleaningAPI_AssemblyInfo["VechileCleaningAPI.AssemblyInfo"]
-    net10_0 --> VechileCleaningAPI_AssemblyInfo
-    CleaningPlatformAPI_AssemblyInfo["CleaningPlatformAPI.AssemblyInfo"]
-    net10_0 --> CleaningPlatformAPI_AssemblyInfo
-    VechileCleaningAPI_MvcApplicationPartsAssemblyInfo["VechileCleaningAPI.MvcApplicationPartsAssemblyInfo"]
-    net10_0 --> VechileCleaningAPI_MvcApplicationPartsAssemblyInfo
-    _NETCoreAppVersionv10_0_AssemblyAttributes[".NETCoreApp,Version=v10.0.AssemblyAttributes"]
-    net10_0 --> _NETCoreAppVersionv10_0_AssemblyAttributes
-    VechileCleaningAPI_GlobalUsings_g["VechileCleaningAPI.GlobalUsings.g"]
-    net10_0 --> VechileCleaningAPI_GlobalUsings_g
-    VechileCleaningAPI_AssemblyInfo["VechileCleaningAPI.AssemblyInfo"]
-    net10_0 --> VechileCleaningAPI_AssemblyInfo
-    CleaningPlatformAPI_MvcApplicationPartsAssemblyInfo["CleaningPlatformAPI.MvcApplicationPartsAssemblyInfo"]
-    net10_0 --> CleaningPlatformAPI_MvcApplicationPartsAssemblyInfo
-    CleaningPlatformAPI_GlobalUsings_g["CleaningPlatformAPI.GlobalUsings.g"]
-    net10_0 --> CleaningPlatformAPI_GlobalUsings_g
-    _NETCoreAppVersionv10_0_AssemblyAttributes[".NETCoreApp,Version=v10.0.AssemblyAttributes"]
-    net10_0 --> _NETCoreAppVersionv10_0_AssemblyAttributes
-    js["js"]
-    permissions["permissions"]
-    js --> permissions
-    site["site"]
-    js --> site
-    app["app"]
-    js --> app
-    auth["auth"]
-    js --> auth
     Dtos["Dtos"]
-    CreateUserDto["CreateUserDto"]
-    Dtos --> CreateUserDto
-    LoginDto["LoginDto"]
-    Dtos --> LoginDto
-    BookingDetailDto["BookingDetailDto"]
-    Dtos --> BookingDetailDto
-    BookingDto["BookingDto"]
-    Dtos --> BookingDto
-    CreateRoleDto["CreateRoleDto"]
-    Dtos --> CreateRoleDto
+    EmployeeSimpleDto["EmployeeSimpleDto"]
+    Dtos --> EmployeeSimpleDto
     AddBookingServiceDto["AddBookingServiceDto"]
     Dtos --> AddBookingServiceDto
-    CreateClientDto["CreateClientDto"]
-    Dtos --> CreateClientDto
-    CreateBookingDto["CreateBookingDto"]
-    Dtos --> CreateBookingDto
-    UserDto["UserDto"]
-    Dtos --> UserDto
-    UpdateRoleDto["UpdateRoleDto"]
-    Dtos --> UpdateRoleDto
-    AvailablePermissionDto["AvailablePermissionDto"]
-    Dtos --> AvailablePermissionDto
-    ServiceCatalogDto["ServiceCatalogDto"]
-    Dtos --> ServiceCatalogDto
-    WeeklyScheduleDto["WeeklyScheduleDto"]
-    Dtos --> WeeklyScheduleDto
+    CreateRoleDto["CreateRoleDto"]
+    Dtos --> CreateRoleDto
     AvailabilityDto["AvailabilityDto"]
     Dtos --> AvailabilityDto
+    UpdateRoleDto["UpdateRoleDto"]
+    Dtos --> UpdateRoleDto
+    ServiceCatalogUpsertDto["ServiceCatalogUpsertDto"]
+    Dtos --> ServiceCatalogUpsertDto
+    UserDto["UserDto"]
+    Dtos --> UserDto
     InvoiceDto["InvoiceDto"]
     Dtos --> InvoiceDto
+    AvailablePermissionDto["AvailablePermissionDto"]
+    Dtos --> AvailablePermissionDto
+    RoleDto["RoleDto"]
+    Dtos --> RoleDto
+    DateOverrideDto["DateOverrideDto"]
+    Dtos --> DateOverrideDto
+    BookingDto["BookingDto"]
+    Dtos --> BookingDto
+    BookingDetailDto["BookingDetailDto"]
+    Dtos --> BookingDetailDto
+    ServiceCatalogDto["ServiceCatalogDto"]
+    Dtos --> ServiceCatalogDto
+    CreateBookingDto["CreateBookingDto"]
+    Dtos --> CreateBookingDto
+    ChangePasswordDto["ChangePasswordDto"]
+    Dtos --> ChangePasswordDto
+    LoginDto["LoginDto"]
+    Dtos --> LoginDto
     BookingAssignDto["BookingAssignDto"]
     Dtos --> BookingAssignDto
     ClientDto["ClientDto"]
     Dtos --> ClientDto
-    ServiceCatalogUpsertDto["ServiceCatalogUpsertDto"]
-    Dtos --> ServiceCatalogUpsertDto
-    DateOverrideDto["DateOverrideDto"]
-    Dtos --> DateOverrideDto
-    EmployeeSimpleDto["EmployeeSimpleDto"]
-    Dtos --> EmployeeSimpleDto
-    RoleDto["RoleDto"]
-    Dtos --> RoleDto
-    Data["Data"]
-    AppDbContext["AppDbContext"]
-    Data --> AppDbContext
-    Managers["Managers"]
-    BookingManager["BookingManager"]
-    Managers --> BookingManager
-    ServiceCatalogManager["ServiceCatalogManager"]
-    Managers --> ServiceCatalogManager
-    ClientManager["ClientManager"]
-    Managers --> ClientManager
-    AvailabilityManager["AvailabilityManager"]
-    Managers --> AvailabilityManager
-    AuthManager["AuthManager"]
-    Managers --> AuthManager
-    ScheduleManager["ScheduleManager"]
-    Managers --> ScheduleManager
-    InvoiceManager["InvoiceManager"]
-    Managers --> InvoiceManager
-    DateOverrideManager["DateOverrideManager"]
-    Managers --> DateOverrideManager
-    TokenManager["TokenManager"]
-    Managers --> TokenManager
-    RoleManager["RoleManager"]
-    Managers --> RoleManager
-    EmployeeManager["EmployeeManager"]
-    Managers --> EmployeeManager
+    WeeklyScheduleDto["WeeklyScheduleDto"]
+    Dtos --> WeeklyScheduleDto
+    CreateUserDto["CreateUserDto"]
+    Dtos --> CreateUserDto
+    ResetPasswordDto["ResetPasswordDto"]
+    Dtos --> ResetPasswordDto
+    CreateClientDto["CreateClientDto"]
+    Dtos --> CreateClientDto
+    Admin["Admin"]
+    Services_cshtml["Services.cshtml"]
+    Admin --> Services_cshtml
+    Clients_cshtml["Clients.cshtml"]
+    Admin --> Clients_cshtml
+    Schedule_cshtml["Schedule.cshtml"]
+    Admin --> Schedule_cshtml
+    Users_cshtml["Users.cshtml"]
+    Admin --> Users_cshtml
+    Bookings_cshtml["Bookings.cshtml"]
+    Admin --> Bookings_cshtml
+    Login_cshtml["Login.cshtml"]
+    Admin --> Login_cshtml
+    InvoiceDetail_cshtml["InvoiceDetail.cshtml"]
+    Admin --> InvoiceDetail_cshtml
+    Roles_cshtml["Roles.cshtml"]
+    Admin --> Roles_cshtml
+    ClientDetail_cshtml["ClientDetail.cshtml"]
+    Admin --> ClientDetail_cshtml
+    Invoices_cshtml["Invoices.cshtml"]
+    Admin --> Invoices_cshtml
+    Profile_cshtml["Profile.cshtml"]
+    Admin --> Profile_cshtml
+    Index_cshtml["Index.cshtml"]
+    Admin --> Index_cshtml
+    BookingDetail_cshtml["BookingDetail.cshtml"]
+    Admin --> BookingDetail_cshtml
+    Entities["Entities"]
+    VehicleBookingDetails["VehicleBookingDetails"]
+    Entities --> VehicleBookingDetails
+    Booking["Booking"]
+    Entities --> Booking
+    ServiceCatalog["ServiceCatalog"]
+    Entities --> ServiceCatalog
+    Role["Role"]
+    Entities --> Role
+    Invoice["Invoice"]
+    Entities --> Invoice
+    BoatBookingDetails["BoatBookingDetails"]
+    Entities --> BoatBookingDetails
+    Client["Client"]
+    Entities --> Client
+    InvoiceLine["InvoiceLine"]
+    Entities --> InvoiceLine
+    Payment["Payment"]
+    Entities --> Payment
+    Contact["Contact"]
+    Entities --> Contact
+    SiteDetail["SiteDetail"]
+    Entities --> SiteDetail
+    WeeklySchedule["WeeklySchedule"]
+    Entities --> WeeklySchedule
+    BookingView["BookingView"]
+    Entities --> BookingView
+    Site["Site"]
+    Entities --> Site
+    InvoiceBooking["InvoiceBooking"]
+    Entities --> InvoiceBooking
+    RolePermission["RolePermission"]
+    Entities --> RolePermission
+    BookingService["BookingService"]
+    Entities --> BookingService
+    DateOverride["DateOverride"]
+    Entities --> DateOverride
+    Employee["Employee"]
+    Entities --> Employee
     Enums["Enums"]
-    BookingStatus["BookingStatus"]
-    Enums --> BookingStatus
     EmployeeRole["EmployeeRole"]
     Enums --> EmployeeRole
+    BookingStatus["BookingStatus"]
+    Enums --> BookingStatus
+    Controllers["Controllers"]
+    BookingController["BookingController"]
+    Controllers --> BookingController
+    ClientController["ClientController"]
+    Controllers --> ClientController
+    AvailabilityController["AvailabilityController"]
+    Controllers --> AvailabilityController
+    EmployeeController["EmployeeController"]
+    Controllers --> EmployeeController
+    ServiceCatalogController["ServiceCatalogController"]
+    Controllers --> ServiceCatalogController
+    ScheduleController["ScheduleController"]
+    Controllers --> ScheduleController
+    InvoiceController["InvoiceController"]
+    Controllers --> InvoiceController
+    DateOverrideController["DateOverrideController"]
+    Controllers --> DateOverrideController
+    AuthController["AuthController"]
+    Controllers --> AuthController
+    RoleController["RoleController"]
+    Controllers --> RoleController
+    Managers["Managers"]
+    InvoiceManager["InvoiceManager"]
+    Managers --> InvoiceManager
+    AvailabilityManager["AvailabilityManager"]
+    Managers --> AvailabilityManager
+    ClientManager["ClientManager"]
+    Managers --> ClientManager
+    ScheduleManager["ScheduleManager"]
+    Managers --> ScheduleManager
+    TokenManager["TokenManager"]
+    Managers --> TokenManager
+    AuthManager["AuthManager"]
+    Managers --> AuthManager
+    BookingManager["BookingManager"]
+    Managers --> BookingManager
+    DateOverrideManager["DateOverrideManager"]
+    Managers --> DateOverrideManager
+    EmployeeManager["EmployeeManager"]
+    Managers --> EmployeeManager
+    RoleManager["RoleManager"]
+    Managers --> RoleManager
+    ServiceCatalogManager["ServiceCatalogManager"]
+    Managers --> ServiceCatalogManager
+    Authorization["Authorization"]
+    PermissionRequirement["PermissionRequirement"]
+    Authorization --> PermissionRequirement
+    SecurityStampValidator["SecurityStampValidator"]
+    Authorization --> SecurityStampValidator
+    PermissionHandler["PermissionHandler"]
+    Authorization --> PermissionHandler
+    js["js"]
+    site["site"]
+    js --> site
+    app["app"]
+    js --> app
+    net10_0["net10.0"]
+    CleaningPlatformAPI_RazorAssemblyInfo["CleaningPlatformAPI.RazorAssemblyInfo"]
+    net10_0 --> CleaningPlatformAPI_RazorAssemblyInfo
+    CleaningPlatformAPI_AssemblyInfo["CleaningPlatformAPI.AssemblyInfo"]
+    net10_0 --> CleaningPlatformAPI_AssemblyInfo
+    _NETCoreAppVersionv10_0_AssemblyAttributes[".NETCoreApp,Version=v10.0.AssemblyAttributes"]
+    net10_0 --> _NETCoreAppVersionv10_0_AssemblyAttributes
+    CleaningPlatformAPI_MvcApplicationPartsAssemblyInfo["CleaningPlatformAPI.MvcApplicationPartsAssemblyInfo"]
+    net10_0 --> CleaningPlatformAPI_MvcApplicationPartsAssemblyInfo
+    CleaningPlatformAPI_GlobalUsings_g["CleaningPlatformAPI.GlobalUsings.g"]
+    net10_0 --> CleaningPlatformAPI_GlobalUsings_g
+    CleaningPlatform["CleaningPlatform"]
+    Index["Index"]
+    CleaningPlatform --> Index
     css["css"]
-    style2["style2"]
-    css --> style2
+    admin["admin"]
+    css --> admin
     site["site"]
     css --> site
-    n_style["style"]
-    css --> n_style
-    Migrations["Migrations"]
-    AppDbContextModelSnapshot["AppDbContextModelSnapshot"]
-    Migrations --> AppDbContextModelSnapshot
-    n_20260506121253_InitalCreate_Designer["20260506121253_InitalCreate.Designer"]
-    Migrations --> n_20260506121253_InitalCreate_Designer
-    n_20260506121253_InitalCreate["20260506121253_InitalCreate"]
-    Migrations --> n_20260506121253_InitalCreate
-    wwwroot["wwwroot"]
-    index["index"]
-    wwwroot --> index
+    customer["customer"]
+    css --> customer
+    Extensions["Extensions"]
+    ClaimsPrincipalExtensions["ClaimsPrincipalExtensions"]
+    Extensions --> ClaimsPrincipalExtensions
     Common["Common"]
     PermissionKeys["PermissionKeys"]
     Common --> PermissionKeys
     OperationResult["OperationResult"]
     Common --> OperationResult
-    Authorization["Authorization"]
-    PermissionHandler["PermissionHandler"]
-    Authorization --> PermissionHandler
-    PermissionRequirement["PermissionRequirement"]
-    Authorization --> PermissionRequirement
+    wwwroot["wwwroot"]
+    index["index"]
+    wwwroot --> index
     CleaningPlatformAPI["CleaningPlatformAPI"]
     Program["Program"]
     CleaningPlatformAPI --> Program
+    Data["Data"]
+    AppDbContext["AppDbContext"]
+    Data --> AppDbContext
