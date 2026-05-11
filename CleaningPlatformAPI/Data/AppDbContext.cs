@@ -15,6 +15,7 @@ namespace CleaningPlatformAPI.Data
         public DbSet<Site> Sites { get; set; }
         public DbSet<ServiceCatalog> ServiceCatalog { get; set; }
         public DbSet<Booking> Bookings { get; set; }
+        public DbSet<BookingAssignment> BookingAssignments { get; set; }
         public DbSet<BookingService> BookingServices { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<InvoiceLine> InvoiceLines { get; set; }
@@ -157,12 +158,21 @@ namespace CleaningPlatformAPI.Data
                 .HasForeignKey(s => s.ClientId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Employee → Bookings (assigned employee)
-            modelBuilder.Entity<Booking>()
-                .HasOne(b => b.AssignedEmployee)
-                .WithMany(e => e.Bookings)
-                .HasForeignKey(b => b.AssignedEmployeeId)
-                .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity<BookingAssignment>()
+                .HasOne(ba => ba.Booking)
+                .WithMany(b => b.Assignments)
+                .HasForeignKey(ba => ba.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<BookingAssignment>()
+                .HasOne(ba => ba.Employee)
+                .WithMany(e => e.BookingAssignments)
+                .HasForeignKey(ba => ba.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<BookingAssignment>()
+                .HasIndex(ba => new { ba.BookingId, ba.EmployeeId })
+                .IsUnique();
 
             // Site → Bookings
             modelBuilder.Entity<Booking>()

@@ -53,12 +53,22 @@ public class BookingDetailModel : PageModel
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnPostAssignEmployeeAsync(int id, int? employeeId)
+    public async Task<IActionResult> OnPostAddAssignmentAsync(int id, int employeeId)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
+        if (!User.HasPermission(PermissionKeys.ActionsBookingAssign))
             return Forbid();
 
-        var result = await _bookingManager.AssignEmployeeAsync(id, employeeId);
+        var result = await _bookingManager.AddAssignmentAsync(id, employeeId);
+        if (!result.Success) ErrorMessage = result.Message;
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostRemoveAssignmentAsync(int id, int assignmentId)
+    {
+        if (!User.HasPermission(PermissionKeys.ActionsBookingAssign))
+            return Forbid();
+
+        var result = await _bookingManager.RemoveAssignmentAsync(id, assignmentId);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
     }

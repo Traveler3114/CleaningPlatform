@@ -43,6 +43,6 @@ namespace CleaningPlatformAPI.Entities
         public int RoleId { get; set; }
         public Role Role { get; set; }
 
-        public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+        public ICollection<BookingAssignment> BookingAssignments { get; set; } = new List<BookingAssignment>();
     }
 }

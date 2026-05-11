@@ -193,6 +193,10 @@ SELECT r.Id, 'reports.view'       FROM Roles r WHERE r.Name = 'Finance'    UNION
 SELECT r.Id, 'all.access'         FROM Roles r WHERE r.Name = 'Owner';
 GO
 
+INSERT INTO RolePermissions (RoleId, PermissionKey)
+SELECT Id, 'actions.booking.assign' FROM Roles WHERE Name = 'Owner';
+GO
+
 ALTER TABLE Employees ADD RoleId INT NOT NULL DEFAULT 1;
 ALTER TABLE Employees ADD CONSTRAINT FK_Employee_Role FOREIGN KEY (RoleId) REFERENCES Roles(Id);
 GO
@@ -241,7 +245,6 @@ CREATE TABLE Bookings (
     Id                  INT             PRIMARY KEY IDENTITY(1,1),
     ClientId            INT             NOT NULL,
     SiteId              INT             NULL,
-    AssignedEmployeeId  INT             NULL,
     ServiceType         NVARCHAR(50)    NOT NULL,
     ScheduledDate       DATE            NOT NULL,
     ScheduledTimeSlot   TIME            NULL,
@@ -252,7 +255,6 @@ CREATE TABLE Bookings (
     CompletedAt         DATETIME2       NULL,
     CONSTRAINT FK_Booking_Client    FOREIGN KEY (ClientId)           REFERENCES Clients(Id),
     CONSTRAINT FK_Booking_Site      FOREIGN KEY (SiteId)             REFERENCES Sites(Id),
-    CONSTRAINT FK_Booking_Employee  FOREIGN KEY (AssignedEmployeeId) REFERENCES Employees(Id),
     CONSTRAINT CHK_Booking_ServiceType CHECK (ServiceType IN ('Vehicle', 'SiteBased', 'Boat')),
     CONSTRAINT CHK_Booking_Status      CHECK (Status IN ('Pending', 'Confirmed', 'InProgress', 'Completed', 'Cancelled')),
     CONSTRAINT CHK_Booking_CompletedAt CHECK (Status != 'Completed' OR CompletedAt IS NOT NULL)
@@ -260,10 +262,23 @@ CREATE TABLE Bookings (
 GO
 CREATE INDEX IX_Bookings_ClientId      ON Bookings(ClientId);
 CREATE INDEX IX_Bookings_SiteId        ON Bookings(SiteId);
-CREATE INDEX IX_Bookings_Employee      ON Bookings(AssignedEmployeeId);
 CREATE INDEX IX_Bookings_ServiceType   ON Bookings(ServiceType);
 CREATE INDEX IX_Bookings_ScheduledDate ON Bookings(ScheduledDate);
 CREATE INDEX IX_Bookings_Status        ON Bookings(Status);
+GO
+
+CREATE TABLE BookingAssignments (
+    Id          INT         PRIMARY KEY IDENTITY(1,1),
+    BookingId   INT         NOT NULL,
+    EmployeeId  INT         NOT NULL,
+    AssignedAt  DATETIME2   NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT FK_BookingAssignment_Booking  FOREIGN KEY (BookingId)  REFERENCES Bookings(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_BookingAssignment_Employee FOREIGN KEY (EmployeeId) REFERENCES Employees(Id),
+    CONSTRAINT UQ_BookingAssignment UNIQUE (BookingId, EmployeeId)
+);
+GO
+CREATE INDEX IX_BookingAssignments_BookingId  ON BookingAssignments(BookingId);
+CREATE INDEX IX_BookingAssignments_EmployeeId ON BookingAssignments(EmployeeId);
 GO
 
 CREATE TABLE BookingServices (
@@ -436,7 +451,12 @@ SELECT
         )
         ELSE NULL
     END                                                     AS FinalTotal,
-    e.FirstName + ' ' + e.LastName                         AS AssignedEmployee,
+    (
+        SELECT STRING_AGG(LTRIM(RTRIM(ea.FirstName + ' ' + ea.LastName)), ', ')
+        FROM BookingAssignments ba
+        INNER JOIN Employees ea ON ea.Id = ba.EmployeeId
+        WHERE ba.BookingId = b.Id
+    )                                                       AS AssignedEmployee,
     (
         SELECT COUNT(*)
         FROM BookingServices bs
@@ -460,7 +480,6 @@ FROM Bookings b
 INNER JOIN Clients    c     ON b.ClientId = c.Id
 LEFT  JOIN Sites      s     ON b.SiteId   = s.Id
 LEFT  JOIN Contacts   cont  ON cont.ClientId = c.Id AND cont.IsPrimary = 1
-LEFT  JOIN Employees  e     ON b.AssignedEmployeeId = e.Id
 LEFT  JOIN InvoiceBookings ib  ON ib.BookingId = b.Id
 LEFT  JOIN Invoices    inv  ON inv.Id = ib.InvoiceId
 LEFT  JOIN VehicleBookingDetails v   ON b.Id = v.BookingId
@@ -639,12 +658,11 @@ WITH N AS (
     FROM sys.all_objects
 )
 INSERT INTO Bookings (
-    ClientId, SiteId, AssignedEmployeeId, ServiceType, ScheduledDate, ScheduledTimeSlot, Status, Notes, CreatedAt, UpdatedAt, CompletedAt
+    ClientId, SiteId, ServiceType, ScheduledDate, ScheduledTimeSlot, Status, Notes, CreatedAt, UpdatedAt, CompletedAt
 )
 SELECT
     ((n - 1) % (SELECT COUNT(*) FROM Clients)) + 1,
     CASE WHEN n % 5 = 0 THEN NULL ELSE ((n - 1) % (SELECT COUNT(*) FROM Sites)) + 1 END,
-    CASE WHEN n % 7 = 0 THEN NULL ELSE ((n - 1) % (SELECT COUNT(*) FROM Employees)) + 1 END,
     CHOOSE((n % 3) + 1, 'Vehicle', 'SiteBased', 'Boat'),
     DATEADD(DAY, (n % 60) - 20, CAST('2026-05-01' AS DATE)),
     CASE WHEN n % 4 = 0 THEN NULL ELSE CAST(CONCAT(8 + (n % 8), ':00') AS TIME) END,
@@ -655,6 +673,15 @@ SELECT
     CASE WHEN s.Status = 'Completed' THEN DATEADD(DAY, -1, GETUTCDATE()) ELSE NULL END
 FROM N
 CROSS APPLY (SELECT CHOOSE((n % 5) + 1, 'Pending', 'Confirmed', 'InProgress', 'Completed', 'Cancelled') AS Status) s;
+GO
+
+INSERT INTO BookingAssignments (BookingId, EmployeeId, AssignedAt)
+SELECT
+    b.Id,
+    ((b.Id - 1) % (SELECT COUNT(*) FROM Employees)) + 1,
+    GETUTCDATE()
+FROM Bookings b
+WHERE b.Id % 7 <> 0;
 GO
 
 WITH S AS (
@@ -699,14 +726,20 @@ WITH BookingTotals AS (
     SELECT
         b.Id AS BookingId,
         b.ClientId,
-        b.AssignedEmployeeId,
+        aa.EmployeeId AS CreatedByEmployeeId,
         b.ScheduledDate,
         b.Status,
         SUM(bs.EstimatedPrice * bs.Quantity) AS SubTotal
     FROM Bookings b
+    OUTER APPLY (
+        SELECT TOP 1 ba.EmployeeId
+        FROM BookingAssignments ba
+        WHERE ba.BookingId = b.Id
+        ORDER BY ba.Id
+    ) aa
     JOIN BookingServices bs ON bs.BookingId = b.Id
     WHERE b.Id % 2 = 0
-    GROUP BY b.Id, b.ClientId, b.AssignedEmployeeId, b.ScheduledDate, b.Status
+    GROUP BY b.Id, b.ClientId, aa.EmployeeId, b.ScheduledDate, b.Status
 )
 MERGE Invoices AS target
 USING BookingTotals AS src
@@ -727,7 +760,7 @@ WHEN NOT MATCHED THEN
         ROUND((src.SubTotal - CASE WHEN src.BookingId % 5 = 0 THEN 10 ELSE 0 END) * 1.25, 2),
         CHOOSE((src.BookingId % 5) + 1, 'Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue'),
         CONCAT('Invoice for booking ', src.BookingId),
-        src.AssignedEmployeeId
+        src.CreatedByEmployeeId
     )
 OUTPUT src.BookingId, inserted.Id INTO @InvoiceMap (BookingId, InvoiceId);
 

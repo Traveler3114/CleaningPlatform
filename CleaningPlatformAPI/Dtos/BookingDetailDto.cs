@@ -8,8 +8,7 @@ public class BookingDetailDto : BookingDto
     public string ClientPhone { get; set; } = string.Empty;
     public string? ClientEmail { get; set; }
 
-    public int? AssignedEmployeeId { get; set; }
-    public string? AssignedEmployeeName { get; set; }
+    public List<AssignedEmployeeDto> AssignedEmployees { get; set; } = new();
 
     public List<BookingServiceDto> Services { get; set; } = new();
 }
