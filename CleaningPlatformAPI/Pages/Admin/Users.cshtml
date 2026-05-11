@@ -115,7 +115,7 @@
             <input type="hidden" name="userId" id="modal-user-id" />
             <label>
                 New Password
-                <input type="password" name="newPassword" placeholder="New password" class="text-input" required />
+                <input type="password" name="newPassword" placeholder="New password" class="text-input" required minlength="8" />
             </label>
             <div class="modal-actions">
                 <button type="submit" class="btn btn-sm">Reset Password</button>
@@ -147,6 +147,12 @@
     window.closeDetailUserModal = () => {
         userModal.style.display = 'none';
     };
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        if (newUserModal.style.display === 'flex') closeUserModal();
+        if (userModal.style.display === 'flex') closeDetailUserModal();
+    });
 
     document.querySelectorAll('.user-row').forEach(row => {
         row.style.cursor = 'pointer';

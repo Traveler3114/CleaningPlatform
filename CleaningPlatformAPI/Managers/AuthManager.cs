@@ -130,6 +130,8 @@ public class AuthManager
     {
         if (string.IsNullOrWhiteSpace(dto.NewPassword))
             return OperationResult<string>.Fail("New password is required.");
+        if (!IsValidPassword(dto.NewPassword))
+            return OperationResult<string>.Fail("New password must be at least 8 characters and include uppercase, lowercase, and a number.");
 
         var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == dto.UserId);
         if (user == null)
@@ -149,6 +151,8 @@ public class AuthManager
             return OperationResult<string>.Fail("Current password is required.");
         if (string.IsNullOrWhiteSpace(dto.NewPassword))
             return OperationResult<string>.Fail("New password is required.");
+        if (!IsValidPassword(dto.NewPassword))
+            return OperationResult<string>.Fail("New password must be at least 8 characters and include uppercase, lowercase, and a number.");
 
         var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == requestingUserId);
         if (user == null)
@@ -163,6 +167,18 @@ public class AuthManager
 
         await _db.SaveChangesAsync();
         return OperationResult<string>.Ok("Password changed.");
+    }
+
+    private static bool IsValidPassword(string password)
+    {
+        if (password.Length < 8)
+            return false;
+
+        var hasUpper = password.Any(char.IsUpper);
+        var hasLower = password.Any(char.IsLower);
+        var hasDigit = password.Any(char.IsDigit);
+
+        return hasUpper && hasLower && hasDigit;
     }
 
     private sealed class LoginContext

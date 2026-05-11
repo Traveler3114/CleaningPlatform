@@ -39,11 +39,11 @@
         <form method="post" asp-page-handler="ChangePassword" class="form-grid">
             <label>
                 Current Password
-                <input type="password" name="currentPassword" class="text-input" required />
+                <input type="password" name="currentPassword" class="text-input" required minlength="8" />
             </label>
             <label>
                 New Password
-                <input type="password" name="newPassword" class="text-input" required />
+                <input type="password" name="newPassword" class="text-input" required minlength="8" />
             </label>
             <div>
                 <button type="submit" class="btn btn-sm">Change Password</button>
