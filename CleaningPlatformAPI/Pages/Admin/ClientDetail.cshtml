@@ -107,7 +107,7 @@
                         <td>@(c.Role ?? "-")</td>
                         <td>@(c.Phone ?? "-")</td>
                         <td>@(c.Email ?? "-")</td>
-                        <td>@(c.IsPrimary ? "<span class=\"badge badge-active\">Primary</span>" : "-")</td>
+                        <td>@Html.Raw(c.IsPrimary ? "<span class=\"badge badge-active\">Primary</span>" : "-")</td>
                         <td>
                             <span class="badge @(c.IsActive ? "badge-active" : "badge-inactive")">
                                 @(c.IsActive ? "Active" : "Inactive")
