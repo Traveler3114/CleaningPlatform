@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
+using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Pages.Admin;
@@ -22,15 +23,15 @@ public class IndexModel : PageModel
         _dateOverrideManager = dateOverrideManager;
     }
 
-    public List<BookingDto> TodaysBookings { get; set; } = [];
-    public List<AvailabilityDto> Slots { get; set; } = [];
-    public DateOverrideDto? TodayOverride { get; set; }
+    public List<BookingResponse> TodaysBookings { get; set; } = [];
+    public List<AvailabilityResponse> Slots { get; set; } = [];
+    public DateOverrideResponse? TodayOverride { get; set; }
     public int KpiPending { get; set; }
     public int KpiConfirmed { get; set; }
     public int KpiCompletedThisMonth { get; set; }
 
     [BindProperty(SupportsGet = true)]
-    public DateTime SelectedDate { get; set; } = DateTime.Today;
+    public DateTime SelectedDate { get; set; } = DateTime.UtcNow.Date;
 
     [BindProperty]
     public int? OverrideStartHour { get; set; }
@@ -47,24 +48,24 @@ public class IndexModel : PageModel
     [TempData]
     public string? ErrorMessage { get; set; }
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(CancellationToken ct)
     {
-        await LoadAsync();
+        await LoadAsync(ct);
     }
 
-    public async Task<IActionResult> OnPostSaveOverrideAsync()
+    public async Task<IActionResult> OnPostSaveOverrideAsync(CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsOverrideManage))
             return Forbid();
 
-        var result = await _dateOverrideManager.CreateOverrideAsync(new DateOverrideDto
+        var result = await _dateOverrideManager.CreateOverrideAsync(new DateOverrideRequest
         {
             Date = SelectedDate.Date,
             StartHour = OverrideStartHour,
             EndHour = OverrideEndHour,
             Capacity = OverrideCapacity,
             IsFullyClosed = OverrideClosed
-        });
+        }, ct);
 
         if (!result.Success)
             ErrorMessage = result.Message;
@@ -72,24 +73,24 @@ public class IndexModel : PageModel
         return RedirectToPage(new { selectedDate = SelectedDate.ToString("yyyy-MM-dd") });
     }
 
-    public async Task<IActionResult> OnPostDeleteOverrideAsync(int id)
+    public async Task<IActionResult> OnPostDeleteOverrideAsync(int id, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsOverrideManage))
             return Forbid();
 
-        var result = await _dateOverrideManager.DeleteOverrideAsync(id);
+        var result = await _dateOverrideManager.DeleteOverrideAsync(id, ct);
         if (!result.Success)
             ErrorMessage = result.Message;
 
         return RedirectToPage(new { selectedDate = SelectedDate.ToString("yyyy-MM-dd") });
     }
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(CancellationToken ct)
     {
-        TodaysBookings = await _bookingManager.GetBookingsAsync(SelectedDate);
-        Slots = await _availabilityManager.GetSlotsAsync(SelectedDate);
+        TodaysBookings = await _bookingManager.GetBookingsAsync(SelectedDate, ct);
+        Slots = await _availabilityManager.GetSlotsAsync(SelectedDate, ct);
 
-        var overrides = await _dateOverrideManager.GetOverridesAsync();
+        var overrides = await _dateOverrideManager.GetOverridesAsync(ct);
         TodayOverride = overrides.FirstOrDefault(o => o.Date.Date == SelectedDate.Date);
 
         if (TodayOverride != null)
@@ -100,10 +101,10 @@ public class IndexModel : PageModel
             OverrideClosed = TodayOverride.IsFullyClosed;
         }
 
-        KpiPending = TodaysBookings.Count(b => string.Equals(b.Status, "Pending", StringComparison.OrdinalIgnoreCase));
-        KpiConfirmed = TodaysBookings.Count(b => string.Equals(b.Status, "Confirmed", StringComparison.OrdinalIgnoreCase));
+        KpiPending = TodaysBookings.Count(b => string.Equals(b.Status, nameof(BookingStatus.Pending), StringComparison.OrdinalIgnoreCase));
+        KpiConfirmed = TodaysBookings.Count(b => string.Equals(b.Status, nameof(BookingStatus.Confirmed), StringComparison.OrdinalIgnoreCase));
         KpiCompletedThisMonth = TodaysBookings.Count(b =>
-            string.Equals(b.Status, "Completed", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(b.Status, nameof(BookingStatus.Completed), StringComparison.OrdinalIgnoreCase) &&
             b.Date.Month == SelectedDate.Month && b.Date.Year == SelectedDate.Year);
     }
 }

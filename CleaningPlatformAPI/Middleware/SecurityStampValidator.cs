@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
-namespace CleaningPlatformAPI.Authorization;
+namespace CleaningPlatformAPI.Middleware;
 
 public class SecurityStampValidator
 {

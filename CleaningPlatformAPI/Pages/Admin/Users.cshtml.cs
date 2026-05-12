@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
@@ -22,11 +22,11 @@ public class UsersModel : PageModel
         _authManager = authManager;
     }
 
-    public List<UserDto> Users { get; set; } = [];
-    public List<RoleDto> AvailableRoles { get; set; } = [];
+    public List<UserResponse> Users { get; set; } = [];
+    public List<RoleResponse> AvailableRoles { get; set; } = [];
 
     [BindProperty]
-    public CreateUserDto NewUser { get; set; } = new();
+    public CreateUserRequest NewUser { get; set; } = new();
 
     [TempData]
     public string? ErrorMessage { get; set; }
@@ -72,7 +72,7 @@ public class UsersModel : PageModel
         if (!User.HasPermission(PermissionKeys.ActionsUserToggleActive))
             return Forbid();
 
-        var result = await _authManager.ResetPasswordAsync(new ResetPasswordDto
+        var result = await _authManager.ResetPasswordAsync(new ResetPasswordRequest
         {
             UserId = userId,
             NewPassword = newPassword

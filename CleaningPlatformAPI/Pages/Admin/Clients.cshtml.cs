@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Pages.Admin;
@@ -17,7 +17,7 @@ public class ClientsModel : PageModel
         _clientManager = clientManager;
     }
 
-    public List<ClientDto> Clients { get; set; } = [];
+    public List<ClientResponse> Clients { get; set; } = [];
 
     [BindProperty(SupportsGet = true)]
     public string? Search { get; set; }
@@ -26,7 +26,7 @@ public class ClientsModel : PageModel
     public string? TypeFilter { get; set; }
 
     [BindProperty]
-    public CreateClientDto NewClient { get; set; } = new();
+    public CreateClientRequest NewClient { get; set; } = new();
 
     [TempData]
     public string? ErrorMessage { get; set; }

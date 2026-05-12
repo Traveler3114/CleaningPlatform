@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using CleaningPlatformAPI.Enums;
 
 namespace CleaningPlatformAPI.Entities
 {
@@ -14,14 +15,12 @@ namespace CleaningPlatformAPI.Entities
         public int ClientId { get; set; }
         public int? SiteId { get; set; }
 
-        [Required, MaxLength(50)]
-        public string ServiceType { get; set; }   // Vehicle, SiteBased, Boat
+        public BookingServiceType ServiceType { get; set; }
 
         public DateTime ScheduledDate { get; set; }
         public TimeSpan? ScheduledTimeSlot { get; set; }
 
-        [Required, MaxLength(50)]
-        public string Status { get; set; }   // Stored as string: Pending, Confirmed, InProgress, Completed, Cancelled
+        public BookingStatus Status { get; set; }
 
         public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }

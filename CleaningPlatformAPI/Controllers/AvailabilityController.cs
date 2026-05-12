@@ -1,12 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
 
 [ApiController]
 [Route("api/availability")]
+[AllowAnonymous]
 public class AvailabilityController : ControllerBase
 {
     private readonly AvailabilityManager _manager;
@@ -17,9 +19,8 @@ public class AvailabilityController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<OperationResult<List<AvailabilityDto>>> Get([FromQuery] DateTime date)
+    public async Task<OperationResult<List<AvailabilityResponse>>> Get([FromQuery] DateTime date, CancellationToken ct)
     {
-        var slots = await _manager.GetSlotsAsync(date);
-        return OperationResult<List<AvailabilityDto>>.Ok(slots);
+        return OperationResult<List<AvailabilityResponse>>.Ok(await _manager.GetSlotsAsync(date, ct));
     }
 }

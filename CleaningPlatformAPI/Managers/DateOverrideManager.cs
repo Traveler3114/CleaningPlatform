@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Data;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Common;
+using CleaningPlatformAPI.Mapping;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -15,62 +16,54 @@ public class DateOverrideManager
         _db = db;
     }
 
-    public async Task<List<DateOverrideDto>> GetOverridesAsync()
+    public async Task<List<DateOverrideResponse>> GetOverridesAsync(CancellationToken ct = default)
     {
-        var cutoff = DateTime.Today;
-        var overrides = await _db.DateOverrides.Where(o => o.Date >= cutoff).OrderBy(o => o.Date).ToListAsync();
-        return overrides.Select(MapToDto).ToList();
+        var cutoff = DateTime.UtcNow.Date;
+        var overrides = await _db.DateOverrides.Where(o => o.Date >= cutoff).OrderBy(o => o.Date).ToListAsync(ct);
+        return overrides.Select(ScheduleMapper.ToDateOverrideResponse).ToList();
     }
 
-    public async Task<OperationResult<DateOverrideDto>> CreateOverrideAsync(DateOverrideDto dto)
+    public async Task<OperationResult<DateOverrideResponse>> CreateOverrideAsync(DateOverrideRequest request, CancellationToken ct = default)
     {
-        var existing = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date.Date == dto.Date.Date);
+        if (request.Date.Date < DateTime.UtcNow.Date)
+            return OperationResult<DateOverrideResponse>.Fail("Cannot create an override for a past date.");
 
+        var existing = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date.Date == request.Date.Date, ct);
         DateOverride entity;
 
         if (existing != null)
         {
-            existing.StartHour = dto.StartHour;
-            existing.EndHour = dto.EndHour;
-            existing.Capacity = dto.Capacity;
-            existing.IsFullyClosed = dto.IsFullyClosed;
+            existing.StartHour = request.StartHour;
+            existing.EndHour = request.EndHour;
+            existing.Capacity = request.Capacity;
+            existing.IsFullyClosed = request.IsFullyClosed;
             entity = existing;
         }
         else
         {
             entity = new DateOverride
             {
-                Date = dto.Date.Date,
-                StartHour = dto.StartHour,
-                EndHour = dto.EndHour,
-                Capacity = dto.Capacity,
-                IsFullyClosed = dto.IsFullyClosed,
+                Date = request.Date.Date,
+                StartHour = request.StartHour,
+                EndHour = request.EndHour,
+                Capacity = request.Capacity,
+                IsFullyClosed = request.IsFullyClosed,
             };
             _db.DateOverrides.Add(entity);
         }
 
-        await _db.SaveChangesAsync();
-        return OperationResult<DateOverrideDto>.Ok(MapToDto(entity));
+        await _db.SaveChangesAsync(ct);
+        return OperationResult<DateOverrideResponse>.Ok(ScheduleMapper.ToDateOverrideResponse(entity));
     }
 
-    public async Task<OperationResult<bool>> DeleteOverrideAsync(int id)
+    public async Task<OperationResult<bool>> DeleteOverrideAsync(int id, CancellationToken ct = default)
     {
-        var entity = await _db.DateOverrides.FindAsync(id);
+        var entity = await _db.DateOverrides.FindAsync([id], ct);
         if (entity == null)
             return OperationResult<bool>.Fail("Override not found.");
 
         _db.DateOverrides.Remove(entity);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return OperationResult<bool>.Ok(true);
     }
-
-    private static DateOverrideDto MapToDto(DateOverride o) => new()
-    {
-        Id = o.Id,
-        Date = o.Date,
-        StartHour = o.StartHour,
-        EndHour = o.EndHour,
-        Capacity = o.Capacity,
-        IsFullyClosed = o.IsFullyClosed,
-    };
 }

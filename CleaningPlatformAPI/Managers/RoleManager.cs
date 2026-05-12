@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
+using CleaningPlatformAPI.Mapping;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -15,52 +16,46 @@ public class RoleManager
         _db = db;
     }
 
-    public async Task<List<RoleDto>> GetAllRolesAsync()
+    public async Task<List<RoleResponse>> GetAllRolesAsync(CancellationToken ct = default)
     {
         var roles = await _db.Roles
             .Include(r => r.Permissions)
             .OrderBy(r => r.Name)
-            .ToListAsync();
+            .ToListAsync(ct);
 
-        return roles.Select(MapToDto).ToList();
+        return roles.Select(RoleMapper.ToResponse).ToList();
     }
 
-    public async Task<RoleDto?> GetByIdAsync(int id)
+    public async Task<RoleResponse?> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var role = await _db.Roles
             .Include(r => r.Permissions)
-            .FirstOrDefaultAsync(r => r.Id == id);
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
 
-        return role == null ? null : MapToDto(role);
+        return role == null ? null : RoleMapper.ToResponse(role);
     }
 
-    public List<AvailablePermissionDto> GetAvailablePermissions()
+    public List<AvailablePermissionResponse> GetAvailablePermissions()
     {
         return PermissionKeys.All.Select(key =>
         {
             var meta = PermissionKeys.Meta[key];
-            return new AvailablePermissionDto
-            {
-                Key = key,
-                DisplayName = meta.DisplayName,
-                Description = meta.Description,
-                Category = meta.Category
-            };
+            return RoleMapper.ToPermissionResponse(key, meta);
         }).ToList();
     }
 
-    public async Task<OperationResult<RoleDto>> CreateRoleAsync(CreateRoleDto dto)
+    public async Task<OperationResult<RoleResponse>> CreateRoleAsync(CreateRoleRequest dto, CancellationToken ct = default)
     {
         var trimmedName = dto.Name.Trim();
         if (string.IsNullOrEmpty(trimmedName))
-            return OperationResult<RoleDto>.Fail("Role name is required.");
+            return OperationResult<RoleResponse>.Fail("Role name is required.");
 
-        if (await _db.Roles.AnyAsync(r => r.Name == trimmedName))
-            return OperationResult<RoleDto>.Fail("A role with this name already exists.");
+        if (await _db.Roles.AnyAsync(r => r.Name == trimmedName, ct))
+            return OperationResult<RoleResponse>.Fail("A role with this name already exists.");
 
         var invalidKeys = dto.Permissions.Except(PermissionKeys.All).ToList();
         if (invalidKeys.Count > 0)
-            return OperationResult<RoleDto>.Fail($"Invalid permission keys: {string.Join(", ", invalidKeys)}");
+            return OperationResult<RoleResponse>.Fail($"Invalid permission keys: {string.Join(", ", invalidKeys)}");
 
         var role = new Role
         {
@@ -71,48 +66,48 @@ public class RoleManager
         };
 
         _db.Roles.Add(role);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
-        return OperationResult<RoleDto>.Ok(MapToDto(role));
+        return OperationResult<RoleResponse>.Ok(RoleMapper.ToResponse(role));
     }
 
-    public async Task<OperationResult<RoleDto>> UpdateRoleAsync(int id, UpdateRoleDto dto)
+    public async Task<OperationResult<RoleResponse>> UpdateRoleAsync(int id, UpdateRoleRequest dto, CancellationToken ct = default)
     {
         var role = await _db.Roles
             .Include(r => r.Permissions)
-            .FirstOrDefaultAsync(r => r.Id == id);
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
 
         if (role == null)
-            return OperationResult<RoleDto>.Fail("Role not found.");
+            return OperationResult<RoleResponse>.Fail("Role not found.");
 
         if (role.IsProtected)
-            return OperationResult<RoleDto>.Fail("This role is protected and cannot be modified.");
+            return OperationResult<RoleResponse>.Fail("This role is protected and cannot be modified.");
 
         var trimmedName = dto.Name.Trim();
         if (string.IsNullOrEmpty(trimmedName))
-            return OperationResult<RoleDto>.Fail("Role name is required.");
+            return OperationResult<RoleResponse>.Fail("Role name is required.");
 
-        if (await _db.Roles.AnyAsync(r => r.Name == trimmedName && r.Id != id))
-            return OperationResult<RoleDto>.Fail("A role with this name already exists.");
+        if (await _db.Roles.AnyAsync(r => r.Name == trimmedName && r.Id != id, ct))
+            return OperationResult<RoleResponse>.Fail("A role with this name already exists.");
 
         var invalidKeys = dto.Permissions.Except(PermissionKeys.All).ToList();
         if (invalidKeys.Count > 0)
-            return OperationResult<RoleDto>.Fail($"Invalid permission keys: {string.Join(", ", invalidKeys)}");
+            return OperationResult<RoleResponse>.Fail($"Invalid permission keys: {string.Join(", ", invalidKeys)}");
 
         role.Name = trimmedName;
         _db.RolePermissions.RemoveRange(role.Permissions);
         role.Permissions = dto.Permissions.Distinct().Select(k => new RolePermission { PermissionKey = k, RoleId = role.Id }).ToList();
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
-        return OperationResult<RoleDto>.Ok(MapToDto(role));
+        return OperationResult<RoleResponse>.Ok(RoleMapper.ToResponse(role));
     }
 
-    public async Task<OperationResult<string>> DeleteRoleAsync(int id)
+    public async Task<OperationResult<string>> DeleteRoleAsync(int id, CancellationToken ct = default)
     {
         var role = await _db.Roles
             .Include(r => r.Permissions)
-            .FirstOrDefaultAsync(r => r.Id == id);
+            .FirstOrDefaultAsync(r => r.Id == id, ct);
 
         if (role == null)
             return OperationResult<string>.Fail("Role not found.");
@@ -120,36 +115,24 @@ public class RoleManager
         if (role.IsProtected)
             return OperationResult<string>.Fail("This role is protected and cannot be deleted.");
 
-        // ✅ Fixed: compare role.Name with employee's role name
-        var assignedUsers = await _db.Employees
-            .Include(e => e.Role)
-            .Where(e => e.Role != null && e.Role.Name == role.Name)
-            .ToListAsync();
+        var assignedCount = await _db.Employees.CountAsync(e => e.RoleId == id, ct);
 
-        if (assignedUsers.Count > 0)
-            return OperationResult<string>.Fail($"{assignedUsers.Count} user(s) are assigned to this role. Reassign them before deleting.");
+        if (assignedCount > 0)
+            return OperationResult<string>.Fail($"{assignedCount} user(s) are assigned to this role. Reassign them before deleting.");
 
         _db.RolePermissions.RemoveRange(role.Permissions);
         _db.Roles.Remove(role);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         return OperationResult<string>.Ok("Role deleted.");
     }
 
-    public async Task<List<string>> GetRolePermissionsAsync(string roleName)
+    public async Task<List<string>> GetRolePermissionsAsync(string roleName, CancellationToken ct = default)
     {
         var role = await _db.Roles
             .Include(r => r.Permissions)
-            .FirstOrDefaultAsync(r => r.Name == roleName);
+            .FirstOrDefaultAsync(r => r.Name == roleName, ct);
 
-        return role?.Permissions.Select(p => p.PermissionKey).ToList() ?? new List<string>();
+        return role?.Permissions.Select(p => p.PermissionKey).ToList() ?? [];
     }
-
-    private static RoleDto MapToDto(Role r) => new()
-    {
-        Id = r.Id,
-        Name = r.Name,
-        IsProtected = r.IsProtected,
-        Permissions = r.Permissions.Select(p => p.PermissionKey).ToList()
-    };
 }

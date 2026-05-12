@@ -1,80 +1,96 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 
 namespace CleaningPlatformAPI.Managers;
 
 public class AuthManager
 {
+    private const int MaxUsernameGenerationAttempts = 20;
+
     private readonly TokenManager _tokenManager;
     private readonly AppDbContext _db;
+    private readonly IConfiguration _config;
 
-    public AuthManager(TokenManager tokenManager, AppDbContext db)
+    public AuthManager(TokenManager tokenManager, AppDbContext db, IConfiguration config)
     {
         _tokenManager = tokenManager;
         _db = db;
+        _config = config;
     }
 
-    public async Task<OperationResult<string>> RegisterAsync(CreateUserDto dto)
+    public async Task<OperationResult<string>> RegisterAsync(CreateUserRequest request, CancellationToken ct = default)
     {
-        var roleName = dto.Role.Trim();
+        var roleName = request.Role.Trim();
         if (string.IsNullOrWhiteSpace(roleName))
             return OperationResult<string>.Fail("Role is required.");
 
-        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName, ct);
         if (role == null)
             return OperationResult<string>.Fail("Invalid role name.");
 
-        var firstName = dto.FirstName.Trim();
-        var lastName = dto.LastName.Trim();
+        var firstName = request.FirstName.Trim();
+        var lastName = request.LastName.Trim();
         if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
             return OperationResult<string>.Fail("First and last name are required.");
 
+        if (!IsValidPassword(request.Password))
+            return OperationResult<string>.Fail("Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
+
         var usernameBase = (firstName[..1] + lastName).ToLowerInvariant();
-        var username = usernameBase;
-        var counter = 2;
-        while (await _db.Employees.AnyAsync(u => u.Username == username))
+        var counter = 1;
+
+        while (counter <= MaxUsernameGenerationAttempts)
         {
-            username = usernameBase + counter;
-            counter++;
+            var username = counter == 1 ? usernameBase : usernameBase + counter;
+            var now = DateTime.UtcNow;
+            var user = new Employee
+            {
+                Username = username,
+                FirstName = firstName,
+                LastName = lastName,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, GetBcryptWorkFactor()),
+                RoleId = role.Id,
+                IsActive = true,
+                CreatedAt = now,
+                UpdatedAt = now,
+                SecurityStamp = Guid.NewGuid().ToString()
+            };
+
+            _db.Employees.Add(user);
+            try
+            {
+                await _db.SaveChangesAsync(ct);
+                return OperationResult<string>.Ok("User created.");
+            }
+            catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+            {
+                _db.Entry(user).State = EntityState.Detached;
+                counter++;
+            }
         }
 
-        var user = new Employee
-        {
-            Username = username,
-            FirstName = firstName,
-            LastName = lastName,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            RoleId = role.Id,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-
-        _db.Employees.Add(user);
-        await _db.SaveChangesAsync();
-        return OperationResult<string>.Ok("User created.");
+        return OperationResult<string>.Fail("Could not generate a unique username.");
     }
 
-    public async Task<OperationResult<string>> LoginAsync(LoginDto dto)
+    public async Task<OperationResult<string>> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
-        var auth = await ValidateLoginAsync(dto);
+        var auth = await ValidateLoginAsync(request, ct);
         if (!auth.Success || auth.Data is null)
             return OperationResult<string>.Fail(auth.Message ?? "Invalid credentials.");
 
-        var user = auth.Data.User;
-        var permissions = auth.Data.Permissions;
-        var token = _tokenManager.CreateToken(user, permissions);
+        var token = _tokenManager.CreateToken(auth.Data.User, auth.Data.Permissions);
         return OperationResult<string>.Ok(token);
     }
 
-    public async Task<OperationResult<List<Claim>>> GetClaimsAsync(LoginDto dto)
+    public async Task<OperationResult<List<Claim>>> GetClaimsAsync(LoginRequest request, CancellationToken ct = default)
     {
-        var auth = await ValidateLoginAsync(dto);
+        var auth = await ValidateLoginAsync(request, ct);
         if (!auth.Success || auth.Data is null)
             return OperationResult<List<Claim>>.Fail(auth.Message ?? "Invalid credentials.");
 
@@ -91,7 +107,7 @@ public class AuthManager
             new Claim("security_stamp", user.SecurityStamp)
         };
 
-        if (roleName != "Owner")
+        if (roleName != RoleNames.Owner)
         {
             foreach (var permission in permissions)
                 claims.Add(new Claim("permission", permission));
@@ -100,24 +116,23 @@ public class AuthManager
         return OperationResult<List<Claim>>.Ok(claims);
     }
 
-    private async Task<OperationResult<LoginContext>> ValidateLoginAsync(LoginDto dto)
+    private async Task<OperationResult<LoginContext>> ValidateLoginAsync(LoginRequest request, CancellationToken ct)
     {
-        var username = dto.Username.Trim();
+        var username = request.Username.Trim();
         var user = await _db.Employees
             .Include(e => e.Role)
-            .FirstOrDefaultAsync(u => u.Username == username);
+            .FirstOrDefaultAsync(u => u.Username == username, ct);
 
         if (user == null || !user.IsActive)
             return OperationResult<LoginContext>.Fail("Invalid credentials.");
 
-        if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return OperationResult<LoginContext>.Fail("Invalid credentials.");
 
-        //  Use Role.Id to get permissions
         var permissions = await _db.RolePermissions
             .Where(rp => rp.RoleId == user.RoleId)
             .Select(rp => rp.PermissionKey)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         return OperationResult<LoginContext>.Ok(new LoginContext
         {
@@ -126,47 +141,67 @@ public class AuthManager
         });
     }
 
-    public async Task<OperationResult<string>> ResetPasswordAsync(ResetPasswordDto dto)
+    public async Task<OperationResult<string>> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(dto.NewPassword))
+        if (string.IsNullOrWhiteSpace(request.NewPassword))
             return OperationResult<string>.Fail("New password is required.");
-        if (!IsValidPassword(dto.NewPassword))
+        if (!IsValidPassword(request.NewPassword))
             return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
 
-        var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == dto.UserId);
+        var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == request.UserId, ct);
         if (user == null)
             return OperationResult<string>.Fail("User not found.");
 
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, GetBcryptWorkFactor());
         user.SecurityStamp = Guid.NewGuid().ToString();
         user.UpdatedAt = DateTime.UtcNow;
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return OperationResult<string>.Ok("Password reset.");
     }
 
-    public async Task<OperationResult<string>> ChangePasswordAsync(ChangePasswordDto dto, int requestingUserId)
+    public async Task<OperationResult<string>> ChangePasswordAsync(ChangePasswordRequest request, int requestingUserId, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword))
             return OperationResult<string>.Fail("Current password is required.");
-        if (string.IsNullOrWhiteSpace(dto.NewPassword))
+        if (string.IsNullOrWhiteSpace(request.NewPassword))
             return OperationResult<string>.Fail("New password is required.");
-        if (!IsValidPassword(dto.NewPassword))
+        if (!IsValidPassword(request.NewPassword))
             return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
 
-        var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == requestingUserId);
+        var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == requestingUserId, ct);
         if (user == null)
             return OperationResult<string>.Fail("User not found.");
 
-        if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
             return OperationResult<string>.Fail("Current password is incorrect.");
 
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, GetBcryptWorkFactor());
         user.SecurityStamp = Guid.NewGuid().ToString();
         user.UpdatedAt = DateTime.UtcNow;
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return OperationResult<string>.Ok("Password changed.");
+    }
+
+    private int GetBcryptWorkFactor()
+    {
+        var configured = _config.GetValue<int?>("Security:BcryptWorkFactor");
+        return configured is > 3 and <= 31 ? configured.Value : 12;
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException exception)
+    {
+        for (Exception? current = exception; current != null; current = current.InnerException)
+        {
+            if (current is SqlException sqlException &&
+                sqlException.Errors.Cast<SqlError>().Any(error => error.Number is 2601 or 2627))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsValidPassword(string password)

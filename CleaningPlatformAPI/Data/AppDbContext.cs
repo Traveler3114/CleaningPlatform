@@ -23,9 +23,9 @@ namespace CleaningPlatformAPI.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<VehicleBookingDetails> VehicleBookingDetails { get; set; }
         public DbSet<BoatBookingDetails> BoatBookingDetails { get; set; }
-        public DbSet<BookingView> BookingView { get; set; }
         public DbSet<WeeklySchedule> WeeklySchedules { get; set; }
         public DbSet<DateOverride> DateOverrides { get; set; }
+        public DbSet<BookingView> BookingViews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +37,10 @@ namespace CleaningPlatformAPI.Data
             modelBuilder.Entity<Employee>()
                 .Property(e => e.HourlyRate)
                 .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.Username)
+                .IsUnique();
 
             modelBuilder.Entity<ServiceCatalog>()
                 .Property(s => s.PriceMin).HasPrecision(10, 2);
@@ -83,7 +87,19 @@ namespace CleaningPlatformAPI.Data
             modelBuilder.Entity<BoatBookingDetails>()
                 .Property(b => b.LengthMeters).HasPrecision(5, 2);
 
-            // (BookingView properties are read from database, no precision needed)
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.ServiceType)
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.Status)
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<BookingView>()
+                .HasNoKey()
+                .ToView("vw_Bookings");
 
             // ============================
             // Relationships
@@ -221,9 +237,6 @@ namespace CleaningPlatformAPI.Data
             modelBuilder.Entity<InvoiceBooking>()
                 .HasIndex(ib => ib.BookingId)
                 .IsUnique();
-
-            // View (keyless)
-            modelBuilder.Entity<BookingView>().ToView("vw_Bookings").HasNoKey();
 
             // Global DateTime precision (optional)
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())

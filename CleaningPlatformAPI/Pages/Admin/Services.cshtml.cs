@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
@@ -18,13 +18,13 @@ public class ServicesModel : PageModel
         _serviceCatalogManager = serviceCatalogManager;
     }
 
-    public List<ServiceCatalogDto> Services { get; set; } = [];
+    public List<ServiceCatalogResponse> Services { get; set; } = [];
 
     [BindProperty]
-    public ServiceCatalogUpsertDto NewService { get; set; } = new();
+    public ServiceCatalogUpsertRequest NewService { get; set; } = new();
 
     [BindProperty]
-    public ServiceCatalogUpsertDto EditService { get; set; } = new();
+    public ServiceCatalogUpsertRequest EditService { get; set; } = new();
 
     [TempData]
     public string? ErrorMessage { get; set; }

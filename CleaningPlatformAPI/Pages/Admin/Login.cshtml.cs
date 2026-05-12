@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Pages.Admin;
@@ -36,7 +36,7 @@ public class LoginModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var result = await _auth.GetClaimsAsync(new LoginDto { Username = Username, Password = Password });
+        var result = await _auth.GetClaimsAsync(new LoginRequest { Username = Username, Password = Password });
         if (!result.Success || result.Data == null)
         {
             ErrorMessage = result.Message ?? "Invalid credentials.";

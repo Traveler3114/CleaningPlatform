@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
@@ -18,7 +18,7 @@ public class InvoicesModel : PageModel
         _invoiceManager = invoiceManager;
     }
 
-    public List<InvoiceSummaryDto> Invoices { get; set; } = [];
+    public List<InvoiceSummaryResponse> Invoices { get; set; } = [];
 
     [TempData]
     public string? ErrorMessage { get; set; }

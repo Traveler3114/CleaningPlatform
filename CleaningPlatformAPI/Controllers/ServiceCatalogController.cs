@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -19,30 +19,29 @@ public class ServiceCatalogController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<OperationResult<List<ServiceCatalogDto>>> Get()
+    public async Task<OperationResult<List<ServiceCatalogResponse>>> Get(CancellationToken ct)
     {
-        var services = await _manager.GetAllAsync();
-        return OperationResult<List<ServiceCatalogDto>>.Ok(services);
+        return OperationResult<List<ServiceCatalogResponse>>.Ok(await _manager.GetAllAsync(ct));
     }
 
     [HttpPost]
-    [Authorize(Policy = "actions.serviceCatalog.manage")]
-    public async Task<OperationResult<ServiceCatalogDto>> Post([FromBody] ServiceCatalogUpsertDto dto)
+    [Authorize(Policy = PermissionKeys.ActionsServiceCatalogManage)]
+    public async Task<OperationResult<ServiceCatalogResponse>> Post([FromBody] ServiceCatalogUpsertRequest request, CancellationToken ct)
     {
-        return await _manager.CreateAsync(dto);
+        return await _manager.CreateAsync(request, ct);
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = "actions.serviceCatalog.edit")]
-    public async Task<OperationResult<ServiceCatalogDto>> Put(int id, [FromBody] ServiceCatalogUpsertDto dto)
+    [Authorize(Policy = PermissionKeys.ActionsServiceCatalogEdit)]
+    public async Task<OperationResult<ServiceCatalogResponse>> Put(int id, [FromBody] ServiceCatalogUpsertRequest request, CancellationToken ct)
     {
-        return await _manager.UpdateAsync(id, dto);
+        return await _manager.UpdateAsync(id, request, ct);
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = "actions.serviceCatalog.manage")]
-    public async Task<OperationResult<string>> Delete(int id)
+    [Authorize(Policy = PermissionKeys.ActionsServiceCatalogManage)]
+    public async Task<OperationResult<string>> Delete(int id, CancellationToken ct)
     {
-        return await _manager.DeleteAsync(id);
+        return await _manager.DeleteAsync(id, ct);
     }
 }
