@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] — Vehicle Cleaning Admin</title>
+    <title>@ViewData["Title"] — Cleaning Platform Admin</title>
     <link rel="stylesheet" href="~/css/admin.css" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -17,7 +17,7 @@
     }
     <header class="admin-header">
         <div class="header-inner">
-            <span class="brand">🚗 Vehicle Cleaning Admin</span>
+            <span class="brand">🚗 Cleaning Platform Admin</span>
             <nav class="main-nav">
                 @if (User.Identity?.IsAuthenticated == true)
                 {
@@ -80,7 +80,7 @@
     </main>
 
     <footer class="admin-footer">
-        <p>&copy; @DateTime.Now.Year Vehicle Cleaning Admin</p>
+        <p>&copy; @DateTime.Now.Year Cleaning Platform Admin</p>
     </footer>
 
     @await RenderSectionAsync("Scripts", required: false)

@@ -6,6 +6,7 @@ namespace CleaningPlatformAPI.Entities;
 public class BookingView
 {
     public int BookingId { get; set; }
+    public int ClientId { get; set; }
     public string ClientName { get; set; } = string.Empty;
     public string ClientType { get; set; } = string.Empty;
     public string? PrimaryContact { get; set; }

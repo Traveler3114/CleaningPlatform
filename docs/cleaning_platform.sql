@@ -419,6 +419,7 @@ GO
 CREATE VIEW vw_Bookings AS
 SELECT
     b.Id                                                    AS BookingId,
+    b.ClientId,                                             AS ClientId,
     c.ClientName,
     c.Type                                                  AS ClientType,
     cont.ContactName                                        AS PrimaryContact,

@@ -38,15 +38,10 @@ public class BookingManager
     {
         var bookings = await _db.BookingViews
             .AsNoTracking()
-            .Join(
-                _db.Bookings.AsNoTracking(),
-                view => view.BookingId,
-                booking => booking.Id,
-                (view, booking) => new { View = view, booking.ClientId })
-            .OrderByDescending(b => b.View.ScheduledDate)
+            .OrderByDescending(b => b.ScheduledDate)
             .ToListAsync(ct);
 
-        return bookings.Select(b => BookingMapper.ToResponse(b.View, b.ClientId)).ToList();
+        return bookings.Select(b => BookingMapper.ToResponse(b, b.ClientId)).ToList();
     }
 
     public async Task<List<BookingResponse>> GetAssignedBookingsForEmployeeAsync(int employeeId, CancellationToken ct = default)

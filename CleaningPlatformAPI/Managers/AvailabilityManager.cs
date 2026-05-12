@@ -34,11 +34,13 @@ public class AvailabilityManager
             .ToListAsync(ct);
 
         var slots = new List<AvailabilityResponse>();
-        var isToday = date.Date == DateTime.UtcNow.Date;
+        var croatiaZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, croatiaZone);
+        var isToday = date.Date == now.Date;
 
         for (var h = startHour; h < endHour; h++)
         {
-            if (isToday && h <= DateTime.UtcNow.Hour)
+            if (isToday && h <= now.Hour)
                 continue;
 
             var booked = bookings.Count(b => b.ScheduledTimeSlot.HasValue && b.ScheduledTimeSlot.Value.Hours == h);
@@ -48,3 +50,4 @@ public class AvailabilityManager
         return slots;
     }
 }
+
