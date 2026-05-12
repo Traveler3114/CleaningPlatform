@@ -15,8 +15,19 @@ public class InvoiceSummaryResponse
     public int BookingCount { get; set; }
 }
 
-public class InvoiceDetailResponse : InvoiceSummaryResponse
+public class InvoiceDetailResponse
 {
+    public int Id { get; set; }
+    public string InvoiceNumber { get; set; } = string.Empty;
+    public int ClientId { get; set; }
+    public string ClientName { get; set; } = string.Empty;
+    public DateTime IssueDate { get; set; }
+    public DateTime DueDate { get; set; }
+    public decimal TotalAmount { get; set; }
+    public decimal PaidAmount { get; set; }
+    public decimal BalanceDue { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public int BookingCount { get; set; }
     public decimal SubTotal { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal VatPct { get; set; }

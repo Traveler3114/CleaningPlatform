@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
+using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -22,11 +22,11 @@ public class EmployeeController : ControllerBase
     [HttpGet("me")]
     public async Task<OperationResult<UserResponse>> Me(CancellationToken ct)
     {
-        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
-        if (!int.TryParse(sub, out var userId))
+        var userId = User.GetEmployeeId();
+        if (userId == null)
             return OperationResult<UserResponse>.Fail("Invalid token.");
 
-        var user = await _userManager.GetByIdAsync(userId, ct);
+        var user = await _userManager.GetByIdAsync(userId.Value, ct);
         return user == null
             ? OperationResult<UserResponse>.Fail("User not found.")
             : OperationResult<UserResponse>.Ok(user);
@@ -49,10 +49,10 @@ public class EmployeeController : ControllerBase
     [Authorize(Policy = PermissionKeys.ActionsUserToggleActive)]
     public async Task<OperationResult<UserResponse>> Toggle(int id, CancellationToken ct)
     {
-        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
-        if (!int.TryParse(sub, out var requestingUserId))
+        var requestingUserId = User.GetEmployeeId();
+        if (requestingUserId == null)
             return OperationResult<UserResponse>.Fail("Invalid token.");
 
-        return await _userManager.ToggleActiveAsync(id, requestingUserId, ct);
+        return await _userManager.ToggleActiveAsync(id, requestingUserId.Value, ct);
     }
 }

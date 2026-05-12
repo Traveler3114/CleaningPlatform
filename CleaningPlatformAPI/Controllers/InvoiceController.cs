@@ -1,8 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
+using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -67,9 +67,5 @@ public class InvoiceController : ControllerBase
         return await _invoiceManager.UpdateStatusAsync(id, request.Status, ct);
     }
 
-    private int? ParseCurrentEmployeeId()
-    {
-        var raw = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-        return int.TryParse(raw, out var employeeId) ? employeeId : null;
-    }
+    private int? ParseCurrentEmployeeId() => User.GetEmployeeId();
 }

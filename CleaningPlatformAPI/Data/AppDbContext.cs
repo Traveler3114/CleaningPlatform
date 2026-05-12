@@ -25,6 +25,7 @@ namespace CleaningPlatformAPI.Data
         public DbSet<BoatBookingDetails> BoatBookingDetails { get; set; }
         public DbSet<WeeklySchedule> WeeklySchedules { get; set; }
         public DbSet<DateOverride> DateOverrides { get; set; }
+        public DbSet<BookingView> BookingViews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,6 +37,10 @@ namespace CleaningPlatformAPI.Data
             modelBuilder.Entity<Employee>()
                 .Property(e => e.HourlyRate)
                 .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.Username)
+                .IsUnique();
 
             modelBuilder.Entity<ServiceCatalog>()
                 .Property(s => s.PriceMin).HasPrecision(10, 2);
@@ -91,6 +96,10 @@ namespace CleaningPlatformAPI.Data
                 .Property(b => b.Status)
                 .HasConversion<string>()
                 .HasMaxLength(50);
+
+            modelBuilder.Entity<BookingView>()
+                .HasNoKey()
+                .ToView("vw_Bookings");
 
             // ============================
             // Relationships
