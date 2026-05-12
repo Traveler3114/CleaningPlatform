@@ -82,7 +82,7 @@ public class ScheduleManager
         if (startHour < 0 || endHour > 24)
             return "StartHour must be >= 0 and EndHour must be <= 24.";
 
-        if (!(startHour < endHour || (startHour == 0 && endHour == 0)))
+        if (startHour >= endHour && !(startHour == 0 && endHour == 0))
             return "StartHour must be less than EndHour unless both are 0 for closed day.";
 
         if (capacity < 0)
