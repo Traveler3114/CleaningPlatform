@@ -17,7 +17,7 @@ USE CleaningPlatformDB;
 GO
 
 -- ============================================================
--- CLEANING PLATFORM – FULL SCHEMA (FIXED & ENHANCED)
+-- CLEANING PLATFORM – FULL SCHEMA
 -- ============================================================
 
 CREATE TABLE Employees (
@@ -197,6 +197,7 @@ INSERT INTO RolePermissions (RoleId, PermissionKey)
 SELECT Id, 'actions.booking.assign' FROM Roles WHERE Name = 'Owner';
 GO
 
+-- Add RoleId to Employees after Roles table exists
 ALTER TABLE Employees ADD RoleId INT NOT NULL DEFAULT 1;
 ALTER TABLE Employees ADD CONSTRAINT FK_Employee_Role FOREIGN KEY (RoleId) REFERENCES Roles(Id);
 GO
@@ -349,11 +350,8 @@ CREATE TABLE Invoices (
 );
 GO
 
-ALTER TABLE Invoices
-ADD CONSTRAINT DF_Invoices_InvoiceNumber
-DEFAULT (CONCAT('INV-', YEAR(GETUTCDATE()), '-', FORMAT(NEXT VALUE FOR InvoiceNumberSeq, '0000')))
-FOR InvoiceNumber;
-GO
+-- Note: InvoiceNumber has no DB default; it is always supplied by the application
+-- using NEXT VALUE FOR InvoiceNumberSeq via C# InvoiceManager.GenerateInvoiceNumberAsync
 
 CREATE INDEX IX_Invoices_ClientId  ON Invoices(ClientId);
 CREATE INDEX IX_Invoices_Status    ON Invoices(Status);
@@ -416,10 +414,11 @@ CREATE INDEX IX_Payments_InvoiceId ON Payments(InvoiceId);
 CREATE INDEX IX_Payments_Date      ON Payments(PaymentDate);
 GO
 
+-- FIX: removed stray comma after b.ClientId; added b.ClientId column to view
 CREATE VIEW vw_Bookings AS
 SELECT
     b.Id                                                    AS BookingId,
-    b.ClientId,                                             AS ClientId,
+    b.ClientId,
     c.ClientName,
     c.Type                                                  AS ClientType,
     cont.ContactName                                        AS PrimaryContact,
@@ -507,10 +506,10 @@ SELECT
              AND i.Status NOT IN ('Paid','WrittenOff') THEN 1
         ELSE 0
     END                                         AS IsOverdue,
-    CASE 
-        WHEN i.DueDate < CAST(GETUTCDATE() AS DATE) 
+    CASE
+        WHEN i.DueDate < CAST(GETUTCDATE() AS DATE)
         THEN DATEDIFF(DAY, i.DueDate, CAST(GETUTCDATE() AS DATE))
-        ELSE 0 
+        ELSE 0
     END                                         AS DaysOverdue,
     e.FirstName + ' ' + e.LastName              AS CreatedBy
 FROM Invoices i
@@ -720,17 +719,25 @@ FROM Bookings b
 WHERE b.ServiceType = 'Boat';
 GO
 
--- Invoice creation + mapping
+-- ============================================================
+-- INVOICE SEED
+-- FIX: replaced MERGE + NEXT VALUE FOR (unsupported) with
+--      INSERT...SELECT using ROW_NUMBER() for invoice numbers,
+--      then a join-back to build the BookingId->InvoiceId map.
+-- ============================================================
+
 DECLARE @InvoiceMap TABLE (BookingId INT, InvoiceId INT);
 
+-- Step 1: insert invoices, generating numbers via ROW_NUMBER
 WITH BookingTotals AS (
     SELECT
-        b.Id AS BookingId,
+        b.Id                                                        AS BookingId,
         b.ClientId,
-        aa.EmployeeId AS CreatedByEmployeeId,
+        aa.EmployeeId                                               AS CreatedByEmployeeId,
         b.ScheduledDate,
         b.Status,
-        SUM(bs.EstimatedPrice * bs.Quantity) AS SubTotal
+        SUM(bs.EstimatedPrice * bs.Quantity)                        AS SubTotal,
+        ROW_NUMBER() OVER (ORDER BY b.Id)                           AS RowNum
     FROM Bookings b
     OUTER APPLY (
         SELECT TOP 1 ba.EmployeeId
@@ -742,33 +749,48 @@ WITH BookingTotals AS (
     WHERE b.Id % 2 = 0
     GROUP BY b.Id, b.ClientId, aa.EmployeeId, b.ScheduledDate, b.Status
 )
-MERGE Invoices AS target
-USING BookingTotals AS src
-ON 1 = 0
-WHEN NOT MATCHED THEN
-    INSERT (
-        ClientId, IssueDate, DueDate, SubTotal, DiscountAmount,
-        VatPct, VatAmount, TotalAmount, Status, Notes, CreatedByEmployeeId
-    )
-    VALUES (
-        src.ClientId,
-        src.ScheduledDate,
-        DATEADD(DAY, 15, src.ScheduledDate),
-        src.SubTotal,
-        CASE WHEN src.BookingId % 5 = 0 THEN 10 ELSE 0 END,
-        25,
-        ROUND((src.SubTotal - CASE WHEN src.BookingId % 5 = 0 THEN 10 ELSE 0 END) * 0.25, 2),
-        ROUND((src.SubTotal - CASE WHEN src.BookingId % 5 = 0 THEN 10 ELSE 0 END) * 1.25, 2),
-        CHOOSE((src.BookingId % 5) + 1, 'Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue'),
-        CONCAT('Invoice for booking ', src.BookingId),
-        src.CreatedByEmployeeId
-    )
-OUTPUT src.BookingId, inserted.Id INTO @InvoiceMap (BookingId, InvoiceId);
+INSERT INTO Invoices (
+    InvoiceNumber, ClientId, IssueDate, DueDate, SubTotal, DiscountAmount,
+    VatPct, VatAmount, TotalAmount, Status, Notes, CreatedByEmployeeId
+)
+SELECT
+    CONCAT('INV-', YEAR(ScheduledDate), '-', RIGHT('0000' + CAST(RowNum AS NVARCHAR(10)), 4)),
+    ClientId,
+    ScheduledDate,
+    DATEADD(DAY, 15, ScheduledDate),
+    SubTotal,
+    CASE WHEN BookingId % 5 = 0 THEN 10 ELSE 0 END,
+    25,
+    ROUND((SubTotal - CASE WHEN BookingId % 5 = 0 THEN 10 ELSE 0 END) * 0.25, 2),
+    ROUND((SubTotal - CASE WHEN BookingId % 5 = 0 THEN 10 ELSE 0 END) * 1.25, 2),
+    CHOOSE((BookingId % 5) + 1, 'Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue'),
+    CONCAT('Invoice for booking ', BookingId),
+    CreatedByEmployeeId
+FROM BookingTotals;
 
+-- Step 2: rebuild the BookingId -> InvoiceId map by matching invoice numbers
+INSERT INTO @InvoiceMap (BookingId, InvoiceId)
+SELECT
+    bt.BookingId,
+    i.Id
+FROM Invoices i
+JOIN (
+    SELECT
+        b.Id                                        AS BookingId,
+        b.ScheduledDate,
+        ROW_NUMBER() OVER (ORDER BY b.Id)           AS RowNum
+    FROM Bookings b
+    JOIN BookingServices bs ON bs.BookingId = b.Id
+    WHERE b.Id % 2 = 0
+    GROUP BY b.Id, b.ScheduledDate
+) bt ON i.InvoiceNumber = CONCAT('INV-', YEAR(bt.ScheduledDate), '-', RIGHT('0000' + CAST(bt.RowNum AS NVARCHAR(10)), 4));
+
+-- Step 3: link invoices to bookings
 INSERT INTO InvoiceBookings (InvoiceId, BookingId)
 SELECT InvoiceId, BookingId
 FROM @InvoiceMap;
 
+-- Step 4: invoice lines from booking services
 INSERT INTO InvoiceLines (InvoiceId, Description, Quantity, UnitPrice, DiscountPct, VatPct, SourceType, SourceId)
 SELECT
     im.InvoiceId,
@@ -783,6 +805,7 @@ FROM @InvoiceMap im
 JOIN BookingServices bs ON bs.BookingId = im.BookingId
 JOIN ServiceCatalog sc ON sc.Id = bs.ServiceCatalogId;
 
+-- Step 5: manual admin fee lines
 INSERT INTO InvoiceLines (InvoiceId, Description, Quantity, UnitPrice, DiscountPct, VatPct, SourceType, SourceId)
 SELECT
     i.Id,
@@ -796,6 +819,7 @@ SELECT
 FROM Invoices i
 WHERE i.Id % 4 = 0;
 
+-- Step 6: payments for paid/partially paid invoices
 INSERT INTO Payments (InvoiceId, PaymentDate, Amount, Method, Reference, Notes, RecordedBy)
 SELECT
     i.Id,
