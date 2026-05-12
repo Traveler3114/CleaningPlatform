@@ -32,7 +32,7 @@ public class AvailabilityManager
         int defaultCapacity = dateOverride?.Capacity ?? schedule.Capacity;
 
         var bookings = await _db.Bookings
-            .Where(b => b.ScheduledDate.Date == date.Date && b.Status != BookingStatus.Cancelled.ToString())
+            .Where(b => b.ScheduledDate.Date == date.Date && b.Status != BookingStatus.Cancelled)
             .ToListAsync();
 
         var slots = new List<AvailabilityDto>();

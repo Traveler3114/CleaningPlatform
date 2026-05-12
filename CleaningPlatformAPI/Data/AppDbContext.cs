@@ -84,6 +84,15 @@ namespace CleaningPlatformAPI.Data
                 .Property(b => b.LengthMeters).HasPrecision(5, 2);
 
             // (BookingView properties are read from database, no precision needed)
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.ServiceType)
+                .HasConversion<string>()
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.Status)
+                .HasConversion<string>()
+                .HasMaxLength(50);
 
             // ============================
             // Relationships

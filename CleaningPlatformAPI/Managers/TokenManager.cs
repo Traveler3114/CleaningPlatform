@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Entities;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -33,7 +34,7 @@ public class TokenManager
         };
 
         // Owner gets all permissions via role claim; others get explicit permission claims
-        if (roleName != "Owner")
+        if (roleName != RoleNames.Owner)
         {
             foreach (var permission in permissions)
                 claims.Add(new Claim("permission", permission));

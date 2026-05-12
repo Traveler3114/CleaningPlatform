@@ -91,7 +91,7 @@ public class AuthManager
             new Claim("security_stamp", user.SecurityStamp)
         };
 
-        if (roleName != "Owner")
+        if (roleName != RoleNames.Owner)
         {
             foreach (var permission in permissions)
                 claims.Add(new Claim("permission", permission));

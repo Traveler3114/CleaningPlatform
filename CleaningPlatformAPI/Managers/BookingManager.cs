@@ -117,10 +117,10 @@ public class BookingManager
         var booking = new Booking
         {
             Client = client,
-            ServiceType = "Vehicle",
+            ServiceType = BookingServiceType.Vehicle,
             ScheduledDate = dto.Date.Date,
             ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
-            Status = BookingStatus.Pending.ToString(),
+            Status = BookingStatus.Pending,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -142,7 +142,7 @@ public class BookingManager
             .FirstOrDefaultAsync(b => b.Id == id);
         if (booking == null)
             return OperationResult<BookingDto>.Fail("Booking not found.");
-        booking.Status = bookingStatus.ToString();
+        booking.Status = bookingStatus;
         if (bookingStatus == BookingStatus.Completed)
             booking.CompletedAt = DateTime.UtcNow;
         booking.UpdatedAt = DateTime.UtcNow;
@@ -186,8 +186,8 @@ public class BookingManager
         if (booking == null)
             return OperationResult<string>.Fail("Booking not found.");
 
-        if (string.Equals(booking.Status, BookingStatus.InProgress.ToString(), StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(booking.Status, BookingStatus.Completed.ToString(), StringComparison.OrdinalIgnoreCase))
+        if (booking.Status == BookingStatus.InProgress ||
+            booking.Status == BookingStatus.Completed)
             return OperationResult<string>.Fail("Cannot remove assignment from an in-progress or completed booking.");
 
         var assignment = await _db.BookingAssignments
@@ -286,7 +286,7 @@ public class BookingManager
         ClientName = b.Client?.ClientName ?? "Unknown",
         Date = b.ScheduledDate,
         Hour = b.ScheduledTimeSlot?.Hours ?? 0,
-        Status = b.Status,
+        Status = b.Status.ToString(),
         ServicesCount = b.BookingServices?.Count ?? 0,
         AssignedEmployees = b.Assignments?.Select(a => new AssignedEmployeeDto
         {
@@ -304,7 +304,7 @@ public class BookingManager
         ClientId = b.ClientId,
         Date = b.ScheduledDate,
         Hour = b.ScheduledTimeSlot?.Hours ?? 0,
-        Status = b.Status,
+        Status = b.Status.ToString(),
         ServicesCount = b.BookingServices?.Count ?? 0,
         CreatedAt = b.CreatedAt,
         ClientName = b.Client?.ClientName ?? "",

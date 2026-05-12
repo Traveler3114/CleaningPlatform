@@ -4,6 +4,7 @@ using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Dtos;
 using CleaningPlatformAPI.Entities;
+using CleaningPlatformAPI.Enums;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -55,7 +56,7 @@ public class InvoiceManager
         if (booking == null)
             return OperationResult<InvoiceDetailDto>.Fail("Booking not found.");
 
-        if (!string.Equals(booking.Status, "Completed", StringComparison.OrdinalIgnoreCase))
+        if (booking.Status != BookingStatus.Completed)
             return OperationResult<InvoiceDetailDto>.Fail("Only completed bookings can be invoiced.");
 
         var existingLink = await _db.InvoiceBookings

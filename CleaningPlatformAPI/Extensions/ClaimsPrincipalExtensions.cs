@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Extensions;
 
@@ -7,7 +8,7 @@ public static class ClaimsPrincipalExtensions
 {
     public static bool HasPermission(this ClaimsPrincipal user, string key)
     {
-        if (user.FindFirst(ClaimTypes.Role)?.Value == "Owner") return true;
+        if (user.FindFirst(ClaimTypes.Role)?.Value == RoleNames.Owner) return true;
         return user.HasClaim("permission", key);
     }
 

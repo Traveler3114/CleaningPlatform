@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Authorization;
 
@@ -10,7 +11,7 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
         PermissionRequirement requirement)
     {
         // Owner bypasses all permission checks
-        if (context.User.FindFirst(ClaimTypes.Role)?.Value == "Owner")
+        if (context.User.FindFirst(ClaimTypes.Role)?.Value == RoleNames.Owner)
         {
             context.Succeed(requirement);
             return Task.CompletedTask;
