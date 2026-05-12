@@ -38,6 +38,10 @@ namespace CleaningPlatformAPI.Data
                 .Property(e => e.HourlyRate)
                 .HasPrecision(10, 2);
 
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.Username)
+                .IsUnique();
+
             modelBuilder.Entity<ServiceCatalog>()
                 .Property(s => s.PriceMin).HasPrecision(10, 2);
             modelBuilder.Entity<ServiceCatalog>()

@@ -31,7 +31,7 @@ public class IndexModel : PageModel
     public int KpiCompletedThisMonth { get; set; }
 
     [BindProperty(SupportsGet = true)]
-    public DateTime SelectedDate { get; set; } = DateTime.Today;
+    public DateTime SelectedDate { get; set; } = DateTime.UtcNow.Date;
 
     [BindProperty]
     public int? OverrideStartHour { get; set; }

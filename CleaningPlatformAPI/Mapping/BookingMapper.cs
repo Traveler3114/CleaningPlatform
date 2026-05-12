@@ -24,6 +24,30 @@ public static class BookingMapper
         CreatedAt = b.CreatedAt
     };
 
+    public static BookingResponse ToResponse(BookingView view, int clientId) => new()
+    {
+        Id = view.BookingId,
+        ClientId = clientId,
+        ClientName = view.ClientName,
+        Date = view.ScheduledDate,
+        Hour = view.ScheduledTimeSlot?.Hours ?? 0,
+        Status = view.Status,
+        ServicesCount = view.ServiceCount,
+        AssignedEmployees = SplitAssignedEmployees(view.AssignedEmployee),
+        CreatedAt = view.CreatedAt
+    };
+
+    private static List<AssignedEmployeeResponse> SplitAssignedEmployees(string? assignedEmployee)
+    {
+        if (string.IsNullOrWhiteSpace(assignedEmployee))
+            return new();
+
+        return assignedEmployee
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(name => new AssignedEmployeeResponse { FullName = name })
+            .ToList();
+    }
+
     public static BookingResponse ToDetailResponse(Booking b)
     {
         var primaryContact = b.Client?.Contacts?

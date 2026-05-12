@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
@@ -67,7 +68,7 @@ public class AuthManager
                 await _db.SaveChangesAsync(ct);
                 return OperationResult<string>.Ok("User created.");
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
             {
                 _db.Entry(user).State = EntityState.Detached;
                 counter++;
@@ -187,6 +188,20 @@ public class AuthManager
     {
         var configured = _config.GetValue<int?>("Security:BcryptWorkFactor");
         return configured is > 3 and <= 31 ? configured.Value : 12;
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException exception)
+    {
+        for (Exception? current = exception; current != null; current = current.InnerException)
+        {
+            if (current is SqlException sqlException &&
+                sqlException.Errors.Cast<SqlError>().Any(error => error.Number is 2601 or 2627))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsValidPassword(string password)
