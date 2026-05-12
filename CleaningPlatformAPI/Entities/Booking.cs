@@ -36,7 +36,6 @@ namespace CleaningPlatformAPI.Entities
         public Site? Site { get; set; }
 
         public VehicleBookingDetails? VehicleDetails { get; set; }
-        public SiteDetail? SiteDetail { get; set; }
         public BoatBookingDetails? BoatDetails { get; set; }
 
         public ICollection<BookingAssignment> Assignments { get; set; } = new List<BookingAssignment>();

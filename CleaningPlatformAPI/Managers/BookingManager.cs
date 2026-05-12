@@ -308,8 +308,6 @@ public class BookingManager
         ServicesCount = b.BookingServices?.Count ?? 0,
         CreatedAt = b.CreatedAt,
         ClientName = b.Client?.ClientName ?? "",
-        ClientPhone = b.Client?.Contacts?.FirstOrDefault()?.Phone ?? "",
-        ClientEmail = b.Client?.Contacts?.FirstOrDefault()?.Email,
         AssignedEmployees = b.Assignments?.Select(a => new AssignedEmployeeDto
         {
             AssignmentId = a.Id,

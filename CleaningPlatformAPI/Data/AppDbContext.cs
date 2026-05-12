@@ -22,7 +22,6 @@ namespace CleaningPlatformAPI.Data
         public DbSet<InvoiceBooking> InvoiceBookings { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<VehicleBookingDetails> VehicleBookingDetails { get; set; }
-        public DbSet<SiteDetail> SiteDetail { get; set; }
         public DbSet<BoatBookingDetails> BoatBookingDetails { get; set; }
         public DbSet<BookingView> BookingView { get; set; }
         public DbSet<WeeklySchedule> WeeklySchedules { get; set; }
@@ -111,15 +110,6 @@ namespace CleaningPlatformAPI.Data
                 .HasOne(v => v.Booking)
                 .WithOne(b => b.VehicleDetails)
                 .HasForeignKey<VehicleBookingDetails>(v => v.BookingId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Booking → SiteDetail (1-to-1)
-            modelBuilder.Entity<SiteDetail>()
-                .HasKey(s => s.BookingId);
-            modelBuilder.Entity<SiteDetail>()
-                .HasOne(s => s.Booking)
-                .WithOne(b => b.SiteDetail)
-                .HasForeignKey<SiteDetail>(s => s.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Booking → BoatBookingDetails (1-to-1)
