@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
@@ -18,7 +18,7 @@ public class BookingsModel : PageModel
         _bookingManager = bookingManager;
     }
 
-    public List<BookingDto> Bookings { get; set; } = [];
+    public List<BookingResponse> Bookings { get; set; } = [];
 
     [BindProperty(SupportsGet = true)]
     public DateTime? DateFilter { get; set; }

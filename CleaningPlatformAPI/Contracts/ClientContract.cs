@@ -1,34 +1,26 @@
-// CleaningPlatformAPI/Dtos/ClientDto.cs
+namespace CleaningPlatformAPI.Contracts;
 
-namespace CleaningPlatformAPI.Dtos;
-
-public class ClientDto
+public class ClientResponse
 {
     public int Id { get; set; }
     public string ClientName { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;   // OneTime, RepeatIndividual, RepeatBusiness
+    public string Type { get; set; } = string.Empty;
     public string? Oib { get; set; }
     public string? PaymentTerms { get; set; }
     public string? Notes { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
-
-    // Primary contact info
     public string? PrimaryContactName { get; set; }
     public string? PrimaryContactPhone { get; set; }
     public string? PrimaryContactEmail { get; set; }
-
     public int TotalBookings { get; set; }
+
+    public List<ContactResponse>? Contacts { get; set; }
+    public List<SiteResponse>? Sites { get; set; }
+    public List<BookingResponse>? Bookings { get; set; }
 }
 
-public class ClientProfileDto : ClientDto
-{
-    public List<ContactDto> Contacts { get; set; } = new();
-    public List<SiteDto> Sites { get; set; } = new();
-    public List<BookingDto> Bookings { get; set; } = new();
-}
-
-public class ContactDto
+public class ContactResponse
 {
     public int Id { get; set; }
     public int ClientId { get; set; }
@@ -41,7 +33,7 @@ public class ContactDto
     public bool IsActive { get; set; }
 }
 
-public class SiteDto
+public class SiteResponse
 {
     public int Id { get; set; }
     public int ClientId { get; set; }
@@ -55,16 +47,28 @@ public class SiteDto
     public bool IsActive { get; set; }
 }
 
-public class UpdateClientProfileDto
+public record CreateClientRequest
+{
+    public string ClientName { get; set; } = string.Empty;
+    public string Type { get; set; } = "RepeatIndividual";
+    public string? Oib { get; set; }
+    public string? PaymentTerms { get; set; }
+    public string? Notes { get; set; }
+    public string PrimaryContactName { get; set; } = string.Empty;
+    public string PrimaryContactPhone { get; set; } = string.Empty;
+    public string? PrimaryContactEmail { get; set; }
+}
+
+public record UpdateClientProfileRequest
 {
     public string ClientName { get; set; } = string.Empty;
     public string? Oib { get; set; }
     public string? PaymentTerms { get; set; }
     public string? Notes { get; set; }
-    public List<UpsertContactDto> Contacts { get; set; } = new();
+    public List<UpsertContactRequest> Contacts { get; set; } = new();
 }
 
-public class UpsertContactDto
+public record UpsertContactRequest
 {
     public int? Id { get; set; }
     public string ContactName { get; set; } = string.Empty;
@@ -76,7 +80,7 @@ public class UpsertContactDto
     public bool IsActive { get; set; } = true;
 }
 
-public class UpsertSiteDto
+public record UpsertSiteRequest
 {
     public string SiteName { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;

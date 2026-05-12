@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -20,46 +20,39 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpGet("me")]
-    public async Task<OperationResult<UserDto>> Me()
+    public async Task<OperationResult<UserResponse>> Me(CancellationToken ct)
     {
-        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                  ?? User.FindFirst("sub")?.Value;
-
+        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
         if (!int.TryParse(sub, out var userId))
-            return OperationResult<UserDto>.Fail("Invalid token.");
+            return OperationResult<UserResponse>.Fail("Invalid token.");
 
-        var user = await _userManager.GetByIdAsync(userId);
-        if (user == null)
-            return OperationResult<UserDto>.Fail("User not found.");
-
-        return OperationResult<UserDto>.Ok(user);
+        var user = await _userManager.GetByIdAsync(userId, ct);
+        return user == null
+            ? OperationResult<UserResponse>.Fail("User not found.")
+            : OperationResult<UserResponse>.Ok(user);
     }
 
     [HttpGet("/api/employees")]
-    public async Task<OperationResult<List<EmployeeSimpleDto>>> GetActiveEmployees()
+    public async Task<OperationResult<List<EmployeeSimpleResponse>>> GetActiveEmployees(CancellationToken ct)
     {
-        var employees = await _userManager.GetActiveEmployeesAsync();
-        return OperationResult<List<EmployeeSimpleDto>>.Ok(employees);
+        return OperationResult<List<EmployeeSimpleResponse>>.Ok(await _userManager.GetActiveEmployeesAsync(ct));
     }
 
     [HttpGet]
-    [Authorize(Policy = "actions.user.toggleActive")]
-    public async Task<OperationResult<List<UserDto>>> GetAll()
+    [Authorize(Policy = PermissionKeys.ActionsUserToggleActive)]
+    public async Task<OperationResult<List<UserResponse>>> GetAll(CancellationToken ct)
     {
-        var users = await _userManager.GetAllUsersAsync();
-        return OperationResult<List<UserDto>>.Ok(users);
+        return OperationResult<List<UserResponse>>.Ok(await _userManager.GetAllUsersAsync(ct));
     }
 
     [HttpPut("{id}/toggle")]
-    [Authorize(Policy = "actions.user.toggleActive")]
-    public async Task<OperationResult<UserDto>> Toggle(int id)
+    [Authorize(Policy = PermissionKeys.ActionsUserToggleActive)]
+    public async Task<OperationResult<UserResponse>> Toggle(int id, CancellationToken ct)
     {
-        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                  ?? User.FindFirst("sub")?.Value;
-
+        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
         if (!int.TryParse(sub, out var requestingUserId))
-            return OperationResult<UserDto>.Fail("Invalid token.");
+            return OperationResult<UserResponse>.Fail("Invalid token.");
 
-        return await _userManager.ToggleActiveAsync(id, requestingUserId);
+        return await _userManager.ToggleActiveAsync(id, requestingUserId, ct);
     }
 }

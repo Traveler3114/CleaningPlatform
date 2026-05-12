@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
@@ -22,9 +22,9 @@ public class IndexModel : PageModel
         _dateOverrideManager = dateOverrideManager;
     }
 
-    public List<BookingDto> TodaysBookings { get; set; } = [];
-    public List<AvailabilityDto> Slots { get; set; } = [];
-    public DateOverrideDto? TodayOverride { get; set; }
+    public List<BookingResponse> TodaysBookings { get; set; } = [];
+    public List<AvailabilityResponse> Slots { get; set; } = [];
+    public DateOverrideResponse? TodayOverride { get; set; }
     public int KpiPending { get; set; }
     public int KpiConfirmed { get; set; }
     public int KpiCompletedThisMonth { get; set; }
@@ -57,7 +57,7 @@ public class IndexModel : PageModel
         if (!User.HasPermission(PermissionKeys.ActionsOverrideManage))
             return Forbid();
 
-        var result = await _dateOverrideManager.CreateOverrideAsync(new DateOverrideDto
+        var result = await _dateOverrideManager.CreateOverrideAsync(new DateOverrideRequest
         {
             Date = SelectedDate.Date,
             StartHour = OverrideStartHour,

@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
+using CleaningPlatformAPI.Mapping;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -15,26 +16,26 @@ public class ServiceCatalogManager
         _db = db;
     }
 
-    public async Task<List<ServiceCatalogDto>> GetAllAsync()
+    public async Task<List<ServiceCatalogResponse>> GetAllAsync(CancellationToken ct = default)
     {
         var services = await _db.ServiceCatalog
             .OrderBy(s => s.Name)
-            .ToListAsync();
+            .ToListAsync(ct);
 
-        return services.Select(MapToDto).ToList();
+        return services.Select(ServiceCatalogMapper.ToResponse).ToList();
     }
 
-    public async Task<OperationResult<ServiceCatalogDto>> CreateAsync(ServiceCatalogUpsertDto dto)
+    public async Task<OperationResult<ServiceCatalogResponse>> CreateAsync(ServiceCatalogUpsertRequest dto, CancellationToken ct = default)
     {
         var code = dto.CatalogCode.Trim();
         var name = dto.Name.Trim();
 
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
-            return OperationResult<ServiceCatalogDto>.Fail("Catalog code and name are required.");
+            return OperationResult<ServiceCatalogResponse>.Fail("Catalog code and name are required.");
 
-        var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code);
+        var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code, ct);
         if (exists)
-            return OperationResult<ServiceCatalogDto>.Fail("Catalog code already exists.");
+            return OperationResult<ServiceCatalogResponse>.Fail("Catalog code already exists.");
 
         var now = DateTime.UtcNow;
         var entity = new ServiceCatalog
@@ -53,27 +54,27 @@ public class ServiceCatalogManager
         };
 
         _db.ServiceCatalog.Add(entity);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
-        return OperationResult<ServiceCatalogDto>.Ok(MapToDto(entity));
+        return OperationResult<ServiceCatalogResponse>.Ok(ServiceCatalogMapper.ToResponse(entity));
     }
 
-    public async Task<OperationResult<ServiceCatalogDto>> UpdateAsync(int id, ServiceCatalogUpsertDto dto)
+    public async Task<OperationResult<ServiceCatalogResponse>> UpdateAsync(int id, ServiceCatalogUpsertRequest dto, CancellationToken ct = default)
     {
-        var entity = await _db.ServiceCatalog.FindAsync(id);
+        var entity = await _db.ServiceCatalog.FindAsync([id], ct);
         if (entity == null)
-            return OperationResult<ServiceCatalogDto>.Fail("Service not found.");
+            return OperationResult<ServiceCatalogResponse>.Fail("Service not found.");
 
         var code = dto.CatalogCode.Trim();
         var name = dto.Name.Trim();
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
-            return OperationResult<ServiceCatalogDto>.Fail("Catalog code and name are required.");
+            return OperationResult<ServiceCatalogResponse>.Fail("Catalog code and name are required.");
 
         if (!string.Equals(entity.CatalogCode, code, StringComparison.OrdinalIgnoreCase))
         {
-            var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code && s.Id != id);
+            var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code && s.Id != id, ct);
             if (exists)
-                return OperationResult<ServiceCatalogDto>.Fail("Catalog code already exists.");
+                return OperationResult<ServiceCatalogResponse>.Fail("Catalog code already exists.");
         }
 
         entity.CatalogCode = code;
@@ -87,34 +88,18 @@ public class ServiceCatalogManager
         entity.IsActive = dto.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
 
-        await _db.SaveChangesAsync();
-        return OperationResult<ServiceCatalogDto>.Ok(MapToDto(entity));
+        await _db.SaveChangesAsync(ct);
+        return OperationResult<ServiceCatalogResponse>.Ok(ServiceCatalogMapper.ToResponse(entity));
     }
 
-    public async Task<OperationResult<string>> DeleteAsync(int id)
+    public async Task<OperationResult<string>> DeleteAsync(int id, CancellationToken ct = default)
     {
-        var entity = await _db.ServiceCatalog.FindAsync(id);
+        var entity = await _db.ServiceCatalog.FindAsync([id], ct);
         if (entity == null)
             return OperationResult<string>.Fail("Service not found.");
 
         _db.ServiceCatalog.Remove(entity);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return OperationResult<string>.Ok("Service deleted.");
     }
-
-    private static ServiceCatalogDto MapToDto(ServiceCatalog s) => new()
-    {
-        Id = s.Id,
-        CatalogCode = s.CatalogCode,
-        Name = s.Name,
-        Category = s.Category,
-        Unit = s.Unit,
-        PriceMin = s.PriceMin,
-        PriceMax = s.PriceMax,
-        PriceAvg = s.PriceAvg,
-        DefaultMarginPct = s.DefaultMarginPct,
-        IsActive = s.IsActive,
-        CreatedAt = s.CreatedAt,
-        UpdatedAt = s.UpdatedAt
-    };
 }

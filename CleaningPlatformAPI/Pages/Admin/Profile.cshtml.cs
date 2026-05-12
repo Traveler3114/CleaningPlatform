@@ -1,4 +1,4 @@
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 using Microsoft.AspNetCore.Authentication;
@@ -23,8 +23,8 @@ public class ProfileModel : PageModel
         _authManager = authManager;
     }
 
-    public UserDto? CurrentUser { get; set; }
-    public List<BookingDto> AssignedBookings { get; set; } = [];
+    public UserResponse? CurrentUser { get; set; }
+    public List<BookingResponse> AssignedBookings { get; set; } = [];
 
     [TempData]
     public string? ErrorMessage { get; set; }
@@ -49,7 +49,7 @@ public class ProfileModel : PageModel
         if (!userId.HasValue)
             return RedirectToPage("/Admin/Login");
 
-        var result = await _authManager.ChangePasswordAsync(new ChangePasswordDto
+        var result = await _authManager.ChangePasswordAsync(new ChangePasswordRequest
         {
             CurrentPassword = currentPassword,
             NewPassword = newPassword

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -19,30 +19,29 @@ public class ScheduleController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<OperationResult<List<WeeklyScheduleDto>>> Get()
+    public async Task<OperationResult<List<WeeklyScheduleResponse>>> Get(CancellationToken ct)
     {
-        var schedule = await _manager.GetScheduleAsync();
-        return OperationResult<List<WeeklyScheduleDto>>.Ok(schedule);
+        return OperationResult<List<WeeklyScheduleResponse>>.Ok(await _manager.GetScheduleAsync(ct));
     }
 
     [HttpPost]
-    [Authorize(Policy = "actions.schedule.edit")]
-    public async Task<OperationResult<WeeklyScheduleDto>> Post([FromBody] WeeklyScheduleDto dto)
+    [Authorize(Policy = PermissionKeys.ActionsScheduleEdit)]
+    public async Task<OperationResult<WeeklyScheduleResponse>> Post([FromBody] WeeklyScheduleRequest request, CancellationToken ct)
     {
-        return await _manager.CreateDayAsync(dto);
+        return await _manager.CreateDayAsync(request, ct);
     }
 
     [HttpPut("{dayOfWeek}")]
-    [Authorize(Policy = "actions.schedule.edit")]
-    public async Task<OperationResult<WeeklyScheduleDto>> Put(int dayOfWeek, [FromBody] WeeklyScheduleDto dto)
+    [Authorize(Policy = PermissionKeys.ActionsScheduleEdit)]
+    public async Task<OperationResult<WeeklyScheduleResponse>> Put(int dayOfWeek, [FromBody] UpdateWeeklyScheduleRequest request, CancellationToken ct)
     {
-        return await _manager.UpdateDayAsync(dayOfWeek, dto);
+        return await _manager.UpdateDayAsync(dayOfWeek, request, ct);
     }
 
     [HttpDelete("{dayOfWeek}")]
-    [Authorize(Policy = "actions.schedule.edit")]
-    public async Task<OperationResult<bool>> Delete(int dayOfWeek)
+    [Authorize(Policy = PermissionKeys.ActionsScheduleEdit)]
+    public async Task<OperationResult<bool>> Delete(int dayOfWeek, CancellationToken ct)
     {
-        return await _manager.DeleteDayAsync(dayOfWeek);
+        return await _manager.DeleteDayAsync(dayOfWeek, ct);
     }
 }

@@ -15,8 +15,7 @@ public static class ClaimsPrincipalExtensions
     public static int? GetEmployeeId(this ClaimsPrincipal user)
     {
         var raw = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                  ?? user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-                  ?? user.FindFirst("sub")?.Value;
+                  ?? user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
         return int.TryParse(raw, out var id) ? id : null;
     }

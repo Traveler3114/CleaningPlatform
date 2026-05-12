@@ -1,10 +1,10 @@
-using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Enums;
+using CleaningPlatformAPI.Mapping;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -20,7 +20,7 @@ public class InvoiceManager
         _db = db;
     }
 
-    public async Task<List<InvoiceSummaryDto>> GetAllAsync()
+    public async Task<List<InvoiceSummaryResponse>> GetAllAsync(CancellationToken ct = default)
     {
         var invoices = await _db.Invoices
             .Include(i => i.Client)
@@ -28,46 +28,48 @@ public class InvoiceManager
             .Include(i => i.InvoiceBookings)
             .OrderByDescending(i => i.IssueDate)
             .ThenByDescending(i => i.Id)
-            .ToListAsync();
+            .ToListAsync(ct);
 
-        return invoices.Select(MapToSummaryDto).ToList();
+        return invoices.Select(InvoiceMapper.ToSummaryResponse).ToList();
     }
 
-    public async Task<InvoiceDetailDto?> GetByIdAsync(int id)
+    public async Task<InvoiceDetailResponse?> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var invoice = await _db.Invoices
             .Include(i => i.Client)
             .Include(i => i.Lines)
             .Include(i => i.Payments)
             .Include(i => i.InvoiceBookings)
-            .FirstOrDefaultAsync(i => i.Id == id);
+            .FirstOrDefaultAsync(i => i.Id == id, ct);
 
-        return invoice == null ? null : MapToDetailDto(invoice);
+        return invoice == null ? null : InvoiceMapper.ToDetailResponse(invoice);
     }
 
-    public async Task<OperationResult<InvoiceDetailDto>> CreateFromBookingAsync(int bookingId, int? createdByEmployeeId)
+    public async Task<OperationResult<InvoiceDetailResponse>> CreateFromBookingAsync(int bookingId, int? createdByEmployeeId, CancellationToken ct = default)
     {
+        await using var transaction = await _db.Database.BeginTransactionAsync(ct);
+
         var booking = await _db.Bookings
             .Include(b => b.Client)
             .Include(b => b.BookingServices)
                 .ThenInclude(bs => bs.ServiceCatalog)
-            .FirstOrDefaultAsync(b => b.Id == bookingId);
+            .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
 
         if (booking == null)
-            return OperationResult<InvoiceDetailDto>.Fail("Booking not found.");
+            return OperationResult<InvoiceDetailResponse>.Fail("Booking not found.");
 
         if (booking.Status != BookingStatus.Completed)
-            return OperationResult<InvoiceDetailDto>.Fail("Only completed bookings can be invoiced.");
+            return OperationResult<InvoiceDetailResponse>.Fail("Only completed bookings can be invoiced.");
 
         var existingLink = await _db.InvoiceBookings
             .AsNoTracking()
-            .FirstOrDefaultAsync(ib => ib.BookingId == bookingId);
+            .FirstOrDefaultAsync(ib => ib.BookingId == bookingId, ct);
 
         if (existingLink != null)
-            return OperationResult<InvoiceDetailDto>.Fail($"Booking already invoiced (Invoice #{existingLink.InvoiceId}).");
+            return OperationResult<InvoiceDetailResponse>.Fail($"Booking already invoiced (Invoice #{existingLink.InvoiceId}).");
 
         var now = DateTime.UtcNow;
-        var invoiceNumber = await GenerateInvoiceNumberAsync();
+        var invoiceNumber = await GenerateInvoiceNumberAsync(ct);
         var issueDate = now.Date;
         var dueDate = issueDate.AddDays(ParsePaymentTermDays(booking.Client?.PaymentTerms));
 
@@ -123,106 +125,92 @@ public class InvoiceManager
             BookingId = booking.Id
         });
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
 
-        var created = await GetByIdAsync(invoice.Id);
+        var created = await GetByIdAsync(invoice.Id, ct);
         return created == null
-            ? OperationResult<InvoiceDetailDto>.Fail("Failed to load created invoice.")
-            : OperationResult<InvoiceDetailDto>.Ok(created);
+            ? OperationResult<InvoiceDetailResponse>.Fail("Failed to load created invoice.")
+            : OperationResult<InvoiceDetailResponse>.Ok(created);
     }
 
-    public async Task<OperationResult<InvoiceDetailDto>> RecordPaymentAsync(int invoiceId, RecordPaymentDto dto, int? recordedBy)
+    public async Task<OperationResult<InvoiceDetailResponse>> RecordPaymentAsync(int invoiceId, RecordPaymentRequest request, int? recordedBy, CancellationToken ct = default)
     {
-        if (dto.Amount <= 0)
-            return OperationResult<InvoiceDetailDto>.Fail("Payment amount must be greater than zero.");
+        if (request.Amount <= 0)
+            return OperationResult<InvoiceDetailResponse>.Fail("Payment amount must be greater than zero.");
 
-        var method = string.IsNullOrWhiteSpace(dto.Method) ? "BankTransfer" : dto.Method.Trim();
+        var method = string.IsNullOrWhiteSpace(request.Method) ? "BankTransfer" : request.Method.Trim();
         if (!AllowedPaymentMethods.Contains(method))
-            return OperationResult<InvoiceDetailDto>.Fail("Invalid payment method.");
+            return OperationResult<InvoiceDetailResponse>.Fail("Invalid payment method.");
 
         var invoice = await _db.Invoices
             .Include(i => i.Payments)
-            .FirstOrDefaultAsync(i => i.Id == invoiceId);
+            .FirstOrDefaultAsync(i => i.Id == invoiceId, ct);
 
         if (invoice == null)
-            return OperationResult<InvoiceDetailDto>.Fail("Invoice not found.");
+            return OperationResult<InvoiceDetailResponse>.Fail("Invoice not found.");
 
-        var paymentDate = dto.PaymentDate == default ? DateTime.UtcNow.Date : dto.PaymentDate.Date;
+        var paymentDate = request.PaymentDate == default ? DateTime.UtcNow.Date : request.PaymentDate.Date;
 
         _db.Payments.Add(new Payment
         {
             InvoiceId = invoiceId,
             PaymentDate = paymentDate,
-            Amount = dto.Amount,
+            Amount = request.Amount,
             Method = method,
-            Reference = string.IsNullOrWhiteSpace(dto.Reference) ? null : dto.Reference.Trim(),
-            Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
+            Reference = string.IsNullOrWhiteSpace(request.Reference) ? null : request.Reference.Trim(),
+            Notes = string.IsNullOrWhiteSpace(request.Notes) ? null : request.Notes.Trim(),
             RecordedBy = recordedBy,
             CreatedAt = DateTime.UtcNow
         });
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         var paidAmount = await _db.Payments
             .Where(p => p.InvoiceId == invoiceId)
-            .SumAsync(p => p.Amount);
+            .SumAsync(p => p.Amount, ct);
 
         if (paidAmount >= invoice.TotalAmount)
-        {
             invoice.Status = "Paid";
-        }
         else if (paidAmount > 0)
-        {
             invoice.Status = "PartiallyPaid";
-        }
 
         invoice.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
-        var updated = await GetByIdAsync(invoiceId);
+        var updated = await GetByIdAsync(invoiceId, ct);
         return updated == null
-            ? OperationResult<InvoiceDetailDto>.Fail("Invoice not found.")
-            : OperationResult<InvoiceDetailDto>.Ok(updated);
+            ? OperationResult<InvoiceDetailResponse>.Fail("Invoice not found.")
+            : OperationResult<InvoiceDetailResponse>.Ok(updated);
     }
 
-    public async Task<OperationResult<InvoiceDetailDto>> UpdateStatusAsync(int invoiceId, string status)
+    public async Task<OperationResult<InvoiceDetailResponse>> UpdateStatusAsync(int invoiceId, string status, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(status) || !AllowedStatuses.Contains(status.Trim()))
-            return OperationResult<InvoiceDetailDto>.Fail("Invalid invoice status.");
+            return OperationResult<InvoiceDetailResponse>.Fail("Invalid invoice status.");
 
-        var invoice = await _db.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId);
+        var invoice = await _db.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId, ct);
         if (invoice == null)
-            return OperationResult<InvoiceDetailDto>.Fail("Invoice not found.");
+            return OperationResult<InvoiceDetailResponse>.Fail("Invoice not found.");
 
         invoice.Status = status.Trim();
         invoice.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
-        var updated = await GetByIdAsync(invoiceId);
+        var updated = await GetByIdAsync(invoiceId, ct);
         return updated == null
-            ? OperationResult<InvoiceDetailDto>.Fail("Invoice not found.")
-            : OperationResult<InvoiceDetailDto>.Ok(updated);
+            ? OperationResult<InvoiceDetailResponse>.Fail("Invoice not found.")
+            : OperationResult<InvoiceDetailResponse>.Ok(updated);
     }
 
-    private async Task<string> GenerateInvoiceNumberAsync()
+    private async Task<string> GenerateInvoiceNumberAsync(CancellationToken ct)
     {
         var year = DateTime.UtcNow.Year;
-        var prefix = $"INV-{year}-";
+        var result = await _db.Database
+            .SqlQueryRaw<long>("SELECT NEXT VALUE FOR InvoiceNumberSeq")
+            .FirstAsync(ct);
 
-        var maxInvoiceNumber = await _db.Invoices
-            .Where(i => i.InvoiceNumber.StartsWith(prefix))
-            .Select(i => i.InvoiceNumber)
-            .ToListAsync();
-
-        var maxSequence = maxInvoiceNumber
-            .Select(number => number.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
-                ? number[prefix.Length..]
-                : string.Empty)
-            .Select(raw => int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) ? parsed : 0)
-            .DefaultIfEmpty(0)
-            .Max();
-
-        return $"{prefix}{(maxSequence + 1):0000}";
+        return $"INV-{year}-{result:0000}";
     }
 
     private static int ParsePaymentTermDays(string? paymentTerms)
@@ -231,10 +219,7 @@ public class InvoiceManager
             return 15;
 
         var digits = new string(paymentTerms.Where(char.IsDigit).ToArray());
-        if (int.TryParse(digits, out var days) && days > 0)
-            return days;
-
-        return 15;
+        return int.TryParse(digits, out var days) && days > 0 ? days : 15;
     }
 
     private static void RecalculateTotals(Invoice invoice)
@@ -259,88 +244,5 @@ public class InvoiceManager
         invoice.SubTotal = decimal.Round(subTotal, 2, MidpointRounding.AwayFromZero);
         invoice.VatAmount = decimal.Round(vatAmount, 2, MidpointRounding.AwayFromZero);
         invoice.TotalAmount = decimal.Round(invoice.SubTotal - invoice.DiscountAmount + invoice.VatAmount, 2, MidpointRounding.AwayFromZero);
-    }
-
-    private static InvoiceSummaryDto MapToSummaryDto(Invoice invoice)
-    {
-        var paidAmount = invoice.Payments.Sum(p => p.Amount);
-        var balanceDue = invoice.TotalAmount - paidAmount;
-
-        return new InvoiceSummaryDto
-        {
-            Id = invoice.Id,
-            InvoiceNumber = invoice.InvoiceNumber,
-            ClientId = invoice.ClientId,
-            ClientName = invoice.Client?.ClientName ?? string.Empty,
-            IssueDate = invoice.IssueDate,
-            DueDate = invoice.DueDate,
-            TotalAmount = invoice.TotalAmount,
-            PaidAmount = paidAmount,
-            BalanceDue = balanceDue < 0 ? 0 : balanceDue,
-            Status = invoice.Status,
-            BookingCount = invoice.InvoiceBookings.Count
-        };
-    }
-
-    private static InvoiceDetailDto MapToDetailDto(Invoice invoice)
-    {
-        var summary = MapToSummaryDto(invoice);
-
-        return new InvoiceDetailDto
-        {
-            Id = summary.Id,
-            InvoiceNumber = summary.InvoiceNumber,
-            ClientId = summary.ClientId,
-            ClientName = summary.ClientName,
-            IssueDate = summary.IssueDate,
-            DueDate = summary.DueDate,
-            TotalAmount = summary.TotalAmount,
-            PaidAmount = summary.PaidAmount,
-            BalanceDue = summary.BalanceDue,
-            Status = summary.Status,
-            BookingCount = summary.BookingCount,
-            SubTotal = invoice.SubTotal,
-            DiscountAmount = invoice.DiscountAmount,
-            VatPct = invoice.VatPct,
-            VatAmount = invoice.VatAmount,
-            Notes = invoice.Notes,
-            Lines = invoice.Lines
-                .OrderBy(l => l.Id)
-                .Select(l =>
-                {
-                    var discountPct = Math.Clamp(l.DiscountPct ?? 0, 0, 100);
-                    var net = l.Quantity * l.UnitPrice * (1 - (discountPct / 100m));
-                    var lineVat = net * (l.VatPct / 100m);
-
-                    return new InvoiceLineDto
-                    {
-                        Id = l.Id,
-                        Description = l.Description,
-                        Quantity = l.Quantity,
-                        UnitPrice = l.UnitPrice,
-                        DiscountPct = l.DiscountPct,
-                        VatPct = l.VatPct,
-                        LineNetAmount = decimal.Round(net, 2, MidpointRounding.AwayFromZero),
-                        LineVatAmount = decimal.Round(lineVat, 2, MidpointRounding.AwayFromZero),
-                        LineTotalAmount = decimal.Round(net + lineVat, 2, MidpointRounding.AwayFromZero),
-                        SourceType = l.SourceType,
-                        SourceId = l.SourceId
-                    };
-                })
-                .ToList(),
-            Payments = invoice.Payments
-                .OrderByDescending(p => p.PaymentDate)
-                .ThenByDescending(p => p.Id)
-                .Select(p => new PaymentDto
-                {
-                    Id = p.Id,
-                    PaymentDate = p.PaymentDate,
-                    Amount = p.Amount,
-                    Method = p.Method,
-                    Reference = p.Reference,
-                    Notes = p.Notes
-                })
-                .ToList()
-        };
     }
 }

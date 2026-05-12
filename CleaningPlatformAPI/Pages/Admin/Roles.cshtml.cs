@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
@@ -30,8 +30,8 @@ public class RolesModel : PageModel
         _roleManager = roleManager;
     }
 
-    public List<RoleDto> Roles { get; set; } = [];
-    public List<AvailablePermissionDto> AvailablePermissions { get; set; } = [];
+    public List<RoleResponse> Roles { get; set; } = [];
+    public List<AvailablePermissionResponse> AvailablePermissions { get; set; } = [];
     public Dictionary<string, string> PermissionDisplayNames { get; set; } = new();
 
     [TempData]
@@ -47,7 +47,7 @@ public class RolesModel : PageModel
         if (!User.HasPermission(PermissionKeys.ActionsRoleManage))
             return Forbid();
 
-        var result = await _roleManager.CreateRoleAsync(new CreateRoleDto { Name = name, Permissions = permissions });
+        var result = await _roleManager.CreateRoleAsync(new CreateRoleRequest { Name = name, Permissions = permissions });
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
     }
@@ -57,7 +57,7 @@ public class RolesModel : PageModel
         if (!User.HasPermission(PermissionKeys.ActionsRoleManage))
             return Forbid();
 
-        var result = await _roleManager.UpdateRoleAsync(id, new UpdateRoleDto { Name = name, Permissions = permissions });
+        var result = await _roleManager.UpdateRoleAsync(id, new UpdateRoleRequest { Name = name, Permissions = permissions });
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
     }

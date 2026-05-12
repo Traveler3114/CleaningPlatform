@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
@@ -18,10 +18,10 @@ public class ScheduleModel : PageModel
         _scheduleManager = scheduleManager;
     }
 
-    public List<WeeklyScheduleDto> Schedule { get; set; } = [];
+    public List<WeeklyScheduleResponse> Schedule { get; set; } = [];
 
     [BindProperty]
-    public WeeklyScheduleDto DayInput { get; set; } = new();
+    public WeeklyScheduleRequest DayInput { get; set; } = new();
 
     [TempData]
     public string? ErrorMessage { get; set; }
@@ -46,7 +46,12 @@ public class ScheduleModel : PageModel
         if (!User.HasPermission(PermissionKeys.ActionsScheduleEdit))
             return Forbid();
 
-        var result = await _scheduleManager.UpdateDayAsync(dayOfWeek, DayInput);
+        var result = await _scheduleManager.UpdateDayAsync(dayOfWeek, new UpdateWeeklyScheduleRequest
+        {
+            StartHour = DayInput.StartHour,
+            EndHour = DayInput.EndHour,
+            Capacity = DayInput.Capacity
+        });
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
     }

@@ -56,4 +56,17 @@ public static class PermissionKeys
         [ActionsServiceCatalogEdit]   = ("Edit Service Catalog",      "Can update service pricing and details","Services"),
         [ActionsServiceCatalogManage] = ("Manage Services",           "Can add or remove services",            "Services"),
     };
+
+    static PermissionKeys()
+    {
+        var missingMeta = All.Where(k => !Meta.ContainsKey(k)).ToList();
+        if (missingMeta.Count > 0)
+            throw new InvalidOperationException(
+                $"PermissionKeys.Meta is missing entries for: {string.Join(", ", missingMeta)}");
+
+        var extraMeta = Meta.Keys.Where(k => !All.Contains(k)).ToList();
+        if (extraMeta.Count > 0)
+            throw new InvalidOperationException(
+                $"PermissionKeys.Meta has entries not in All: {string.Join(", ", extraMeta)}");
+    }
 }

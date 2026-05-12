@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -19,47 +19,44 @@ public class RoleController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<OperationResult<List<RoleDto>>> GetAll()
+    public async Task<OperationResult<List<RoleResponse>>> GetAll(CancellationToken ct)
     {
-        var roles = await _roleManager.GetAllRolesAsync();
-        return OperationResult<List<RoleDto>>.Ok(roles);
+        return OperationResult<List<RoleResponse>>.Ok(await _roleManager.GetAllRolesAsync(ct));
     }
 
     [HttpGet("{id}")]
-    public async Task<OperationResult<RoleDto>> GetById(int id)
+    public async Task<OperationResult<RoleResponse>> GetById(int id, CancellationToken ct)
     {
-        var roles = await _roleManager.GetAllRolesAsync();
-        var role = roles.FirstOrDefault(r => r.Id == id);
+        var role = await _roleManager.GetByIdAsync(id, ct);
         return role is null
-            ? OperationResult<RoleDto>.Fail("Role not found.")
-            : OperationResult<RoleDto>.Ok(role);
+            ? OperationResult<RoleResponse>.Fail("Role not found.")
+            : OperationResult<RoleResponse>.Ok(role);
     }
 
     [HttpGet("permissions")]
-    public OperationResult<List<AvailablePermissionDto>> GetPermissions()
+    public OperationResult<List<AvailablePermissionResponse>> GetPermissions()
     {
-        var permissions = _roleManager.GetAvailablePermissions();
-        return OperationResult<List<AvailablePermissionDto>>.Ok(permissions);
+        return OperationResult<List<AvailablePermissionResponse>>.Ok(_roleManager.GetAvailablePermissions());
     }
 
     [HttpPost]
-    [Authorize(Policy = "actions.role.manage")]
-    public async Task<OperationResult<RoleDto>> Create(CreateRoleDto dto)
+    [Authorize(Policy = PermissionKeys.ActionsRoleManage)]
+    public async Task<OperationResult<RoleResponse>> Create([FromBody] CreateRoleRequest request, CancellationToken ct)
     {
-        return await _roleManager.CreateRoleAsync(dto);
+        return await _roleManager.CreateRoleAsync(request, ct);
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = "actions.role.manage")]
-    public async Task<OperationResult<RoleDto>> Update(int id, UpdateRoleDto dto)
+    [Authorize(Policy = PermissionKeys.ActionsRoleManage)]
+    public async Task<OperationResult<RoleResponse>> Update(int id, [FromBody] UpdateRoleRequest request, CancellationToken ct)
     {
-        return await _roleManager.UpdateRoleAsync(id, dto);
+        return await _roleManager.UpdateRoleAsync(id, request, ct);
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = "actions.role.manage")]
-    public async Task<OperationResult<string>> Delete(int id)
+    [Authorize(Policy = PermissionKeys.ActionsRoleManage)]
+    public async Task<OperationResult<string>> Delete(int id, CancellationToken ct)
     {
-        return await _roleManager.DeleteRoleAsync(id);
+        return await _roleManager.DeleteRoleAsync(id, ct);
     }
 }

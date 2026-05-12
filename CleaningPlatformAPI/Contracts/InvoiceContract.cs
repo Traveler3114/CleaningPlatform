@@ -1,6 +1,6 @@
-namespace CleaningPlatformAPI.Dtos;
+namespace CleaningPlatformAPI.Contracts;
 
-public class InvoiceSummaryDto
+public class InvoiceSummaryResponse
 {
     public int Id { get; set; }
     public string InvoiceNumber { get; set; } = string.Empty;
@@ -15,18 +15,18 @@ public class InvoiceSummaryDto
     public int BookingCount { get; set; }
 }
 
-public class InvoiceDetailDto : InvoiceSummaryDto
+public class InvoiceDetailResponse : InvoiceSummaryResponse
 {
     public decimal SubTotal { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal VatPct { get; set; }
     public decimal VatAmount { get; set; }
     public string? Notes { get; set; }
-    public List<InvoiceLineDto> Lines { get; set; } = new();
-    public List<PaymentDto> Payments { get; set; } = new();
+    public List<InvoiceLineResponse> Lines { get; set; } = new();
+    public List<PaymentResponse> Payments { get; set; } = new();
 }
 
-public class InvoiceLineDto
+public class InvoiceLineResponse
 {
     public int Id { get; set; }
     public string Description { get; set; } = string.Empty;
@@ -41,7 +41,7 @@ public class InvoiceLineDto
     public int? SourceId { get; set; }
 }
 
-public class PaymentDto
+public class PaymentResponse
 {
     public int Id { get; set; }
     public DateTime PaymentDate { get; set; }
@@ -51,12 +51,12 @@ public class PaymentDto
     public string? Notes { get; set; }
 }
 
-public class CreateInvoiceFromBookingDto
+public record CreateInvoiceFromBookingRequest
 {
     public int BookingId { get; set; }
 }
 
-public class RecordPaymentDto
+public record RecordPaymentRequest
 {
     public DateTime PaymentDate { get; set; } = DateTime.UtcNow.Date;
     public decimal Amount { get; set; }
@@ -65,7 +65,7 @@ public class RecordPaymentDto
     public string? Notes { get; set; }
 }
 
-public class UpdateInvoiceStatusDto
+public record UpdateInvoiceStatusRequest
 {
     public string Status { get; set; } = string.Empty;
 }

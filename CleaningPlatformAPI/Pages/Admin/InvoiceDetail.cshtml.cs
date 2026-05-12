@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
@@ -18,7 +18,7 @@ public class InvoiceDetailModel : PageModel
         _invoiceManager = invoiceManager;
     }
 
-    public InvoiceDetailDto? Invoice { get; set; }
+    public InvoiceDetailResponse? Invoice { get; set; }
 
     [BindProperty(SupportsGet = true)]
     public int Id { get; set; }
@@ -47,7 +47,7 @@ public class InvoiceDetailModel : PageModel
         if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
             return Forbid();
 
-        var result = await _invoiceManager.RecordPaymentAsync(Id, new RecordPaymentDto
+        var result = await _invoiceManager.RecordPaymentAsync(Id, new RecordPaymentRequest
         {
             PaymentDate = paymentDate,
             Amount = amount,

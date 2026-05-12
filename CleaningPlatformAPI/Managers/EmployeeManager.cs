@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
-using CleaningPlatformAPI.Dtos;
-using CleaningPlatformAPI.Entities;
+using CleaningPlatformAPI.Contracts;
+using CleaningPlatformAPI.Mapping;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -15,85 +15,68 @@ public class EmployeeManager
         _db = db;
     }
 
-    public async Task<List<UserDto>> GetAllUsersAsync()
+    public async Task<List<UserResponse>> GetAllUsersAsync(CancellationToken ct = default)
     {
         var users = await _db.Employees
-            .Include(e => e.Role)   // ✅ Include Role
-            .OrderBy(u => u.Role.Name)
+            .Include(e => e.Role)
+            .OrderBy(u => u.Role!.Name)
             .ThenBy(u => u.LastName)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var rolePermissions = await _db.Roles
             .Include(r => r.Permissions)
-            .ToDictionaryAsync(r => r.Name, r => r.Permissions.Select(p => p.PermissionKey).ToList());
+            .ToDictionaryAsync(r => r.Name, r => r.Permissions.Select(p => p.PermissionKey).ToList(), ct);
 
-        return users.Select(u => MapToDto(u, rolePermissions.GetValueOrDefault(u.Role?.Name ?? string.Empty, new List<string>()))).ToList();
+        return users.Select(u => UserMapper.ToResponse(u, rolePermissions.GetValueOrDefault(u.Role?.Name ?? string.Empty, []))).ToList();
     }
 
-    public async Task<UserDto?> GetByIdAsync(int id)
+    public async Task<UserResponse?> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var user = await _db.Employees
             .Include(e => e.Role)
-            .FirstOrDefaultAsync(u => u.Id == id);
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user == null) return null;
 
         var permissions = await _db.RolePermissions
             .Where(rp => rp.RoleId == user.RoleId)
             .Select(rp => rp.PermissionKey)
-            .ToListAsync();
+            .ToListAsync(ct);
 
-        return MapToDto(user, permissions);
+        return UserMapper.ToResponse(user, permissions);
     }
 
-    public async Task<List<EmployeeSimpleDto>> GetActiveEmployeesAsync()
+    public async Task<List<EmployeeSimpleResponse>> GetActiveEmployeesAsync(CancellationToken ct = default)
     {
-        return await _db.Employees
+        var employees = await _db.Employees
             .Include(e => e.Role)
             .Where(e => e.IsActive)
             .OrderBy(e => e.FirstName)
             .ThenBy(e => e.LastName)
-            .Select(e => new EmployeeSimpleDto
-            {
-                Id = e.Id,
-                FirstName = e.FirstName,
-                LastName = e.LastName,
-                Role = e.Role != null ? e.Role.Name : string.Empty
-            })
-            .ToListAsync();
+            .ToListAsync(ct);
+
+        return employees.Select(UserMapper.ToSimpleResponse).ToList();
     }
 
-    public async Task<OperationResult<UserDto>> ToggleActiveAsync(int id, int requestingUserId)
+    public async Task<OperationResult<UserResponse>> ToggleActiveAsync(int id, int requestingUserId, CancellationToken ct = default)
     {
         if (id == requestingUserId)
-            return OperationResult<UserDto>.Fail("You cannot deactivate your own account.");
+            return OperationResult<UserResponse>.Fail("You cannot deactivate your own account.");
 
         var user = await _db.Employees
             .Include(e => e.Role)
-            .FirstOrDefaultAsync(u => u.Id == id);
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user == null)
-            return OperationResult<UserDto>.Fail("User not found.");
+            return OperationResult<UserResponse>.Fail("User not found.");
 
         user.IsActive = !user.IsActive;
         user.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         var permissions = await _db.RolePermissions
             .Where(rp => rp.RoleId == user.RoleId)
             .Select(rp => rp.PermissionKey)
-            .ToListAsync();
+            .ToListAsync(ct);
 
-        return OperationResult<UserDto>.Ok(MapToDto(user, permissions));
+        return OperationResult<UserResponse>.Ok(UserMapper.ToResponse(user, permissions));
     }
-
-    private static UserDto MapToDto(Employee u, List<string> permissions) => new()
-    {
-        Id = u.Id,
-        FirstName = u.FirstName,
-        LastName = u.LastName,
-        Username = u.Username,
-        Role = u.Role?.Name ?? string.Empty,
-        IsActive = u.IsActive,
-        CreatedAt = u.CreatedAt,
-        Permissions = permissions
-    };
 }

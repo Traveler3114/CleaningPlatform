@@ -23,7 +23,6 @@ namespace CleaningPlatformAPI.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<VehicleBookingDetails> VehicleBookingDetails { get; set; }
         public DbSet<BoatBookingDetails> BoatBookingDetails { get; set; }
-        public DbSet<BookingView> BookingView { get; set; }
         public DbSet<WeeklySchedule> WeeklySchedules { get; set; }
         public DbSet<DateOverride> DateOverrides { get; set; }
 
@@ -83,7 +82,6 @@ namespace CleaningPlatformAPI.Data
             modelBuilder.Entity<BoatBookingDetails>()
                 .Property(b => b.LengthMeters).HasPrecision(5, 2);
 
-            // (BookingView properties are read from database, no precision needed)
             modelBuilder.Entity<Booking>()
                 .Property(b => b.ServiceType)
                 .HasConversion<string>()
@@ -230,9 +228,6 @@ namespace CleaningPlatformAPI.Data
             modelBuilder.Entity<InvoiceBooking>()
                 .HasIndex(ib => ib.BookingId)
                 .IsUnique();
-
-            // View (keyless)
-            modelBuilder.Entity<BookingView>().ToView("vw_Bookings").HasNoKey();
 
             // Global DateTime precision (optional)
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())

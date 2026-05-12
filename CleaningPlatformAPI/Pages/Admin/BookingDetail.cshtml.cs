@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 
@@ -27,9 +27,9 @@ public class BookingDetailModel : PageModel
     [BindProperty(SupportsGet = true)]
     public int Id { get; set; }
 
-    public BookingDetailDto? Booking { get; set; }
-    public List<EmployeeSimpleDto> ActiveEmployees { get; set; } = [];
-    public List<ServiceCatalogDto> ServiceCatalog { get; set; } = [];
+    public BookingResponse? Booking { get; set; }
+    public List<EmployeeSimpleResponse> ActiveEmployees { get; set; } = [];
+    public List<ServiceCatalogResponse> ServiceCatalog { get; set; } = [];
 
     [TempData]
     public string? ErrorMessage { get; set; }

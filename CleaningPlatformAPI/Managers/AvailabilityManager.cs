@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Enums;
-using CleaningPlatformAPI.Dtos;
-using CleaningPlatformAPI.Entities;
+using CleaningPlatformAPI.Contracts;
+using CleaningPlatformAPI.Mapping;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -15,41 +15,36 @@ public class AvailabilityManager
         _db = db;
     }
 
-    public async Task<List<AvailabilityDto>> GetSlotsAsync(DateTime date)
+    public async Task<List<AvailabilityResponse>> GetSlotsAsync(DateTime date, CancellationToken ct = default)
     {
-        // Check DateOverride first
-        var dateOverride = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date.Date == date.Date);
+        var dateOverride = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date.Date == date.Date, ct);
         if (dateOverride != null && dateOverride.IsFullyClosed)
-            return new List<AvailabilityDto>();
+            return [];
 
-        var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == (int)date.DayOfWeek);
+        var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == (int)date.DayOfWeek, ct);
         if (schedule == null)
-            return new List<AvailabilityDto>();
+            return [];
 
-        // Use override hours if provided, otherwise fall back to schedule
-        int startHour = dateOverride?.StartHour ?? schedule.StartHour;
-        int endHour = dateOverride?.EndHour ?? schedule.EndHour;
-        int defaultCapacity = dateOverride?.Capacity ?? schedule.Capacity;
+        var startHour = dateOverride?.StartHour ?? schedule.StartHour;
+        var endHour = dateOverride?.EndHour ?? schedule.EndHour;
+        var defaultCapacity = dateOverride?.Capacity ?? schedule.Capacity;
 
         var bookings = await _db.Bookings
             .Where(b => b.ScheduledDate.Date == date.Date && b.Status != BookingStatus.Cancelled)
-            .ToListAsync();
+            .ToListAsync(ct);
 
-        var slots = new List<AvailabilityDto>();
+        var slots = new List<AvailabilityResponse>();
+        var isToday = date.Date == DateTime.UtcNow.Date;
 
-        for (int h = startHour; h < endHour; h++)
+        for (var h = startHour; h < endHour; h++)
         {
-            int booked = bookings.Count(b => b.ScheduledTimeSlot.HasValue && b.ScheduledTimeSlot.Value.Hours == h);
+            if (isToday && h <= DateTime.UtcNow.Hour)
+                continue;
 
-            slots.Add(new AvailabilityDto
-            {
-                Hour = h,
-                Capacity = defaultCapacity,
-                Booked = booked,
-                Available = Math.Max(0, defaultCapacity - booked),
-                IsClosed = defaultCapacity == 0
-            });
+            var booked = bookings.Count(b => b.ScheduledTimeSlot.HasValue && b.ScheduledTimeSlot.Value.Hours == h);
+            slots.Add(ScheduleMapper.ToAvailabilityResponse(h, defaultCapacity, booked, defaultCapacity == 0));
         }
+
         return slots;
     }
 }

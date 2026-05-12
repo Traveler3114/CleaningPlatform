@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -17,16 +17,17 @@ public class AuthController : ControllerBase
         _authManager = authManager;
     }
 
-    [Authorize(Policy = "actions.user.create")]
+    [Authorize(Policy = PermissionKeys.ActionsUserCreate)]
     [HttpPost("register")]
-    public async Task<OperationResult<string>> Register(CreateUserDto request)
+    public async Task<OperationResult<string>> Register([FromBody] CreateUserRequest request, CancellationToken ct)
     {
-        return await _authManager.RegisterAsync(request);
+        return await _authManager.RegisterAsync(request, ct);
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<OperationResult<string>> Login(LoginDto request)
+    public async Task<OperationResult<string>> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        return await _authManager.LoginAsync(request);
+        return await _authManager.LoginAsync(request, ct);
     }
 }

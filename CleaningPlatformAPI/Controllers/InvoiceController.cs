@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
-using CleaningPlatformAPI.Dtos;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -21,51 +21,50 @@ public class InvoiceController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.PagesBookings)]
-    public async Task<OperationResult<List<InvoiceSummaryDto>>> GetAll()
+    public async Task<OperationResult<List<InvoiceSummaryResponse>>> GetAll(CancellationToken ct)
     {
-        var invoices = await _invoiceManager.GetAllAsync();
-        return OperationResult<List<InvoiceSummaryDto>>.Ok(invoices);
+        return OperationResult<List<InvoiceSummaryResponse>>.Ok(await _invoiceManager.GetAllAsync(ct));
     }
 
     [HttpGet("{id:int}")]
     [Authorize(Policy = PermissionKeys.PagesBookings)]
-    public async Task<OperationResult<InvoiceDetailDto>> GetById(int id)
+    public async Task<OperationResult<InvoiceDetailResponse>> GetById(int id, CancellationToken ct)
     {
-        var invoice = await _invoiceManager.GetByIdAsync(id);
+        var invoice = await _invoiceManager.GetByIdAsync(id, ct);
         return invoice is null
-            ? OperationResult<InvoiceDetailDto>.Fail("Invoice not found.")
-            : OperationResult<InvoiceDetailDto>.Ok(invoice);
+            ? OperationResult<InvoiceDetailResponse>.Fail("Invoice not found.")
+            : OperationResult<InvoiceDetailResponse>.Ok(invoice);
     }
 
     [HttpPost("from-booking/{bookingId:int}")]
     [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
-    public async Task<OperationResult<InvoiceDetailDto>> CreateFromBooking(int bookingId)
+    public async Task<OperationResult<InvoiceDetailResponse>> CreateFromBooking(int bookingId, CancellationToken ct)
     {
-        var employeeId = ParseCurrentEmployeeId();
-        return await _invoiceManager.CreateFromBookingAsync(bookingId, employeeId);
+        return await _invoiceManager.CreateFromBookingAsync(bookingId, ParseCurrentEmployeeId(), ct);
     }
 
     [HttpPost("from-booking")]
     [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
-    public async Task<OperationResult<InvoiceDetailDto>> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingDto dto)
+    public async Task<OperationResult<InvoiceDetailResponse>> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingRequest request, CancellationToken ct)
     {
-        if (dto.BookingId <= 0)
-            return OperationResult<InvoiceDetailDto>.Fail("Booking id is required.");
-        return await _invoiceManager.CreateFromBookingAsync(dto.BookingId, ParseCurrentEmployeeId());
+        if (request.BookingId <= 0)
+            return OperationResult<InvoiceDetailResponse>.Fail("Booking id is required.");
+
+        return await _invoiceManager.CreateFromBookingAsync(request.BookingId, ParseCurrentEmployeeId(), ct);
     }
 
     [HttpPost("{id:int}/payments")]
     [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
-    public async Task<OperationResult<InvoiceDetailDto>> RecordPayment(int id, [FromBody] RecordPaymentDto dto)
+    public async Task<OperationResult<InvoiceDetailResponse>> RecordPayment(int id, [FromBody] RecordPaymentRequest request, CancellationToken ct)
     {
-        return await _invoiceManager.RecordPaymentAsync(id, dto, ParseCurrentEmployeeId());
+        return await _invoiceManager.RecordPaymentAsync(id, request, ParseCurrentEmployeeId(), ct);
     }
 
     [HttpPut("{id:int}/status")]
     [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
-    public async Task<OperationResult<InvoiceDetailDto>> UpdateStatus(int id, [FromBody] UpdateInvoiceStatusDto dto)
+    public async Task<OperationResult<InvoiceDetailResponse>> UpdateStatus(int id, [FromBody] UpdateInvoiceStatusRequest request, CancellationToken ct)
     {
-        return await _invoiceManager.UpdateStatusAsync(id, dto.Status);
+        return await _invoiceManager.UpdateStatusAsync(id, request.Status, ct);
     }
 
     private int? ParseCurrentEmployeeId()
