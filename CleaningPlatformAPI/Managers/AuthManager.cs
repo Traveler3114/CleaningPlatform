@@ -10,6 +10,8 @@ namespace CleaningPlatformAPI.Managers;
 
 public class AuthManager
 {
+    private const int MaxUsernameGenerationAttempts = 20;
+
     private readonly TokenManager _tokenManager;
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
@@ -42,7 +44,7 @@ public class AuthManager
         var usernameBase = (firstName[..1] + lastName).ToLowerInvariant();
         var counter = 1;
 
-        while (counter <= 20)
+        while (counter <= MaxUsernameGenerationAttempts)
         {
             var username = counter == 1 ? usernameBase : usernameBase + counter;
             var now = DateTime.UtcNow;
