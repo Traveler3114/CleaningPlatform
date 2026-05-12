@@ -115,13 +115,10 @@ public class RoleManager
         if (role.IsProtected)
             return OperationResult<string>.Fail("This role is protected and cannot be deleted.");
 
-        var assignedUsers = await _db.Employees
-            .Include(e => e.Role)
-            .Where(e => e.Role != null && e.Role.Name == role.Name)
-            .ToListAsync(ct);
+        var assignedCount = await _db.Employees.CountAsync(e => e.RoleId == id, ct);
 
-        if (assignedUsers.Count > 0)
-            return OperationResult<string>.Fail($"{assignedUsers.Count} user(s) are assigned to this role. Reassign them before deleting.");
+        if (assignedCount > 0)
+            return OperationResult<string>.Fail($"{assignedCount} user(s) are assigned to this role. Reassign them before deleting.");
 
         _db.RolePermissions.RemoveRange(role.Permissions);
         _db.Roles.Remove(role);

@@ -34,81 +34,81 @@ public class BookingDetailModel : PageModel
     [TempData]
     public string? ErrorMessage { get; set; }
 
-    public async Task<IActionResult> OnGetAsync()
+    public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
-        Booking = await _bookingManager.GetBookingDetailByIdAsync(Id);
-        ActiveEmployees = await _employeeManager.GetActiveEmployeesAsync();
-        ServiceCatalog = await _serviceCatalogManager.GetAllAsync();
+        Booking = await _bookingManager.GetBookingDetailByIdAsync(Id, ct);
+        ActiveEmployees = await _employeeManager.GetActiveEmployeesAsync(ct);
+        ServiceCatalog = await _serviceCatalogManager.GetAllAsync(ct);
 
         return Booking == null ? NotFound() : Page();
     }
 
-    public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status)
+    public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
             return Forbid();
 
-        var result = await _bookingManager.UpdateStatusAsync(id, status);
+        var result = await _bookingManager.UpdateStatusAsync(id, status, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnPostAddAssignmentAsync(int id, int employeeId)
+    public async Task<IActionResult> OnPostAddAssignmentAsync(int id, int employeeId, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsBookingAssign))
             return Forbid();
 
-        var result = await _bookingManager.AddAssignmentAsync(id, employeeId);
+        var result = await _bookingManager.AddAssignmentAsync(id, employeeId, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnPostRemoveAssignmentAsync(int id, int assignmentId)
+    public async Task<IActionResult> OnPostRemoveAssignmentAsync(int id, int assignmentId, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsBookingAssign))
             return Forbid();
 
-        var result = await _bookingManager.RemoveAssignmentAsync(id, assignmentId);
+        var result = await _bookingManager.RemoveAssignmentAsync(id, assignmentId, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnPostAddServiceAsync(int id, int serviceCatalogId, decimal quantity, decimal? estimatedPrice, string? notes)
+    public async Task<IActionResult> OnPostAddServiceAsync(int id, int serviceCatalogId, decimal quantity, decimal? estimatedPrice, string? notes, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
             return Forbid();
 
-        var result = await _bookingManager.AddServiceAsync(id, serviceCatalogId, estimatedPrice, quantity, null, notes);
+        var result = await _bookingManager.AddServiceAsync(id, serviceCatalogId, estimatedPrice, quantity, null, notes, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnPostRemoveServiceAsync(int id, int serviceId)
+    public async Task<IActionResult> OnPostRemoveServiceAsync(int id, int serviceId, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
             return Forbid();
 
-        var result = await _bookingManager.RemoveServiceAsync(id, serviceId);
+        var result = await _bookingManager.RemoveServiceAsync(id, serviceId, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnPostUpdateServicePriceAsync(int id, int serviceId, decimal? finalPrice)
+    public async Task<IActionResult> OnPostUpdateServicePriceAsync(int id, int serviceId, decimal? finalPrice, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
             return Forbid();
 
-        var result = await _bookingManager.UpdateServicePriceAsync(id, serviceId, finalPrice);
+        var result = await _bookingManager.UpdateServicePriceAsync(id, serviceId, finalPrice, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
     }
 
-    public async Task<IActionResult> OnPostGenerateInvoiceAsync(int id)
+    public async Task<IActionResult> OnPostGenerateInvoiceAsync(int id, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
             return Forbid();
 
-        var result = await _invoiceManager.CreateFromBookingAsync(id, User.GetEmployeeId());
+        var result = await _invoiceManager.CreateFromBookingAsync(id, User.GetEmployeeId(), ct);
         if (!result.Success || result.Data == null)
         {
             ErrorMessage = result.Message;

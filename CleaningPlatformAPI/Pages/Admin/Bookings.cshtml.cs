@@ -28,17 +28,17 @@ public class BookingsModel : PageModel
     [TempData]
     public string? ErrorMessage { get; set; }
 
-    public async Task OnGetAsync()
+    public async Task OnGetAsync(CancellationToken ct)
     {
-        await LoadAsync();
+        await LoadAsync(ct);
     }
 
-    public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status)
+    public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
             return Forbid();
 
-        var result = await _bookingManager.UpdateStatusAsync(id, status);
+        var result = await _bookingManager.UpdateStatusAsync(id, status, ct);
         if (!result.Success)
             ErrorMessage = result.Message;
 
@@ -47,16 +47,16 @@ public class BookingsModel : PageModel
             : RedirectToPage();
     }
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(CancellationToken ct)
     {
         if (DateFilter.HasValue)
         {
             ShowAll = false;
-            Bookings = await _bookingManager.GetBookingsAsync(DateFilter.Value);
+            Bookings = await _bookingManager.GetBookingsAsync(DateFilter.Value, ct);
             return;
         }
 
         ShowAll = true;
-        Bookings = await _bookingManager.GetAllBookingsAsync();
+        Bookings = await _bookingManager.GetAllBookingsAsync(ct);
     }
 }
