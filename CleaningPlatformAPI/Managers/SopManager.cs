@@ -118,10 +118,12 @@ public class SopManager
             .GroupBy(r => r.ChecklistItem.SopTemplateId)
             .ToDictionary(g => g.Key, g => g.Count());
         var firstAssignmentId = bookingAssignmentIds.FirstOrDefault();
-        var responsesByItem = responses
-            .Where(r => firstAssignmentId == 0 || r.BookingAssignmentId == firstAssignmentId)
-            .GroupBy(r => r.ChecklistItemId)
-            .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CompletedAt).First());
+        var responsesByItem = firstAssignmentId == 0
+            ? new Dictionary<int, ChecklistResponse>()
+            : responses
+                .Where(r => r.BookingAssignmentId == firstAssignmentId)
+                .GroupBy(r => r.ChecklistItemId)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CompletedAt).First());
 
         return assignments.Select(a =>
         {

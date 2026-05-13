@@ -125,10 +125,10 @@
             document.getElementById('edit-sop-active').checked = row.dataset.active === 'true';
 
             const stSelect = document.getElementById('edit-sop-service-type');
-            [...stSelect.options].forEach(o => o.selected = o.value === row.dataset.serviceType);
+            stSelect.value = row.dataset.serviceType || 'Generic';
 
             const catSelect = document.getElementById('edit-sop-catalog');
-            [...catSelect.options].forEach(o => o.selected = o.value === (row.dataset.serviceCatalogId || ''));
+            catSelect.value = row.dataset.serviceCatalogId || '';
 
             modal.style.display = 'flex';
         });

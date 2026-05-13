@@ -226,14 +226,21 @@
                             <li style="display:flex; align-items:flex-start; gap:0.5rem; padding:0.35rem 0; border-bottom:1px solid #f0f0f0;">
                                 @if (User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus) && Model.Booking.AssignedEmployees.Any())
                                 {
-                                    var firstAssignment = Model.Booking.AssignedEmployees.First();
-                                    <form method="post" asp-page-handler="CompleteChecklistItem" style="display:contents;">
-                                        <input type="hidden" name="id" value="@Model.Booking.Id" />
-                                        <input type="hidden" name="assignmentId" value="@firstAssignment.AssignmentId" />
-                                        <input type="hidden" name="itemId" value="@item.ChecklistItemId" />
-                                        <input type="hidden" name="isCompleted" value="@(!item.IsCompleted)" />
-                                        <input type="checkbox" checked="@item.IsCompleted" onchange="this.form.submit()" style="margin-top:2px; cursor:pointer;" />
-                                    </form>
+                                    var firstAssignment = Model.Booking.AssignedEmployees.FirstOrDefault();
+                                    if (firstAssignment != null)
+                                    {
+                                        <form method="post" asp-page-handler="CompleteChecklistItem" style="display:contents;">
+                                            <input type="hidden" name="id" value="@Model.Booking.Id" />
+                                            <input type="hidden" name="assignmentId" value="@firstAssignment.AssignmentId" />
+                                            <input type="hidden" name="itemId" value="@item.ChecklistItemId" />
+                                            <input type="hidden" name="isCompleted" value="@(!item.IsCompleted)" />
+                                            <input type="checkbox" checked="@item.IsCompleted" onchange="this.form.submit()" style="margin-top:2px; cursor:pointer;" />
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <input type="checkbox" checked="@item.IsCompleted" disabled style="margin-top:2px;" />
+                                    }
                                 }
                                 else
                                 {
