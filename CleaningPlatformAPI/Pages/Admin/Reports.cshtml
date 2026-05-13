@@ -1,0 +1,28 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.ReportsModel
+@{
+    ViewData["Title"] = "Reports";
+    ViewData["ActivePage"] = "reports";
+    var latestRevenue = Model.Revenue.FirstOrDefault();
+    var latestCompletion = Model.CompletionRates.FirstOrDefault();
+}
+
+<div class="page-header">
+    <h1>Finance & Reports</h1>
+    @if (User.HasPermission(PermissionKeys.ActionsReportsExport))
+    {
+        <form method="post" asp-page-handler="Export"><button class="btn btn-sm" type="submit">Export invoices to Excel</button></form>
+    }
+</div>
+
+<div class="dashboard-grid">
+    <div class="stat-card"><span>Revenue MTD</span><strong>@(latestRevenue?.TotalRevenue.ToString("C") ?? "—")</strong></div>
+    <div class="stat-card"><span>Overdue</span><strong>@Model.Overdue.TotalOverdueAmount.ToString("C")</strong><small>@Model.Overdue.OverdueInvoiceCount invoices</small></div>
+    <div class="stat-card"><span>Completion rate</span><strong>@(latestCompletion?.CompletionRatePct?.ToString("0.0") ?? "0")%</strong></div>
+    <div class="stat-card"><span>Top client</span><strong>@(Model.TopClients.FirstOrDefault()?.ClientName ?? "—")</strong></div>
+</div>
+
+<section class="detail-section"><h2 class="section-title">Monthly Revenue</h2><table class="admin-table"><thead><tr><th>Month</th><th>Invoices</th><th>Revenue</th><th>VAT</th><th>Discount</th></tr></thead><tbody>@foreach (var row in Model.Revenue) { <tr><td>@row.Year-@row.Month.ToString("00")</td><td>@row.InvoiceCount</td><td>@row.TotalRevenue.ToString("C")</td><td>@row.TotalVat.ToString("C")</td><td>@row.TotalDiscount.ToString("C")</td></tr> }</tbody></table></section>
+<section class="detail-section"><h2 class="section-title">Top Clients</h2><table class="admin-table"><thead><tr><th>Client</th><th>Invoices</th><th>Billed</th><th>Paid</th></tr></thead><tbody>@foreach (var row in Model.TopClients) { <tr><td>@row.ClientName</td><td>@row.InvoiceCount</td><td>@row.TotalBilled.ToString("C")</td><td>@row.TotalPaid.ToString("C")</td></tr> }</tbody></table></section>
+<section class="detail-section"><h2 class="section-title">Employee Utilization</h2><table class="admin-table"><thead><tr><th>Employee</th><th>Assigned</th><th>Completed</th><th>Rate</th><th>Days Active</th></tr></thead><tbody>@foreach (var row in Model.Utilization) { <tr><td>@row.EmployeeName</td><td>@row.JobsAssigned</td><td>@row.JobsCompleted</td><td>@row.CompletionRatePct%</td><td>@row.DaysActive</td></tr> }</tbody></table></section>
+<section class="detail-section"><h2 class="section-title">Job Completion Rate</h2><table class="admin-table"><thead><tr><th>Month</th><th>Total</th><th>Completed</th><th>Rate</th></tr></thead><tbody>@foreach (var row in Model.CompletionRates) { <tr><td>@row.Year-@row.Month.ToString("00")</td><td>@row.TotalJobs</td><td>@row.CompletedJobs</td><td>@row.CompletionRatePct%</td></tr> }</tbody></table></section>

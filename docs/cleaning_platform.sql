@@ -1175,12 +1175,12 @@ SELECT
     i.Status,
     ISNULL(paid.AmountPaid, 0)                  AS AmountPaid,
     i.TotalAmount - ISNULL(paid.AmountPaid, 0)  AS AmountOutstanding,
-    CASE
+    CAST(CASE
         WHEN i.Status = 'Paid'        THEN 0
         WHEN i.DueDate < CAST(GETUTCDATE() AS DATE)
              AND i.Status NOT IN ('Paid','WrittenOff') THEN 1
         ELSE 0
-    END                                         AS IsOverdue,
+    END AS BIT)                                 AS IsOverdue,
     CASE
         WHEN i.DueDate < CAST(GETUTCDATE() AS DATE)
         THEN DATEDIFF(DAY, i.DueDate, CAST(GETUTCDATE() AS DATE))

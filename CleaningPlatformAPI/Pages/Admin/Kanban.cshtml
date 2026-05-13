@@ -1,0 +1,101 @@
+@page
+@model CleaningPlatformAPI.Pages.Admin.KanbanModel
+@{
+    ViewData["Title"] = "Kanban";
+    ViewData["ActivePage"] = "kanban";
+    var sidebarColumn = Model.IsEmployeeView ? string.Empty : "260px";
+}
+
+<div class="page-header">
+    <h1>Kanban Board</h1>
+    @if (!Model.IsEmployeeView)
+    {
+        <form method="get" class="date-form" style="display:flex; gap:.5rem; align-items:center;">
+            <input asp-for="SelectedDate" type="date" class="date-input" />
+            <label><input asp-for="AllOpen" type="checkbox" /> All open pipeline</label>
+            <button class="btn btn-sm" type="submit">Load</button>
+        </form>
+    }
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert" style="background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;">@Model.ErrorMessage</div>
+}
+
+<div style="display:grid; grid-template-columns: minmax(0,1fr) @sidebarColumn; gap:1rem; align-items:start;">
+    <div class="kanban-board" style="display:grid; grid-template-columns:repeat(5,minmax(180px,1fr)); gap:.75rem; overflow:auto;">
+        @foreach (var column in Model.Board.Columns)
+        {
+            <section class="card-lite" ondragover="event.preventDefault()" ondrop="dropStatus(event, '@column.Status')">
+                <h2 class="section-title">@column.Status (@column.Cards.Count)</h2>
+                @foreach (var card in column.Cards)
+                {
+                    <article class="card-lite" style="margin-bottom:.75rem;" draggable="@((!Model.IsEmployeeView).ToString().ToLowerInvariant())" ondragstart="event.dataTransfer.setData('bookingId', '@card.BookingId')">
+                        <strong><a asp-page="/Admin/BookingDetail" asp-route-id="@card.BookingId" class="link">#@card.BookingId @card.ClientName</a></strong>
+                        <div>@card.Hour:00 · @card.ServiceType · @card.ServicesCount services</div>
+                        <div>@card.SiteName @card.SiteAddress</div>
+                        <div>Employees: @(card.AssignedEmployees.Count == 0 ? "Unassigned" : string.Join(", ", card.AssignedEmployees.Select(e => e.FullName)))</div>
+                        <div><span class="badge">SOP @(card.HasSop ? $"{card.SopCompletionPct}%" : "none")</span></div>
+                        @if (!Model.IsEmployeeView)
+                        {
+                            <form method="post" asp-page-handler="AddAssignment" class="inline-form">
+                                <input type="hidden" name="id" value="@card.BookingId" />
+                                <input type="hidden" asp-for="SelectedDate" />
+                                <input type="hidden" asp-for="AllOpen" />
+                                <select name="employeeId" class="status-select">
+                                    @foreach (var employee in Model.Board.Employees)
+                                    {
+                                        <option value="@employee.EmployeeId">@employee.FullName (@employee.JobsToday)</option>
+                                    }
+                                </select>
+                                <button class="btn btn-sm" type="submit">Assign</button>
+                            </form>
+                        }
+                        else if (column.Status is "Confirmed" or "InProgress")
+                        {
+                            var nextStatus = column.Status == "Confirmed" ? "InProgress" : "Completed";
+                            <form method="post" asp-page-handler="UpdateStatus" class="inline-form">
+                                <input type="hidden" name="id" value="@card.BookingId" />
+                                <input type="hidden" name="status" value="@nextStatus" />
+                                <button class="btn btn-sm" type="submit">@(nextStatus == "InProgress" ? "Start" : "Complete")</button>
+                            </form>
+                        }
+                    </article>
+                }
+            </section>
+        }
+    </div>
+    @if (!Model.IsEmployeeView)
+    {
+        <aside class="card-lite">
+            <h2 class="section-title">Employees</h2>
+            @foreach (var employee in Model.Board.Employees)
+            {
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:.4rem 0;">
+                    <span>@employee.FullName</span>
+                    <span class="badge">@employee.JobsToday @(employee.IsFree ? "free" : "busy")</span>
+                </div>
+            }
+        </aside>
+    }
+</div>
+
+<form method="post" asp-page-handler="UpdateStatus" id="drag-status-form" style="display:none;">
+    <input type="hidden" name="id" id="drag-booking-id" />
+    <input type="hidden" name="status" id="drag-status" />
+    <input type="hidden" asp-for="SelectedDate" />
+    <input type="hidden" asp-for="AllOpen" />
+</form>
+
+@section Scripts {
+<script>
+function dropStatus(event, status) {
+    const bookingId = event.dataTransfer.getData('bookingId');
+    if (!bookingId) return;
+    document.getElementById('drag-booking-id').value = bookingId;
+    document.getElementById('drag-status').value = status;
+    document.getElementById('drag-status-form').submit();
+}
+</script>
+}

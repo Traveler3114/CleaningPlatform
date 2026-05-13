@@ -15,13 +15,15 @@ public class BookingDetailModel : PageModel
     private readonly EmployeeManager _employeeManager;
     private readonly ServiceCatalogManager _serviceCatalogManager;
     private readonly InvoiceManager _invoiceManager;
+    private readonly SopManager _sopManager;
 
-    public BookingDetailModel(BookingManager bookingManager, EmployeeManager employeeManager, ServiceCatalogManager serviceCatalogManager, InvoiceManager invoiceManager)
+    public BookingDetailModel(BookingManager bookingManager, EmployeeManager employeeManager, ServiceCatalogManager serviceCatalogManager, InvoiceManager invoiceManager, SopManager sopManager)
     {
         _bookingManager = bookingManager;
         _employeeManager = employeeManager;
         _serviceCatalogManager = serviceCatalogManager;
         _invoiceManager = invoiceManager;
+        _sopManager = sopManager;
     }
 
     [BindProperty(SupportsGet = true)]
@@ -30,6 +32,8 @@ public class BookingDetailModel : PageModel
     public BookingResponse? Booking { get; set; }
     public List<EmployeeSimpleResponse> ActiveEmployees { get; set; } = [];
     public List<ServiceCatalogResponse> ServiceCatalog { get; set; } = [];
+    public List<SopTemplateResponse> SopTemplates { get; set; } = [];
+    public List<BookingSopAssignmentResponse> BookingSops { get; set; } = [];
 
     [TempData]
     public string? ErrorMessage { get; set; }
@@ -39,6 +43,8 @@ public class BookingDetailModel : PageModel
         Booking = await _bookingManager.GetBookingDetailByIdAsync(Id, ct);
         ActiveEmployees = await _employeeManager.GetActiveEmployeesAsync(ct);
         ServiceCatalog = await _serviceCatalogManager.GetAllAsync(ct);
+        SopTemplates = await _sopManager.GetAllTemplatesAsync(ct);
+        BookingSops = await _sopManager.GetBookingSopsAsync(Id, ct);
 
         return Booking == null ? NotFound() : Page();
     }
@@ -99,6 +105,23 @@ public class BookingDetailModel : PageModel
             return Forbid();
 
         var result = await _bookingManager.UpdateServicePriceAsync(id, serviceId, finalPrice, ct);
+        if (!result.Success) ErrorMessage = result.Message;
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostAssignSopAsync(int id, int sopTemplateId, CancellationToken ct)
+    {
+        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
+            return Forbid();
+
+        var result = await _sopManager.AssignSopToBookingAsync(id, new AssignSopRequest { SopTemplateId = sopTemplateId }, ct);
+        if (!result.Success) ErrorMessage = result.Message;
+        return RedirectToPage(new { id });
+    }
+
+    public async Task<IActionResult> OnPostCompleteChecklistItemAsync(int id, int assignmentId, int itemId, bool isCompleted, string? notes, CancellationToken ct)
+    {
+        var result = await _sopManager.CompleteChecklistItemAsync(assignmentId, itemId, new CompleteChecklistItemRequest { IsCompleted = isCompleted, Notes = notes }, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
     }

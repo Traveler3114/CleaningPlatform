@@ -33,5 +33,6 @@ namespace CleaningPlatformAPI.Entities
 
         // Navigation
         public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
+        public ICollection<SopTemplate> SopTemplates { get; set; } = new List<SopTemplate>();
     }
 }

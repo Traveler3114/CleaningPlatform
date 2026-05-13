@@ -15,12 +15,14 @@ public class IndexModel : PageModel
     private readonly BookingManager _bookingManager;
     private readonly AvailabilityManager _availabilityManager;
     private readonly DateOverrideManager _dateOverrideManager;
+    private readonly ReportingManager _reportingManager;
 
-    public IndexModel(BookingManager bookingManager, AvailabilityManager availabilityManager, DateOverrideManager dateOverrideManager)
+    public IndexModel(BookingManager bookingManager, AvailabilityManager availabilityManager, DateOverrideManager dateOverrideManager, ReportingManager reportingManager)
     {
         _bookingManager = bookingManager;
         _availabilityManager = availabilityManager;
         _dateOverrideManager = dateOverrideManager;
+        _reportingManager = reportingManager;
     }
 
     public List<BookingResponse> TodaysBookings { get; set; } = [];
@@ -29,6 +31,7 @@ public class IndexModel : PageModel
     public int KpiPending { get; set; }
     public int KpiConfirmed { get; set; }
     public int KpiCompletedThisMonth { get; set; }
+    public DashboardSummaryResponse DashboardSummary { get; set; } = new(null, null, null, new OverdueInvoiceSummaryResponse(0, 0, 0, 0));
 
     [BindProperty(SupportsGet = true)]
     public DateTime SelectedDate { get; set; } = DateTime.UtcNow.Date;
@@ -89,6 +92,7 @@ public class IndexModel : PageModel
     {
         TodaysBookings = await _bookingManager.GetBookingsAsync(SelectedDate, ct);
         Slots = await _availabilityManager.GetSlotsAsync(SelectedDate, ct);
+        DashboardSummary = await _reportingManager.GetDashboardSummaryAsync(ct);
 
         var overrides = await _dateOverrideManager.GetOverridesAsync(ct);
         TodayOverride = overrides.FirstOrDefault(o => o.Date.Date == SelectedDate.Date);

@@ -69,3 +69,14 @@ public record AssignEmployeeRequest
 {
     public int EmployeeId { get; set; }
 }
+
+public record CreateAdminBookingRequest
+{
+    public int ClientId { get; set; }
+    public int? SiteId { get; set; }
+    public BookingServiceType ServiceType { get; set; }
+    public DateTime Date { get; set; }
+    public int Hour { get; set; }
+    public string? Notes { get; set; }
+    public List<AddServiceRequest> Services { get; set; } = [];
+}
