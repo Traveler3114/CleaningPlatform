@@ -34,7 +34,15 @@ public class AvailabilityManager
             .ToListAsync(ct);
 
         var slots = new List<AvailabilityResponse>();
-        var croatiaZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+        TimeZoneInfo croatiaZone;
+        try
+        {
+            croatiaZone = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            croatiaZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Zagreb");
+        }
         var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, croatiaZone);
         var isToday = date.Date == now.Date;
 
