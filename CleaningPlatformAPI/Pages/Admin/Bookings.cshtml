@@ -8,6 +8,10 @@
 <div class="page-header">
     <h1>Bookings</h1>
     <div class="date-form">
+        @if (User.HasPermission(PermissionKeys.ActionsBookingCreate))
+        {
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('new-booking-panel').style.display = document.getElementById('new-booking-panel').style.display === 'none' ? 'block' : 'none';">New Booking</button>
+        }
         <form method="get" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
             <label for="DateFilter">Select Date:</label>
             <input type="date" id="DateFilter" name="DateFilter"
@@ -18,6 +22,69 @@
         </form>
     </div>
 </div>
+
+
+@if (User.HasPermission(PermissionKeys.ActionsBookingCreate))
+{
+    <section id="new-booking-panel" class="card-lite" style="display:none; margin-bottom:1rem;">
+        <h2 class="section-title">Create Admin Booking</h2>
+        <form method="post" asp-page-handler="CreateAdmin" class="form-grid two-col">
+            <label>
+                Client
+                <select asp-for="NewBooking.ClientId" class="text-input" required>
+                    <option value="">Select client</option>
+                    @foreach (var client in Model.Clients)
+                    {
+                        <option value="@client.Id">@client.ClientName</option>
+                    }
+                </select>
+            </label>
+            <label>
+                Site
+                <select asp-for="NewBooking.SiteId" class="text-input">
+                    <option value="">No site</option>
+                    @foreach (var site in Model.Sites)
+                    {
+                        <option value="@site.Id">@site.SiteName (@site.Client.ClientName)</option>
+                    }
+                </select>
+            </label>
+            <label>
+                Service type
+                <select asp-for="NewBooking.ServiceType" class="text-input">
+                    <option value="Vehicle">Vehicle</option>
+                    <option value="SiteBased">Site Based</option>
+                    <option value="Boat">Boat</option>
+                </select>
+            </label>
+            <label>
+                Date
+                <input asp-for="NewBooking.Date" type="date" class="text-input" required />
+            </label>
+            <label>
+                Hour
+                <input asp-for="NewBooking.Hour" type="number" min="0" max="23" class="text-input" required />
+            </label>
+            <label>
+                Initial service
+                <select asp-for="NewServiceCatalogId" class="text-input">
+                    <option value="">No initial service</option>
+                    @foreach (var service in Model.Services)
+                    {
+                        <option value="@service.Id">@service.Name</option>
+                    }
+                </select>
+            </label>
+            <label class="full-span">
+                Notes
+                <textarea asp-for="NewBooking.Notes" class="text-input"></textarea>
+            </label>
+            <div class="full-span">
+                <button type="submit" class="btn btn-sm">Create Booking</button>
+            </div>
+        </form>
+    </section>
+}
 
 @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
 {

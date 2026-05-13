@@ -26,6 +26,16 @@ namespace CleaningPlatformAPI.Data
         public DbSet<WeeklySchedule> WeeklySchedules { get; set; }
         public DbSet<DateOverride> DateOverrides { get; set; }
         public DbSet<BookingView> BookingViews { get; set; }
+        public DbSet<SopTemplate> SopTemplates { get; set; }
+        public DbSet<ChecklistItem> ChecklistItems { get; set; }
+        public DbSet<BookingSopAssignment> BookingSopAssignments { get; set; }
+        public DbSet<ChecklistResponse> ChecklistResponses { get; set; }
+        public DbSet<InvoiceSummaryView> InvoiceSummaryViews { get; set; }
+        public DbSet<MonthlyRevenueView> MonthlyRevenueViews { get; set; }
+        public DbSet<TopClientView> TopClientViews { get; set; }
+        public DbSet<EmployeeUtilizationView> EmployeeUtilizationViews { get; set; }
+        public DbSet<JobCompletionRateView> JobCompletionRateViews { get; set; }
+        public DbSet<OverdueInvoiceSummaryView> OverdueInvoiceSummaryViews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -100,6 +110,31 @@ namespace CleaningPlatformAPI.Data
             modelBuilder.Entity<BookingView>()
                 .HasNoKey()
                 .ToView("vw_Bookings");
+
+            modelBuilder.Entity<InvoiceSummaryView>()
+                .HasNoKey()
+                .ToView("vw_InvoiceSummary");
+
+            modelBuilder.Entity<MonthlyRevenueView>()
+                .HasNoKey()
+                .ToView("vw_MonthlyRevenue");
+
+            modelBuilder.Entity<TopClientView>()
+                .HasNoKey()
+                .ToView("vw_TopClients");
+
+            modelBuilder.Entity<EmployeeUtilizationView>()
+                .HasNoKey()
+                .ToView("vw_EmployeeUtilization");
+
+            modelBuilder.Entity<JobCompletionRateView>()
+                .HasNoKey()
+                .ToView("vw_JobCompletionRate");
+
+            modelBuilder.Entity<OverdueInvoiceSummaryView>()
+                .HasNoKey()
+                .ToView("vw_OverdueInvoiceSummary");
+
 
             // ============================
             // Relationships
@@ -237,6 +272,55 @@ namespace CleaningPlatformAPI.Data
             modelBuilder.Entity<InvoiceBooking>()
                 .HasIndex(ib => ib.BookingId)
                 .IsUnique();
+
+            // SOP template → checklist items
+            modelBuilder.Entity<ChecklistItem>()
+                .HasOne(ci => ci.SopTemplate)
+                .WithMany(st => st.ChecklistItems)
+                .HasForeignKey(ci => ci.SopTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Service catalog → SOP templates
+            modelBuilder.Entity<SopTemplate>()
+                .HasOne(st => st.ServiceCatalog)
+                .WithMany(sc => sc.SopTemplates)
+                .HasForeignKey(st => st.ServiceCatalogId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Booking → SOP assignments
+            modelBuilder.Entity<BookingSopAssignment>()
+                .HasOne(bsa => bsa.Booking)
+                .WithMany(b => b.SopAssignments)
+                .HasForeignKey(bsa => bsa.BookingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<BookingSopAssignment>()
+                .HasOne(bsa => bsa.SopTemplate)
+                .WithMany(st => st.BookingSopAssignments)
+                .HasForeignKey(bsa => bsa.SopTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<BookingSopAssignment>()
+                .HasIndex(bsa => new { bsa.BookingId, bsa.SopTemplateId })
+                .IsUnique();
+
+            // Booking assignment/checklist item → checklist responses
+            modelBuilder.Entity<ChecklistResponse>()
+                .HasOne(cr => cr.BookingAssignment)
+                .WithMany(ba => ba.ChecklistResponses)
+                .HasForeignKey(cr => cr.BookingAssignmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ChecklistResponse>()
+                .HasOne(cr => cr.ChecklistItem)
+                .WithMany(ci => ci.ChecklistResponses)
+                .HasForeignKey(cr => cr.ChecklistItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ChecklistResponse>()
+                .HasIndex(cr => new { cr.BookingAssignmentId, cr.ChecklistItemId })
+                .IsUnique();
+
 
             // Global DateTime precision (optional)
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())

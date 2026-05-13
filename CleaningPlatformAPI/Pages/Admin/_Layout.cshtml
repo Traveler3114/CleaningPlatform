@@ -43,6 +43,21 @@
                         <a asp-page="/Admin/Schedule"
                            class="nav-link @(activePage == "schedule" ? "active" : "")">Schedule</a>
                     }
+                    @if (CanView(PermissionKeys.PagesKanban))
+                    {
+                        <a asp-page="/Admin/Kanban"
+                           class="nav-link @(activePage == "kanban" ? "active" : "")">Kanban</a>
+                    }
+                    @if (CanView(PermissionKeys.PagesSop))
+                    {
+                        <a asp-page="/Admin/Sops"
+                           class="nav-link @(activePage == "sops" ? "active" : "")">SOPs</a>
+                    }
+                    @if (CanView(PermissionKeys.PagesReports))
+                    {
+                        <a asp-page="/Admin/Reports"
+                           class="nav-link @(activePage == "reports" ? "active" : "")">Reports</a>
+                    }
                     @if (IsOwner() || User.HasPermission(PermissionKeys.ActionsServiceCatalogEdit) || User.HasPermission(PermissionKeys.ActionsServiceCatalogManage))
                     {
                         <a asp-page="/Admin/Services"

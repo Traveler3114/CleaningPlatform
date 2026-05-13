@@ -12,11 +12,13 @@ public class BookingManager
 {
     private readonly AppDbContext _db;
     private readonly AvailabilityManager _availability;
+    private readonly SopManager? _sopManager;
 
-    public BookingManager(AppDbContext db, AvailabilityManager availability)
+    public BookingManager(AppDbContext db, AvailabilityManager availability, SopManager? sopManager = null)
     {
         _db = db;
         _availability = availability;
+        _sopManager = sopManager;
     }
 
     public async Task<List<BookingResponse>> GetBookingsAsync(DateTime date, CancellationToken ct = default)
@@ -137,6 +139,66 @@ public class BookingManager
             await transaction.RollbackAsync(ct);
             throw;
         }
+    }
+
+    public async Task<OperationResult<BookingResponse>> CreateAdminBookingAsync(CreateAdminBookingRequest dto, CancellationToken ct = default)
+    {
+        var client = await _db.Clients.AnyAsync(c => c.Id == dto.ClientId && c.IsActive, ct);
+        if (!client)
+            return OperationResult<BookingResponse>.Fail("Client not found or inactive.");
+
+        if (dto.SiteId.HasValue)
+        {
+            var siteBelongsToClient = await _db.Sites.AnyAsync(s => s.Id == dto.SiteId.Value && s.ClientId == dto.ClientId && s.IsActive, ct);
+            if (!siteBelongsToClient)
+                return OperationResult<BookingResponse>.Fail("Selected site does not belong to the client.");
+        }
+
+        var slots = await _availability.GetSlotsAsync(dto.Date, ct);
+        var slot = slots.FirstOrDefault(s => s.Hour == dto.Hour);
+        if (slot == null || slot.IsClosed)
+            return OperationResult<BookingResponse>.Fail("Slot is closed or unavailable.");
+        if (slot.Available <= 0)
+            return OperationResult<BookingResponse>.Fail("No capacity available for this slot.");
+
+        var now = DateTime.UtcNow;
+        var booking = new Booking
+        {
+            ClientId = dto.ClientId,
+            SiteId = dto.SiteId,
+            ServiceType = dto.ServiceType,
+            ScheduledDate = dto.Date.Date,
+            ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
+            Status = BookingStatus.Pending,
+            Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        foreach (var service in dto.Services.Where(s => s.ServiceCatalogId > 0))
+        {
+            booking.BookingServices.Add(new BookingService
+            {
+                ServiceCatalogId = service.ServiceCatalogId,
+                EstimatedPrice = service.EstimatedPrice,
+                FinalPrice = service.FinalPrice,
+                Quantity = service.Quantity <= 0 ? 1 : service.Quantity,
+                Notes = string.IsNullOrWhiteSpace(service.Notes) ? null : service.Notes.Trim()
+            });
+        }
+
+        _db.Bookings.Add(booking);
+        await _db.SaveChangesAsync(ct);
+
+        if (_sopManager is not null)
+        {
+            var templates = await _sopManager.GetDefaultTemplatesForServiceTypeAsync(dto.ServiceType.ToString(), ct);
+            foreach (var template in templates)
+                await _sopManager.AssignSopToBookingAsync(booking.Id, new AssignSopRequest { SopTemplateId = template.Id }, ct);
+        }
+
+        var detail = await GetBookingDetailByIdAsync(booking.Id, ct);
+        return detail is null ? OperationResult<BookingResponse>.Fail("Booking not found.") : OperationResult<BookingResponse>.Ok(detail);
     }
 
     public async Task<OperationResult<BookingResponse>> UpdateStatusAsync(int id, string status, CancellationToken ct = default)

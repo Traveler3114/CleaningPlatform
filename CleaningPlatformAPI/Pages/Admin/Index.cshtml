@@ -19,9 +19,12 @@
 }
 
 <section class="kpi-grid">
-    <div class="kpi-card"><span>Pending</span><strong>@Model.KpiPending</strong></div>
-    <div class="kpi-card"><span>Confirmed</span><strong>@Model.KpiConfirmed</strong></div>
-    <div class="kpi-card"><span>Completed this month</span><strong>@Model.KpiCompletedThisMonth</strong></div>
+    <div class="kpi-card"><span>Revenue MTD</span><strong>@(Model.DashboardSummary.MonthlyRevenue?.TotalRevenue.ToString("C") ?? "—")</strong></div>
+    <div class="kpi-card"><span>Overdue invoices</span><strong>@Model.DashboardSummary.OverdueInvoices.TotalOverdueAmount.ToString("C")</strong><small>@Model.DashboardSummary.OverdueInvoices.OverdueInvoiceCount invoices</small></div>
+    <div class="kpi-card"><span>Completion rate</span><strong>@(Model.DashboardSummary.CompletionRate?.CompletionRatePct?.ToString("0.0") ?? "0")%</strong></div>
+    <div class="kpi-card"><span>Top client</span><strong>@(Model.DashboardSummary.TopClient?.ClientName ?? "—")</strong></div>
+    <div class="kpi-card"><span>Pending today</span><strong>@Model.KpiPending</strong></div>
+    <div class="kpi-card"><span>Confirmed today</span><strong>@Model.KpiConfirmed</strong></div>
 </section>
 
 <section class="detail-section">

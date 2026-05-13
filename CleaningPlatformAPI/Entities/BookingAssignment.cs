@@ -18,4 +18,6 @@ public class BookingAssignment
 
     [ForeignKey(nameof(EmployeeId))]
     public Employee Employee { get; set; } = null!;
+
+    public ICollection<ChecklistResponse> ChecklistResponses { get; set; } = new List<ChecklistResponse>();
 }

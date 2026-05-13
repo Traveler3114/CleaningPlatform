@@ -40,5 +40,6 @@ namespace CleaningPlatformAPI.Entities
         public ICollection<BookingAssignment> Assignments { get; set; } = new List<BookingAssignment>();
         public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
         public ICollection<InvoiceBooking> InvoiceBookings { get; set; } = new List<InvoiceBooking>();
+        public ICollection<BookingSopAssignment> SopAssignments { get; set; } = new List<BookingSopAssignment>();
     }
 }

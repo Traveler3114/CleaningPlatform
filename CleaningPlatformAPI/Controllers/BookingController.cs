@@ -43,6 +43,13 @@ public class BookingController : ControllerBase
         return await _bookingManager.CreateBookingAsync(request, ct);
     }
 
+    [HttpPost("admin")]
+    [Authorize(Policy = PermissionKeys.ActionsBookingCreate)]
+    public Task<OperationResult<BookingResponse>> CreateAdmin([FromBody] CreateAdminBookingRequest request, CancellationToken ct)
+    {
+        return _bookingManager.CreateAdminBookingAsync(request, ct);
+    }
+
     [HttpPut("{id:int}/status")]
     [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
     public async Task<OperationResult<BookingResponse>> UpdateStatus(int id, [FromBody] UpdateStatusRequest request, CancellationToken ct)
