@@ -199,18 +199,59 @@
 @* ===== SOPs ===== *@
 <section class="detail-section">
     <h2 class="section-title">SOPs</h2>
-    @if (Model.BookingSops.Any())
+    @if (!Model.BookingSops.Any())
     {
-        <table class="admin-table"><thead><tr><th>SOP</th><th>Instructions</th><th>Completion</th></tr></thead><tbody>
-        @foreach (var sop in Model.BookingSops)
-        {
-            <tr><td>@sop.SopName</td><td>@(sop.CustomInstructions ?? "-")</td><td>@sop.CompletedItems / @sop.TotalItems</td></tr>
-        }
-        </tbody></table>
+        <div class="alert alert-info">No SOPs assigned.</div>
     }
     else
     {
-        <div class="alert alert-info">No SOPs assigned.</div>
+        @foreach (var sop in Model.BookingSops)
+        {
+            <div class="card-lite" style="margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>@sop.SopName</strong>
+                    <span class="badge">@sop.CompletedItems / @sop.TotalItems complete</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(sop.CustomInstructions))
+                {
+                    <p style="margin-top:0.5rem; font-size:0.875rem;">
+                        <em>@sop.CustomInstructions</em>
+                    </p>
+                }
+                @if (sop.ChecklistItems.Any())
+                {
+                    <ul style="margin-top:0.75rem; list-style:none; padding:0;">
+                        @foreach (var item in sop.ChecklistItems)
+                        {
+                            <li style="display:flex; align-items:flex-start; gap:0.5rem; padding:0.35rem 0; border-bottom:1px solid #f0f0f0;">
+                                @if (User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus) && Model.Booking.AssignedEmployees.Any())
+                                {
+                                    var firstAssignment = Model.Booking.AssignedEmployees.First();
+                                    <form method="post" asp-page-handler="CompleteChecklistItem" style="display:contents;">
+                                        <input type="hidden" name="id" value="@Model.Booking.Id" />
+                                        <input type="hidden" name="assignmentId" value="@firstAssignment.AssignmentId" />
+                                        <input type="hidden" name="itemId" value="@item.ChecklistItemId" />
+                                        <input type="hidden" name="isCompleted" value="@(!item.IsCompleted)" />
+                                        <input type="checkbox" checked="@item.IsCompleted" onchange="this.form.submit()" style="margin-top:2px; cursor:pointer;" />
+                                    </form>
+                                }
+                                else
+                                {
+                                    <input type="checkbox" checked="@item.IsCompleted" disabled style="margin-top:2px;" />
+                                }
+                                <span style="@(item.IsCompleted ? "text-decoration:line-through; color:#888;" : "")">
+                                    @item.ItemText
+                                    @if (item.IsRequired)
+                                    {
+                                        <span style="color:#c62828; font-size:0.75rem; margin-left:4px;">*</span>
+                                    }
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
     }
 
     @if (User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))

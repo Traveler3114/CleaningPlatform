@@ -109,8 +109,35 @@ public class SopManager
     {
         var assignments = await _db.BookingSopAssignments.Include(a => a.SopTemplate).ThenInclude(t => t.ChecklistItems).Where(a => a.BookingId == bookingId).ToListAsync(ct);
         var bookingAssignmentIds = await _db.BookingAssignments.Where(a => a.BookingId == bookingId).Select(a => a.Id).ToListAsync(ct);
-        var completed = await _db.ChecklistResponses.Where(r => bookingAssignmentIds.Contains(r.BookingAssignmentId) && r.IsCompleted).GroupBy(r => r.ChecklistItem.SopTemplateId).Select(g => new { SopTemplateId = g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.SopTemplateId, x => x.Count, ct);
-        return assignments.Select(a => SopMapper.ToAssignmentResponse(a, completed.TryGetValue(a.SopTemplateId, out var count) ? count : 0)).ToList();
+        var responses = await _db.ChecklistResponses
+            .Where(r => bookingAssignmentIds.Contains(r.BookingAssignmentId))
+            .Include(r => r.ChecklistItem)
+            .ToListAsync(ct);
+        var completed = responses
+            .Where(r => r.IsCompleted)
+            .GroupBy(r => r.ChecklistItem.SopTemplateId)
+            .ToDictionary(g => g.Key, g => g.Count());
+        var firstAssignmentId = bookingAssignmentIds.FirstOrDefault();
+        var responsesByItem = responses
+            .Where(r => firstAssignmentId == 0 || r.BookingAssignmentId == firstAssignmentId)
+            .GroupBy(r => r.ChecklistItemId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CompletedAt).First());
+
+        return assignments.Select(a =>
+        {
+            var items = a.SopTemplate.ChecklistItems
+                .OrderBy(i => i.SortOrder)
+                .ThenBy(i => i.Id)
+                .Select(i =>
+                {
+                    responsesByItem.TryGetValue(i.Id, out var response);
+                    return SopMapper.ToChecklistResponseResponse(i, response);
+                })
+                .ToList();
+
+            completed.TryGetValue(a.SopTemplateId, out var count);
+            return SopMapper.ToAssignmentResponse(a, count, items);
+        }).ToList();
     }
 
     public async Task<List<ChecklistResponseResponse>> GetChecklistForAssignmentAsync(int bookingAssignmentId, CancellationToken ct = default)
