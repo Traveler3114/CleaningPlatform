@@ -31,7 +31,7 @@
         <form method="post" asp-page-handler="CreateAdmin" class="form-grid two-col">
             <label>
                 Client
-                <select asp-for="NewBooking.ClientId" class="text-input" required>
+                <select asp-for="NewBooking.ClientId" id="client-select" class="text-input" required>
                     <option value="">Select client</option>
                     @foreach (var client in Model.Clients)
                     {
@@ -41,7 +41,7 @@
             </label>
             <label>
                 Site
-                <select asp-for="NewBooking.SiteId" class="text-input">
+                <select asp-for="NewBooking.SiteId" id="site-select" class="text-input">
                     <option value="">No site</option>
                     @foreach (var site in Model.Sites)
                     {
@@ -153,6 +153,47 @@ else
 @section Scripts {
 <script>
 (function () {
+    const clientSelect = document.getElementById('client-select');
+    const siteSelect = document.getElementById('site-select');
+
+    if (clientSelect && siteSelect) {
+        clientSelect.addEventListener('change', async function () {
+            const clientId = this.value;
+
+            siteSelect.disabled = true;
+            siteSelect.innerHTML = '<option value="">No site</option>';
+
+            if (!clientId) {
+                siteSelect.disabled = false;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/clients/${clientId}/sites`, { credentials: 'include' });
+                const result = await response.json();
+                const sites = result?.success ? (result.data || []) : [];
+                const activeSites = sites.filter(s => s.isActive);
+
+                siteSelect.innerHTML = '<option value="">No site</option>';
+
+                if (activeSites.length > 0) {
+                    activeSites.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = `${s.siteName} (${s.siteType ?? 'Other'})`;
+                        siteSelect.appendChild(opt);
+                    });
+                } else {
+                    siteSelect.innerHTML = '<option value="" disabled>No sites for this client</option>';
+                }
+            } catch {
+                siteSelect.innerHTML = '<option value="" disabled>No sites for this client</option>';
+            } finally {
+                siteSelect.disabled = false;
+            }
+        });
+    }
+
     document.querySelectorAll('.booking-row').forEach(row => {
         row.style.cursor = 'pointer';
         row.addEventListener('click', (event) => {

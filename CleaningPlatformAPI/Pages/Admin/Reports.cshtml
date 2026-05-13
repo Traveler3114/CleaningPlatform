@@ -26,3 +26,25 @@
 <section class="detail-section"><h2 class="section-title">Top Clients</h2><table class="admin-table"><thead><tr><th>Client</th><th>Invoices</th><th>Billed</th><th>Paid</th></tr></thead><tbody>@foreach (var row in Model.TopClients) { <tr><td>@row.ClientName</td><td>@row.InvoiceCount</td><td>@row.TotalBilled.ToString("C")</td><td>@row.TotalPaid.ToString("C")</td></tr> }</tbody></table></section>
 <section class="detail-section"><h2 class="section-title">Employee Utilization</h2><table class="admin-table"><thead><tr><th>Employee</th><th>Assigned</th><th>Completed</th><th>Rate</th><th>Days Active</th></tr></thead><tbody>@foreach (var row in Model.Utilization) { <tr><td>@row.EmployeeName</td><td>@row.JobsAssigned</td><td>@row.JobsCompleted</td><td>@row.CompletionRatePct%</td><td>@row.DaysActive</td></tr> }</tbody></table></section>
 <section class="detail-section"><h2 class="section-title">Job Completion Rate</h2><table class="admin-table"><thead><tr><th>Month</th><th>Total</th><th>Completed</th><th>Rate</th></tr></thead><tbody>@foreach (var row in Model.CompletionRates) { <tr><td>@row.Year-@row.Month.ToString("00")</td><td>@row.TotalJobs</td><td>@row.CompletedJobs</td><td>@row.CompletionRatePct%</td></tr> }</tbody></table></section>
+
+<section class="detail-section">
+    <h2 class="section-title">Overdue Invoices</h2>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span>Total overdue value</span>
+            <strong>@Model.Overdue.TotalOverdueAmount.ToString("C")</strong>
+        </div>
+        <div class="kpi-card">
+            <span>Overdue invoice count</span>
+            <strong>@Model.Overdue.OverdueInvoiceCount</strong>
+        </div>
+        <div class="kpi-card">
+            <span>Average overdue amount</span>
+            <strong>@Model.Overdue.AvgOverdueAmount.ToString("C")</strong>
+        </div>
+        <div class="kpi-card">
+            <span>Max days overdue</span>
+            <strong>@Model.Overdue.MaxDaysOverdue days</strong>
+        </div>
+    </div>
+</section>

@@ -28,7 +28,14 @@
     <tbody>
     @foreach (var template in Model.Templates)
     {
-        <tr>
+        <tr class="sop-row"
+            data-id="@template.Id"
+            data-name="@template.Name"
+            data-description="@(template.Description ?? string.Empty)"
+            data-active="@(template.IsActive ? "true" : "false")"
+            data-service-type="@template.ServiceType"
+            data-service-catalog-id="@(template.ServiceCatalogId?.ToString() ?? string.Empty)"
+            style="cursor:pointer;">
             <td>@template.Name</td><td>@template.ServiceType</td><td>@template.ServiceCatalogName</td><td>@template.IsActive</td><td>@template.ChecklistItems.Count</td>
             <td>
                 @if (User.HasPermission(PermissionKeys.ActionsSopManage))
@@ -53,3 +60,79 @@
     }
     </tbody>
 </table>
+
+@if (User.HasPermission(PermissionKeys.ActionsSopManage))
+{
+    <div id="sop-edit-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;" onclick="if(event.target===this) closeSopModal()">
+        <div class="modal-panel" style="background:white; border-radius:8px; width:min(700px,95vw); max-height:90vh; overflow:auto; padding:1rem;">
+            <h2 class="section-title" id="sop-modal-title">Edit SOP Template</h2>
+            <form method="post" asp-page-handler="Update" id="sop-update-form" class="form-grid two-col">
+                <input type="hidden" name="id" id="edit-sop-id" />
+
+                <label>Name
+                    <input name="Template.Name" id="edit-sop-name" class="text-input" required />
+                </label>
+                <label>Service type
+                    <select name="Template.ServiceType" id="edit-sop-service-type" class="text-input">
+                        <option>Vehicle</option>
+                        <option>SiteBased</option>
+                        <option>Boat</option>
+                        <option>Generic</option>
+                    </select>
+                </label>
+                <label>Linked service
+                    <select name="Template.ServiceCatalogId" id="edit-sop-catalog" class="text-input">
+                        <option value="">Optional</option>
+                        @foreach (var service in Model.Services)
+                        {
+                            <option value="@service.Id">@service.Name</option>
+                        }
+                    </select>
+                </label>
+                <label class="checkbox-label">
+                    <input name="Template.IsActive" id="edit-sop-active" type="checkbox" class="checkbox" />
+                    Active
+                </label>
+                <label class="full-span">Description
+                    <textarea name="Template.Description" id="edit-sop-description" class="text-input"></textarea>
+                </label>
+                <div class="modal-actions full-span">
+                    <button type="submit" class="btn btn-sm">Save changes</button>
+                    <button type="button" class="btn btn-sm" onclick="closeSopModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+(function () {
+    const modal = document.getElementById('sop-edit-modal');
+    if (!modal) return;
+
+    window.closeSopModal = () => { modal.style.display = 'none'; };
+
+    document.querySelectorAll('.sop-row').forEach(row => {
+        row.addEventListener('click', (event) => {
+            if (event.target.closest('form,button,a,input,select,textarea,label')) {
+                return;
+            }
+
+            document.getElementById('edit-sop-id').value = row.dataset.id || '';
+            document.getElementById('edit-sop-name').value = row.dataset.name || '';
+            document.getElementById('edit-sop-description').value = row.dataset.description || '';
+            document.getElementById('edit-sop-active').checked = row.dataset.active === 'true';
+
+            const stSelect = document.getElementById('edit-sop-service-type');
+            stSelect.value = row.dataset.serviceType || 'Generic';
+
+            const catSelect = document.getElementById('edit-sop-catalog');
+            catSelect.value = row.dataset.serviceCatalogId || '';
+
+            modal.style.display = 'flex';
+        });
+    });
+})();
+</script>
+}
