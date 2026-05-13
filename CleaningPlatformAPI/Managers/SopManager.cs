@@ -117,11 +117,11 @@ public class SopManager
             .Where(r => r.IsCompleted)
             .GroupBy(r => r.ChecklistItem.SopTemplateId)
             .ToDictionary(g => g.Key, g => g.Count());
-        var firstAssignmentId = bookingAssignmentIds.FirstOrDefault();
-        var responsesByItem = firstAssignmentId == 0
+        var primaryAssignmentId = bookingAssignmentIds.OrderBy(id => id).FirstOrDefault();
+        var responsesByItem = primaryAssignmentId == 0
             ? new Dictionary<int, ChecklistResponse>()
             : responses
-                .Where(r => r.BookingAssignmentId == firstAssignmentId)
+                .Where(r => r.BookingAssignmentId == primaryAssignmentId)
                 .GroupBy(r => r.ChecklistItemId)
                 .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CompletedAt).First());
 
