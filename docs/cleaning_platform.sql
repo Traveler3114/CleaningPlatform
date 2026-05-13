@@ -980,6 +980,8 @@ WHERE BookingAssignmentId IN (
     WHERE b.Id = 6
 ) AND ChecklistItemId = (SELECT Id FROM ChecklistItems WHERE ItemText LIKE '%tepih%');
 
+GO
+
 -- ============================================================
 -- MANAGEMENT DASHBOARD VIEWS
 -- ============================================================
