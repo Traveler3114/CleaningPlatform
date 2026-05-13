@@ -169,32 +169,130 @@ CREATE INDEX IX_RolePermissions_RoleId ON RolePermissions(RoleId);
 CREATE INDEX IX_RolePermissions_Key    ON RolePermissions(PermissionKey);
 GO
 
-INSERT INTO RolePermissions (RoleId, PermissionKey)
-SELECT r.Id, 'clients.view'       FROM Roles r WHERE r.Name = 'Admin' UNION ALL
-SELECT r.Id, 'clients.manage'     FROM Roles r WHERE r.Name = 'Admin' UNION ALL
-SELECT r.Id, 'sites.view'         FROM Roles r WHERE r.Name = 'Admin' UNION ALL
-SELECT r.Id, 'sites.manage'       FROM Roles r WHERE r.Name = 'Admin' UNION ALL
-SELECT r.Id, 'bookings.view'      FROM Roles r WHERE r.Name = 'Admin' UNION ALL
-SELECT r.Id, 'bookings.manage'    FROM Roles r WHERE r.Name = 'Admin' UNION ALL
-SELECT r.Id, 'invoices.view'      FROM Roles r WHERE r.Name = 'Admin' UNION ALL
-SELECT r.Id, 'invoices.manage'    FROM Roles r WHERE r.Name = 'Admin' UNION ALL
-SELECT r.Id, 'reports.view'       FROM Roles r WHERE r.Name = 'Admin' UNION ALL
-SELECT r.Id, 'clients.view'       FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
-SELECT r.Id, 'sites.view'         FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
-SELECT r.Id, 'bookings.view'      FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
-SELECT r.Id, 'bookings.assign'    FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
-SELECT r.Id, 'bookings.manage'    FROM Roles r WHERE r.Name = 'Dispatcher' UNION ALL
-SELECT r.Id, 'bookings.view'      FROM Roles r WHERE r.Name = 'Employee'   UNION ALL
-SELECT r.Id, 'clients.view'       FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
-SELECT r.Id, 'invoices.view'      FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
-SELECT r.Id, 'invoices.manage'    FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
-SELECT r.Id, 'payments.manage'    FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
-SELECT r.Id, 'reports.view'       FROM Roles r WHERE r.Name = 'Finance'    UNION ALL
-SELECT r.Id, 'all.access'         FROM Roles r WHERE r.Name = 'Owner';
+-- ============================================================
+-- CORRECTED RolePermissions SEED
+-- Replace the existing RolePermissions INSERT block in
+-- cleaning_platform.sql with this one.
+--
+-- The old seed used legacy-style keys (clients.view, bookings.manage
+-- etc.) that do not exist in PermissionKeys.All and were therefore
+-- dead. This block uses the exact keys the C# authorization system
+-- checks, matching PermissionKeys.cs.
+-- ============================================================
+
+-- Clear existing seeded permissions (safe to re-run on a fresh DB;
+-- remove this DELETE if you are patching a live DB manually)
+DELETE FROM RolePermissions;
 GO
 
 INSERT INTO RolePermissions (RoleId, PermissionKey)
-SELECT Id, 'actions.booking.assign' FROM Roles WHERE Name = 'Owner';
+
+-- ── Owner ────────────────────────────────────────────────────
+-- Owner bypasses all permission checks in PermissionHandler,
+-- so no permission rows are strictly required. We insert all
+-- keys so the role looks correct in the Roles admin page.
+SELECT r.Id, p.PermissionKey
+FROM Roles r
+CROSS JOIN (VALUES
+    ('pages.daily'),
+    ('pages.bookings'),
+    ('pages.schedule'),
+    ('pages.users'),
+    ('pages.roles'),
+    ('pages.clients'),
+    ('pages.kanban'),
+    ('pages.sop'),
+    ('pages.reports'),
+    ('actions.booking.assign'),
+    ('actions.booking.updateStatus'),
+    ('actions.booking.create'),
+    ('actions.schedule.edit'),
+    ('actions.override.manage'),
+    ('actions.user.create'),
+    ('actions.user.toggleActive'),
+    ('actions.role.manage'),
+    ('actions.serviceCatalog.edit'),
+    ('actions.serviceCatalog.manage'),
+    ('actions.sop.manage'),
+    ('actions.reports.export')
+) p(PermissionKey)
+WHERE r.Name = 'Owner'
+
+UNION ALL
+
+-- ── Admin ────────────────────────────────────────────────────
+-- Full operational access; no user/role management,
+-- no service catalog management (edit only).
+SELECT r.Id, p.PermissionKey
+FROM Roles r
+CROSS JOIN (VALUES
+    ('pages.daily'),
+    ('pages.bookings'),
+    ('pages.schedule'),
+    ('pages.clients'),
+    ('pages.kanban'),
+    ('pages.sop'),
+    ('pages.reports'),
+    ('actions.booking.assign'),
+    ('actions.booking.updateStatus'),
+    ('actions.booking.create'),
+    ('actions.schedule.edit'),
+    ('actions.override.manage'),
+    ('actions.serviceCatalog.edit'),
+    ('actions.sop.manage'),
+    ('actions.reports.export')
+) p(PermissionKey)
+WHERE r.Name = 'Admin'
+
+UNION ALL
+
+-- ── Dispatcher ───────────────────────────────────────────────
+-- Operational focus: bookings, kanban, schedule, clients (read).
+-- No financial reports, no user/role management.
+SELECT r.Id, p.PermissionKey
+FROM Roles r
+CROSS JOIN (VALUES
+    ('pages.daily'),
+    ('pages.bookings'),
+    ('pages.clients'),
+    ('pages.kanban'),
+    ('pages.schedule'),
+    ('actions.booking.assign'),
+    ('actions.booking.updateStatus'),
+    ('actions.booking.create'),
+    ('actions.override.manage')
+) p(PermissionKey)
+WHERE r.Name = 'Dispatcher'
+
+UNION ALL
+
+-- ── Employee ─────────────────────────────────────────────────
+-- Personal view only: daily view and kanban (filtered to their
+-- own jobs by the page model). No admin actions.
+SELECT r.Id, p.PermissionKey
+FROM Roles r
+CROSS JOIN (VALUES
+    ('pages.daily'),
+    ('pages.kanban')
+) p(PermissionKey)
+WHERE r.Name = 'Employee'
+
+UNION ALL
+
+-- ── Finance ──────────────────────────────────────────────────
+-- Financial visibility: invoices, reports, client read,
+-- payment recording (via actions.booking.updateStatus which
+-- guards the RecordPayment handler).
+SELECT r.Id, p.PermissionKey
+FROM Roles r
+CROSS JOIN (VALUES
+    ('pages.bookings'),
+    ('pages.clients'),
+    ('pages.reports'),
+    ('actions.booking.updateStatus'),
+    ('actions.reports.export')
+) p(PermissionKey)
+WHERE r.Name = 'Finance';
 GO
 
 -- Add RoleId to Employees after Roles table exists
