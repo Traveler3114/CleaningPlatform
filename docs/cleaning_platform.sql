@@ -350,9 +350,6 @@ CREATE TABLE Invoices (
 );
 GO
 
--- Note: InvoiceNumber has no DB default; it is always supplied by the application
--- using NEXT VALUE FOR InvoiceNumberSeq via C# InvoiceManager.GenerateInvoiceNumberAsync
-
 CREATE INDEX IX_Invoices_ClientId  ON Invoices(ClientId);
 CREATE INDEX IX_Invoices_Status    ON Invoices(Status);
 CREATE INDEX IX_Invoices_IssueDate ON Invoices(IssueDate);
@@ -412,114 +409,6 @@ CREATE TABLE Payments (
 GO
 CREATE INDEX IX_Payments_InvoiceId ON Payments(InvoiceId);
 CREATE INDEX IX_Payments_Date      ON Payments(PaymentDate);
-GO
-
--- FIX: removed stray comma after b.ClientId; added b.ClientId column to view
-CREATE VIEW vw_Bookings AS
-SELECT
-    b.Id                                                    AS BookingId,
-    b.ClientId,
-    c.ClientName,
-    c.Type                                                  AS ClientType,
-    cont.ContactName                                        AS PrimaryContact,
-    cont.Phone                                              AS ContactPhone,
-    b.ServiceType,
-    b.ScheduledDate,
-    b.ScheduledTimeSlot,
-    b.Status,
-    b.Notes,
-    s.SiteName,
-    s.Address                                               AS SiteAddress,
-    s.City                                                  AS SiteCity,
-    s.SiteType,
-    s.FloorAreaM2,
-    (
-        SELECT SUM(bs.EstimatedPrice * bs.Quantity)
-        FROM BookingServices bs
-        WHERE bs.BookingId = b.Id
-    )                                                       AS EstimatedTotal,
-    CASE
-        WHEN (
-            SELECT COUNT(*)
-            FROM BookingServices bs
-            WHERE bs.BookingId = b.Id AND bs.FinalPrice IS NULL
-        ) = 0
-        THEN (
-            SELECT SUM(bs.FinalPrice * bs.Quantity)
-            FROM BookingServices bs
-            WHERE bs.BookingId = b.Id
-        )
-        ELSE NULL
-    END                                                     AS FinalTotal,
-    (
-        SELECT STRING_AGG(LTRIM(RTRIM(ea.FirstName + ' ' + ea.LastName)), ', ')
-        FROM BookingAssignments ba
-        INNER JOIN Employees ea ON ea.Id = ba.EmployeeId
-        WHERE ba.BookingId = b.Id
-    )                                                       AS AssignedEmployee,
-    (
-        SELECT COUNT(*)
-        FROM BookingServices bs
-        WHERE bs.BookingId = b.Id
-    )                                                       AS ServiceCount,
-    (
-        SELECT STRING_AGG(sc.CatalogCode + ' (' + CAST(bs.Quantity AS NVARCHAR) + ')', ', ')
-        FROM BookingServices bs
-        INNER JOIN ServiceCatalog sc ON bs.ServiceCatalogId = sc.Id
-        WHERE bs.BookingId = b.Id
-    )                                                       AS ServiceItems,
-    inv.InvoiceNumber,
-    inv.Status                                              AS InvoiceStatus,
-    b.CreatedAt,
-    b.CompletedAt,
-    v.LicensePlate,
-    v.CarModel,
-    bt.BoatType,
-    bt.LengthMeters
-FROM Bookings b
-INNER JOIN Clients    c     ON b.ClientId = c.Id
-LEFT  JOIN Sites      s     ON b.SiteId   = s.Id
-LEFT  JOIN Contacts   cont  ON cont.ClientId = c.Id AND cont.IsPrimary = 1
-LEFT  JOIN InvoiceBookings ib  ON ib.BookingId = b.Id
-LEFT  JOIN Invoices    inv  ON inv.Id = ib.InvoiceId
-LEFT  JOIN VehicleBookingDetails v   ON b.Id = v.BookingId
-LEFT  JOIN BoatBookingDetails    bt  ON b.Id = bt.BookingId;
-GO
-
-CREATE VIEW vw_InvoiceSummary AS
-SELECT
-    i.Id                                        AS InvoiceId,
-    i.InvoiceNumber,
-    c.ClientName,
-    i.IssueDate,
-    i.DueDate,
-    i.SubTotal,
-    i.DiscountAmount,
-    i.VatAmount,
-    i.TotalAmount,
-    i.Status,
-    ISNULL(paid.AmountPaid, 0)                  AS AmountPaid,
-    i.TotalAmount - ISNULL(paid.AmountPaid, 0)  AS AmountOutstanding,
-    CASE
-        WHEN i.Status = 'Paid'        THEN 0
-        WHEN i.DueDate < CAST(GETUTCDATE() AS DATE)
-             AND i.Status NOT IN ('Paid','WrittenOff') THEN 1
-        ELSE 0
-    END                                         AS IsOverdue,
-    CASE
-        WHEN i.DueDate < CAST(GETUTCDATE() AS DATE)
-        THEN DATEDIFF(DAY, i.DueDate, CAST(GETUTCDATE() AS DATE))
-        ELSE 0
-    END                                         AS DaysOverdue,
-    e.FirstName + ' ' + e.LastName              AS CreatedBy
-FROM Invoices i
-INNER JOIN Clients   c ON i.ClientId = c.Id
-LEFT  JOIN Employees e ON i.CreatedByEmployeeId = e.Id
-LEFT  JOIN (
-    SELECT InvoiceId, SUM(Amount) AS AmountPaid
-    FROM Payments
-    GROUP BY InvoiceId
-) paid ON paid.InvoiceId = i.Id;
 GO
 
 -- ============================================================
@@ -721,14 +610,10 @@ GO
 
 -- ============================================================
 -- INVOICE SEED
--- FIX: replaced MERGE + NEXT VALUE FOR (unsupported) with
---      INSERT...SELECT using ROW_NUMBER() for invoice numbers,
---      then a join-back to build the BookingId->InvoiceId map.
 -- ============================================================
 
 DECLARE @InvoiceMap TABLE (BookingId INT, InvoiceId INT);
 
--- Step 1: insert invoices, generating numbers via ROW_NUMBER
 WITH BookingTotals AS (
     SELECT
         b.Id                                                        AS BookingId,
@@ -768,7 +653,6 @@ SELECT
     CreatedByEmployeeId
 FROM BookingTotals;
 
--- Step 2: rebuild the BookingId -> InvoiceId map by matching invoice numbers
 INSERT INTO @InvoiceMap (BookingId, InvoiceId)
 SELECT
     bt.BookingId,
@@ -785,12 +669,10 @@ JOIN (
     GROUP BY b.Id, b.ScheduledDate
 ) bt ON i.InvoiceNumber = CONCAT('INV-', YEAR(bt.ScheduledDate), '-', RIGHT('0000' + CAST(bt.RowNum AS NVARCHAR(10)), 4));
 
--- Step 3: link invoices to bookings
 INSERT INTO InvoiceBookings (InvoiceId, BookingId)
 SELECT InvoiceId, BookingId
 FROM @InvoiceMap;
 
--- Step 4: invoice lines from booking services
 INSERT INTO InvoiceLines (InvoiceId, Description, Quantity, UnitPrice, DiscountPct, VatPct, SourceType, SourceId)
 SELECT
     im.InvoiceId,
@@ -805,7 +687,6 @@ FROM @InvoiceMap im
 JOIN BookingServices bs ON bs.BookingId = im.BookingId
 JOIN ServiceCatalog sc ON sc.Id = bs.ServiceCatalogId;
 
--- Step 5: manual admin fee lines
 INSERT INTO InvoiceLines (InvoiceId, Description, Quantity, UnitPrice, DiscountPct, VatPct, SourceType, SourceId)
 SELECT
     i.Id,
@@ -819,7 +700,6 @@ SELECT
 FROM Invoices i
 WHERE i.Id % 4 = 0;
 
--- Step 6: payments for paid/partially paid invoices
 INSERT INTO Payments (InvoiceId, PaymentDate, Amount, Method, Reference, Notes, RecordedBy)
 SELECT
     i.Id,
@@ -831,4 +711,390 @@ SELECT
     i.CreatedByEmployeeId
 FROM Invoices i
 WHERE i.Status IN ('Paid', 'PartiallyPaid');
+GO
+
+-- ============================================================
+-- SOP MODULE
+-- ============================================================
+
+CREATE TABLE SopTemplates (
+    Id                  INT             PRIMARY KEY IDENTITY(1,1),
+    ServiceCatalogId    INT             NULL,
+    Name                NVARCHAR(200)   NOT NULL,
+    ServiceType         NVARCHAR(50)    NOT NULL,
+    Description         NVARCHAR(MAX)   NULL,
+    IsActive            BIT             NOT NULL DEFAULT 1,
+    CreatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT FK_SopTemplate_ServiceCatalog FOREIGN KEY (ServiceCatalogId)
+        REFERENCES ServiceCatalog(Id) ON DELETE SET NULL,
+    CONSTRAINT CHK_SopTemplate_ServiceType CHECK (ServiceType IN ('Vehicle','SiteBased','Boat','Generic'))
+);
+GO
+CREATE INDEX IX_SopTemplates_ServiceCatalog ON SopTemplates(ServiceCatalogId);
+CREATE INDEX IX_SopTemplates_ServiceType    ON SopTemplates(ServiceType);
+GO
+
+CREATE TABLE ChecklistItems (
+    Id              INT             PRIMARY KEY IDENTITY(1,1),
+    SopTemplateId   INT             NOT NULL,
+    ItemText        NVARCHAR(500)   NOT NULL,
+    SortOrder       INT             NOT NULL DEFAULT 0,
+    IsRequired      BIT             NOT NULL DEFAULT 1,
+    CONSTRAINT FK_ChecklistItem_SopTemplate FOREIGN KEY (SopTemplateId)
+        REFERENCES SopTemplates(Id) ON DELETE CASCADE
+);
+GO
+CREATE INDEX IX_ChecklistItems_SopTemplate ON ChecklistItems(SopTemplateId);
+GO
+
+CREATE TABLE BookingSopAssignments (
+    Id                  INT             PRIMARY KEY IDENTITY(1,1),
+    BookingId           INT             NOT NULL,
+    SopTemplateId       INT             NOT NULL,
+    CustomInstructions  NVARCHAR(MAX)   NULL,
+    AssignedAt          DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT FK_BookingSop_Booking FOREIGN KEY (BookingId)
+        REFERENCES Bookings(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_BookingSop_Sop     FOREIGN KEY (SopTemplateId)
+        REFERENCES SopTemplates(Id),
+    CONSTRAINT UQ_BookingSop UNIQUE (BookingId, SopTemplateId)
+);
+GO
+CREATE INDEX IX_BookingSop_Booking ON BookingSopAssignments(BookingId);
+CREATE INDEX IX_BookingSop_Sop     ON BookingSopAssignments(SopTemplateId);
+GO
+
+CREATE TABLE ChecklistResponses (
+    Id                    INT             PRIMARY KEY IDENTITY(1,1),
+    BookingAssignmentId   INT             NOT NULL,
+    ChecklistItemId       INT             NOT NULL,
+    IsCompleted           BIT             NOT NULL DEFAULT 0,
+    CompletedAt           DATETIME2       NULL,
+    Notes                 NVARCHAR(500)   NULL,
+    CONSTRAINT FK_ChecklistResponse_Assignment FOREIGN KEY (BookingAssignmentId)
+        REFERENCES BookingAssignments(Id),
+    CONSTRAINT FK_ChecklistResponse_Item       FOREIGN KEY (ChecklistItemId)
+        REFERENCES ChecklistItems(Id),
+    CONSTRAINT UQ_ChecklistResponse UNIQUE (BookingAssignmentId, ChecklistItemId)
+);
+GO
+CREATE INDEX IX_ChecklistResponses_Assignment ON ChecklistResponses(BookingAssignmentId);
+GO
+
+-- ============================================================
+-- SOP SEED DATA
+-- ============================================================
+
+-- Insert SOP templates for a few services
+INSERT INTO SopTemplates (ServiceCatalogId, Name, ServiceType, Description) VALUES
+(1,  'Stubište osnovno čišćenje', 'SiteBased', 'Standardni postupak za tjedno čišćenje stubišta'),
+(4,  'Uredsko osnovno čišćenje', 'SiteBased', 'Osnovno čišćenje uredskih prostora'),
+(9,  'Carwash LIM komplet', 'Vehicle', 'Kompletno vanjsko i unutarnje pranje manjeg vozila'),
+(14, 'Kemijsko čišćenje sjedala', 'Vehicle', 'Dubinsko kemijsko čišćenje tapeciranih površina'),
+(3,  'Stubište premium', 'SiteBased', 'Premium čišćenje velikih stambenih objekata');
+
+-- Insert checklist items for each template
+-- Template 1: Stubište osnovno
+INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
+(1, 'Pomesti sve stepenice i podeste', 1, 1),
+(1, 'Oprati podove mokrom krpom', 2, 1),
+(1, 'Očistiti rukohvate i ograde', 3, 1),
+(1, 'Provjeriti i zamijeniti pregorjele žarulje', 4, 0),
+(1, 'Isprazniti pepeljare i kante za smeće', 5, 1);
+
+-- Template 2: Uredsko osnovno
+INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
+(2, 'Isprazniti košarice za papir', 1, 1),
+(2, 'Obrisati sve radne površine', 2, 1),
+(2, 'Usisati podove i tepihe', 3, 1),
+(2, 'Očistiti staklene površine', 4, 0),
+(2, 'Dezinficirati kvake i telefone', 5, 1);
+
+-- Template 3: Carwash LIM komplet
+INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
+(3, 'Predpranje vozila visokotlačnim čistačem', 1, 1),
+(3, 'Ručno pranje karoserije spužvom', 2, 1),
+(3, 'Čišćenje felgi i guma', 3, 1),
+(3, 'Usisavanje unutrašnjosti', 4, 1),
+(3, 'Brisanje plastičnih dijelova i stakala iznutra', 5, 1),
+(3, 'Nanošenje voska (ako je ugovoreno)', 6, 0);
+
+-- Template 4: Kemijsko čišćenje sjedala
+INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
+(4, 'Usisavanje sjedala prije tretmana', 1, 1),
+(4, 'Nanošenje kemijskog sredstva', 2, 1),
+(4, 'Strojno ribanje i ekstrakcija', 3, 1),
+(4, 'Provjera rezultata i po potrebi ponoviti', 4, 0);
+
+-- Template 5: Stubište premium
+INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
+(5, 'Pomesti sve etaže i podeste', 1, 1),
+(5, 'Strojno ribanje podova', 2, 1),
+(5, 'Očistiti prozore i prozorske klupčice', 3, 1),
+(5, 'Očistiti ulazna vrata i okvire', 4, 1),
+(5, 'Provjera sigurnosne rasvjete', 5, 0);
+
+-- Attach SOPs to some bookings (pick bookings where Id <= 20 and Status != Cancelled)
+INSERT INTO BookingSopAssignments (BookingId, SopTemplateId, CustomInstructions)
+SELECT b.Id, st.Id, NULL
+FROM Bookings b
+CROSS JOIN (
+    SELECT Id FROM SopTemplates
+    WHERE ServiceType = 'SiteBased'
+) st
+WHERE b.Id BETWEEN 1 AND 15
+  AND b.ServiceType = 'SiteBased'
+  AND b.Status NOT IN ('Cancelled')
+  AND b.Id % 2 = 0; -- roughly half of them
+
+INSERT INTO BookingSopAssignments (BookingId, SopTemplateId, CustomInstructions)
+SELECT b.Id, st.Id, 'Preskočiti vosak - klijent ne želi'
+FROM Bookings b
+CROSS JOIN (
+    SELECT Id FROM SopTemplates WHERE Name = 'Carwash LIM komplet'
+) st
+WHERE b.ServiceType = 'Vehicle'
+  AND b.Id BETWEEN 5 AND 10;
+
+-- Generate checklist responses for assignments that have SOPs attached.
+-- We'll mark them all as completed for Completed bookings, partially completed for InProgress.
+INSERT INTO ChecklistResponses (BookingAssignmentId, ChecklistItemId, IsCompleted, CompletedAt, Notes)
+SELECT
+    ba.Id,
+    ci.Id,
+    CASE WHEN b.Status = 'Completed' THEN 1 ELSE 0 END,
+    CASE WHEN b.Status = 'Completed' THEN DATEADD(HOUR, -1, GETUTCDATE()) ELSE NULL END,
+    CASE WHEN b.Status = 'InProgress' THEN 'U tijeku' ELSE NULL END
+FROM BookingAssignments ba
+INNER JOIN Bookings b ON ba.BookingId = b.Id
+INNER JOIN BookingSopAssignments bsa ON bsa.BookingId = b.Id
+INNER JOIN ChecklistItems ci ON ci.SopTemplateId = bsa.SopTemplateId
+WHERE b.Id IN (SELECT BookingId FROM BookingSopAssignments)
+  AND ba.EmployeeId IS NOT NULL;
+
+-- For a couple of specific bookings, add notes to show discrepancy
+UPDATE ChecklistResponses
+SET Notes = 'Klijent tražio preskakanje - uredski tepisi već oprani jučer'
+WHERE BookingAssignmentId IN (
+    SELECT ba.Id FROM BookingAssignments ba
+    JOIN Bookings b ON ba.BookingId = b.Id
+    WHERE b.Id = 6
+) AND ChecklistItemId = (SELECT Id FROM ChecklistItems WHERE ItemText LIKE '%tepih%');
+
+-- ============================================================
+-- MANAGEMENT DASHBOARD VIEWS
+-- ============================================================
+
+-- Monthly Revenue (by invoice issue date)
+CREATE VIEW vw_MonthlyRevenue AS
+SELECT
+    YEAR(i.IssueDate)  AS Year,
+    MONTH(i.IssueDate) AS Month,
+    COUNT(*)           AS InvoiceCount,
+    SUM(i.SubTotal)    AS TotalSubTotal,
+    SUM(i.DiscountAmount) AS TotalDiscount,
+    SUM(i.VatAmount)   AS TotalVat,
+    SUM(i.TotalAmount) AS TotalRevenue
+FROM Invoices i
+WHERE i.Status NOT IN ('WrittenOff')
+GROUP BY YEAR(i.IssueDate), MONTH(i.IssueDate);
+GO
+
+-- Top Clients by revenue (last 12 months)
+CREATE VIEW vw_TopClients AS
+SELECT TOP 10
+    c.Id           AS ClientId,
+    c.ClientName,
+    COUNT(i.Id)    AS InvoiceCount,
+    SUM(i.TotalAmount) AS TotalBilled,
+    ISNULL(SUM(p.AmountPaid), 0) AS TotalPaid
+FROM Clients c
+INNER JOIN Invoices i ON i.ClientId = c.Id
+LEFT JOIN (
+    SELECT InvoiceId, SUM(Amount) AS AmountPaid
+    FROM Payments
+    GROUP BY InvoiceId
+) p ON p.InvoiceId = i.Id
+WHERE i.IssueDate >= DATEADD(YEAR, -1, CAST(GETUTCDATE() AS DATE))
+GROUP BY c.Id, c.ClientName
+ORDER BY SUM(i.TotalAmount) DESC;
+GO
+
+-- Employee Utilization (last 30 days)
+CREATE VIEW vw_EmployeeUtilization AS
+SELECT
+    e.Id           AS EmployeeId,
+    e.FirstName + ' ' + e.LastName AS EmployeeName,
+    COUNT(DISTINCT ba.BookingId) AS JobsAssigned,
+    COUNT(DISTINCT CASE WHEN b.Status = 'Completed' THEN b.Id END) AS JobsCompleted,
+    COUNT(DISTINCT b.ScheduledDate) AS DaysActive
+FROM Employees e
+LEFT JOIN BookingAssignments ba ON ba.EmployeeId = e.Id
+LEFT JOIN Bookings b ON b.Id = ba.BookingId
+    AND b.ScheduledDate >= DATEADD(DAY, -30, CAST(GETUTCDATE() AS DATE))
+WHERE e.IsActive = 1
+GROUP BY e.Id, e.FirstName, e.LastName;
+GO
+
+-- Job Completion Rate (by scheduled month)
+CREATE VIEW vw_JobCompletionRate AS
+SELECT
+    YEAR(b.ScheduledDate)  AS Year,
+    MONTH(b.ScheduledDate) AS Month,
+    COUNT(*)               AS TotalJobs,
+    SUM(CASE WHEN b.Status = 'Completed' THEN 1 ELSE 0 END) AS CompletedJobs,
+    ROUND(
+        CAST(SUM(CASE WHEN b.Status = 'Completed' THEN 1 ELSE 0 END) AS FLOAT) /
+        NULLIF(COUNT(*), 0) * 100, 1
+    ) AS CompletionRatePct
+FROM Bookings b
+WHERE b.ScheduledDate >= DATEADD(MONTH, -12, CAST(GETUTCDATE() AS DATE))
+GROUP BY YEAR(b.ScheduledDate), MONTH(b.ScheduledDate);
+GO
+
+-- Overdue Invoice Summary
+CREATE VIEW vw_OverdueInvoiceSummary AS
+SELECT
+    SUM(i.TotalAmount)                         AS TotalOverdueAmount,
+    COUNT(*)                                   AS OverdueInvoiceCount,
+    AVG(i.TotalAmount)                         AS AvgOverdueAmount,
+    MAX(DATEDIFF(DAY, i.DueDate, CAST(GETUTCDATE() AS DATE))) AS MaxDaysOverdue
+FROM Invoices i
+WHERE i.DueDate < CAST(GETUTCDATE() AS DATE)
+  AND i.Status NOT IN ('Paid','WrittenOff');
+GO
+
+-- Booking SOP Status (audit trail)
+CREATE VIEW vw_BookingSopStatus AS
+SELECT
+    b.Id                                              AS BookingId,
+    st.Id                                             AS SopTemplateId,
+    st.Name                                           AS SopName,
+    COUNT(ci.Id)                                      AS TotalItems,
+    SUM(CASE WHEN cr.IsCompleted = 1 THEN 1 ELSE 0 END) AS CompletedItems,
+    SUM(CASE WHEN cr.IsCompleted = 0 OR cr.IsCompleted IS NULL THEN 1 ELSE 0 END) AS IncompleteItems,
+    MIN(CASE WHEN cr.IsCompleted = 1 THEN cr.CompletedAt END) AS FirstCompletedAt,
+    MAX(cr.CompletedAt)                               AS LastCompletedAt
+FROM Bookings b
+INNER JOIN BookingSopAssignments bsa ON bsa.BookingId = b.Id
+INNER JOIN SopTemplates st ON st.Id = bsa.SopTemplateId
+INNER JOIN ChecklistItems ci ON ci.SopTemplateId = st.Id
+LEFT JOIN ChecklistResponses cr ON cr.ChecklistItemId = ci.Id
+    AND cr.BookingAssignmentId IN (
+        SELECT ba.Id FROM BookingAssignments ba WHERE ba.BookingId = b.Id
+    )
+GROUP BY b.Id, st.Id, st.Name;
+GO
+-- vw_Bookings
+-- Mapped in C# as a keyless entity (BookingView) via .ToView("vw_Bookings")
+-- Used by BookingManager.GetAllBookingsAsync()
+CREATE VIEW vw_Bookings AS
+SELECT
+    b.Id                                                        AS BookingId,
+    b.ClientId,
+    c.ClientName,
+    c.Type                                                      AS ClientType,
+    cont.ContactName                                            AS PrimaryContact,
+    cont.Phone                                                  AS ContactPhone,
+    b.ServiceType,
+    b.ScheduledDate,
+    b.ScheduledTimeSlot,
+    b.Status,
+    b.Notes,
+    s.SiteName,
+    s.Address                                                   AS SiteAddress,
+    s.City                                                      AS SiteCity,
+    s.SiteType,
+    s.FloorAreaM2,
+    (
+        SELECT SUM(bs.EstimatedPrice * bs.Quantity)
+        FROM BookingServices bs
+        WHERE bs.BookingId = b.Id
+    )                                                           AS EstimatedTotal,
+    CASE
+        WHEN (
+            SELECT COUNT(*)
+            FROM BookingServices bs
+            WHERE bs.BookingId = b.Id AND bs.FinalPrice IS NULL
+        ) = 0
+        THEN (
+            SELECT SUM(bs.FinalPrice * bs.Quantity)
+            FROM BookingServices bs
+            WHERE bs.BookingId = b.Id
+        )
+        ELSE NULL
+    END                                                         AS FinalTotal,
+    (
+        SELECT STRING_AGG(LTRIM(RTRIM(ea.FirstName + ' ' + ea.LastName)), ', ')
+        FROM BookingAssignments ba
+        INNER JOIN Employees ea ON ea.Id = ba.EmployeeId
+        WHERE ba.BookingId = b.Id
+    )                                                           AS AssignedEmployee,
+    (
+        SELECT COUNT(*)
+        FROM BookingServices bs
+        WHERE bs.BookingId = b.Id
+    )                                                           AS ServiceCount,
+    (
+        SELECT STRING_AGG(sc.CatalogCode + ' (' + CAST(bs.Quantity AS NVARCHAR) + ')', ', ')
+        FROM BookingServices bs
+        INNER JOIN ServiceCatalog sc ON bs.ServiceCatalogId = sc.Id
+        WHERE bs.BookingId = b.Id
+    )                                                           AS ServiceItems,
+    inv.InvoiceNumber,
+    inv.Status                                                  AS InvoiceStatus,
+    b.CreatedAt,
+    b.CompletedAt,
+    v.LicensePlate,
+    v.CarModel,
+    bt.BoatType,
+    bt.LengthMeters
+FROM Bookings b
+INNER JOIN Clients    c     ON b.ClientId = c.Id
+LEFT  JOIN Sites      s     ON b.SiteId   = s.Id
+LEFT  JOIN Contacts   cont  ON cont.ClientId = c.Id AND cont.IsPrimary = 1
+LEFT  JOIN InvoiceBookings ib  ON ib.BookingId = b.Id
+LEFT  JOIN Invoices    inv  ON inv.Id = ib.InvoiceId
+LEFT  JOIN VehicleBookingDetails v   ON b.Id = v.BookingId
+LEFT  JOIN BoatBookingDetails    bt  ON b.Id = bt.BookingId;
+GO
+
+-- vw_InvoiceSummary
+-- Used by reporting queries; referenced in the brief's financial reporting workflow
+CREATE VIEW vw_InvoiceSummary AS
+SELECT
+    i.Id                                        AS InvoiceId,
+    i.InvoiceNumber,
+    i.ClientId,
+    c.ClientName,
+    i.IssueDate,
+    i.DueDate,
+    i.SubTotal,
+    i.DiscountAmount,
+    i.VatAmount,
+    i.TotalAmount,
+    i.Status,
+    ISNULL(paid.AmountPaid, 0)                  AS AmountPaid,
+    i.TotalAmount - ISNULL(paid.AmountPaid, 0)  AS AmountOutstanding,
+    CASE
+        WHEN i.Status = 'Paid'        THEN 0
+        WHEN i.DueDate < CAST(GETUTCDATE() AS DATE)
+             AND i.Status NOT IN ('Paid','WrittenOff') THEN 1
+        ELSE 0
+    END                                         AS IsOverdue,
+    CASE
+        WHEN i.DueDate < CAST(GETUTCDATE() AS DATE)
+        THEN DATEDIFF(DAY, i.DueDate, CAST(GETUTCDATE() AS DATE))
+        ELSE 0
+    END                                         AS DaysOverdue,
+    e.FirstName + ' ' + e.LastName              AS CreatedBy
+FROM Invoices i
+INNER JOIN Clients   c ON i.ClientId = c.Id
+LEFT  JOIN Employees e ON i.CreatedByEmployeeId = e.Id
+LEFT  JOIN (
+    SELECT InvoiceId, SUM(Amount) AS AmountPaid
+    FROM Payments
+    GROUP BY InvoiceId
+) paid ON paid.InvoiceId = i.Id;
 GO
