@@ -82,9 +82,9 @@ public class BookingManager
         var slots = await _availability.GetSlotsAsync(dto.Date, ct);
         var slot = slots.FirstOrDefault(s => s.Hour == dto.Hour);
         if (slot == null || slot.IsClosed)
-            return OperationResult<BookingResponse>.Fail("The selected time slot at {hour}:00 on {date:dd MMM yyyy} is closed.");
+            return OperationResult<BookingResponse>.Fail($"The selected time slot at {dto.Hour}:00 on {dto.Date:dd MMM yyyy} is closed.");
         if (slot.Available <= 0)
-            return OperationResult<BookingResponse>.Fail("The {hour}:00 slot on {date:dd MMM yyyy} is fully booked ({booked}/{capacity} spots taken).");
+            return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dto.Date:dd MMM yyyy} is fully booked ({slot.Booked}/{slot.Capacity} spots taken).");
 
         var customerName = dto.CustomerName.Trim();
         var phone = dto.Phone.Trim();
@@ -157,9 +157,9 @@ public class BookingManager
         var slots = await _availability.GetSlotsAsync(dto.Date, ct);
         var slot = slots.FirstOrDefault(s => s.Hour == dto.Hour);
         if (slot == null || slot.IsClosed)
-            return OperationResult<BookingResponse>.Fail("The selected time slot at {hour}:00 on {date:dd MMM yyyy} is closed.");
+            return OperationResult<BookingResponse>.Fail($"The selected time slot at {dto.Hour}:00 on {dto.Date:dd MMM yyyy} is closed.");
         if (slot.Available <= 0)
-            return OperationResult<BookingResponse>.Fail("The {hour}:00 slot on {date:dd MMM yyyy} is fully booked ({booked}/{capacity} spots taken).");
+            return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dto.Date:dd MMM yyyy} is fully booked ({slot.Booked}/{slot.Capacity} spots taken).");
 
         var now = DateTime.UtcNow;
         var booking = new Booking
@@ -233,7 +233,7 @@ public class BookingManager
             return OperationResult<BookingResponse>.Fail("Booking not found.");
 
         if (booking.Status == BookingStatus.Completed || booking.Status == BookingStatus.Cancelled)
-            return OperationResult<BookingResponse>.Fail("Cannot assign employees — the booking status is {status}.");
+            return OperationResult<BookingResponse>.Fail($"Cannot assign employees — the booking status is {booking.Status}.");
 
         var employeeExists = await _db.Employees.AnyAsync(e => e.Id == employeeId && e.IsActive, ct);
         if (!employeeExists)

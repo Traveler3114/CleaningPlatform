@@ -14,61 +14,36 @@ public class KanbanModel : PageModel
 {
     private readonly KanbanManager _kanbanManager;
     private readonly BookingManager _bookingManager;
+    public KanbanModel(KanbanManager kanbanManager, BookingManager bookingManager) { _kanbanManager = kanbanManager; _bookingManager = bookingManager; }
 
-    public KanbanModel(KanbanManager kanbanManager, BookingManager bookingManager)
-    {
-        _kanbanManager = kanbanManager;
-        _bookingManager = bookingManager;
-    }
-
-    public KanbanBoardResponse Board { get; set; } = new(DateTime.UtcNow.Date, [], []);
+    public WeeklyBoardResponse Board { get; set; } = new(DateTime.UtcNow.Date, [], []);
     public bool IsEmployeeView { get; set; }
-
-    [BindProperty(SupportsGet = true)]
-    public DateTime SelectedDate { get; set; } = DateTime.UtcNow.Date;
-
-    [BindProperty(SupportsGet = true)]
-    public bool AllOpen { get; set; }
-
-    [TempData]
-    public string? ErrorMessage { get; set; }
+    [BindProperty(SupportsGet = true)] public DateTime? WeekStart { get; set; }
+    [BindProperty(SupportsGet = true)] public string View { get; set; } = "week";
+    [BindProperty(SupportsGet = true)] public int? EmployeeId { get; set; }
+    [TempData] public string? ErrorMessage { get; set; }
 
     public async Task OnGetAsync(CancellationToken ct)
     {
+        var start = GetWeekStart(WeekStart ?? DateTime.UtcNow.Date);
+        WeekStart = start;
         var role = User.FindFirst(ClaimTypes.Role)?.Value;
         IsEmployeeView = string.Equals(role, RoleNames.Employee, StringComparison.OrdinalIgnoreCase);
-        if (IsEmployeeView)
-        {
-            var employeeId = User.GetEmployeeId();
-            Board = await _kanbanManager.GetBoardAsync(DateTime.UtcNow.Date, employeeId, ct);
-            SelectedDate = DateTime.UtcNow.Date;
-            return;
-        }
-
-        Board = AllOpen ? await _kanbanManager.GetPipelineAsync(ct) : await _kanbanManager.GetBoardAsync(SelectedDate, null, ct);
+        if (IsEmployeeView) Board = await _kanbanManager.GetEmployeeWeekAsync(User.GetEmployeeId(), start, ct);
+        else Board = await _kanbanManager.GetWeekAsync(start, EmployeeId, ct);
     }
 
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.BookingsEdit))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
         var result = await _bookingManager.UpdateStatusAsync(id, status, ct);
-        if (!result.Success)
-            ErrorMessage = result.Message;
-
-        return RedirectToPage(new { selectedDate = SelectedDate.ToString("yyyy-MM-dd"), allOpen = AllOpen });
+        if (!result.Success) ErrorMessage = result.Message;
+        return RedirectToPage(new { weekStart = WeekStart?.ToString("yyyy-MM-dd"), view = View, employeeId = EmployeeId });
     }
 
-    public async Task<IActionResult> OnPostAddAssignmentAsync(int id, int employeeId, CancellationToken ct)
+    private static DateTime GetWeekStart(DateTime d)
     {
-        if (!User.HasPermission(PermissionKeys.BookingsEdit))
-            return Forbid();
-
-        var result = await _bookingManager.AddAssignmentAsync(id, employeeId, ct);
-        if (!result.Success)
-            ErrorMessage = result.Message;
-
-        return RedirectToPage(new { selectedDate = SelectedDate.ToString("yyyy-MM-dd"), allOpen = AllOpen });
+        var day = ((int)d.DayOfWeek + 6) % 7;
+        return d.Date.AddDays(-day);
     }
 }

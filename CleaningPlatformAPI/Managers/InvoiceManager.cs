@@ -59,14 +59,14 @@ public class InvoiceManager
             return OperationResult<InvoiceDetailResponse>.Fail("Booking not found.");
 
         if (booking.Status != BookingStatus.Completed)
-            return OperationResult<InvoiceDetailResponse>.Fail("Booking #{bookingId} cannot be invoiced — its status is '{status}', but only Completed bookings can generate an invoice.");
+            return OperationResult<InvoiceDetailResponse>.Fail($"Booking #{bookingId} cannot be invoiced — its status is '{booking.Status}', but only Completed bookings can generate an invoice.");
 
         var existingLink = await _db.InvoiceBookings
             .AsNoTracking()
             .FirstOrDefaultAsync(ib => ib.BookingId == bookingId, ct);
 
         if (existingLink != null)
-            return OperationResult<InvoiceDetailResponse>.Fail($"Booking already invoiced (Invoice #{existingLink.InvoiceId}).");
+            return OperationResult<InvoiceDetailResponse>.Fail($"Booking #{bookingId} is already linked to invoice #{existingLink.InvoiceId}.");
 
         var now = DateTime.UtcNow;
         var invoiceNumber = await GenerateInvoiceNumberAsync(ct);
