@@ -11,7 +11,7 @@ using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Pages.Admin;
 
-[Authorize(Policy = PermissionKeys.PagesSop)]
+[Authorize(Policy = PermissionKeys.SopsView)]
 public class SopsModel : PageModel
 {
     private readonly SopManager _sopManager;
@@ -38,7 +38,7 @@ public class SopsModel : PageModel
 
     public async Task<IActionResult> OnPostCreateAsync(CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsSopManage)) return Forbid();
+        if (!User.HasPermission(PermissionKeys.SopsManage)) return Forbid();
         var result = await _sopManager.CreateTemplateAsync(Template, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
@@ -46,7 +46,7 @@ public class SopsModel : PageModel
 
     public async Task<IActionResult> OnPostUpdateAsync(int id, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsSopManage)) return Forbid();
+        if (!User.HasPermission(PermissionKeys.SopsManage)) return Forbid();
         var result = await _sopManager.UpdateTemplateAsync(id, Template, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
@@ -54,7 +54,7 @@ public class SopsModel : PageModel
 
     public async Task<IActionResult> OnPostDeleteAsync(int id, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsSopManage)) return Forbid();
+        if (!User.HasPermission(PermissionKeys.SopsManage)) return Forbid();
         var result = await _sopManager.DeleteTemplateAsync(id, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
@@ -62,7 +62,7 @@ public class SopsModel : PageModel
 
     public async Task<IActionResult> OnPostAddItemAsync(int templateId, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsSopManage)) return Forbid();
+        if (!User.HasPermission(PermissionKeys.SopsManage)) return Forbid();
         var result = await _sopManager.AddChecklistItemAsync(templateId, ChecklistItem, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
@@ -70,7 +70,7 @@ public class SopsModel : PageModel
 
     public async Task<IActionResult> OnPostUpdateItemAsync(int itemId, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsSopManage)) return Forbid();
+        if (!User.HasPermission(PermissionKeys.SopsManage)) return Forbid();
         var result = await _sopManager.UpdateChecklistItemAsync(itemId, ChecklistItem, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
@@ -78,7 +78,7 @@ public class SopsModel : PageModel
 
     public async Task<IActionResult> OnPostDeleteItemAsync(int itemId, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsSopManage)) return Forbid();
+        if (!User.HasPermission(PermissionKeys.SopsManage)) return Forbid();
         var result = await _sopManager.DeleteChecklistItemAsync(itemId, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();

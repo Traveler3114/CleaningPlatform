@@ -59,7 +59,7 @@ public class InvoiceManager
             return OperationResult<InvoiceDetailResponse>.Fail("Booking not found.");
 
         if (booking.Status != BookingStatus.Completed)
-            return OperationResult<InvoiceDetailResponse>.Fail("Only completed bookings can be invoiced.");
+            return OperationResult<InvoiceDetailResponse>.Fail("Booking #{bookingId} cannot be invoiced — its status is '{status}', but only Completed bookings can generate an invoice.");
 
         var existingLink = await _db.InvoiceBookings
             .AsNoTracking()

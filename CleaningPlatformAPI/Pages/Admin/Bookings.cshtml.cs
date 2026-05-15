@@ -12,7 +12,7 @@ using CleaningPlatformAPI.Enums;
 
 namespace CleaningPlatformAPI.Pages.Admin;
 
-[Authorize(Policy = PermissionKeys.PagesBookings)]
+[Authorize(Policy = PermissionKeys.BookingsView)]
 public class BookingsModel : PageModel
 {
     private readonly BookingManager _bookingManager;
@@ -49,7 +49,7 @@ public class BookingsModel : PageModel
 
     public async Task<IActionResult> OnPostCreateAdminAsync(CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingCreate))
+        if (!User.HasPermission(PermissionKeys.BookingsCreate))
             return Forbid();
 
         if (NewServiceCatalogId.HasValue)
@@ -64,7 +64,7 @@ public class BookingsModel : PageModel
 
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
+        if (!User.HasPermission(PermissionKeys.BookingsEdit))
             return Forbid();
 
         var result = await _bookingManager.UpdateStatusAsync(id, status, ct);

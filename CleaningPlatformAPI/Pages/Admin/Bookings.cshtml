@@ -8,7 +8,7 @@
 <div class="page-header">
     <h1>Bookings</h1>
     <div class="date-form">
-        @if (User.HasPermission(PermissionKeys.ActionsBookingCreate))
+        @if (User.HasPermission(PermissionKeys.BookingsCreate))
         {
             <button type="button" class="btn btn-sm" onclick="document.getElementById('new-booking-panel').style.display = document.getElementById('new-booking-panel').style.display === 'none' ? 'block' : 'none';">New Booking</button>
         }
@@ -24,7 +24,7 @@
 </div>
 
 
-@if (User.HasPermission(PermissionKeys.ActionsBookingCreate))
+@if (User.HasPermission(PermissionKeys.BookingsCreate))
 {
     <section id="new-booking-panel" class="card-lite" style="display:none; margin-bottom:1rem;">
         <h2 class="section-title">Create Admin Booking</h2>

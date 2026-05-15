@@ -460,3 +460,24 @@ body.login-page {
         display: none;
     }
 }
+
+/* Remove bullet dots from SOP checklist lists and employee lists */
+.sop-checklist, .assigned-employees-list { list-style: none; padding: 0; margin: 0; }
+
+/* General fix: any ul inside detail-section or card-lite loses bullets */
+.detail-section ul, .card-lite ul { list-style: none; padding: 0; margin: 0; }
+
+/* Inline form overflow fix */
+.inline-form { flex-wrap: wrap; gap: 0.4rem; overflow: visible; }
+
+/* Page header wraps on narrow screens */
+.page-header { flex-wrap: wrap; }
+
+/* Modal panel never overflows viewport */
+.modal-panel { max-width: min(900px, 95vw); max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
+
+/* Dropdown nav */
+.nav-group { position: relative; }
+.nav-dropdown { display:none; position:absolute; top:100%; left:0; background:#283593; min-width:180px; z-index:20; padding:.4rem 0; }
+.nav-group:hover .nav-dropdown, .nav-group:focus-within .nav-dropdown { display:block; }
+.nav-dropdown a { display:block; padding:.4rem .8rem; color:#fff; text-decoration:none; }

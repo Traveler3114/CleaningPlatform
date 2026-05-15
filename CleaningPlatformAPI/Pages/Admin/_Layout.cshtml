@@ -26,14 +26,14 @@
                         <a asp-page="/Admin/Index"
                            class="nav-link @(activePage == "daily" ? "active" : "")">Daily View</a>
                     }
-                    @if (CanView(PermissionKeys.PagesBookings))
+                    @if (CanView(PermissionKeys.BookingsView))
                     {
                         <a asp-page="/Admin/Bookings"
                            class="nav-link @(activePage == "bookings" ? "active" : "")">Bookings</a>
                         <a asp-page="/Admin/Invoices"
                            class="nav-link @(activePage == "invoices" ? "active" : "")">Invoices</a>
                     }
-                    @if (CanView(PermissionKeys.PagesClients))
+                    @if (CanView(PermissionKeys.ClientsView))
                     {
                         <a asp-page="/Admin/Clients"
                            class="nav-link @(activePage == "clients" ? "active" : "")">Clients</a>
@@ -48,17 +48,17 @@
                         <a asp-page="/Admin/Kanban"
                            class="nav-link @(activePage == "kanban" ? "active" : "")">Kanban</a>
                     }
-                    @if (CanView(PermissionKeys.PagesSop))
+                    @if (CanView(PermissionKeys.SopsView))
                     {
                         <a asp-page="/Admin/Sops"
                            class="nav-link @(activePage == "sops" ? "active" : "")">SOPs</a>
                     }
-                    @if (CanView(PermissionKeys.PagesReports))
+                    @if (CanView(PermissionKeys.ReportsView))
                     {
                         <a asp-page="/Admin/Reports"
                            class="nav-link @(activePage == "reports" ? "active" : "")">Reports</a>
                     }
-                    @if (IsOwner() || User.HasPermission(PermissionKeys.ActionsServiceCatalogEdit) || User.HasPermission(PermissionKeys.ActionsServiceCatalogManage))
+                    @if (IsOwner() || User.HasPermission(PermissionKeys.ServicesManage) || User.HasPermission(PermissionKeys.ServicesManage))
                     {
                         <a asp-page="/Admin/Services"
                            class="nav-link @(activePage == "services" ? "active" : "")">Services</a>

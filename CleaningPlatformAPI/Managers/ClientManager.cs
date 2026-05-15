@@ -135,7 +135,7 @@ public class ClientManager
             .ToList();
 
         if (rawContacts.Count == 0)
-            return OperationResult<ClientResponse>.Fail("At least one contact is required.");
+            return OperationResult<ClientResponse>.Fail("At least one active contact with a name and phone number is required.");
 
         if (rawContacts.Any(c => string.IsNullOrWhiteSpace(c.ContactName) || string.IsNullOrWhiteSpace(c.Phone)))
             return OperationResult<ClientResponse>.Fail("Each contact must have name and phone.");
@@ -153,7 +153,7 @@ public class ClientManager
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
         if (client == null)
-            return OperationResult<ClientResponse>.Fail("Client not found.");
+            return OperationResult<ClientResponse>.Fail("Client #{id} was not found.");
 
         var now = DateTime.UtcNow;
         await using var transaction = await _db.Database.BeginTransactionAsync(ct);
@@ -235,7 +235,7 @@ public class ClientManager
     {
         var exists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!exists)
-            return OperationResult<List<SiteResponse>>.Fail("Client not found.");
+            return OperationResult<List<SiteResponse>>.Fail("Client #{id} was not found.");
 
         var sites = await _db.Sites
             .Where(s => s.ClientId == clientId)
@@ -255,7 +255,7 @@ public class ClientManager
 
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<SiteResponse>.Fail("Client not found.");
+            return OperationResult<SiteResponse>.Fail("Client #{id} was not found.");
 
         var now = DateTime.UtcNow;
         var site = new Site

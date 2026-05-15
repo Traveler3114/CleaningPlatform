@@ -8,7 +8,7 @@ using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Pages.Admin;
 
-[Authorize(Policy = PermissionKeys.PagesBookings)]
+[Authorize(Policy = PermissionKeys.BookingsView)]
 public class InvoicesModel : PageModel
 {
     private readonly InvoiceManager _invoiceManager;
@@ -30,7 +30,7 @@ public class InvoicesModel : PageModel
 
     public async Task<IActionResult> OnPostGenerateFromBookingAsync(int bookingId)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
+        if (!User.HasPermission(PermissionKeys.BookingsEdit))
             return Forbid();
 
         var result = await _invoiceManager.CreateFromBookingAsync(bookingId, User.GetEmployeeId());

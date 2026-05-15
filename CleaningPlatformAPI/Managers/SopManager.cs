@@ -51,16 +51,29 @@ public class SopManager
 
     public async Task<OperationResult<string>> DeleteTemplateAsync(int id, CancellationToken ct = default)
     {
+        await using var tx = await _db.Database.BeginTransactionAsync(ct);
         var template = await _db.SopTemplates.FindAsync([id], ct);
-        if (template is null) return OperationResult<string>.Fail("SOP template not found.");
+        if (template is null) return OperationResult<string>.Fail($"SOP template #{id} was not found.");
+
+        var itemIds = await _db.ChecklistItems.Where(i => i.SopTemplateId == id).Select(i => i.Id).ToListAsync(ct);
+        if (itemIds.Count != 0)
+        {
+            var responses = await _db.ChecklistResponses.Where(r => itemIds.Contains(r.ChecklistItemId)).ToListAsync(ct);
+            if (responses.Count != 0) _db.ChecklistResponses.RemoveRange(responses);
+            var items = await _db.ChecklistItems.Where(i => i.SopTemplateId == id).ToListAsync(ct);
+            if (items.Count != 0) _db.ChecklistItems.RemoveRange(items);
+        }
+
         var hasAssignments = await _db.BookingSopAssignments.AnyAsync(a => a.SopTemplateId == id, ct);
         if (hasAssignments) template.IsActive = false;
         else _db.SopTemplates.Remove(template);
+
         await _db.SaveChangesAsync(ct);
-        return OperationResult<string>.Ok(hasAssignments ? "SOP template deactivated." : "SOP template deleted.");
+        await tx.CommitAsync(ct);
+        return OperationResult<string>.Ok(hasAssignments ? "SOP template deactivated — it is linked to existing bookings and cannot be fully removed." : "SOP template deleted successfully.");
     }
 
-    public async Task<OperationResult<ChecklistItemResponse>> AddChecklistItemAsync(int templateId, UpsertChecklistItemRequest dto, CancellationToken ct = default)
+public async Task<OperationResult<ChecklistItemResponse>> AddChecklistItemAsync(int templateId, UpsertChecklistItemRequest dto, CancellationToken ct = default)
     {
         if (!await _db.SopTemplates.AnyAsync(t => t.Id == templateId, ct)) return OperationResult<ChecklistItemResponse>.Fail("SOP template not found.");
         var item = new ChecklistItem { SopTemplateId = templateId, ItemText = dto.ItemText.Trim(), SortOrder = dto.SortOrder, IsRequired = dto.IsRequired };
@@ -83,10 +96,12 @@ public class SopManager
     public async Task<OperationResult<string>> DeleteChecklistItemAsync(int itemId, CancellationToken ct = default)
     {
         var item = await _db.ChecklistItems.FindAsync([itemId], ct);
-        if (item is null) return OperationResult<string>.Fail("Checklist item not found.");
+        if (item is null) return OperationResult<string>.Fail($"Checklist item #{itemId} was not found.");
+        var responses = await _db.ChecklistResponses.Where(r => r.ChecklistItemId == itemId).ToListAsync(ct);
+        if (responses.Count != 0) _db.ChecklistResponses.RemoveRange(responses);
         _db.ChecklistItems.Remove(item);
         await _db.SaveChangesAsync(ct);
-        return OperationResult<string>.Ok("Checklist item deleted.");
+        return OperationResult<string>.Ok("Checklist item deleted successfully.");
     }
 
     public async Task<List<SopTemplate>> GetDefaultTemplatesForServiceTypeAsync(string serviceType, CancellationToken ct = default) =>

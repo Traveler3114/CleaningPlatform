@@ -26,7 +26,7 @@ public class DateOverrideManager
     public async Task<OperationResult<DateOverrideResponse>> CreateOverrideAsync(DateOverrideRequest request, CancellationToken ct = default)
     {
         if (request.Date.Date < DateTime.UtcNow.Date)
-            return OperationResult<DateOverrideResponse>.Fail("Cannot create an override for a past date.");
+            return OperationResult<DateOverrideResponse>.Fail("Date overrides cannot be created for past dates. Selected date: {date:dd MMM yyyy}.");
 
         var existing = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date.Date == request.Date.Date, ct);
         DateOverride entity;

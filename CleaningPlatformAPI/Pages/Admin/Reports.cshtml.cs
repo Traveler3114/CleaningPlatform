@@ -9,7 +9,7 @@ using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Pages.Admin;
 
-[Authorize(Policy = PermissionKeys.PagesReports)]
+[Authorize(Policy = PermissionKeys.ReportsView)]
 public class ReportsModel : PageModel
 {
     private readonly ReportingManager _reportingManager;
@@ -26,7 +26,7 @@ public class ReportsModel : PageModel
 
     public async Task<IActionResult> OnPostExportAsync(CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsReportsExport))
+        if (!User.HasPermission(PermissionKeys.ReportsExport))
             return Forbid();
 
         var rows = await _reportingManager.GetInvoiceExportDataAsync(ct);

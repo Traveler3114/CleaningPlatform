@@ -9,7 +9,7 @@ namespace CleaningPlatformAPI.Controllers;
 
 [ApiController]
 [Route("api/reports")]
-[Authorize(Policy = PermissionKeys.PagesReports)]
+[Authorize(Policy = PermissionKeys.ReportsView)]
 public class ReportingController : ControllerBase
 {
     private readonly ReportingManager _reportingManager;
@@ -32,7 +32,7 @@ public class ReportingController : ControllerBase
     public async Task<OperationResult<OverdueInvoiceSummaryResponse>> Overdue(CancellationToken ct) => OperationResult<OverdueInvoiceSummaryResponse>.Ok(await _reportingManager.GetOverdueInvoiceSummaryAsync(ct));
 
     [HttpGet("export")]
-    [Authorize(Policy = PermissionKeys.ActionsReportsExport)]
+    [Authorize(Policy = PermissionKeys.ReportsExport)]
     public async Task<IActionResult> Export(CancellationToken ct)
     {
         var rows = await _reportingManager.GetInvoiceExportDataAsync(ct);

@@ -34,14 +34,14 @@ public class ClientController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = PermissionKeys.PagesClients)]
+    [Authorize(Policy = PermissionKeys.ClientsView)]
     public async Task<OperationResult<ClientResponse>> Create([FromBody] CreateClientRequest request, CancellationToken ct)
     {
         return await _clientManager.CreateAsync(request, ct);
     }
 
     [HttpPut("{id:int}")]
-    [Authorize(Policy = PermissionKeys.PagesClients)]
+    [Authorize(Policy = PermissionKeys.ClientsView)]
     public async Task<OperationResult<ClientResponse>> UpdateProfile(int id, [FromBody] UpdateClientProfileRequest request, CancellationToken ct)
     {
         return await _clientManager.UpdateProfileAsync(id, request, ct);
@@ -54,21 +54,21 @@ public class ClientController : ControllerBase
     }
 
     [HttpPost("{id:int}/sites")]
-    [Authorize(Policy = PermissionKeys.PagesClients)]
+    [Authorize(Policy = PermissionKeys.ClientsView)]
     public async Task<OperationResult<SiteResponse>> CreateSite(int id, [FromBody] UpsertSiteRequest request, CancellationToken ct)
     {
         return await _clientManager.CreateSiteAsync(id, request, ct);
     }
 
     [HttpPut("{id:int}/sites/{siteId:int}")]
-    [Authorize(Policy = PermissionKeys.PagesClients)]
+    [Authorize(Policy = PermissionKeys.ClientsView)]
     public async Task<OperationResult<SiteResponse>> UpdateSite(int id, int siteId, [FromBody] UpsertSiteRequest request, CancellationToken ct)
     {
         return await _clientManager.UpdateSiteAsync(id, siteId, request, ct);
     }
 
     [HttpDelete("{id:int}/sites/{siteId:int}")]
-    [Authorize(Policy = PermissionKeys.PagesClients)]
+    [Authorize(Policy = PermissionKeys.ClientsView)]
     public async Task<OperationResult<SiteResponse>> DeactivateSite(int id, int siteId, CancellationToken ct)
     {
         return await _clientManager.DeactivateSiteAsync(id, siteId, ct);

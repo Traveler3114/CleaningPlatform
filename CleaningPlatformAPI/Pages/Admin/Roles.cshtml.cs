@@ -44,7 +44,7 @@ public class RolesModel : PageModel
 
     public async Task<IActionResult> OnPostCreateAsync(string name, List<string> permissions, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsRoleManage))
+        if (!User.HasPermission(PermissionKeys.RolesManage))
             return Forbid();
 
         var result = await _roleManager.CreateRoleAsync(new CreateRoleRequest { Name = name, Permissions = permissions }, ct);
@@ -54,7 +54,7 @@ public class RolesModel : PageModel
 
     public async Task<IActionResult> OnPostUpdateAsync(int id, string name, List<string> permissions, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsRoleManage))
+        if (!User.HasPermission(PermissionKeys.RolesManage))
             return Forbid();
 
         var result = await _roleManager.UpdateRoleAsync(id, new UpdateRoleRequest { Name = name, Permissions = permissions }, ct);
@@ -64,7 +64,7 @@ public class RolesModel : PageModel
 
     public async Task<IActionResult> OnPostDeleteAsync(int id, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsRoleManage))
+        if (!User.HasPermission(PermissionKeys.RolesManage))
             return Forbid();
 
         var result = await _roleManager.DeleteRoleAsync(id, ct);

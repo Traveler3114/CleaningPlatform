@@ -25,21 +25,21 @@ public class ServiceCatalogController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = PermissionKeys.ActionsServiceCatalogManage)]
+    [Authorize(Policy = PermissionKeys.ServicesManage)]
     public async Task<OperationResult<ServiceCatalogResponse>> Post([FromBody] ServiceCatalogUpsertRequest request, CancellationToken ct)
     {
         return await _manager.CreateAsync(request, ct);
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = PermissionKeys.ActionsServiceCatalogEdit)]
+    [Authorize(Policy = PermissionKeys.ServicesManage)]
     public async Task<OperationResult<ServiceCatalogResponse>> Put(int id, [FromBody] ServiceCatalogUpsertRequest request, CancellationToken ct)
     {
         return await _manager.UpdateAsync(id, request, ct);
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = PermissionKeys.ActionsServiceCatalogManage)]
+    [Authorize(Policy = PermissionKeys.ServicesManage)]
     public async Task<OperationResult<string>> Delete(int id, CancellationToken ct)
     {
         return await _manager.DeleteAsync(id, ct);

@@ -40,21 +40,21 @@ public class RoleController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = PermissionKeys.ActionsRoleManage)]
+    [Authorize(Policy = PermissionKeys.RolesManage)]
     public async Task<OperationResult<RoleResponse>> Create([FromBody] CreateRoleRequest request, CancellationToken ct)
     {
         return await _roleManager.CreateRoleAsync(request, ct);
     }
 
     [HttpPut("{id}")]
-    [Authorize(Policy = PermissionKeys.ActionsRoleManage)]
+    [Authorize(Policy = PermissionKeys.RolesManage)]
     public async Task<OperationResult<RoleResponse>> Update(int id, [FromBody] UpdateRoleRequest request, CancellationToken ct)
     {
         return await _roleManager.UpdateRoleAsync(id, request, ct);
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = PermissionKeys.ActionsRoleManage)]
+    [Authorize(Policy = PermissionKeys.RolesManage)]
     public async Task<OperationResult<string>> Delete(int id, CancellationToken ct)
     {
         return await _roleManager.DeleteRoleAsync(id, ct);

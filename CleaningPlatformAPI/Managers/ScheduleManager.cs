@@ -30,7 +30,7 @@ public class ScheduleManager
 
         var existing = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == request.DayOfWeek, ct);
         if (existing != null)
-            return OperationResult<WeeklyScheduleResponse>.Fail("A schedule for this day already exists.");
+            return OperationResult<WeeklyScheduleResponse>.Fail("A schedule entry for {dayName} already exists. Edit the existing entry instead.");
 
         var schedule = new WeeklySchedule
         {

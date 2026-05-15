@@ -38,7 +38,7 @@ public class UsersModel : PageModel
 
     public async Task<IActionResult> OnPostCreateAsync()
     {
-        if (!User.HasPermission(PermissionKeys.ActionsUserCreate))
+        if (!User.HasPermission(PermissionKeys.UsersCreate))
             return Forbid();
 
         var result = await _authManager.RegisterAsync(NewUser);
@@ -50,7 +50,7 @@ public class UsersModel : PageModel
 
     public async Task<IActionResult> OnPostToggleAsync(int id)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsUserToggleActive))
+        if (!User.HasPermission(PermissionKeys.UsersEdit))
             return Forbid();
 
         var currentUserId = User.GetEmployeeId();
@@ -69,7 +69,7 @@ public class UsersModel : PageModel
 
     public async Task<IActionResult> OnPostResetPasswordAsync(int userId, string newPassword)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsUserToggleActive))
+        if (!User.HasPermission(PermissionKeys.UsersEdit))
             return Forbid();
 
         var result = await _authManager.ResetPasswordAsync(new ResetPasswordRequest

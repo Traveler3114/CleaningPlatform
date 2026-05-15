@@ -20,14 +20,14 @@ public class InvoiceController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = PermissionKeys.PagesBookings)]
+    [Authorize(Policy = PermissionKeys.BookingsView)]
     public async Task<OperationResult<List<InvoiceSummaryResponse>>> GetAll(CancellationToken ct)
     {
         return OperationResult<List<InvoiceSummaryResponse>>.Ok(await _invoiceManager.GetAllAsync(ct));
     }
 
     [HttpGet("{id:int}")]
-    [Authorize(Policy = PermissionKeys.PagesBookings)]
+    [Authorize(Policy = PermissionKeys.BookingsView)]
     public async Task<OperationResult<InvoiceDetailResponse>> GetById(int id, CancellationToken ct)
     {
         var invoice = await _invoiceManager.GetByIdAsync(id, ct);
@@ -37,14 +37,14 @@ public class InvoiceController : ControllerBase
     }
 
     [HttpPost("from-booking/{bookingId:int}")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<InvoiceDetailResponse>> CreateFromBooking(int bookingId, CancellationToken ct)
     {
         return await _invoiceManager.CreateFromBookingAsync(bookingId, ParseCurrentEmployeeId(), ct);
     }
 
     [HttpPost("from-booking")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<InvoiceDetailResponse>> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingRequest request, CancellationToken ct)
     {
         if (request.BookingId <= 0)
@@ -54,14 +54,14 @@ public class InvoiceController : ControllerBase
     }
 
     [HttpPost("{id:int}/payments")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<InvoiceDetailResponse>> RecordPayment(int id, [FromBody] RecordPaymentRequest request, CancellationToken ct)
     {
         return await _invoiceManager.RecordPaymentAsync(id, request, ParseCurrentEmployeeId(), ct);
     }
 
     [HttpPut("{id:int}/status")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<InvoiceDetailResponse>> UpdateStatus(int id, [FromBody] UpdateInvoiceStatusRequest request, CancellationToken ct)
     {
         return await _invoiceManager.UpdateStatusAsync(id, request.Status, ct);

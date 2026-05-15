@@ -25,14 +25,14 @@ public class DateOverrideController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = PermissionKeys.ActionsOverrideManage)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<DateOverrideResponse>> Post([FromBody] DateOverrideRequest request, CancellationToken ct)
     {
         return await _manager.CreateOverrideAsync(request, ct);
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = PermissionKeys.ActionsOverrideManage)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<bool>> Delete(int id, CancellationToken ct)
     {
         return await _manager.DeleteOverrideAsync(id, ct);

@@ -8,7 +8,7 @@ using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Pages.Admin;
 
-[Authorize(Policy = PermissionKeys.PagesClients)]
+[Authorize(Policy = PermissionKeys.ClientsView)]
 public class ClientDetailModel : PageModel
 {
     private readonly ClientManager _clientManager;

@@ -82,12 +82,12 @@
     <h2 class="section-title">Employee Assignments</h2>
     @if (Model.Booking.AssignedEmployees.Any())
     {
-        <ul>
+        <ul class="assigned-employees-list">
             @foreach (var a in Model.Booking.AssignedEmployees)
             {
                 <li style="margin-bottom:0.4rem;">
                     @a.FullName (@a.Role)
-                    @if (User.HasPermission(PermissionKeys.ActionsBookingAssign))
+                    @if (User.HasPermission(PermissionKeys.BookingsEdit))
                     {
                         <form method="post" asp-page-handler="RemoveAssignment" style="display:inline; margin-left:0.5rem;">
                             <input type="hidden" name="id" value="@Model.Booking.Id" />
@@ -104,7 +104,7 @@
         <p><strong>Current:</strong> Unassigned</p>
     }
 
-    @if (User.HasPermission(PermissionKeys.ActionsBookingAssign))
+    @if (User.HasPermission(PermissionKeys.BookingsEdit))
     {
         <form method="post" asp-page-handler="AddAssignment" class="inline-form" style="flex-wrap:wrap;">
             <input type="hidden" name="id" value="@Model.Booking.Id" />
@@ -224,7 +224,7 @@
                         @foreach (var item in sop.ChecklistItems)
                         {
                             <li style="display:flex; align-items:flex-start; gap:0.5rem; padding:0.35rem 0; border-bottom:1px solid #f0f0f0;">
-                                @if (User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus) && Model.Booking.AssignedEmployees.Any())
+                                @if (User.HasPermission(PermissionKeys.BookingsEdit) && Model.Booking.AssignedEmployees.Any())
                                 {
                                     var primaryAssignment = Model.Booking.AssignedEmployees.OrderBy(a => a.AssignmentId).First();
                                     <form method="post" asp-page-handler="CompleteChecklistItem" style="display:contents;">
@@ -254,7 +254,7 @@
         }
     }
 
-    @if (User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
+    @if (User.HasPermission(PermissionKeys.BookingsEdit))
     {
         <form method="post" asp-page-handler="AssignSop" class="inline-form" style="margin-top:1rem;">
             <input type="hidden" name="id" value="@Model.Booking.Id" />

@@ -31,7 +31,7 @@ public class ServicesModel : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        if (!User.HasPermission(PermissionKeys.ActionsServiceCatalogEdit) && !User.HasPermission(PermissionKeys.ActionsServiceCatalogManage))
+        if (!User.HasPermission(PermissionKeys.ServicesManage) && !User.HasPermission(PermissionKeys.ServicesManage))
             return Forbid();
 
         Services = await _serviceCatalogManager.GetAllAsync();
@@ -40,7 +40,7 @@ public class ServicesModel : PageModel
 
     public async Task<IActionResult> OnPostCreateAsync()
     {
-        if (!User.HasPermission(PermissionKeys.ActionsServiceCatalogManage))
+        if (!User.HasPermission(PermissionKeys.ServicesManage))
             return Forbid();
 
         var result = await _serviceCatalogManager.CreateAsync(NewService);
@@ -50,7 +50,7 @@ public class ServicesModel : PageModel
 
     public async Task<IActionResult> OnPostUpdateAsync(int id)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsServiceCatalogEdit))
+        if (!User.HasPermission(PermissionKeys.ServicesManage))
             return Forbid();
 
         var result = await _serviceCatalogManager.UpdateAsync(id, EditService);
@@ -60,7 +60,7 @@ public class ServicesModel : PageModel
 
     public async Task<IActionResult> OnPostDeleteAsync(int id)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsServiceCatalogManage))
+        if (!User.HasPermission(PermissionKeys.ServicesManage))
             return Forbid();
 
         var result = await _serviceCatalogManager.DeleteAsync(id);

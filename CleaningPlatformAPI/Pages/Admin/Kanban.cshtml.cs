@@ -50,7 +50,7 @@ public class KanbanModel : PageModel
 
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
+        if (!User.HasPermission(PermissionKeys.BookingsEdit))
             return Forbid();
 
         var result = await _bookingManager.UpdateStatusAsync(id, status, ct);
@@ -62,7 +62,7 @@ public class KanbanModel : PageModel
 
     public async Task<IActionResult> OnPostAddAssignmentAsync(int id, int employeeId, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingAssign))
+        if (!User.HasPermission(PermissionKeys.BookingsEdit))
             return Forbid();
 
         var result = await _bookingManager.AddAssignmentAsync(id, employeeId, ct);

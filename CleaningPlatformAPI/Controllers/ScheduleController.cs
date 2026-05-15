@@ -25,21 +25,21 @@ public class ScheduleController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = PermissionKeys.ActionsScheduleEdit)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<WeeklyScheduleResponse>> Post([FromBody] WeeklyScheduleRequest request, CancellationToken ct)
     {
         return await _manager.CreateDayAsync(request, ct);
     }
 
     [HttpPut("{dayOfWeek}")]
-    [Authorize(Policy = PermissionKeys.ActionsScheduleEdit)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<WeeklyScheduleResponse>> Put(int dayOfWeek, [FromBody] UpdateWeeklyScheduleRequest request, CancellationToken ct)
     {
         return await _manager.UpdateDayAsync(dayOfWeek, request, ct);
     }
 
     [HttpDelete("{dayOfWeek}")]
-    [Authorize(Policy = PermissionKeys.ActionsScheduleEdit)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<bool>> Delete(int dayOfWeek, CancellationToken ct)
     {
         return await _manager.DeleteDayAsync(dayOfWeek, ct);

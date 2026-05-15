@@ -33,7 +33,7 @@ public class ScheduleModel : PageModel
 
     public async Task<IActionResult> OnPostAddDayAsync()
     {
-        if (!User.HasPermission(PermissionKeys.ActionsScheduleEdit))
+        if (!User.HasPermission(PermissionKeys.ScheduleEdit))
             return Forbid();
 
         var result = await _scheduleManager.CreateDayAsync(DayInput);
@@ -43,7 +43,7 @@ public class ScheduleModel : PageModel
 
     public async Task<IActionResult> OnPostUpdateDayAsync(int dayOfWeek)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsScheduleEdit))
+        if (!User.HasPermission(PermissionKeys.ScheduleEdit))
             return Forbid();
 
         var result = await _scheduleManager.UpdateDayAsync(dayOfWeek, new UpdateWeeklyScheduleRequest
@@ -58,7 +58,7 @@ public class ScheduleModel : PageModel
 
     public async Task<IActionResult> OnPostDeleteDayAsync(int dayOfWeek)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsScheduleEdit))
+        if (!User.HasPermission(PermissionKeys.ScheduleEdit))
             return Forbid();
 
         var result = await _scheduleManager.DeleteDayAsync(dayOfWeek);

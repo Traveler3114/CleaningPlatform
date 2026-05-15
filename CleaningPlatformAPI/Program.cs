@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -114,13 +115,26 @@ app.UseExceptionHandler(errorApp =>
         context.Response.StatusCode = 500;
         context.Response.ContentType = "application/json";
         var error = context.Features.Get<IExceptionHandlerFeature>();
-        if (error != null)
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+
+        string message = "An unexpected error occurred.";
+        if (error?.Error is SqlException sqlEx && (sqlEx.Number == 2601 || sqlEx.Number == 2627))
         {
-            var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogError(error.Error, "Unhandled exception");
+            message = "A record with this value already exists.";
+        }
+        else if (error?.Error is SqlException fkEx && fkEx.Number == 547)
+        {
+            message = "This record cannot be deleted because it is referenced by other data. Remove the related records first.";
+        }
+        else if (error?.Error is Exception ex)
+        {
+            logger.LogError(ex, "Unhandled exception");
+            message = app.Environment.IsDevelopment()
+                ? $"Unexpected error ({ex.GetType().Name}): {ex.Message}"
+                : "An unexpected error occurred.";
         }
 
-        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("An unexpected error occurred."));
+        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail(message));
     });
 });
 app.UseRouting();

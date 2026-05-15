@@ -44,35 +44,35 @@ public class BookingController : ControllerBase
     }
 
     [HttpPost("admin")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingCreate)]
+    [Authorize(Policy = PermissionKeys.BookingsCreate)]
     public Task<OperationResult<BookingResponse>> CreateAdmin([FromBody] CreateAdminBookingRequest request, CancellationToken ct)
     {
         return _bookingManager.CreateAdminBookingAsync(request, ct);
     }
 
     [HttpPut("{id:int}/status")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<BookingResponse>> UpdateStatus(int id, [FromBody] UpdateStatusRequest request, CancellationToken ct)
     {
         return await _bookingManager.UpdateStatusAsync(id, request.Status, ct);
     }
 
     [HttpPost("{id:int}/assignments")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingAssign)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<BookingResponse>> AddAssignment(int id, [FromBody] AssignEmployeeRequest request, CancellationToken ct)
     {
         return await _bookingManager.AddAssignmentAsync(id, request.EmployeeId, ct);
     }
 
     [HttpDelete("{id:int}/assignments/{assignmentId:int}")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingAssign)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<string>> RemoveAssignment(int id, int assignmentId, CancellationToken ct)
     {
         return await _bookingManager.RemoveAssignmentAsync(id, assignmentId, ct);
     }
 
     [HttpPost("{id:int}/services")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<BookingResponse>> AddService(int id, [FromBody] AddServiceRequest request, CancellationToken ct)
     {
         return await _bookingManager.AddServiceAsync(
@@ -86,14 +86,14 @@ public class BookingController : ControllerBase
     }
 
     [HttpDelete("{id:int}/services/{serviceId:int}")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<string>> RemoveService(int id, int serviceId, CancellationToken ct)
     {
         return await _bookingManager.RemoveServiceAsync(id, serviceId, ct);
     }
 
     [HttpPut("{id:int}/services/{serviceId:int}")]
-    [Authorize(Policy = PermissionKeys.ActionsBookingUpdateStatus)]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<OperationResult<BookingResponse>> UpdateServicePrice(int id, int serviceId, [FromBody] UpdateServicePriceRequest request, CancellationToken ct)
     {
         return await _bookingManager.UpdateServicePriceAsync(id, serviceId, request.FinalPrice, ct);

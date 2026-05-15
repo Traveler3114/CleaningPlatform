@@ -58,7 +58,7 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostSaveOverrideAsync(CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsOverrideManage))
+        if (!User.HasPermission(PermissionKeys.ScheduleEdit))
             return Forbid();
 
         var result = await _dateOverrideManager.CreateOverrideAsync(new DateOverrideRequest
@@ -78,7 +78,7 @@ public class IndexModel : PageModel
 
     public async Task<IActionResult> OnPostDeleteOverrideAsync(int id, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsOverrideManage))
+        if (!User.HasPermission(PermissionKeys.ScheduleEdit))
             return Forbid();
 
         var result = await _dateOverrideManager.DeleteOverrideAsync(id, ct);
