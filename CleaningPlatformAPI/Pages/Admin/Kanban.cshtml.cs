@@ -56,35 +56,16 @@ public class KanbanModel : PageModel
 
     public async Task OnGetAsync(CancellationToken ct)
     {
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-        IsEmployeeView = string.Equals(role, RoleNames.Employee, StringComparison.OrdinalIgnoreCase);
-
         if (IsEmployeeView)
         {
             var empId = User.GetEmployeeId();
+            // Always use the current week – ignore any WeekStart from the query string
             WeekStartDate = GetMondayOf(DateTime.UtcNow);
             Board = await _kanbanManager.GetEmployeeWeekAsync(empId!.Value, WeekStartDate, ct);
             View = "week";
             ComputeGridHours();
             return;
         }
-
-        WeekStartDate = GetMondayOf(
-            DateTime.TryParse(WeekStart, out var ws) ? ws : DateTime.UtcNow);
-
-        DayView = DateTime.TryParse(DayDate, out var dd) ? dd.Date : null;
-
-        var md = DateTime.TryParse(MonthDate, out var m) ? m : DateTime.UtcNow;
-        var currentMonth = new DateTime(md.Year, md.Month, 1);
-
-        Board = View switch
-        {
-            "day"   => await _kanbanManager.GetWeekAsync(DayView ?? WeekStartDate, FilterEmployeeId, ct),
-            "month" => await _kanbanManager.GetWeekAsync(currentMonth, FilterEmployeeId, ct),
-            _       => await _kanbanManager.GetWeekAsync(WeekStartDate, FilterEmployeeId, ct)
-        };
-
-        ComputeGridHours();
     }
 
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)

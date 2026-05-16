@@ -42,11 +42,23 @@ public class BookingDetailModel : PageModel
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
         Booking = await _bookingManager.GetBookingDetailByIdAsync(Id, ct);
+        if (Booking == null)
+            return NotFound();
+
+        // Security: employees can only see bookings they are assigned to
+        if (User.IsInRole(RoleNames.Employee))
+        {
+            var currentEmployeeId = User.GetEmployeeId();
+            bool isAssigned = Booking.AssignedEmployees.Any(e => e.EmployeeId == currentEmployeeId);
+            if (!isAssigned)
+                return Forbid(); // or return NotFound() if you prefer to hide existence
+        }
+
         ActiveEmployees = await _employeeManager.GetActiveEmployeesAsync(ct);
         ServiceCatalog = await _serviceCatalogManager.GetAllAsync(ct);
         SopTemplates = await _sopManager.GetAllTemplatesAsync(ct);
         BookingSops = await _sopManager.GetBookingSopsAsync(Id, ct);
-        return Booking == null ? NotFound() : Page();
+        return Page();
     }
 
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)

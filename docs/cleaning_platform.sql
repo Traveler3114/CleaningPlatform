@@ -17,7 +17,7 @@ USE CleaningPlatformDB;
 GO
 
 -- ============================================================
--- CLEANING PLATFORM – FULL SCHEMA
+-- TABLES (unchanged from your original – kept as is)
 -- ============================================================
 
 CREATE TABLE Employees (
@@ -170,129 +170,82 @@ CREATE INDEX IX_RolePermissions_Key    ON RolePermissions(PermissionKey);
 GO
 
 -- ============================================================
--- CORRECTED RolePermissions SEED
--- Replace the existing RolePermissions INSERT block in
--- cleaning_platform.sql with this one.
---
--- The old seed used legacy-style keys (clients.view, bookings.manage
--- etc.) that do not exist in PermissionKeys.All and were therefore
--- dead. This block uses the exact keys the C# authorization system
--- checks, matching PermissionKeys.cs.
+-- CORRECTED RolePermissions SEED (matching PermissionKeys.All)
 -- ============================================================
 
--- Clear existing seeded permissions (safe to re-run on a fresh DB;
--- remove this DELETE if you are patching a live DB manually)
+-- Clear any previous permissions (fresh start)
 DELETE FROM RolePermissions;
 GO
 
+-- Define the exact list of permission keys used in C# (PermissionKeys.All)
+DECLARE @AllowedKeys TABLE (KeyName NVARCHAR(100));
+INSERT INTO @AllowedKeys (KeyName) VALUES
+    -- Pages
+    ('pages.daily'), ('pages.bookings'), ('pages.schedule'), ('pages.users'),
+    ('pages.roles'), ('pages.clients'), ('pages.kanban'), ('pages.sop'), ('pages.reports'),
+    -- Bookings
+    ('bookings.view'), ('bookings.create'), ('bookings.edit'), ('bookings.delete'),
+    -- Clients
+    ('clients.view'), ('clients.create'), ('clients.edit'), ('clients.delete'),
+    -- Invoices
+    ('invoices.view'), ('invoices.create'), ('invoices.edit'),
+    -- SOPs
+    ('sops.view'), ('sops.manage'),
+    -- Services
+    ('services.view'), ('services.manage'),
+    -- Schedule
+    ('schedule.view'), ('schedule.edit'),
+    -- Users
+    ('users.view'), ('users.create'), ('users.edit'),
+    -- Roles
+    ('roles.view'), ('roles.manage'),
+    -- Reports
+    ('reports.view'), ('reports.export');
+
+-- Owner gets all keys
 INSERT INTO RolePermissions (RoleId, PermissionKey)
-
--- ── Owner ────────────────────────────────────────────────────
--- Owner bypasses all permission checks in PermissionHandler,
--- so no permission rows are strictly required. We insert all
--- keys so the role looks correct in the Roles admin page.
-SELECT r.Id, p.PermissionKey
+SELECT r.Id, k.KeyName
 FROM Roles r
-CROSS JOIN (VALUES
-    ('pages.daily'),
-    ('pages.bookings'),
-    ('pages.schedule'),
-    ('pages.users'),
-    ('pages.roles'),
-    ('pages.clients'),
-    ('pages.kanban'),
-    ('pages.sop'),
-    ('pages.reports'),
-    ('actions.booking.assign'),
-    ('actions.booking.updateStatus'),
-    ('actions.booking.create'),
-    ('actions.schedule.edit'),
-    ('actions.override.manage'),
-    ('actions.user.create'),
-    ('actions.user.toggleActive'),
-    ('actions.role.manage'),
-    ('actions.serviceCatalog.edit'),
-    ('actions.serviceCatalog.manage'),
-    ('actions.sop.manage'),
-    ('actions.reports.export')
-) p(PermissionKey)
+CROSS JOIN @AllowedKeys k
 WHERE r.Name = 'Owner'
+AND NOT EXISTS (SELECT 1 FROM RolePermissions rp WHERE rp.RoleId = r.Id AND rp.PermissionKey = k.KeyName);
 
-UNION ALL
-
--- ── Admin ────────────────────────────────────────────────────
--- Full operational access; no user/role management,
--- no service catalog management (edit only).
-SELECT r.Id, p.PermissionKey
+-- Admin gets all except user/role management and services.manage
+INSERT INTO RolePermissions (RoleId, PermissionKey)
+SELECT r.Id, k.KeyName
 FROM Roles r
-CROSS JOIN (VALUES
-    ('pages.daily'),
-    ('pages.bookings'),
-    ('pages.schedule'),
-    ('pages.clients'),
-    ('pages.kanban'),
-    ('pages.sop'),
-    ('pages.reports'),
-    ('actions.booking.assign'),
-    ('actions.booking.updateStatus'),
-    ('actions.booking.create'),
-    ('actions.schedule.edit'),
-    ('actions.override.manage'),
-    ('actions.serviceCatalog.edit'),
-    ('actions.sop.manage'),
-    ('actions.reports.export')
-) p(PermissionKey)
+CROSS JOIN @AllowedKeys k
 WHERE r.Name = 'Admin'
+AND k.KeyName NOT IN ('pages.users','pages.roles','users.view','users.create','users.edit','roles.view','roles.manage','services.manage')
+AND NOT EXISTS (SELECT 1 FROM RolePermissions rp WHERE rp.RoleId = r.Id AND rp.PermissionKey = k.KeyName);
 
-UNION ALL
-
--- ── Dispatcher ───────────────────────────────────────────────
--- Operational focus: bookings, kanban, schedule, clients (read).
--- No financial reports, no user/role management.
-SELECT r.Id, p.PermissionKey
+-- Dispatcher: only operational pages and booking/schedule actions
+INSERT INTO RolePermissions (RoleId, PermissionKey)
+SELECT r.Id, k.KeyName
 FROM Roles r
-CROSS JOIN (VALUES
-    ('pages.daily'),
-    ('pages.bookings'),
-    ('pages.clients'),
-    ('pages.kanban'),
-    ('pages.schedule'),
-    ('actions.booking.assign'),
-    ('actions.booking.updateStatus'),
-    ('actions.booking.create'),
-    ('actions.override.manage')
-) p(PermissionKey)
+CROSS JOIN @AllowedKeys k
 WHERE r.Name = 'Dispatcher'
+AND k.KeyName IN ('pages.daily','pages.bookings','pages.clients','pages.kanban','pages.schedule',
+                  'bookings.view','bookings.create','bookings.edit','schedule.edit')
+AND NOT EXISTS (SELECT 1 FROM RolePermissions rp WHERE rp.RoleId = r.Id AND rp.PermissionKey = k.KeyName);
 
-UNION ALL
-
--- ── Employee ─────────────────────────────────────────────────
--- Personal view only: daily view and kanban (filtered to their
--- own jobs by the page model). No admin actions.
-SELECT r.Id, p.PermissionKey
+-- Employee: only daily view and kanban (personal)
+INSERT INTO RolePermissions (RoleId, PermissionKey)
+SELECT r.Id, k.KeyName
 FROM Roles r
-CROSS JOIN (VALUES
-    ('pages.daily'),
-    ('pages.kanban')
-) p(PermissionKey)
+CROSS JOIN @AllowedKeys k
 WHERE r.Name = 'Employee'
+AND k.KeyName IN ('pages.daily','pages.kanban')
+AND NOT EXISTS (SELECT 1 FROM RolePermissions rp WHERE rp.RoleId = r.Id AND rp.PermissionKey = k.KeyName);
 
-UNION ALL
-
--- ── Finance ──────────────────────────────────────────────────
--- Financial visibility: invoices, reports, client read,
--- payment recording (via actions.booking.updateStatus which
--- guards the RecordPayment handler).
-SELECT r.Id, p.PermissionKey
+-- Finance: bookings, clients, reports, and ability to record payments (bookings.edit)
+INSERT INTO RolePermissions (RoleId, PermissionKey)
+SELECT r.Id, k.KeyName
 FROM Roles r
-CROSS JOIN (VALUES
-    ('pages.bookings'),
-    ('pages.clients'),
-    ('pages.reports'),
-    ('actions.booking.updateStatus'),
-    ('actions.reports.export')
-) p(PermissionKey)
-WHERE r.Name = 'Finance';
+CROSS JOIN @AllowedKeys k
+WHERE r.Name = 'Finance'
+AND k.KeyName IN ('pages.bookings','pages.clients','pages.reports','bookings.edit','reports.export')
+AND NOT EXISTS (SELECT 1 FROM RolePermissions rp WHERE rp.RoleId = r.Id AND rp.PermissionKey = k.KeyName);
 GO
 
 -- Add RoleId to Employees after Roles table exists
@@ -510,7 +463,7 @@ CREATE INDEX IX_Payments_Date      ON Payments(PaymentDate);
 GO
 
 -- ============================================================
--- SEED DATA
+-- SEED DATA (Employees, Clients, Sites, etc.)
 -- ============================================================
 
 INSERT INTO Employees (Username, PasswordHash, SecurityStamp, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, CreatedAt, UpdatedAt, RoleId)
@@ -707,7 +660,7 @@ WHERE b.ServiceType = 'Boat';
 GO
 
 -- ============================================================
--- INVOICE SEED
+-- INVOICE SEED (unchanged)
 -- ============================================================
 
 DECLARE @InvoiceMap TABLE (BookingId INT, InvoiceId INT);
@@ -812,7 +765,7 @@ WHERE i.Status IN ('Paid', 'PartiallyPaid');
 GO
 
 -- ============================================================
--- SOP MODULE
+-- SOP MODULE (unchanged)
 -- ============================================================
 
 CREATE TABLE SopTemplates (
@@ -880,11 +833,7 @@ GO
 CREATE INDEX IX_ChecklistResponses_Assignment ON ChecklistResponses(BookingAssignmentId);
 GO
 
--- ============================================================
 -- SOP SEED DATA
--- ============================================================
-
--- Insert SOP templates for a few services
 INSERT INTO SopTemplates (ServiceCatalogId, Name, ServiceType, Description) VALUES
 (1,  'Stubište osnovno čišćenje', 'SiteBased', 'Standardni postupak za tjedno čišćenje stubišta'),
 (4,  'Uredsko osnovno čišćenje', 'SiteBased', 'Osnovno čišćenje uredskih prostora'),
@@ -892,71 +841,49 @@ INSERT INTO SopTemplates (ServiceCatalogId, Name, ServiceType, Description) VALU
 (14, 'Kemijsko čišćenje sjedala', 'Vehicle', 'Dubinsko kemijsko čišćenje tapeciranih površina'),
 (3,  'Stubište premium', 'SiteBased', 'Premium čišćenje velikih stambenih objekata');
 
--- Insert checklist items for each template
--- Template 1: Stubište osnovno
 INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
 (1, 'Pomesti sve stepenice i podeste', 1, 1),
 (1, 'Oprati podove mokrom krpom', 2, 1),
 (1, 'Očistiti rukohvate i ograde', 3, 1),
 (1, 'Provjeriti i zamijeniti pregorjele žarulje', 4, 0),
-(1, 'Isprazniti pepeljare i kante za smeće', 5, 1);
-
--- Template 2: Uredsko osnovno
-INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
+(1, 'Isprazniti pepeljare i kante za smeće', 5, 1),
 (2, 'Isprazniti košarice za papir', 1, 1),
 (2, 'Obrisati sve radne površine', 2, 1),
 (2, 'Usisati podove i tepihe', 3, 1),
 (2, 'Očistiti staklene površine', 4, 0),
-(2, 'Dezinficirati kvake i telefone', 5, 1);
-
--- Template 3: Carwash LIM komplet
-INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
+(2, 'Dezinficirati kvake i telefone', 5, 1),
 (3, 'Predpranje vozila visokotlačnim čistačem', 1, 1),
 (3, 'Ručno pranje karoserije spužvom', 2, 1),
 (3, 'Čišćenje felgi i guma', 3, 1),
 (3, 'Usisavanje unutrašnjosti', 4, 1),
 (3, 'Brisanje plastičnih dijelova i stakala iznutra', 5, 1),
-(3, 'Nanošenje voska (ako je ugovoreno)', 6, 0);
-
--- Template 4: Kemijsko čišćenje sjedala
-INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
+(3, 'Nanošenje voska (ako je ugovoreno)', 6, 0),
 (4, 'Usisavanje sjedala prije tretmana', 1, 1),
 (4, 'Nanošenje kemijskog sredstva', 2, 1),
 (4, 'Strojno ribanje i ekstrakcija', 3, 1),
-(4, 'Provjera rezultata i po potrebi ponoviti', 4, 0);
-
--- Template 5: Stubište premium
-INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALUES
+(4, 'Provjera rezultata i po potrebi ponoviti', 4, 0),
 (5, 'Pomesti sve etaže i podeste', 1, 1),
 (5, 'Strojno ribanje podova', 2, 1),
 (5, 'Očistiti prozore i prozorske klupčice', 3, 1),
 (5, 'Očistiti ulazna vrata i okvire', 4, 1),
 (5, 'Provjera sigurnosne rasvjete', 5, 0);
 
--- Attach SOPs to some bookings (pick bookings where Id <= 20 and Status != Cancelled)
 INSERT INTO BookingSopAssignments (BookingId, SopTemplateId, CustomInstructions)
 SELECT b.Id, st.Id, NULL
 FROM Bookings b
-CROSS JOIN (
-    SELECT Id FROM SopTemplates
-    WHERE ServiceType = 'SiteBased'
-) st
+CROSS JOIN (SELECT Id FROM SopTemplates WHERE ServiceType = 'SiteBased') st
 WHERE b.Id BETWEEN 1 AND 15
   AND b.ServiceType = 'SiteBased'
   AND b.Status NOT IN ('Cancelled')
-  AND b.Id % 2 = 0; -- roughly half of them
+  AND b.Id % 2 = 0;
 
 INSERT INTO BookingSopAssignments (BookingId, SopTemplateId, CustomInstructions)
 SELECT b.Id, st.Id, 'Preskočiti vosak - klijent ne želi'
 FROM Bookings b
-CROSS JOIN (
-    SELECT Id FROM SopTemplates WHERE Name = 'Carwash LIM komplet'
-) st
+CROSS JOIN (SELECT Id FROM SopTemplates WHERE Name = 'Carwash LIM komplet') st
 WHERE b.ServiceType = 'Vehicle'
   AND b.Id BETWEEN 5 AND 10;
 
--- Generate checklist responses for assignments that have SOPs attached.
--- We'll mark them all as completed for Completed bookings, partially completed for InProgress.
 INSERT INTO ChecklistResponses (BookingAssignmentId, ChecklistItemId, IsCompleted, CompletedAt, Notes)
 SELECT
     ba.Id,
@@ -971,7 +898,6 @@ INNER JOIN ChecklistItems ci ON ci.SopTemplateId = bsa.SopTemplateId
 WHERE b.Id IN (SELECT BookingId FROM BookingSopAssignments)
   AND ba.EmployeeId IS NOT NULL;
 
--- For a couple of specific bookings, add notes to show discrepancy
 UPDATE ChecklistResponses
 SET Notes = 'Klijent tražio preskakanje - uredski tepisi već oprani jučer'
 WHERE BookingAssignmentId IN (
@@ -979,14 +905,12 @@ WHERE BookingAssignmentId IN (
     JOIN Bookings b ON ba.BookingId = b.Id
     WHERE b.Id = 6
 ) AND ChecklistItemId = (SELECT Id FROM ChecklistItems WHERE ItemText LIKE '%tepih%');
-
 GO
 
 -- ============================================================
--- MANAGEMENT DASHBOARD VIEWS
+-- DASHBOARD VIEWS (unchanged)
 -- ============================================================
 
--- Monthly Revenue (by invoice issue date)
 CREATE VIEW vw_MonthlyRevenue AS
 SELECT
     YEAR(i.IssueDate)  AS Year,
@@ -1001,7 +925,6 @@ WHERE i.Status NOT IN ('WrittenOff')
 GROUP BY YEAR(i.IssueDate), MONTH(i.IssueDate);
 GO
 
--- Top Clients by revenue (last 12 months)
 CREATE VIEW vw_TopClients AS
 SELECT TOP 10
     c.Id           AS ClientId,
@@ -1021,7 +944,6 @@ GROUP BY c.Id, c.ClientName
 ORDER BY SUM(i.TotalAmount) DESC;
 GO
 
--- Employee Utilization (last 30 days)
 CREATE VIEW vw_EmployeeUtilization AS
 SELECT
     e.Id           AS EmployeeId,
@@ -1037,7 +959,6 @@ WHERE e.IsActive = 1
 GROUP BY e.Id, e.FirstName, e.LastName;
 GO
 
--- Job Completion Rate (by scheduled month)
 CREATE VIEW vw_JobCompletionRate AS
 SELECT
     YEAR(b.ScheduledDate)  AS Year,
@@ -1053,7 +974,6 @@ WHERE b.ScheduledDate >= DATEADD(MONTH, -12, CAST(GETUTCDATE() AS DATE))
 GROUP BY YEAR(b.ScheduledDate), MONTH(b.ScheduledDate);
 GO
 
--- Overdue Invoice Summary
 CREATE VIEW vw_OverdueInvoiceSummary AS
 SELECT
     SUM(i.TotalAmount)                         AS TotalOverdueAmount,
@@ -1065,7 +985,6 @@ WHERE i.DueDate < CAST(GETUTCDATE() AS DATE)
   AND i.Status NOT IN ('Paid','WrittenOff');
 GO
 
--- Booking SOP Status (audit trail)
 CREATE VIEW vw_BookingSopStatus AS
 SELECT
     b.Id                                              AS BookingId,
@@ -1086,9 +1005,7 @@ LEFT JOIN ChecklistResponses cr ON cr.ChecklistItemId = ci.Id
     )
 GROUP BY b.Id, st.Id, st.Name;
 GO
--- vw_Bookings
--- Mapped in C# as a keyless entity (BookingView) via .ToView("vw_Bookings")
--- Used by BookingManager.GetAllBookingsAsync()
+
 CREATE VIEW vw_Bookings AS
 SELECT
     b.Id                                                        AS BookingId,
@@ -1160,8 +1077,6 @@ LEFT  JOIN VehicleBookingDetails v   ON b.Id = v.BookingId
 LEFT  JOIN BoatBookingDetails    bt  ON b.Id = bt.BookingId;
 GO
 
--- vw_InvoiceSummary
--- Used by reporting queries; referenced in the brief's financial reporting workflow
 CREATE VIEW vw_InvoiceSummary AS
 SELECT
     i.Id                                        AS InvoiceId,

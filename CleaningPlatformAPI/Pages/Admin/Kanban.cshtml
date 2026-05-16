@@ -70,17 +70,17 @@
     }
 
     @* Date navigation *@
-    @if (Model.View == "week" || Model.IsEmployeeView)
+    @if (!Model.IsEmployeeView)
     {
         <div class="cal-nav">
             <a asp-page="/Admin/Kanban"
-               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.PrevWeek.ToString("yyyy-MM-dd")},{"view",Model.View},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               asp-all-route-data='@(new Dictionary<string, string?> { { "weekStart", Model.PrevWeek.ToString("yyyy-MM-dd") }, { "view", Model.View }, { "filterEmployeeId", Model.FilterEmployeeId?.ToString() } })'
                class="cal-nav-btn">&#8592;</a>
             <span class="cal-range-label">
                 @weekStart.ToString("d MMM") – @Model.Board.WeekEnd.ToString("d MMM yyyy")
             </span>
             <a asp-page="/Admin/Kanban"
-               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.NextWeek.ToString("yyyy-MM-dd")},{"view",Model.View},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               asp-all-route-data='@(new Dictionary<string, string?> { { "weekStart", Model.NextWeek.ToString("yyyy-MM-dd") }, { "view", Model.View }, { "filterEmployeeId", Model.FilterEmployeeId?.ToString() } })'
                class="cal-nav-btn">&#8594;</a>
         </div>
     }

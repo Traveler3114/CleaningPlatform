@@ -36,17 +36,40 @@
             data-service-type="@template.ServiceType"
             data-service-catalog-id="@(template.ServiceCatalogId?.ToString() ?? string.Empty)"
             style="cursor:pointer;">
-            <td>@template.Name</td><td>@template.ServiceType</td><td>@template.ServiceCatalogName</td><td>@template.IsActive</td><td>@template.ChecklistItems.Count</td>
+            <td>@template.Name</td>
+            <td>@template.ServiceType</td>
+            <td>@template.ServiceCatalogName</td>
+            <td>@template.IsActive</td>
+            <td>@template.ChecklistItems.Count</td>
             <td>
                 @if (User.HasPermission(PermissionKeys.SopsManage))
                 {
-                    <form method="post" asp-page-handler="Delete" asp-route-id="@template.Id" class="inline-form"><button class="btn btn-sm" onclick="return confirm('Delete or deactivate this SOP?')">Delete</button></form>
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@template.Id" class="inline-form">
+                        <button class="btn btn-sm" onclick="return confirm('This SOP will be deactivated (no longer usable for new bookings). Existing bookings will keep a copy. Continue?')">Deactivate</button>
+                    </form>
                 }
             </td>
         </tr>
         <tr><td colspan="6">
             <strong>Checklist items</strong>
-            <ul>@foreach (var item in template.ChecklistItems) { <li>@item.SortOrder. @item.ItemText @(item.IsRequired ? "(required)" : "") @if (User.HasPermission(PermissionKeys.SopsManage)) { <form method="post" asp-page-handler="DeleteItem" asp-route-itemId="@item.Id" class="inline-form"><button class="btn btn-sm">Remove</button></form> }</li> }</ul>
+            @if (template.ChecklistItems.Any())
+            {
+                <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin:0.5rem 0;">
+                    @foreach (var item in template.ChecklistItems.OrderBy(i => i.SortOrder))
+                    {
+                        <div style="background:#f5f5f5; padding:0.2rem 0.6rem; border-radius:16px; font-size:0.8rem;">
+                            @item.SortOrder. @item.ItemText
+                            @if (item.IsRequired) { <span style="color:#c62828;">*</span> }
+                            @if (User.HasPermission(PermissionKeys.SopsManage))
+                            {
+                                <form method="post" asp-page-handler="DeleteItem" asp-route-itemId="@item.Id" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm" style="margin-left:0.5rem; padding:0.1rem 0.4rem;" onclick="return confirm('Remove this checklist item?')">✖</button>
+                                </form>
+                            }
+                        </div>
+                    }
+                </div>
+            }
             @if (User.HasPermission(PermissionKeys.SopsManage))
             {
                 <form method="post" asp-page-handler="AddItem" asp-route-templateId="@template.Id" class="inline-form" style="gap:.5rem; flex-wrap:wrap;">
@@ -63,43 +86,17 @@
 
 @if (User.HasPermission(PermissionKeys.SopsManage))
 {
-    <div id="sop-edit-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;" onclick="if(event.target===this) closeSopModal()">
-        <div class="modal-panel" style="background:white; border-radius:8px; width:min(700px,95vw); max-height:90vh; overflow:auto; padding:1rem;">
+    <div id="sop-edit-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this) closeSopModal()">
+        <div class="modal-panel">
             <h2 class="section-title" id="sop-modal-title">Edit SOP Template</h2>
             <form method="post" asp-page-handler="Update" id="sop-update-form" class="form-grid two-col">
                 <input type="hidden" name="id" id="edit-sop-id" />
-
-                <label>Name
-                    <input name="Template.Name" id="edit-sop-name" class="text-input" required />
-                </label>
-                <label>Service type
-                    <select name="Template.ServiceType" id="edit-sop-service-type" class="text-input">
-                        <option>Vehicle</option>
-                        <option>SiteBased</option>
-                        <option>Boat</option>
-                        <option>Generic</option>
-                    </select>
-                </label>
-                <label>Linked service
-                    <select name="Template.ServiceCatalogId" id="edit-sop-catalog" class="text-input">
-                        <option value="">Optional</option>
-                        @foreach (var service in Model.Services)
-                        {
-                            <option value="@service.Id">@service.Name</option>
-                        }
-                    </select>
-                </label>
-                <label class="checkbox-label">
-                    <input name="Template.IsActive" id="edit-sop-active" type="checkbox" class="checkbox" />
-                    Active
-                </label>
-                <label class="full-span">Description
-                    <textarea name="Template.Description" id="edit-sop-description" class="text-input"></textarea>
-                </label>
-                <div class="modal-actions full-span">
-                    <button type="submit" class="btn btn-sm">Save changes</button>
-                    <button type="button" class="btn btn-sm" onclick="closeSopModal()">Cancel</button>
-                </div>
+                <label>Name <input name="Template.Name" id="edit-sop-name" class="text-input" required /></label>
+                <label>Service type <select name="Template.ServiceType" id="edit-sop-service-type" class="text-input"><option>Vehicle</option><option>SiteBased</option><option>Boat</option><option>Generic</option></select></label>
+                <label>Linked service <select name="Template.ServiceCatalogId" id="edit-sop-catalog" class="text-input"><option value="">Optional</option>@foreach (var service in Model.Services) { <option value="@service.Id">@service.Name</option> }</select></label>
+                <label class="checkbox-label"><input name="Template.IsActive" id="edit-sop-active" type="checkbox" class="checkbox" /> Active</label>
+                <label class="full-span">Description <textarea name="Template.Description" id="edit-sop-description" class="text-input"></textarea></label>
+                <div class="modal-actions full-span"><button type="submit" class="btn btn-sm">Save changes</button><button type="button" class="btn btn-sm" onclick="closeSopModal()">Cancel</button></div>
             </form>
         </div>
     </div>
@@ -110,26 +107,16 @@
 (function () {
     const modal = document.getElementById('sop-edit-modal');
     if (!modal) return;
-
-    window.closeSopModal = () => { modal.style.display = 'none'; };
-
+    window.closeSopModal = () => modal.style.display = 'none';
     document.querySelectorAll('.sop-row').forEach(row => {
         row.addEventListener('click', (event) => {
-            if (event.target.closest('form,button,a,input,select,textarea,label')) {
-                return;
-            }
-
+            if (event.target.closest('form,button,a,input,select,textarea,label')) return;
             document.getElementById('edit-sop-id').value = row.dataset.id || '';
             document.getElementById('edit-sop-name').value = row.dataset.name || '';
             document.getElementById('edit-sop-description').value = row.dataset.description || '';
             document.getElementById('edit-sop-active').checked = row.dataset.active === 'true';
-
-            const stSelect = document.getElementById('edit-sop-service-type');
-            stSelect.value = row.dataset.serviceType || 'Generic';
-
-            const catSelect = document.getElementById('edit-sop-catalog');
-            catSelect.value = row.dataset.serviceCatalogId || '';
-
+            document.getElementById('edit-sop-service-type').value = row.dataset.serviceType || 'Generic';
+            document.getElementById('edit-sop-catalog').value = row.dataset.serviceCatalogId || '';
             modal.style.display = 'flex';
         });
     });
