@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -107,22 +108,62 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
     {
-        context.Response.StatusCode = 500;
-        context.Response.ContentType = "application/json";
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
         var error = context.Features.Get<IExceptionHandlerFeature>();
+        var isDev = app.Environment.IsDevelopment();
+
         if (error != null)
         {
-            var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogError(error.Error, "Unhandled exception");
+            logger.LogError(error.Error, "Unhandled exception on {Method} {Path}",
+                context.Request.Method, context.Request.Path);
         }
 
-        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("An unexpected error occurred."));
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = 500;
+
+        string message;
+
+        if (error?.Error is SqlException sqlEx)
+        {
+            message = GetSqlErrorMessage(sqlEx);
+        }
+        else if (error?.Error is DbUpdateException dbEx)
+        {
+            // Unwrap to find the inner SqlException
+            var innerSql = dbEx.InnerException as SqlException;
+            message = innerSql != null
+                ? GetSqlErrorMessage(innerSql)
+                : isDev
+                    ? $"Database update failed: {dbEx.InnerException?.Message ?? dbEx.Message}"
+                    : "A database error occurred. Please try again.";
+        }
+        else if (error?.Error is InvalidOperationException invEx)
+        {
+            message = isDev
+                ? $"Invalid operation: {invEx.Message}"
+                : "An invalid operation was attempted.";
+        }
+        else if (error?.Error is UnauthorizedAccessException)
+        {
+            context.Response.StatusCode = 403;
+            message = "You do not have permission to perform this action.";
+        }
+        else
+        {
+            message = isDev && error?.Error != null
+                ? $"Unexpected error ({error.Error.GetType().Name}): {error.Error.Message}"
+                : "An unexpected error occurred. Please try again or contact support.";
+        }
+
+        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail(message));
     });
 });
+
 app.UseRouting();
 app.UseAuthentication();
 app.UseMiddleware<SecurityStampValidator>();
@@ -135,7 +176,6 @@ app.MapRazorPages();
 app.MapGet("/admin", () => Results.Redirect("/Admin/Index"));
 app.MapFallbackToFile("index.html");
 
-// Ensure DB created and seeded
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -146,3 +186,31 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+static string GetSqlErrorMessage(SqlException sqlEx)
+{
+    // Check all SQL errors in the collection
+    foreach (SqlError err in sqlEx.Errors)
+    {
+        switch (err.Number)
+        {
+            case 547:
+                return "This record cannot be deleted because it is referenced by other data. Remove the related records first, then try again.";
+            case 2601:
+            case 2627:
+                return "A record with this value already exists. Please use a unique value.";
+            case 2628:
+                return "One of the values provided is too long for the field. Please shorten your input.";
+            case 8152:
+                return "One of the values provided is too long for the field.";
+            case 515:
+                return "A required field is missing. Please fill in all required fields.";
+            case 4060:
+            case 18456:
+                return "Database connection failed. Please contact your administrator.";
+            case 1205:
+                return "A database deadlock occurred. Please try again.";
+        }
+    }
+    return $"A database error occurred (code {sqlEx.Number}). Please try again or contact support.";
+}

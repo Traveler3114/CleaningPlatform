@@ -13,10 +13,7 @@ public class ClientManager
 
     private readonly AppDbContext _db;
 
-    public ClientManager(AppDbContext db)
-    {
-        _db = db;
-    }
+    public ClientManager(AppDbContext db) { _db = db; }
 
     public async Task<List<ClientResponse>> GetAllAsync(string? search, string? type, CancellationToken ct = default)
     {
@@ -35,18 +32,18 @@ public class ClientManager
             .OrderBy(c => c.ClientName)
             .Select(c => new ClientResponse
             {
-                Id = c.Id,
-                ClientName = c.ClientName,
-                Type = c.Type,
-                Oib = c.Oib,
-                PaymentTerms = c.PaymentTerms,
-                Notes = c.Notes,
-                IsActive = c.IsActive,
-                CreatedAt = c.CreatedAt,
-                PrimaryContactName = c.Contacts.Where(con => con.IsPrimary && con.IsActive).Select(con => con.ContactName).FirstOrDefault(),
-                PrimaryContactPhone = c.Contacts.Where(con => con.IsPrimary && con.IsActive).Select(con => con.Phone).FirstOrDefault(),
-                PrimaryContactEmail = c.Contacts.Where(con => con.IsPrimary && con.IsActive).Select(con => con.Email).FirstOrDefault(),
-                TotalBookings = c.Bookings.Count
+                Id                   = c.Id,
+                ClientName           = c.ClientName,
+                Type                 = c.Type,
+                Oib                  = c.Oib,
+                PaymentTerms         = c.PaymentTerms,
+                Notes                = c.Notes,
+                IsActive             = c.IsActive,
+                CreatedAt            = c.CreatedAt,
+                PrimaryContactName   = c.Contacts.Where(con => con.IsPrimary && con.IsActive).Select(con => con.ContactName).FirstOrDefault(),
+                PrimaryContactPhone  = c.Contacts.Where(con => con.IsPrimary && con.IsActive).Select(con => con.Phone).FirstOrDefault(),
+                PrimaryContactEmail  = c.Contacts.Where(con => con.IsPrimary && con.IsActive).Select(con => con.Email).FirstOrDefault(),
+                TotalBookings        = c.Bookings.Count
             })
             .ToListAsync(ct);
     }
@@ -74,33 +71,36 @@ public class ClientManager
             return OperationResult<ClientResponse>.Fail("Client name is required.");
 
         if (dto.Type != "RepeatIndividual" && dto.Type != "RepeatBusiness")
-            return OperationResult<ClientResponse>.Fail("Type must be RepeatIndividual or RepeatBusiness.");
+            return OperationResult<ClientResponse>.Fail("Client type must be RepeatIndividual or RepeatBusiness.");
 
-        if (string.IsNullOrWhiteSpace(dto.PrimaryContactName) || string.IsNullOrWhiteSpace(dto.PrimaryContactPhone))
-            return OperationResult<ClientResponse>.Fail("Primary contact name and phone are required.");
+        if (string.IsNullOrWhiteSpace(dto.PrimaryContactName))
+            return OperationResult<ClientResponse>.Fail("Primary contact name is required.");
+
+        if (string.IsNullOrWhiteSpace(dto.PrimaryContactPhone))
+            return OperationResult<ClientResponse>.Fail("Primary contact phone number is required.");
 
         var now = DateTime.UtcNow;
         var client = new Client
         {
-            ClientName = dto.ClientName.Trim(),
-            Type = dto.Type,
-            Oib = dto.Oib?.Trim(),
+            ClientName   = dto.ClientName.Trim(),
+            Type         = dto.Type,
+            Oib          = dto.Oib?.Trim(),
             PaymentTerms = dto.PaymentTerms?.Trim(),
-            Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
-            IsActive = true,
-            CreatedAt = now,
-            UpdatedAt = now,
-            Contacts =
+            Notes        = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
+            IsActive     = true,
+            CreatedAt    = now,
+            UpdatedAt    = now,
+            Contacts     =
             [
                 new Contact
                 {
                     ContactName = dto.PrimaryContactName.Trim(),
-                    Phone = dto.PrimaryContactPhone.Trim(),
-                    Email = dto.PrimaryContactEmail?.Trim(),
-                    IsPrimary = true,
-                    IsActive = true,
-                    CreatedAt = now,
-                    UpdatedAt = now
+                    Phone       = dto.PrimaryContactPhone.Trim(),
+                    Email       = dto.PrimaryContactEmail?.Trim(),
+                    IsPrimary   = true,
+                    IsActive    = true,
+                    CreatedAt   = now,
+                    UpdatedAt   = now
                 }
             ]
         };
@@ -110,18 +110,18 @@ public class ClientManager
 
         return OperationResult<ClientResponse>.Ok(new ClientResponse
         {
-            Id = client.Id,
-            ClientName = client.ClientName,
-            Type = client.Type,
-            Oib = client.Oib,
-            PaymentTerms = client.PaymentTerms,
-            Notes = client.Notes,
-            IsActive = client.IsActive,
-            CreatedAt = client.CreatedAt,
-            PrimaryContactName = dto.PrimaryContactName,
+            Id                  = client.Id,
+            ClientName          = client.ClientName,
+            Type                = client.Type,
+            Oib                 = client.Oib,
+            PaymentTerms        = client.PaymentTerms,
+            Notes               = client.Notes,
+            IsActive            = client.IsActive,
+            CreatedAt           = client.CreatedAt,
+            PrimaryContactName  = dto.PrimaryContactName,
             PrimaryContactPhone = dto.PrimaryContactPhone,
             PrimaryContactEmail = dto.PrimaryContactEmail,
-            TotalBookings = 0
+            TotalBookings       = 0
         });
     }
 
@@ -135,10 +135,11 @@ public class ClientManager
             .ToList();
 
         if (rawContacts.Count == 0)
-            return OperationResult<ClientResponse>.Fail("At least one contact is required.");
+            return OperationResult<ClientResponse>.Fail("At least one active contact with a name and phone number is required.");
 
-        if (rawContacts.Any(c => string.IsNullOrWhiteSpace(c.ContactName) || string.IsNullOrWhiteSpace(c.Phone)))
-            return OperationResult<ClientResponse>.Fail("Each contact must have name and phone.");
+        var invalidContacts = rawContacts.Where(c => string.IsNullOrWhiteSpace(c.ContactName) || string.IsNullOrWhiteSpace(c.Phone)).ToList();
+        if (invalidContacts.Count > 0)
+            return OperationResult<ClientResponse>.Fail("Every contact must have both a name and a phone number. Please check your contact entries.");
 
         var client = await _db.Clients
             .Include(c => c.Contacts)
@@ -153,21 +154,21 @@ public class ClientManager
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
         if (client == null)
-            return OperationResult<ClientResponse>.Fail("Client not found.");
+            return OperationResult<ClientResponse>.Fail($"Client #{id} was not found.");
 
         var now = DateTime.UtcNow;
         await using var transaction = await _db.Database.BeginTransactionAsync(ct);
 
         try
         {
-            client.ClientName = dto.ClientName.Trim();
-            client.Oib = string.IsNullOrWhiteSpace(dto.Oib) ? null : dto.Oib.Trim();
+            client.ClientName   = dto.ClientName.Trim();
+            client.Oib          = string.IsNullOrWhiteSpace(dto.Oib)          ? null : dto.Oib.Trim();
             client.PaymentTerms = string.IsNullOrWhiteSpace(dto.PaymentTerms) ? null : dto.PaymentTerms.Trim();
-            client.Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim();
-            client.UpdatedAt = now;
+            client.Notes        = string.IsNullOrWhiteSpace(dto.Notes)        ? null : dto.Notes.Trim();
+            client.UpdatedAt    = now;
 
             var existingContactsById = client.Contacts.ToDictionary(c => c.Id, c => c);
-            var touchedContactIds = new HashSet<int>();
+            var touchedContactIds    = new HashSet<int>();
 
             foreach (var contactRequest in rawContacts)
             {
@@ -177,47 +178,45 @@ public class ClientManager
                 if (contactId > 0)
                 {
                     if (!existingContactsById.TryGetValue(contactId, out contact!))
-                        return OperationResult<ClientResponse>.Fail($"Contact #{contactId} was not found for this client.");
+                        return OperationResult<ClientResponse>.Fail($"Contact #{contactId} was not found for client #{id}. It may have been deleted.");
 
                     touchedContactIds.Add(contactId);
                 }
                 else
                 {
-                    contact = new Contact
-                    {
-                        ClientId = client.Id,
-                        CreatedAt = now
-                    };
+                    contact = new Contact { ClientId = client.Id, CreatedAt = now };
                     _db.Contacts.Add(contact);
                     client.Contacts.Add(contact);
                 }
 
                 contact.ContactName = contactRequest.ContactName.Trim();
-                contact.Role = string.IsNullOrWhiteSpace(contactRequest.Role) ? null : contactRequest.Role.Trim();
-                contact.Phone = contactRequest.Phone.Trim();
-                contact.Email = string.IsNullOrWhiteSpace(contactRequest.Email) ? null : contactRequest.Email.Trim();
-                contact.Address = string.IsNullOrWhiteSpace(contactRequest.Address) ? null : contactRequest.Address.Trim();
-                contact.IsPrimary = contactRequest.IsPrimary;
-                contact.IsActive = contactRequest.IsActive;
-                contact.UpdatedAt = now;
+                contact.Role        = string.IsNullOrWhiteSpace(contactRequest.Role)    ? null : contactRequest.Role.Trim();
+                contact.Phone       = contactRequest.Phone.Trim();
+                contact.Email       = string.IsNullOrWhiteSpace(contactRequest.Email)   ? null : contactRequest.Email.Trim();
+                contact.Address     = string.IsNullOrWhiteSpace(contactRequest.Address) ? null : contactRequest.Address.Trim();
+                contact.IsPrimary   = contactRequest.IsPrimary;
+                contact.IsActive    = contactRequest.IsActive;
+                contact.UpdatedAt   = now;
             }
 
-            foreach (var existing in client.Contacts.Where(c => !touchedContactIds.Contains(c.Id)))
+            // Deactivate contacts not included in the update
+            foreach (var existing in client.Contacts.Where(c => c.Id > 0 && !touchedContactIds.Contains(c.Id)))
             {
-                existing.IsActive = false;
+                existing.IsActive  = false;
                 existing.IsPrimary = false;
                 existing.UpdatedAt = now;
             }
 
             var activeContacts = client.Contacts.Where(c => c.IsActive).ToList();
             if (activeContacts.Count == 0)
-                return OperationResult<ClientResponse>.Fail("At least one active contact is required.");
+                return OperationResult<ClientResponse>.Fail("At least one active contact is required. You cannot deactivate all contacts.");
 
+            // Ensure exactly one primary
             var primaryContact = activeContacts.FirstOrDefault(c => c.IsPrimary) ?? activeContacts.First();
-            foreach (var activeContact in activeContacts)
+            foreach (var ac in activeContacts)
             {
-                activeContact.IsPrimary = activeContact.Id == primaryContact.Id;
-                activeContact.UpdatedAt = now;
+                ac.IsPrimary  = ac.Id == primaryContact.Id;
+                ac.UpdatedAt  = now;
             }
 
             await _db.SaveChangesAsync(ct);
@@ -235,7 +234,7 @@ public class ClientManager
     {
         var exists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!exists)
-            return OperationResult<List<SiteResponse>>.Fail("Client not found.");
+            return OperationResult<List<SiteResponse>>.Fail($"Client #{clientId} was not found.");
 
         var sites = await _db.Sites
             .Where(s => s.ClientId == clientId)
@@ -255,27 +254,26 @@ public class ClientManager
 
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<SiteResponse>.Fail("Client not found.");
+            return OperationResult<SiteResponse>.Fail($"Client #{clientId} was not found.");
 
-        var now = DateTime.UtcNow;
+        var now  = DateTime.UtcNow;
         var site = new Site
         {
-            ClientId = clientId,
-            SiteName = dto.SiteName.Trim(),
-            Address = dto.Address.Trim(),
-            City = string.IsNullOrWhiteSpace(dto.City) ? null : dto.City.Trim(),
-            PostalCode = string.IsNullOrWhiteSpace(dto.PostalCode) ? null : dto.PostalCode.Trim(),
-            SiteType = string.IsNullOrWhiteSpace(dto.SiteType) ? null : dto.SiteType.Trim(),
-            FloorAreaM2 = dto.FloorAreaM2,
-            AccessNotes = string.IsNullOrWhiteSpace(dto.AccessNotes) ? null : dto.AccessNotes.Trim(),
-            IsActive = dto.IsActive,
-            CreatedAt = now,
-            UpdatedAt = now
+            ClientId     = clientId,
+            SiteName     = dto.SiteName.Trim(),
+            Address      = dto.Address.Trim(),
+            City         = string.IsNullOrWhiteSpace(dto.City)         ? null : dto.City.Trim(),
+            PostalCode   = string.IsNullOrWhiteSpace(dto.PostalCode)   ? null : dto.PostalCode.Trim(),
+            SiteType     = string.IsNullOrWhiteSpace(dto.SiteType)     ? null : dto.SiteType.Trim(),
+            FloorAreaM2  = dto.FloorAreaM2,
+            AccessNotes  = string.IsNullOrWhiteSpace(dto.AccessNotes)  ? null : dto.AccessNotes.Trim(),
+            IsActive     = dto.IsActive,
+            CreatedAt    = now,
+            UpdatedAt    = now
         };
 
         _db.Sites.Add(site);
         await _db.SaveChangesAsync(ct);
-
         return OperationResult<SiteResponse>.Ok(ClientMapper.ToSiteResponse(site));
     }
 
@@ -287,17 +285,17 @@ public class ClientManager
 
         var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId && s.ClientId == clientId, ct);
         if (site == null)
-            return OperationResult<SiteResponse>.Fail("Site not found.");
+            return OperationResult<SiteResponse>.Fail($"Site #{siteId} was not found for client #{clientId}.");
 
-        site.SiteName = dto.SiteName.Trim();
-        site.Address = dto.Address.Trim();
-        site.City = string.IsNullOrWhiteSpace(dto.City) ? null : dto.City.Trim();
-        site.PostalCode = string.IsNullOrWhiteSpace(dto.PostalCode) ? null : dto.PostalCode.Trim();
-        site.SiteType = string.IsNullOrWhiteSpace(dto.SiteType) ? null : dto.SiteType.Trim();
+        site.SiteName    = dto.SiteName.Trim();
+        site.Address     = dto.Address.Trim();
+        site.City        = string.IsNullOrWhiteSpace(dto.City)        ? null : dto.City.Trim();
+        site.PostalCode  = string.IsNullOrWhiteSpace(dto.PostalCode)  ? null : dto.PostalCode.Trim();
+        site.SiteType    = string.IsNullOrWhiteSpace(dto.SiteType)    ? null : dto.SiteType.Trim();
         site.FloorAreaM2 = dto.FloorAreaM2;
         site.AccessNotes = string.IsNullOrWhiteSpace(dto.AccessNotes) ? null : dto.AccessNotes.Trim();
-        site.IsActive = dto.IsActive;
-        site.UpdatedAt = DateTime.UtcNow;
+        site.IsActive    = dto.IsActive;
+        site.UpdatedAt   = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);
         return OperationResult<SiteResponse>.Ok(ClientMapper.ToSiteResponse(site));
@@ -307,12 +305,11 @@ public class ClientManager
     {
         var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId && s.ClientId == clientId, ct);
         if (site == null)
-            return OperationResult<SiteResponse>.Fail("Site not found.");
+            return OperationResult<SiteResponse>.Fail($"Site #{siteId} was not found for client #{clientId}.");
 
-        site.IsActive = false;
+        site.IsActive  = false;
         site.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
-
         return OperationResult<SiteResponse>.Ok(ClientMapper.ToSiteResponse(site));
     }
 
@@ -325,7 +322,7 @@ public class ClientManager
             return "Address is required.";
 
         if (!string.IsNullOrWhiteSpace(dto.SiteType) && !AllowedSiteTypes.Contains(dto.SiteType.Trim()))
-            return "Invalid site type.";
+            return $"'{dto.SiteType}' is not a valid site type. Accepted values: {string.Join(", ", AllowedSiteTypes)}.";
 
         if (dto.FloorAreaM2.HasValue && dto.FloorAreaM2.Value < 0)
             return "Floor area cannot be negative.";

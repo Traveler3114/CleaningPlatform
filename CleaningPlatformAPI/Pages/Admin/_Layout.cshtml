@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] — Cleaning Platform Admin</title>
+    <title>@ViewData["Title"] — Cleaning Platform</title>
     <link rel="stylesheet" href="~/css/admin.css" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -13,73 +13,136 @@
         var activePage = ViewData["ActivePage"]?.ToString();
         var roleName = User.FindFirst(ClaimTypes.Role)?.Value;
         bool IsOwner() => string.Equals(roleName, RoleNames.Owner, StringComparison.OrdinalIgnoreCase);
-        bool CanView(string permission) => IsOwner() || User.HasPermission(permission);
+        bool Can(string permission) => IsOwner() || User.HasPermission(permission);
+
+        // Group active states
+        bool opsActive    = activePage is "daily" or "kanban";
+        bool bookActive   = activePage is "bookings" or "invoices";
+        bool clientActive = activePage is "clients";
+        bool cfgActive    = activePage is "schedule" or "services" or "sops";
+        bool adminActive  = activePage is "users" or "roles" or "reports";
     }
+
     <header class="admin-header">
         <div class="header-inner">
-            <span class="brand">🚗 Cleaning Platform Admin</span>
-            <nav class="main-nav">
-                @if (User.Identity?.IsAuthenticated == true)
-                {
-                    @if (CanView(PermissionKeys.PagesDaily))
-                    {
-                        <a asp-page="/Admin/Index"
-                           class="nav-link @(activePage == "daily" ? "active" : "")">Daily View</a>
-                    }
-                    @if (CanView(PermissionKeys.PagesBookings))
-                    {
-                        <a asp-page="/Admin/Bookings"
-                           class="nav-link @(activePage == "bookings" ? "active" : "")">Bookings</a>
-                        <a asp-page="/Admin/Invoices"
-                           class="nav-link @(activePage == "invoices" ? "active" : "")">Invoices</a>
-                    }
-                    @if (CanView(PermissionKeys.PagesClients))
-                    {
-                        <a asp-page="/Admin/Clients"
-                           class="nav-link @(activePage == "clients" ? "active" : "")">Clients</a>
-                    }
-                    @if (CanView(PermissionKeys.PagesSchedule))
-                    {
-                        <a asp-page="/Admin/Schedule"
-                           class="nav-link @(activePage == "schedule" ? "active" : "")">Schedule</a>
-                    }
-                    @if (CanView(PermissionKeys.PagesKanban))
-                    {
-                        <a asp-page="/Admin/Kanban"
-                           class="nav-link @(activePage == "kanban" ? "active" : "")">Kanban</a>
-                    }
-                    @if (CanView(PermissionKeys.PagesSop))
-                    {
-                        <a asp-page="/Admin/Sops"
-                           class="nav-link @(activePage == "sops" ? "active" : "")">SOPs</a>
-                    }
-                    @if (CanView(PermissionKeys.PagesReports))
-                    {
-                        <a asp-page="/Admin/Reports"
-                           class="nav-link @(activePage == "reports" ? "active" : "")">Reports</a>
-                    }
-                    @if (IsOwner() || User.HasPermission(PermissionKeys.ActionsServiceCatalogEdit) || User.HasPermission(PermissionKeys.ActionsServiceCatalogManage))
-                    {
-                        <a asp-page="/Admin/Services"
-                           class="nav-link @(activePage == "services" ? "active" : "")">Services</a>
-                    }
-                    @if (CanView(PermissionKeys.PagesUsers))
-                    {
-                        <a asp-page="/Admin/Users"
-                           class="nav-link @(activePage == "users" ? "active" : "")">Users</a>
-                    }
-                    @if (CanView(PermissionKeys.PagesRoles))
-                    {
-                        <a asp-page="/Admin/Roles"
-                           class="nav-link @(activePage == "roles" ? "active" : "")">Roles</a>
-                    }
-                }
-            </nav>
+            <span class="brand">Cleaning Platform</span>
+
             @if (User.Identity?.IsAuthenticated == true)
             {
+                <nav class="main-nav">
+
+                    @* ── Operations ── *@
+                    @if (Can(PermissionKeys.PagesDaily) || Can(PermissionKeys.PagesKanban))
+                    {
+                        <div class="nav-group @(opsActive ? "nav-group--active" : "")">
+                            <button class="nav-group__label">Operations</button>
+                            <div class="nav-group__dropdown">
+                                @if (Can(PermissionKeys.PagesDaily))
+                                {
+                                    <a asp-page="/Admin/Index" class="nav-group__item @(activePage == "daily" ? "active" : "")">
+                                        Daily View
+                                    </a>
+                                }
+                                @if (Can(PermissionKeys.PagesKanban))
+                                {
+                                    <a asp-page="/Admin/Kanban" class="nav-group__item @(activePage == "kanban" ? "active" : "")">
+                                        Calendar
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @* ── Bookings ── *@
+                    @if (Can(PermissionKeys.PagesBookings))
+                    {
+                        <div class="nav-group @(bookActive ? "nav-group--active" : "")">
+                            <button class="nav-group__label">Bookings</button>
+                            <div class="nav-group__dropdown">
+                                <a asp-page="/Admin/Bookings" class="nav-group__item @(activePage == "bookings" ? "active" : "")">
+                                    Bookings
+                                </a>
+                                <a asp-page="/Admin/Invoices" class="nav-group__item @(activePage == "invoices" ? "active" : "")">
+                                    Invoices
+                                </a>
+                            </div>
+                        </div>
+                    }
+
+                    @* ── Clients ── *@
+                    @if (Can(PermissionKeys.PagesClients))
+                    {
+                        <div class="nav-group @(clientActive ? "nav-group--active" : "")">
+                            <button class="nav-group__label">Clients</button>
+                            <div class="nav-group__dropdown">
+                                <a asp-page="/Admin/Clients" class="nav-group__item @(activePage == "clients" ? "active" : "")">
+                                    Client List
+                                </a>
+                            </div>
+                        </div>
+                    }
+
+                    @* ── Config ── *@
+                    @if (Can(PermissionKeys.PagesSchedule) || Can(PermissionKeys.ServicesView) || Can(PermissionKeys.PagesSop))
+                    {
+                        <div class="nav-group @(cfgActive ? "nav-group--active" : "")">
+                            <button class="nav-group__label">Config</button>
+                            <div class="nav-group__dropdown">
+                                @if (Can(PermissionKeys.PagesSchedule))
+                                {
+                                    <a asp-page="/Admin/Schedule" class="nav-group__item @(activePage == "schedule" ? "active" : "")">
+                                        Schedule
+                                    </a>
+                                }
+                                @if (IsOwner() || Can(PermissionKeys.ServicesView) || Can(PermissionKeys.ServicesManage))
+                                {
+                                    <a asp-page="/Admin/Services" class="nav-group__item @(activePage == "services" ? "active" : "")">
+                                        Services
+                                    </a>
+                                }
+                                @if (Can(PermissionKeys.PagesSop))
+                                {
+                                    <a asp-page="/Admin/Sops" class="nav-group__item @(activePage == "sops" ? "active" : "")">
+                                        SOPs
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @* ── Admin ── *@
+                    @if (Can(PermissionKeys.PagesUsers) || Can(PermissionKeys.PagesRoles) || Can(PermissionKeys.PagesReports))
+                    {
+                        <div class="nav-group @(adminActive ? "nav-group--active" : "")">
+                            <button class="nav-group__label">Admin</button>
+                            <div class="nav-group__dropdown">
+                                @if (Can(PermissionKeys.PagesUsers))
+                                {
+                                    <a asp-page="/Admin/Users" class="nav-group__item @(activePage == "users" ? "active" : "")">
+                                        Users
+                                    </a>
+                                }
+                                @if (Can(PermissionKeys.PagesRoles))
+                                {
+                                    <a asp-page="/Admin/Roles" class="nav-group__item @(activePage == "roles" ? "active" : "")">
+                                        Roles
+                                    </a>
+                                }
+                                @if (Can(PermissionKeys.PagesReports))
+                                {
+                                    <a asp-page="/Admin/Reports" class="nav-group__item @(activePage == "reports" ? "active" : "")">
+                                        Reports
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                </nav>
+
                 <div class="user-pill">
                     <div class="user-pill-info">
-                        <a asp-page="/Admin/Profile" class="user-pill-name nav-link">@User.Identity.Name</a>
+                        <a asp-page="/Admin/Profile" class="user-pill-name">@User.Identity.Name</a>
                         <span class="user-pill-role">@roleName</span>
                     </div>
                     <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout" class="logout-form">
@@ -95,7 +158,7 @@
     </main>
 
     <footer class="admin-footer">
-        <p>&copy; @DateTime.Now.Year Cleaning Platform Admin</p>
+        <p>&copy; @DateTime.Now.Year Cleaning Platform</p>
     </footer>
 
     @await RenderSectionAsync("Scripts", required: false)

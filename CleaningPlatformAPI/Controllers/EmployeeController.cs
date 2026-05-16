@@ -39,14 +39,14 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = PermissionKeys.ActionsUserToggleActive)]
+    [Authorize(Policy = PermissionKeys.UsersEdit)]
     public async Task<OperationResult<List<UserResponse>>> GetAll(CancellationToken ct)
     {
         return OperationResult<List<UserResponse>>.Ok(await _userManager.GetAllUsersAsync(ct));
     }
 
     [HttpPut("{id}/toggle")]
-    [Authorize(Policy = PermissionKeys.ActionsUserToggleActive)]
+    [Authorize(Policy = PermissionKeys.UsersEdit)]
     public async Task<OperationResult<UserResponse>> Toggle(int id, CancellationToken ct)
     {
         var requestingUserId = User.GetEmployeeId();

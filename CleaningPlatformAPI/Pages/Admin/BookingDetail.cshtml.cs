@@ -17,7 +17,8 @@ public class BookingDetailModel : PageModel
     private readonly InvoiceManager _invoiceManager;
     private readonly SopManager _sopManager;
 
-    public BookingDetailModel(BookingManager bookingManager, EmployeeManager employeeManager, ServiceCatalogManager serviceCatalogManager, InvoiceManager invoiceManager, SopManager sopManager)
+    public BookingDetailModel(BookingManager bookingManager, EmployeeManager employeeManager,
+        ServiceCatalogManager serviceCatalogManager, InvoiceManager invoiceManager, SopManager sopManager)
     {
         _bookingManager = bookingManager;
         _employeeManager = employeeManager;
@@ -45,15 +46,12 @@ public class BookingDetailModel : PageModel
         ServiceCatalog = await _serviceCatalogManager.GetAllAsync(ct);
         SopTemplates = await _sopManager.GetAllTemplatesAsync(ct);
         BookingSops = await _sopManager.GetBookingSopsAsync(Id, ct);
-
         return Booking == null ? NotFound() : Page();
     }
 
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
         var result = await _bookingManager.UpdateStatusAsync(id, status, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
@@ -61,9 +59,7 @@ public class BookingDetailModel : PageModel
 
     public async Task<IActionResult> OnPostAddAssignmentAsync(int id, int employeeId, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingAssign))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
         var result = await _bookingManager.AddAssignmentAsync(id, employeeId, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
@@ -71,9 +67,7 @@ public class BookingDetailModel : PageModel
 
     public async Task<IActionResult> OnPostRemoveAssignmentAsync(int id, int assignmentId, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingAssign))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
         var result = await _bookingManager.RemoveAssignmentAsync(id, assignmentId, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
@@ -81,9 +75,7 @@ public class BookingDetailModel : PageModel
 
     public async Task<IActionResult> OnPostAddServiceAsync(int id, int serviceCatalogId, decimal quantity, decimal? estimatedPrice, string? notes, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
         var result = await _bookingManager.AddServiceAsync(id, serviceCatalogId, estimatedPrice, quantity, null, notes, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
@@ -91,9 +83,7 @@ public class BookingDetailModel : PageModel
 
     public async Task<IActionResult> OnPostRemoveServiceAsync(int id, int serviceId, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
         var result = await _bookingManager.RemoveServiceAsync(id, serviceId, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
@@ -101,9 +91,7 @@ public class BookingDetailModel : PageModel
 
     public async Task<IActionResult> OnPostUpdateServicePriceAsync(int id, int serviceId, decimal? finalPrice, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
         var result = await _bookingManager.UpdateServicePriceAsync(id, serviceId, finalPrice, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
@@ -111,9 +99,7 @@ public class BookingDetailModel : PageModel
 
     public async Task<IActionResult> OnPostAssignSopAsync(int id, int sopTemplateId, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
         var result = await _sopManager.AssignSopToBookingAsync(id, new AssignSopRequest { SopTemplateId = sopTemplateId }, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id });
@@ -128,16 +114,13 @@ public class BookingDetailModel : PageModel
 
     public async Task<IActionResult> OnPostGenerateInvoiceAsync(int id, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.InvoicesCreate)) return Forbid();
         var result = await _invoiceManager.CreateFromBookingAsync(id, User.GetEmployeeId(), ct);
         if (!result.Success || result.Data == null)
         {
             ErrorMessage = result.Message;
             return RedirectToPage(new { id });
         }
-
         return RedirectToPage("/Admin/InvoiceDetail", new { id = result.Data.Id });
     }
 }

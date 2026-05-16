@@ -10,32 +10,34 @@ namespace CleaningPlatformAPI.Managers;
 public class DateOverrideManager
 {
     private readonly AppDbContext _db;
-
-    public DateOverrideManager(AppDbContext db)
-    {
-        _db = db;
-    }
+    public DateOverrideManager(AppDbContext db) { _db = db; }
 
     public async Task<List<DateOverrideResponse>> GetOverridesAsync(CancellationToken ct = default)
     {
-        var cutoff = DateTime.UtcNow.Date;
-        var overrides = await _db.DateOverrides.Where(o => o.Date >= cutoff).OrderBy(o => o.Date).ToListAsync(ct);
+        var cutoff    = DateTime.UtcNow.Date;
+        var overrides = await _db.DateOverrides
+            .Where(o => o.Date >= cutoff)
+            .OrderBy(o => o.Date)
+            .ToListAsync(ct);
         return overrides.Select(ScheduleMapper.ToDateOverrideResponse).ToList();
     }
 
     public async Task<OperationResult<DateOverrideResponse>> CreateOverrideAsync(DateOverrideRequest request, CancellationToken ct = default)
     {
         if (request.Date.Date < DateTime.UtcNow.Date)
-            return OperationResult<DateOverrideResponse>.Fail("Cannot create an override for a past date.");
+            return OperationResult<DateOverrideResponse>.Fail(
+                $"Date overrides cannot be created for past dates. The selected date was {request.Date:dd MMM yyyy}.");
 
-        var existing = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date.Date == request.Date.Date, ct);
+        var existing = await _db.DateOverrides
+            .FirstOrDefaultAsync(o => o.Date.Date == request.Date.Date, ct);
+
         DateOverride entity;
 
         if (existing != null)
         {
-            existing.StartHour = request.StartHour;
-            existing.EndHour = request.EndHour;
-            existing.Capacity = request.Capacity;
+            existing.StartHour     = request.StartHour;
+            existing.EndHour       = request.EndHour;
+            existing.Capacity      = request.Capacity;
             existing.IsFullyClosed = request.IsFullyClosed;
             entity = existing;
         }
@@ -43,11 +45,11 @@ public class DateOverrideManager
         {
             entity = new DateOverride
             {
-                Date = request.Date.Date,
-                StartHour = request.StartHour,
-                EndHour = request.EndHour,
-                Capacity = request.Capacity,
-                IsFullyClosed = request.IsFullyClosed,
+                Date          = request.Date.Date,
+                StartHour     = request.StartHour,
+                EndHour       = request.EndHour,
+                Capacity      = request.Capacity,
+                IsFullyClosed = request.IsFullyClosed
             };
             _db.DateOverrides.Add(entity);
         }
@@ -60,7 +62,7 @@ public class DateOverrideManager
     {
         var entity = await _db.DateOverrides.FindAsync([id], ct);
         if (entity == null)
-            return OperationResult<bool>.Fail("Override not found.");
+            return OperationResult<bool>.Fail($"Date override #{id} was not found.");
 
         _db.DateOverrides.Remove(entity);
         await _db.SaveChangesAsync(ct);

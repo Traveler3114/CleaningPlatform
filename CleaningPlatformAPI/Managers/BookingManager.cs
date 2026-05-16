@@ -24,114 +24,102 @@ public class BookingManager
     public async Task<List<BookingResponse>> GetBookingsAsync(DateTime date, CancellationToken ct = default)
     {
         var bookings = await _db.Bookings
-            .Include(b => b.Client)
-                .ThenInclude(c => c.Contacts)
+            .Include(b => b.Client).ThenInclude(c => c.Contacts)
             .Include(b => b.BookingServices)
-            .Include(b => b.Assignments)
-                .ThenInclude(a => a.Employee)
-                    .ThenInclude(e => e.Role)
+            .Include(b => b.Assignments).ThenInclude(a => a.Employee).ThenInclude(e => e.Role)
             .Where(b => b.ScheduledDate.Date == date.Date)
             .ToListAsync(ct);
-
         return bookings.Select(BookingMapper.ToResponse).ToList();
     }
 
     public async Task<List<BookingResponse>> GetAllBookingsAsync(CancellationToken ct = default)
     {
-        var bookings = await _db.BookingViews
-            .AsNoTracking()
-            .OrderByDescending(b => b.ScheduledDate)
-            .ToListAsync(ct);
-
+        var bookings = await _db.BookingViews.AsNoTracking()
+            .OrderByDescending(b => b.ScheduledDate).ToListAsync(ct);
         return bookings.Select(b => BookingMapper.ToResponse(b, b.ClientId)).ToList();
     }
 
     public async Task<List<BookingResponse>> GetAssignedBookingsForEmployeeAsync(int employeeId, CancellationToken ct = default)
     {
         var bookings = await _db.Bookings
-            .Include(b => b.Client)
-                .ThenInclude(c => c.Contacts)
+            .Include(b => b.Client).ThenInclude(c => c.Contacts)
             .Include(b => b.BookingServices)
-            .Include(b => b.Assignments)
-                .ThenInclude(a => a.Employee)
-                    .ThenInclude(e => e.Role)
+            .Include(b => b.Assignments).ThenInclude(a => a.Employee).ThenInclude(e => e.Role)
             .Where(b => b.Assignments.Any(a => a.EmployeeId == employeeId))
             .OrderByDescending(b => b.ScheduledDate)
             .ToListAsync(ct);
-
         return bookings.Select(BookingMapper.ToResponse).ToList();
     }
 
     public async Task<BookingResponse?> GetBookingDetailByIdAsync(int id, CancellationToken ct = default)
     {
         var booking = await _db.Bookings
-            .Include(b => b.Client)
-                .ThenInclude(c => c.Contacts)
-            .Include(b => b.Assignments)
-                .ThenInclude(a => a.Employee)
-                    .ThenInclude(e => e.Role)
-            .Include(b => b.BookingServices)
-                .ThenInclude(bs => bs.ServiceCatalog)
+            .Include(b => b.Client).ThenInclude(c => c.Contacts)
+            .Include(b => b.Assignments).ThenInclude(a => a.Employee).ThenInclude(e => e.Role)
+            .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
             .FirstOrDefaultAsync(b => b.Id == id, ct);
-
         return booking is null ? null : BookingMapper.ToDetailResponse(booking);
     }
 
     public async Task<OperationResult<BookingResponse>> CreateBookingAsync(CreateBookingRequest dto, CancellationToken ct = default)
     {
+        var dateStr = dto.Date.ToString("dd MMM yyyy");
+
         var slots = await _availability.GetSlotsAsync(dto.Date, ct);
-        var slot = slots.FirstOrDefault(s => s.Hour == dto.Hour);
+        var slot  = slots.FirstOrDefault(s => s.Hour == dto.Hour);
+
         if (slot == null || slot.IsClosed)
-            return OperationResult<BookingResponse>.Fail("Slot is closed or unavailable.");
+            return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is closed and not available for booking.");
+
         if (slot.Available <= 0)
-            return OperationResult<BookingResponse>.Fail("No capacity available for this slot.");
+            return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is fully booked ({slot.Booked}/{slot.Capacity} spots taken).");
 
         var customerName = dto.CustomerName.Trim();
-        var phone = dto.Phone.Trim();
-        if (string.IsNullOrWhiteSpace(customerName) || string.IsNullOrWhiteSpace(phone))
-            return OperationResult<BookingResponse>.Fail("Customer name and phone are required.");
+        var phone        = dto.Phone.Trim();
+        if (string.IsNullOrWhiteSpace(customerName))
+            return OperationResult<BookingResponse>.Fail("Customer name is required.");
+        if (string.IsNullOrWhiteSpace(phone))
+            return OperationResult<BookingResponse>.Fail("Phone number is required.");
 
         var now = DateTime.UtcNow;
         await using var transaction = await _db.Database.BeginTransactionAsync(ct);
-
         try
         {
             var client = new Client
             {
                 ClientName = customerName,
-                Type = "OneTime",
-                IsActive = true,
-                CreatedAt = now,
-                UpdatedAt = now,
-                Contacts =
+                Type       = "OneTime",
+                IsActive   = true,
+                CreatedAt  = now,
+                UpdatedAt  = now,
+                Contacts   =
                 [
                     new Contact
                     {
                         ContactName = customerName,
-                        Phone = phone,
-                        IsPrimary = true,
-                        IsActive = true,
-                        CreatedAt = now,
-                        UpdatedAt = now
+                        Phone       = phone,
+                        IsPrimary   = true,
+                        IsActive    = true,
+                        CreatedAt   = now,
+                        UpdatedAt   = now
                     }
                 ]
             };
 
             var booking = new Booking
             {
-                Client = client,
-                ServiceType = BookingServiceType.Vehicle,
-                ScheduledDate = dto.Date.Date,
-                ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
-                Status = BookingStatus.Pending,
-                CreatedAt = now,
-                UpdatedAt = now
+                Client             = client,
+                ServiceType        = BookingServiceType.Vehicle,
+                ScheduledDate      = dto.Date.Date,
+                ScheduledTimeSlot  = TimeSpan.FromHours(dto.Hour),
+                Status             = BookingStatus.Pending,
+                CreatedAt          = now,
+                UpdatedAt          = now
             };
 
             _db.Bookings.Add(booking);
             await _db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
-
             return OperationResult<BookingResponse>.Ok(BookingMapper.ToResponse(booking));
         }
         catch
@@ -143,36 +131,38 @@ public class BookingManager
 
     public async Task<OperationResult<BookingResponse>> CreateAdminBookingAsync(CreateAdminBookingRequest dto, CancellationToken ct = default)
     {
-        var client = await _db.Clients.AnyAsync(c => c.Id == dto.ClientId && c.IsActive, ct);
-        if (!client)
-            return OperationResult<BookingResponse>.Fail("Client not found or inactive.");
+        var clientExists = await _db.Clients.AnyAsync(c => c.Id == dto.ClientId && c.IsActive, ct);
+        if (!clientExists)
+            return OperationResult<BookingResponse>.Fail($"Client #{dto.ClientId} was not found or is inactive.");
 
         if (dto.SiteId.HasValue)
         {
-            var siteBelongsToClient = await _db.Sites.AnyAsync(s => s.Id == dto.SiteId.Value && s.ClientId == dto.ClientId && s.IsActive, ct);
-            if (!siteBelongsToClient)
-                return OperationResult<BookingResponse>.Fail("Selected site does not belong to the client.");
+            var siteOk = await _db.Sites.AnyAsync(s => s.Id == dto.SiteId.Value && s.ClientId == dto.ClientId && s.IsActive, ct);
+            if (!siteOk)
+                return OperationResult<BookingResponse>.Fail($"Site #{dto.SiteId} does not belong to this client or is inactive.");
         }
 
-        var slots = await _availability.GetSlotsAsync(dto.Date, ct);
-        var slot = slots.FirstOrDefault(s => s.Hour == dto.Hour);
-        if (slot == null || slot.IsClosed)
-            return OperationResult<BookingResponse>.Fail("Slot is closed or unavailable.");
-        if (slot.Available <= 0)
-            return OperationResult<BookingResponse>.Fail("No capacity available for this slot.");
+        var dateStr = dto.Date.ToString("dd MMM yyyy");
+        var slots   = await _availability.GetSlotsAsync(dto.Date, ct);
+        var slot    = slots.FirstOrDefault(s => s.Hour == dto.Hour);
 
-        var now = DateTime.UtcNow;
+        if (slot == null || slot.IsClosed)
+            return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is closed.");
+        if (slot.Available <= 0)
+            return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is fully booked ({slot.Booked}/{slot.Capacity} spots taken).");
+
+        var now     = DateTime.UtcNow;
         var booking = new Booking
         {
-            ClientId = dto.ClientId,
-            SiteId = dto.SiteId,
-            ServiceType = dto.ServiceType,
-            ScheduledDate = dto.Date.Date,
+            ClientId          = dto.ClientId,
+            SiteId            = dto.SiteId,
+            ServiceType       = dto.ServiceType,
+            ScheduledDate     = dto.Date.Date,
             ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
-            Status = BookingStatus.Pending,
-            Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
-            CreatedAt = now,
-            UpdatedAt = now
+            Status            = BookingStatus.Pending,
+            Notes             = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
+            CreatedAt         = now,
+            UpdatedAt         = now
         };
 
         foreach (var service in dto.Services.Where(s => s.ServiceCatalogId > 0))
@@ -180,10 +170,10 @@ public class BookingManager
             booking.BookingServices.Add(new BookingService
             {
                 ServiceCatalogId = service.ServiceCatalogId,
-                EstimatedPrice = service.EstimatedPrice,
-                FinalPrice = service.FinalPrice,
-                Quantity = service.Quantity <= 0 ? 1 : service.Quantity,
-                Notes = string.IsNullOrWhiteSpace(service.Notes) ? null : service.Notes.Trim()
+                EstimatedPrice   = service.EstimatedPrice,
+                FinalPrice       = service.FinalPrice,
+                Quantity         = service.Quantity <= 0 ? 1 : service.Quantity,
+                Notes            = string.IsNullOrWhiteSpace(service.Notes) ? null : service.Notes.Trim()
             });
         }
 
@@ -198,30 +188,30 @@ public class BookingManager
         }
 
         var detail = await GetBookingDetailByIdAsync(booking.Id, ct);
-        return detail is null ? OperationResult<BookingResponse>.Fail("Booking not found.") : OperationResult<BookingResponse>.Ok(detail);
+        return detail is null
+            ? OperationResult<BookingResponse>.Fail("Booking was created but could not be loaded. Please refresh.")
+            : OperationResult<BookingResponse>.Ok(detail);
     }
 
     public async Task<OperationResult<BookingResponse>> UpdateStatusAsync(int id, string status, CancellationToken ct = default)
     {
         if (!Enum.TryParse<BookingStatus>(status, true, out var bookingStatus))
-            return OperationResult<BookingResponse>.Fail("Invalid status.");
+            return OperationResult<BookingResponse>.Fail($"'{status}' is not a valid booking status. Valid values: Pending, Confirmed, InProgress, Completed, Cancelled.");
 
         var booking = await _db.Bookings
             .Include(b => b.Client)
             .Include(b => b.BookingServices)
-            .Include(b => b.Assignments)
-                .ThenInclude(a => a.Employee)
-                    .ThenInclude(e => e.Role)
+            .Include(b => b.Assignments).ThenInclude(a => a.Employee).ThenInclude(e => e.Role)
             .FirstOrDefaultAsync(b => b.Id == id, ct);
 
         if (booking == null)
-            return OperationResult<BookingResponse>.Fail("Booking not found.");
+            return OperationResult<BookingResponse>.Fail($"Booking #{id} was not found.");
 
-        booking.Status = bookingStatus;
+        booking.Status    = bookingStatus;
+        booking.UpdatedAt = DateTime.UtcNow;
         if (bookingStatus == BookingStatus.Completed)
             booking.CompletedAt = DateTime.UtcNow;
 
-        booking.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
         return OperationResult<BookingResponse>.Ok(BookingMapper.ToResponse(booking));
     }
@@ -230,33 +220,32 @@ public class BookingManager
     {
         var booking = await _db.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, ct);
         if (booking == null)
-            return OperationResult<BookingResponse>.Fail("Booking not found.");
+            return OperationResult<BookingResponse>.Fail($"Booking #{bookingId} was not found.");
 
         if (booking.Status == BookingStatus.Completed || booking.Status == BookingStatus.Cancelled)
-            return OperationResult<BookingResponse>.Fail("Cannot assign employees to completed or cancelled bookings.");
+            return OperationResult<BookingResponse>.Fail($"Cannot assign employees to a booking with status '{booking.Status}'. Only Pending, Confirmed, or InProgress bookings can be assigned.");
 
-        var employeeExists = await _db.Employees.AnyAsync(e => e.Id == employeeId && e.IsActive, ct);
-        if (!employeeExists)
-            return OperationResult<BookingResponse>.Fail("Employee not found or inactive.");
+        var employee = await _db.Employees.FirstOrDefaultAsync(e => e.Id == employeeId && e.IsActive, ct);
+        if (employee == null)
+            return OperationResult<BookingResponse>.Fail($"Employee #{employeeId} was not found or is inactive.");
 
         var alreadyAssigned = await _db.BookingAssignments
             .AnyAsync(a => a.BookingId == bookingId && a.EmployeeId == employeeId, ct);
         if (alreadyAssigned)
-            return OperationResult<BookingResponse>.Fail("Employee already assigned.");
+            return OperationResult<BookingResponse>.Fail($"{employee.FirstName} {employee.LastName} is already assigned to this booking.");
 
         _db.BookingAssignments.Add(new BookingAssignment
         {
-            BookingId = bookingId,
+            BookingId  = bookingId,
             EmployeeId = employeeId,
             AssignedAt = DateTime.UtcNow
         });
-
         booking.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
 
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
         return detail == null
-            ? OperationResult<BookingResponse>.Fail("Booking not found.")
+            ? OperationResult<BookingResponse>.Fail($"Booking #{bookingId} was not found after update.")
             : OperationResult<BookingResponse>.Ok(detail);
     }
 
@@ -264,15 +253,15 @@ public class BookingManager
     {
         var booking = await _db.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, ct);
         if (booking == null)
-            return OperationResult<string>.Fail("Booking not found.");
+            return OperationResult<string>.Fail($"Booking #{bookingId} was not found.");
 
         if (booking.Status == BookingStatus.InProgress || booking.Status == BookingStatus.Completed)
-            return OperationResult<string>.Fail("Cannot remove assignment from an in-progress or completed booking.");
+            return OperationResult<string>.Fail($"Cannot remove an assignment from a booking with status '{booking.Status}'.");
 
         var assignment = await _db.BookingAssignments
             .FirstOrDefaultAsync(a => a.Id == assignmentId && a.BookingId == bookingId, ct);
         if (assignment == null)
-            return OperationResult<string>.Fail("Assignment not found.");
+            return OperationResult<string>.Fail($"Assignment #{assignmentId} was not found for booking #{bookingId}.");
 
         _db.BookingAssignments.Remove(assignment);
         booking.UpdatedAt = DateTime.UtcNow;
@@ -280,46 +269,38 @@ public class BookingManager
         return OperationResult<string>.Ok("Assignment removed.");
     }
 
-    public async Task<OperationResult<BookingResponse>> AddServiceAsync(
-        int bookingId,
-        int serviceCatalogId,
-        decimal? estimatedPrice,
-        decimal quantity,
-        decimal? finalPrice = null,
-        string? notes = null,
-        CancellationToken ct = default)
+    public async Task<OperationResult<BookingResponse>> AddServiceAsync(int bookingId, int serviceCatalogId, decimal? estimatedPrice, decimal quantity, decimal? finalPrice = null, string? notes = null, CancellationToken ct = default)
     {
         if (quantity <= 0)
             return OperationResult<BookingResponse>.Fail("Quantity must be greater than zero.");
 
         var booking = await _db.Bookings.FindAsync([bookingId], ct);
         if (booking == null)
-            return OperationResult<BookingResponse>.Fail("Booking not found.");
+            return OperationResult<BookingResponse>.Fail($"Booking #{bookingId} was not found.");
 
         var hasInvoice = await _db.InvoiceBookings.AnyAsync(ib => ib.BookingId == bookingId, ct);
         if (hasInvoice)
-            return OperationResult<BookingResponse>.Fail("Cannot modify booking services after an invoice has been linked.");
+            return OperationResult<BookingResponse>.Fail("Cannot add services after an invoice has been generated for this booking. Record any changes on the invoice directly.");
 
         var serviceExists = await _db.ServiceCatalog.AnyAsync(s => s.Id == serviceCatalogId, ct);
         if (!serviceExists)
-            return OperationResult<BookingResponse>.Fail("Service not found.");
+            return OperationResult<BookingResponse>.Fail($"Service #{serviceCatalogId} was not found in the catalog.");
 
         _db.BookingServices.Add(new BookingService
         {
-            BookingId = bookingId,
+            BookingId        = bookingId,
             ServiceCatalogId = serviceCatalogId,
-            EstimatedPrice = estimatedPrice,
-            FinalPrice = finalPrice,
-            Quantity = quantity,
-            Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim()
+            EstimatedPrice   = estimatedPrice,
+            FinalPrice       = finalPrice,
+            Quantity         = quantity,
+            Notes            = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim()
         });
-
         booking.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
 
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
         return detail == null
-            ? OperationResult<BookingResponse>.Fail("Booking not found.")
+            ? OperationResult<BookingResponse>.Fail($"Booking #{bookingId} was not found after update.")
             : OperationResult<BookingResponse>.Ok(detail);
     }
 
@@ -327,20 +308,16 @@ public class BookingManager
     {
         var hasInvoice = await _db.InvoiceBookings.AnyAsync(ib => ib.BookingId == bookingId, ct);
         if (hasInvoice)
-            return OperationResult<string>.Fail("Cannot modify booking services after an invoice has been linked.");
+            return OperationResult<string>.Fail("Cannot remove services after an invoice has been generated for this booking.");
 
         var bookingService = await _db.BookingServices
             .FirstOrDefaultAsync(bs => bs.Id == bookingServiceId && bs.BookingId == bookingId, ct);
-
         if (bookingService == null)
-            return OperationResult<string>.Fail("Booking service not found.");
+            return OperationResult<string>.Fail($"Service #{bookingServiceId} was not found on booking #{bookingId}.");
 
         _db.BookingServices.Remove(bookingService);
-
         var booking = await _db.Bookings.FindAsync([bookingId], ct);
-        if (booking != null)
-            booking.UpdatedAt = DateTime.UtcNow;
-
+        if (booking != null) booking.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
         return OperationResult<string>.Ok("Service removed.");
     }
@@ -349,21 +326,17 @@ public class BookingManager
     {
         var bookingService = await _db.BookingServices
             .FirstOrDefaultAsync(bs => bs.Id == bookingServiceId && bs.BookingId == bookingId, ct);
-
         if (bookingService == null)
-            return OperationResult<BookingResponse>.Fail("Booking service not found.");
+            return OperationResult<BookingResponse>.Fail($"Service #{bookingServiceId} was not found on booking #{bookingId}.");
 
         bookingService.FinalPrice = finalPrice;
-
         var booking = await _db.Bookings.FindAsync([bookingId], ct);
-        if (booking != null)
-            booking.UpdatedAt = DateTime.UtcNow;
-
+        if (booking != null) booking.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
 
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
         return detail == null
-            ? OperationResult<BookingResponse>.Fail("Booking not found.")
+            ? OperationResult<BookingResponse>.Fail($"Booking #{bookingId} was not found after update.")
             : OperationResult<BookingResponse>.Ok(detail);
     }
 }

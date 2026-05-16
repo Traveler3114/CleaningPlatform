@@ -8,7 +8,7 @@
 <div class="page-header"><h1>SOP Library</h1></div>
 @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="alert" style="background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;">@Model.ErrorMessage</div> }
 
-@if (User.HasPermission(PermissionKeys.ActionsSopManage))
+@if (User.HasPermission(PermissionKeys.SopsManage))
 {
     <section class="card-lite" style="margin-bottom:1rem;">
         <h2 class="section-title">New Template</h2>
@@ -38,7 +38,7 @@
             style="cursor:pointer;">
             <td>@template.Name</td><td>@template.ServiceType</td><td>@template.ServiceCatalogName</td><td>@template.IsActive</td><td>@template.ChecklistItems.Count</td>
             <td>
-                @if (User.HasPermission(PermissionKeys.ActionsSopManage))
+                @if (User.HasPermission(PermissionKeys.SopsManage))
                 {
                     <form method="post" asp-page-handler="Delete" asp-route-id="@template.Id" class="inline-form"><button class="btn btn-sm" onclick="return confirm('Delete or deactivate this SOP?')">Delete</button></form>
                 }
@@ -46,8 +46,8 @@
         </tr>
         <tr><td colspan="6">
             <strong>Checklist items</strong>
-            <ul>@foreach (var item in template.ChecklistItems) { <li>@item.SortOrder. @item.ItemText @(item.IsRequired ? "(required)" : "") @if (User.HasPermission(PermissionKeys.ActionsSopManage)) { <form method="post" asp-page-handler="DeleteItem" asp-route-itemId="@item.Id" class="inline-form"><button class="btn btn-sm">Remove</button></form> }</li> }</ul>
-            @if (User.HasPermission(PermissionKeys.ActionsSopManage))
+            <ul>@foreach (var item in template.ChecklistItems) { <li>@item.SortOrder. @item.ItemText @(item.IsRequired ? "(required)" : "") @if (User.HasPermission(PermissionKeys.SopsManage)) { <form method="post" asp-page-handler="DeleteItem" asp-route-itemId="@item.Id" class="inline-form"><button class="btn btn-sm">Remove</button></form> }</li> }</ul>
+            @if (User.HasPermission(PermissionKeys.SopsManage))
             {
                 <form method="post" asp-page-handler="AddItem" asp-route-templateId="@template.Id" class="inline-form" style="gap:.5rem; flex-wrap:wrap;">
                     <input asp-for="ChecklistItem.ItemText" class="text-input" placeholder="New checklist item" />
@@ -61,7 +61,7 @@
     </tbody>
 </table>
 
-@if (User.HasPermission(PermissionKeys.ActionsSopManage))
+@if (User.HasPermission(PermissionKeys.SopsManage))
 {
     <div id="sop-edit-modal" class="modal-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1000;" onclick="if(event.target===this) closeSopModal()">
         <div class="modal-panel" style="background:white; border-radius:8px; width:min(700px,95vw); max-height:90vh; overflow:auto; padding:1rem;">

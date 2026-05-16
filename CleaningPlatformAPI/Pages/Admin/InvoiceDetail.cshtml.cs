@@ -12,19 +12,11 @@ namespace CleaningPlatformAPI.Pages.Admin;
 public class InvoiceDetailModel : PageModel
 {
     private readonly InvoiceManager _invoiceManager;
-
-    public InvoiceDetailModel(InvoiceManager invoiceManager)
-    {
-        _invoiceManager = invoiceManager;
-    }
+    public InvoiceDetailModel(InvoiceManager invoiceManager) { _invoiceManager = invoiceManager; }
 
     public InvoiceDetailResponse? Invoice { get; set; }
-
-    [BindProperty(SupportsGet = true)]
-    public int Id { get; set; }
-
-    [TempData]
-    public string? ErrorMessage { get; set; }
+    [BindProperty(SupportsGet = true)] public int Id { get; set; }
+    [TempData] public string? ErrorMessage { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -34,26 +26,24 @@ public class InvoiceDetailModel : PageModel
 
     public async Task<IActionResult> OnPostUpdateStatusAsync(string status)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
-            return Forbid();
-
+        if (!User.HasPermission(PermissionKeys.InvoicesEdit)) return Forbid();
         var result = await _invoiceManager.UpdateStatusAsync(Id, status);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { id = Id });
     }
 
-    public async Task<IActionResult> OnPostRecordPaymentAsync(DateTime paymentDate, decimal amount, string method, string? reference, string? notes)
+    public async Task<IActionResult> OnPostRecordPaymentAsync(
+        DateTime paymentDate, decimal amount, string method, string? reference, string? notes)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
-            return Forbid();
+        if (!User.HasPermission(PermissionKeys.InvoicesEdit)) return Forbid();
 
         var result = await _invoiceManager.RecordPaymentAsync(Id, new RecordPaymentRequest
         {
             PaymentDate = paymentDate,
-            Amount = amount,
-            Method = method,
-            Reference = reference,
-            Notes = notes
+            Amount      = amount,
+            Method      = method,
+            Reference   = reference,
+            Notes       = notes
         }, User.GetEmployeeId());
 
         if (!result.Success) ErrorMessage = result.Message;

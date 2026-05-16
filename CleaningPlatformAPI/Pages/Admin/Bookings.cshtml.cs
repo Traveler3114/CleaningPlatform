@@ -42,34 +42,28 @@ public class BookingsModel : PageModel
     [TempData]
     public string? ErrorMessage { get; set; }
 
-    public async Task OnGetAsync(CancellationToken ct)
-    {
-        await LoadAsync(ct);
-    }
+    public async Task OnGetAsync(CancellationToken ct) => await LoadAsync(ct);
 
     public async Task<IActionResult> OnPostCreateAdminAsync(CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingCreate))
+        if (!User.HasPermission(PermissionKeys.BookingsCreate))
             return Forbid();
 
         if (NewServiceCatalogId.HasValue)
             NewBooking.Services.Add(new AddServiceRequest { ServiceCatalogId = NewServiceCatalogId.Value, Quantity = 1 });
 
         var result = await _bookingManager.CreateAdminBookingAsync(NewBooking, ct);
-        if (!result.Success)
-            ErrorMessage = result.Message;
-
+        if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
     }
 
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
+        if (!User.HasPermission(PermissionKeys.BookingsEdit))
             return Forbid();
 
         var result = await _bookingManager.UpdateStatusAsync(id, status, ct);
-        if (!result.Success)
-            ErrorMessage = result.Message;
+        if (!result.Success) ErrorMessage = result.Message;
 
         return DateFilter.HasValue
             ? RedirectToPage(new { dateFilter = DateFilter.Value.ToString("yyyy-MM-dd") })

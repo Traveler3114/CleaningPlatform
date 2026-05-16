@@ -13,35 +13,52 @@ public static class PermissionKeys
     public const string PagesSop      = "pages.sop";
     public const string PagesReports  = "pages.reports";
 
-    // ── Booking actions ──────────────────────────────────────
-    public const string ActionsBookingAssign       = "actions.booking.assign";
-    public const string ActionsBookingUpdateStatus = "actions.booking.updateStatus";
-    public const string ActionsBookingCreate       = "actions.booking.create";
+    // ── Bookings ─────────────────────────────────────────────
+    public const string BookingsView   = "bookings.view";
+    public const string BookingsCreate = "bookings.create";
+    public const string BookingsEdit   = "bookings.edit";
+    public const string BookingsDelete = "bookings.delete";
 
-    // ── Schedule actions ─────────────────────────────────────
-    public const string ActionsScheduleEdit   = "actions.schedule.edit";
-    public const string ActionsOverrideManage = "actions.override.manage";
+    // ── Clients ──────────────────────────────────────────────
+    public const string ClientsView   = "clients.view";
+    public const string ClientsCreate = "clients.create";
+    public const string ClientsEdit   = "clients.edit";
+    public const string ClientsDelete = "clients.delete";
 
-    // ── User actions ─────────────────────────────────────────
-    public const string ActionsUserCreate       = "actions.user.create";
-    public const string ActionsUserToggleActive = "actions.user.toggleActive";
+    // ── Invoices ─────────────────────────────────────────────
+    public const string InvoicesView   = "invoices.view";
+    public const string InvoicesCreate = "invoices.create";
+    public const string InvoicesEdit   = "invoices.edit";
 
-    // ── Role actions ─────────────────────────────────────────
-    public const string ActionsRoleManage = "actions.role.manage";
+    // ── SOPs ─────────────────────────────────────────────────
+    public const string SopsView   = "sops.view";
+    public const string SopsManage = "sops.manage";
 
-    // ── Service catalog actions ──────────────────────────────
-    public const string ActionsServiceCatalogEdit   = "actions.serviceCatalog.edit";
-    public const string ActionsServiceCatalogManage = "actions.serviceCatalog.manage";
+    // ── Services ─────────────────────────────────────────────
+    public const string ServicesView   = "services.view";
+    public const string ServicesManage = "services.manage";
 
-    // ── SOP actions ───────────────────────────────────────────
-    public const string ActionsSopManage = "actions.sop.manage";
+    // ── Schedule ─────────────────────────────────────────────
+    public const string ScheduleView = "schedule.view";
+    public const string ScheduleEdit = "schedule.edit";
 
-    // ── Reporting actions ────────────────────────────────────
-    public const string ActionsReportsExport = "actions.reports.export";
+    // ── Users ────────────────────────────────────────────────
+    public const string UsersView   = "users.view";
+    public const string UsersCreate = "users.create";
+    public const string UsersEdit   = "users.edit";
+
+    // ── Roles ────────────────────────────────────────────────
+    public const string RolesView   = "roles.view";
+    public const string RolesManage = "roles.manage";
+
+    // ── Reports ──────────────────────────────────────────────
+    public const string ReportsView   = "reports.view";
+    public const string ReportsExport = "reports.export";
 
     // ── Master list (must stay in sync with Meta below) ──────
     public static readonly string[] All =
     [
+        // Pages
         PagesDaily,
         PagesBookings,
         PagesSchedule,
@@ -51,58 +68,95 @@ public static class PermissionKeys
         PagesKanban,
         PagesSop,
         PagesReports,
-        ActionsBookingAssign,
-        ActionsBookingUpdateStatus,
-        ActionsBookingCreate,
-        ActionsScheduleEdit,
-        ActionsOverrideManage,
-        ActionsUserCreate,
-        ActionsUserToggleActive,
-        ActionsRoleManage,
-        ActionsServiceCatalogEdit,
-        ActionsServiceCatalogManage,
-        ActionsSopManage,
-        ActionsReportsExport,
+        // Bookings
+        BookingsView,
+        BookingsCreate,
+        BookingsEdit,
+        BookingsDelete,
+        // Clients
+        ClientsView,
+        ClientsCreate,
+        ClientsEdit,
+        ClientsDelete,
+        // Invoices
+        InvoicesView,
+        InvoicesCreate,
+        InvoicesEdit,
+        // SOPs
+        SopsView,
+        SopsManage,
+        // Services
+        ServicesView,
+        ServicesManage,
+        // Schedule
+        ScheduleView,
+        ScheduleEdit,
+        // Users
+        UsersView,
+        UsersCreate,
+        UsersEdit,
+        // Roles
+        RolesView,
+        RolesManage,
+        // Reports
+        ReportsView,
+        ReportsExport,
     ];
 
     public static readonly Dictionary<string, (string DisplayName, string Description, string Category)> Meta = new()
     {
         // Pages
-        [PagesDaily]    = ("Daily View Page",    "Can access the daily view page",            "Pages"),
-        [PagesBookings] = ("Bookings Page",       "Can access the bookings page",              "Pages"),
-        [PagesSchedule] = ("Schedule Page",       "Can access the weekly schedule editor",     "Pages"),
-        [PagesUsers]    = ("Users Page",          "Can access the users management page",      "Pages"),
-        [PagesRoles]    = ("Roles Page",          "Can access the roles management page",      "Pages"),
-        [PagesClients]  = ("Clients Page",        "Can access the clients management page",    "Pages"),
-        [PagesKanban]   = ("Kanban Board",        "Can access the Kanban board",               "Pages"),
-        [PagesSop]      = ("SOP Library Page",    "Can access the SOP library",                "Pages"),
-        [PagesReports]  = ("Reports Page",        "Can access the finance and reports page",   "Pages"),
+        [PagesDaily]    = ("Daily View",          "Access the daily schedule view",                 "Pages"),
+        [PagesBookings] = ("Bookings Page",        "Access the bookings list page",                 "Pages"),
+        [PagesSchedule] = ("Schedule Page",        "Access the weekly schedule editor",             "Pages"),
+        [PagesUsers]    = ("Users Page",           "Access the user management page",               "Pages"),
+        [PagesRoles]    = ("Roles Page",           "Access the roles management page",              "Pages"),
+        [PagesClients]  = ("Clients Page",         "Access the client management page",             "Pages"),
+        [PagesKanban]   = ("Kanban / Calendar",    "Access the kanban and calendar board",          "Pages"),
+        [PagesSop]      = ("SOP Library Page",     "Access the SOP library",                        "Pages"),
+        [PagesReports]  = ("Reports Page",         "Access the finance and reports page",           "Pages"),
 
-        // Booking actions
-        [ActionsBookingAssign]       = ("Assign Employees to Bookings", "Can assign and remove employees from bookings", "Bookings"),
-        [ActionsBookingUpdateStatus] = ("Update Booking Status",        "Can update the status of bookings",            "Bookings"),
-        [ActionsBookingCreate]       = ("Create Bookings",              "Can create new bookings from the admin panel", "Bookings"),
+        // Bookings
+        [BookingsView]   = ("View Bookings",   "Read bookings list and detail",                     "Bookings"),
+        [BookingsCreate] = ("Create Bookings", "Create new bookings from the admin panel",          "Bookings"),
+        [BookingsEdit]   = ("Edit Bookings",   "Update status, assign employees, edit services",    "Bookings"),
+        [BookingsDelete] = ("Cancel Bookings", "Cancel or delete bookings",                         "Bookings"),
 
-        // Schedule actions
-        [ActionsScheduleEdit]   = ("Edit Schedule",           "Can edit the weekly schedule",          "Schedule"),
-        [ActionsOverrideManage] = ("Manage Date Overrides",   "Can manage date-specific overrides",    "Schedule"),
+        // Clients
+        [ClientsView]   = ("View Clients",   "Read client list and detail",                         "Clients"),
+        [ClientsCreate] = ("Create Clients", "Create new clients",                                  "Clients"),
+        [ClientsEdit]   = ("Edit Clients",   "Edit client profile, contacts and sites",             "Clients"),
+        [ClientsDelete] = ("Delete Clients", "Deactivate clients and sites",                        "Clients"),
 
-        // User actions
-        [ActionsUserCreate]       = ("Create User Accounts",      "Can create new user accounts",          "Users"),
-        [ActionsUserToggleActive] = ("Activate/Deactivate Users", "Can toggle user active status",         "Users"),
+        // Invoices
+        [InvoicesView]   = ("View Invoices",   "Read invoices and payment history",                 "Invoices"),
+        [InvoicesCreate] = ("Create Invoices", "Generate invoices from completed bookings",         "Invoices"),
+        [InvoicesEdit]   = ("Edit Invoices",   "Record payments and update invoice status",         "Invoices"),
 
-        // Role actions
-        [ActionsRoleManage] = ("Manage Roles", "Can create, edit and delete roles", "Roles"),
+        // SOPs
+        [SopsView]   = ("View SOPs",   "Read the SOP library and checklists",                       "SOPs"),
+        [SopsManage] = ("Manage SOPs", "Create, edit and delete SOP templates and checklist items", "SOPs"),
 
-        // Service catalog actions
-        [ActionsServiceCatalogEdit]   = ("Edit Service Catalog", "Can update service pricing and details", "Services"),
-        [ActionsServiceCatalogManage] = ("Manage Services",      "Can add or remove services",             "Services"),
+        // Services
+        [ServicesView]   = ("View Services",   "Read the service catalog",                          "Services"),
+        [ServicesManage] = ("Manage Services", "Create, edit and delete services",                  "Services"),
 
-        // SOP actions
-        [ActionsSopManage] = ("Manage SOPs", "Can create, edit and delete SOP templates and checklist items", "SOPs"),
+        // Schedule
+        [ScheduleView] = ("View Schedule",   "Read the weekly schedule and date overrides",         "Schedule"),
+        [ScheduleEdit] = ("Edit Schedule",   "Edit the weekly schedule and manage date overrides",  "Schedule"),
 
-        // Reporting actions
-        [ActionsReportsExport] = ("Export Reports", "Can export financial reports to Excel", "Reports"),
+        // Users
+        [UsersView]   = ("View Users",   "Read the user list",                                      "Users"),
+        [UsersCreate] = ("Create Users", "Create new user accounts",                                "Users"),
+        [UsersEdit]   = ("Edit Users",   "Reset passwords and toggle user active status",           "Users"),
+
+        // Roles
+        [RolesView]   = ("View Roles",   "Read the roles list",                                     "Roles"),
+        [RolesManage] = ("Manage Roles", "Create, edit and delete roles",                           "Roles"),
+
+        // Reports
+        [ReportsView]   = ("View Reports",   "Read financial reports and dashboards",               "Reports"),
+        [ReportsExport] = ("Export Reports", "Export financial data to Excel",                      "Reports"),
     };
 
     static PermissionKeys()

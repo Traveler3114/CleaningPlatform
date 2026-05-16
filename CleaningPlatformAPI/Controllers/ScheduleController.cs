@@ -12,36 +12,25 @@ namespace CleaningPlatformAPI.Controllers;
 public class ScheduleController : ControllerBase
 {
     private readonly ScheduleManager _manager;
-
-    public ScheduleController(ScheduleManager manager)
-    {
-        _manager = manager;
-    }
+    public ScheduleController(ScheduleManager manager) { _manager = manager; }
 
     [HttpGet]
+    [Authorize(Policy = PermissionKeys.ScheduleView)]
     public async Task<OperationResult<List<WeeklyScheduleResponse>>> Get(CancellationToken ct)
-    {
-        return OperationResult<List<WeeklyScheduleResponse>>.Ok(await _manager.GetScheduleAsync(ct));
-    }
+        => OperationResult<List<WeeklyScheduleResponse>>.Ok(await _manager.GetScheduleAsync(ct));
 
     [HttpPost]
-    [Authorize(Policy = PermissionKeys.ActionsScheduleEdit)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<WeeklyScheduleResponse>> Post([FromBody] WeeklyScheduleRequest request, CancellationToken ct)
-    {
-        return await _manager.CreateDayAsync(request, ct);
-    }
+        => await _manager.CreateDayAsync(request, ct);
 
     [HttpPut("{dayOfWeek}")]
-    [Authorize(Policy = PermissionKeys.ActionsScheduleEdit)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<WeeklyScheduleResponse>> Put(int dayOfWeek, [FromBody] UpdateWeeklyScheduleRequest request, CancellationToken ct)
-    {
-        return await _manager.UpdateDayAsync(dayOfWeek, request, ct);
-    }
+        => await _manager.UpdateDayAsync(dayOfWeek, request, ct);
 
     [HttpDelete("{dayOfWeek}")]
-    [Authorize(Policy = PermissionKeys.ActionsScheduleEdit)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<bool>> Delete(int dayOfWeek, CancellationToken ct)
-    {
-        return await _manager.DeleteDayAsync(dayOfWeek, ct);
-    }
+        => await _manager.DeleteDayAsync(dayOfWeek, ct);
 }

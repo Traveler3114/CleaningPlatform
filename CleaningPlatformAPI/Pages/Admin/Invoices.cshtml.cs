@@ -12,26 +12,16 @@ namespace CleaningPlatformAPI.Pages.Admin;
 public class InvoicesModel : PageModel
 {
     private readonly InvoiceManager _invoiceManager;
-
-    public InvoicesModel(InvoiceManager invoiceManager)
-    {
-        _invoiceManager = invoiceManager;
-    }
+    public InvoicesModel(InvoiceManager invoiceManager) { _invoiceManager = invoiceManager; }
 
     public List<InvoiceSummaryResponse> Invoices { get; set; } = [];
+    [TempData] public string? ErrorMessage { get; set; }
 
-    [TempData]
-    public string? ErrorMessage { get; set; }
-
-    public async Task OnGetAsync()
-    {
-        Invoices = await _invoiceManager.GetAllAsync();
-    }
+    public async Task OnGetAsync() => Invoices = await _invoiceManager.GetAllAsync();
 
     public async Task<IActionResult> OnPostGenerateFromBookingAsync(int bookingId)
     {
-        if (!User.HasPermission(PermissionKeys.ActionsBookingUpdateStatus))
-            return Forbid();
+        if (!User.HasPermission(PermissionKeys.InvoicesCreate)) return Forbid();
 
         var result = await _invoiceManager.CreateFromBookingAsync(bookingId, User.GetEmployeeId());
         if (!result.Success || result.Data == null)
@@ -39,7 +29,6 @@ public class InvoicesModel : PageModel
             ErrorMessage = result.Message;
             return RedirectToPage();
         }
-
         return RedirectToPage("/Admin/InvoiceDetail", new { id = result.Data.Id });
     }
 }

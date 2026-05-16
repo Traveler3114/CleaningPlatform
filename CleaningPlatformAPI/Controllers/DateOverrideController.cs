@@ -12,29 +12,20 @@ namespace CleaningPlatformAPI.Controllers;
 public class DateOverrideController : ControllerBase
 {
     private readonly DateOverrideManager _manager;
-
-    public DateOverrideController(DateOverrideManager manager)
-    {
-        _manager = manager;
-    }
+    public DateOverrideController(DateOverrideManager manager) { _manager = manager; }
 
     [HttpGet]
+    [Authorize(Policy = PermissionKeys.ScheduleView)]
     public async Task<OperationResult<List<DateOverrideResponse>>> Get(CancellationToken ct)
-    {
-        return OperationResult<List<DateOverrideResponse>>.Ok(await _manager.GetOverridesAsync(ct));
-    }
+        => OperationResult<List<DateOverrideResponse>>.Ok(await _manager.GetOverridesAsync(ct));
 
     [HttpPost]
-    [Authorize(Policy = PermissionKeys.ActionsOverrideManage)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<DateOverrideResponse>> Post([FromBody] DateOverrideRequest request, CancellationToken ct)
-    {
-        return await _manager.CreateOverrideAsync(request, ct);
-    }
+        => await _manager.CreateOverrideAsync(request, ct);
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = PermissionKeys.ActionsOverrideManage)]
+    [Authorize(Policy = PermissionKeys.ScheduleEdit)]
     public async Task<OperationResult<bool>> Delete(int id, CancellationToken ct)
-    {
-        return await _manager.DeleteOverrideAsync(id, ct);
-    }
+        => await _manager.DeleteOverrideAsync(id, ct);
 }

@@ -17,7 +17,7 @@ public class AuthController : ControllerBase
         _authManager = authManager;
     }
 
-    [Authorize(Policy = PermissionKeys.ActionsUserCreate)]
+    [Authorize(Policy = PermissionKeys.UsersCreate)]
     [HttpPost("register")]
     public async Task<OperationResult<string>> Register([FromBody] CreateUserRequest request, CancellationToken ct)
     {

@@ -9,7 +9,7 @@
 
 <div class="page-header">
     <h1>Finance & Reports</h1>
-    @if (User.HasPermission(PermissionKeys.ActionsReportsExport))
+    @if (User.HasPermission(PermissionKeys.ReportsExport))
     {
         <form method="post" asp-page-handler="Export"><button class="btn btn-sm" type="submit">Export invoices to Excel</button></form>
     }

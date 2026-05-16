@@ -10,11 +10,7 @@ namespace CleaningPlatformAPI.Managers;
 public class ScheduleManager
 {
     private readonly AppDbContext _db;
-
-    public ScheduleManager(AppDbContext db)
-    {
-        _db = db;
-    }
+    public ScheduleManager(AppDbContext db) { _db = db; }
 
     public async Task<List<WeeklyScheduleResponse>> GetScheduleAsync(CancellationToken ct = default)
     {
@@ -24,22 +20,22 @@ public class ScheduleManager
 
     public async Task<OperationResult<WeeklyScheduleResponse>> CreateDayAsync(WeeklyScheduleRequest request, CancellationToken ct = default)
     {
-        var validationError = ValidateScheduleRequest(request.DayOfWeek, request.StartHour, request.EndHour, request.Capacity, true);
-        if (validationError != null)
-            return OperationResult<WeeklyScheduleResponse>.Fail(validationError);
+        var err = ValidateScheduleRequest(request.DayOfWeek, request.StartHour, request.EndHour, request.Capacity, true);
+        if (err != null) return OperationResult<WeeklyScheduleResponse>.Fail(err);
 
+        var dayName  = ((DayOfWeek)request.DayOfWeek).ToString();
         var existing = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == request.DayOfWeek, ct);
         if (existing != null)
-            return OperationResult<WeeklyScheduleResponse>.Fail("A schedule for this day already exists.");
+            return OperationResult<WeeklyScheduleResponse>.Fail(
+                $"A schedule entry for {dayName} already exists. Click the row to edit the existing entry instead.");
 
         var schedule = new WeeklySchedule
         {
             DayOfWeek = request.DayOfWeek,
             StartHour = request.StartHour,
-            EndHour = request.EndHour,
-            Capacity = request.Capacity,
+            EndHour   = request.EndHour,
+            Capacity  = request.Capacity
         };
-
         _db.WeeklySchedules.Add(schedule);
         await _db.SaveChangesAsync(ct);
         return OperationResult<WeeklyScheduleResponse>.Ok(ScheduleMapper.ToWeeklyResponse(schedule));
@@ -47,18 +43,17 @@ public class ScheduleManager
 
     public async Task<OperationResult<WeeklyScheduleResponse>> UpdateDayAsync(int dayOfWeek, UpdateWeeklyScheduleRequest request, CancellationToken ct = default)
     {
-        var validationError = ValidateScheduleRequest(dayOfWeek, request.StartHour, request.EndHour, request.Capacity, false);
-        if (validationError != null)
-            return OperationResult<WeeklyScheduleResponse>.Fail(validationError);
+        var err = ValidateScheduleRequest(dayOfWeek, request.StartHour, request.EndHour, request.Capacity, false);
+        if (err != null) return OperationResult<WeeklyScheduleResponse>.Fail(err);
 
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == dayOfWeek, ct);
         if (schedule == null)
-            return OperationResult<WeeklyScheduleResponse>.Fail("Schedule not found.");
+            return OperationResult<WeeklyScheduleResponse>.Fail(
+                $"No schedule entry found for {((DayOfWeek)dayOfWeek)}.");
 
         schedule.StartHour = request.StartHour;
-        schedule.EndHour = request.EndHour;
-        schedule.Capacity = request.Capacity;
-
+        schedule.EndHour   = request.EndHour;
+        schedule.Capacity  = request.Capacity;
         await _db.SaveChangesAsync(ct);
         return OperationResult<WeeklyScheduleResponse>.Ok(ScheduleMapper.ToWeeklyResponse(schedule));
     }
@@ -67,7 +62,7 @@ public class ScheduleManager
     {
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == dayOfWeek, ct);
         if (schedule == null)
-            return OperationResult<bool>.Fail("Schedule not found.");
+            return OperationResult<bool>.Fail($"No schedule entry found for {((DayOfWeek)dayOfWeek)}.");
 
         _db.WeeklySchedules.Remove(schedule);
         await _db.SaveChangesAsync(ct);
@@ -77,13 +72,13 @@ public class ScheduleManager
     private static string? ValidateScheduleRequest(int dayOfWeek, int startHour, int endHour, int capacity, bool validateDayOfWeek)
     {
         if (validateDayOfWeek && (dayOfWeek < 0 || dayOfWeek > 6))
-            return "DayOfWeek must be between 0 and 6.";
+            return "Day of week must be between 0 (Sunday) and 6 (Saturday).";
 
         if (startHour < 0 || endHour > 24)
-            return "StartHour must be >= 0 and EndHour must be <= 24.";
+            return "Start hour must be ≥ 0 and end hour must be ≤ 24.";
 
         if (startHour >= endHour && !(startHour == 0 && endHour == 0))
-            return "StartHour must be less than EndHour unless both are 0 for closed day.";
+            return $"Start hour ({startHour}) must be earlier than end hour ({endHour}).";
 
         if (capacity < 0)
             return "Capacity cannot be negative.";

@@ -1,101 +1,455 @@
 @page
 @model CleaningPlatformAPI.Pages.Admin.KanbanModel
+@using System.Security.Claims
 @{
-    ViewData["Title"] = "Kanban";
+    ViewData["Title"] = "Calendar";
     ViewData["ActivePage"] = "kanban";
-    var sidebarColumn = Model.IsEmployeeView ? string.Empty : "260px";
+
+    var today = DateTime.UtcNow.Date;
+    int startHour = Model.GridStartHour;
+    int endHour   = Model.GridEndHour;
+
+    // Status → CSS modifier
+    string CardCss(string status) => status.ToLower() switch
+    {
+        "pending"    => "cal-card--pending",
+        "confirmed"  => "cal-card--confirmed",
+        "inprogress" => "cal-card--inprogress",
+        "completed"  => "cal-card--completed",
+        _            => "cal-card--cancelled"
+    };
+
+    // Initials from full name
+    string Initials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[^1][0]}"
+            : name.Length >= 2 ? name[..2] : name;
+    }
+
+    // Employee dot CSS
+    string EmpDot(CleaningPlatformAPI.Contracts.KanbanEmployeeResponse e)
+    {
+        if (!e.IsFree) return "cal-emp-dot--full";
+        return e.JobsToday > 0 ? "cal-emp-dot--busy" : "cal-emp-dot--free";
+    }
 }
 
+@* ── Toolbar ─────────────────────────────────────────────────────────── *@
 <div class="page-header">
-    <h1>Kanban Board</h1>
+    <h1>@(Model.IsEmployeeView ? "My Schedule" : "Calendar")</h1>
+
+    @if (!Model.IsEmployeeView && User.HasPermission(CleaningPlatformAPI.Common.PermissionKeys.BookingsCreate))
+    {
+        <a asp-page="/Admin/Bookings" class="btn btn-sm">+ New Booking</a>
+    }
+</div>
+
+<div class="cal-toolbar">
+
+    @* View switcher — hidden for employee *@
     @if (!Model.IsEmployeeView)
     {
-        <form method="get" class="date-form" style="display:flex; gap:.5rem; align-items:center;">
-            <input asp-for="SelectedDate" type="date" class="date-input" />
-            <label><input asp-for="AllOpen" type="checkbox" /> All open pipeline</label>
-            <button class="btn btn-sm" type="submit">Load</button>
+        <div class="cal-view-pills">
+            <a asp-page="/Admin/Kanban"
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.WeekStart.ToString("yyyy-MM-dd")},{"view","week"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               class="@(Model.View == "week" ? "active" : "")">Week</a>
+            <a asp-page="/Admin/Kanban"
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.WeekStart.ToString("yyyy-MM-dd")},{"view","day"},{"dayView",(Model.DayView ?? Model.WeekStart).ToString("yyyy-MM-dd")},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               class="@(Model.View == "day" ? "active" : "")">Day</a>
+            <a asp-page="/Admin/Kanban"
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.WeekStart.ToString("yyyy-MM-dd")},{"view","month"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               class="@(Model.View == "month" ? "active" : "")">Month</a>
+        </div>
+    }
+
+    @* Date navigation *@
+    @if (Model.View == "week" || Model.IsEmployeeView)
+    {
+        <div class="cal-nav">
+            <a asp-page="/Admin/Kanban"
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.PrevWeek.ToString("yyyy-MM-dd")},{"view",Model.View},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               class="cal-nav-btn">&#8592;</a>
+            <span class="cal-range-label">
+                @Model.WeekStart.ToString("d MMM") – @Model.Board.WeekEnd.ToString("d MMM yyyy")
+            </span>
+            <a asp-page="/Admin/Kanban"
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.NextWeek.ToString("yyyy-MM-dd")},{"view",Model.View},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               class="cal-nav-btn">&#8594;</a>
+        </div>
+    }
+    else if (Model.View == "day")
+    {
+        var curDay = Model.DayView ?? Model.WeekStart;
+        <div class="cal-nav">
+            <a asp-page="/Admin/Kanban"
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.PrevDay.ToString("yyyy-MM-dd")},{"view","day"},{"dayView",Model.PrevDay.ToString("yyyy-MM-dd")},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               class="cal-nav-btn">&#8592;</a>
+            <span class="cal-range-label">@curDay.ToString("dddd, d MMM yyyy")</span>
+            <a asp-page="/Admin/Kanban"
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.NextDay.ToString("yyyy-MM-dd")},{"view","day"},{"dayView",Model.NextDay.ToString("yyyy-MM-dd")},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               class="cal-nav-btn">&#8594;</a>
+        </div>
+    }
+    else if (Model.View == "month")
+    {
+        <div class="cal-nav">
+            <a asp-page="/Admin/Kanban"
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.PrevMonth.ToString("yyyy-MM-dd")},{"view","month"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               class="cal-nav-btn">&#8592;</a>
+            <span class="cal-range-label">@Model.WeekStart.ToString("MMMM yyyy")</span>
+            <a asp-page="/Admin/Kanban"
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.NextMonth.ToString("yyyy-MM-dd")},{"view","month"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               class="cal-nav-btn">&#8594;</a>
+        </div>
+    }
+
+    @* Employee filter — admin only *@
+    @if (!Model.IsEmployeeView && Model.Board.Employees.Count > 0)
+    {
+        <form method="get" style="display:flex; gap:0.4rem; align-items:center;">
+            <input type="hidden" name="weekStart" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="view" value="@Model.View" />
+            <select name="filterEmployeeId" class="status-select" onchange="this.form.submit()">
+                <option value="">All employees</option>
+                @foreach (var emp in Model.Board.Employees)
+                {
+                    <option value="@emp.EmployeeId" @(Model.FilterEmployeeId == emp.EmployeeId ? "selected" : "")>
+                        @emp.FullName
+                    </option>
+                }
+            </select>
         </form>
     }
+
 </div>
 
 @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
 {
-    <div class="alert" style="background:#fce4ec;color:#c62828;border:1px solid #ef9a9a;">@Model.ErrorMessage</div>
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
 }
 
-<div style="display:grid; grid-template-columns: minmax(0,1fr) @sidebarColumn; gap:1rem; align-items:start;">
-    <div class="kanban-board" style="display:grid; grid-template-columns:repeat(5,minmax(180px,1fr)); gap:.75rem; overflow:auto;">
-        @foreach (var column in Model.Board.Columns)
-        {
-            <section class="card-lite" ondragover="event.preventDefault()" ondrop="dropStatus(event, '@column.Status')">
-                <h2 class="section-title">@column.Status (@column.Cards.Count)</h2>
-                @foreach (var card in column.Cards)
-                {
-                    <article class="card-lite" style="margin-bottom:.75rem;" draggable="@((!Model.IsEmployeeView).ToString().ToLowerInvariant())" ondragstart="event.dataTransfer.setData('bookingId', '@card.BookingId')">
-                        <strong><a asp-page="/Admin/BookingDetail" asp-route-id="@card.BookingId" class="link">#@card.BookingId @card.ClientName</a></strong>
-                        <div>@card.Hour:00 · @card.ServiceType · @card.ServicesCount services</div>
-                        <div>@card.SiteName @card.SiteAddress</div>
-                        <div>Employees: @(card.AssignedEmployees.Count == 0 ? "Unassigned" : string.Join(", ", card.AssignedEmployees.Select(e => e.FullName)))</div>
-                        <div><span class="badge">SOP @(card.HasSop ? $"{card.SopCompletionPct}%" : "none")</span></div>
-                        @if (!Model.IsEmployeeView)
-                        {
-                            <form method="post" asp-page-handler="AddAssignment" class="inline-form">
-                                <input type="hidden" name="id" value="@card.BookingId" />
-                                <input type="hidden" asp-for="SelectedDate" />
-                                <input type="hidden" asp-for="AllOpen" />
-                                <select name="employeeId" class="status-select">
-                                    @foreach (var employee in Model.Board.Employees)
-                                    {
-                                        <option value="@employee.EmployeeId">@employee.FullName (@employee.JobsToday)</option>
-                                    }
-                                </select>
-                                <button class="btn btn-sm" type="submit">Assign</button>
-                            </form>
-                        }
-                        else if (column.Status is "Confirmed" or "InProgress")
-                        {
-                            var nextStatus = column.Status == "Confirmed" ? "InProgress" : "Completed";
-                            <form method="post" asp-page-handler="UpdateStatus" class="inline-form">
-                                <input type="hidden" name="id" value="@card.BookingId" />
-                                <input type="hidden" name="status" value="@nextStatus" />
-                                <button class="btn btn-sm" type="submit">@(nextStatus == "InProgress" ? "Start" : "Complete")</button>
-                            </form>
-                        }
-                    </article>
-                }
-            </section>
-        }
-    </div>
-    @if (!Model.IsEmployeeView)
+@* ── EMPLOYEE VIEW — simple task list ────────────────────────────────── *@
+@if (Model.IsEmployeeView)
+{
+    foreach (var day in Model.Board.Days)
     {
-        <aside class="card-lite">
-            <h2 class="section-title">Employees</h2>
-            @foreach (var employee in Model.Board.Employees)
+        if (!day.Bookings.Any()) continue;
+
+        <h3 style="margin:1rem 0 0.5rem; color:#3949ab; font-size:0.95rem;">
+            @day.DayLabel @(day.IsToday ? "— Today" : "")
+        </h3>
+
+        foreach (var card in day.Bookings.OrderBy(c => c.Hour))
+        {
+            var cssStatus = card.Status.ToLower();
+            <div class="emp-task-card emp-task-card--@cssStatus">
+                <div class="emp-task-card__header">
+                    <span class="emp-task-card__title">
+                        @card.Hour:00 — @card.ClientName
+                    </span>
+                    <span class="badge badge-@cssStatus">@card.Status</span>
+                </div>
+                <div class="emp-task-card__meta">
+                    @if (!string.IsNullOrWhiteSpace(card.SiteName))
+                    {
+                        <div>📍 @card.SiteName — @card.SiteAddress</div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(card.ClientPhone))
+                    {
+                        <div>📞 @card.ClientPhone</div>
+                    }
+                    <div>@card.ServiceType · @card.ServicesCount service(s)</div>
+                    @if (card.HasSop)
+                    {
+                        <div style="margin-top:0.3rem;">
+                            SOP: @card.SopCompletionPct% complete
+                            <div class="cal-sop-bar" style="margin-top:3px;">
+                                <div class="cal-sop-bar__fill" style="width:@card.SopCompletionPct%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                @if (card.Status is "Confirmed" or "InProgress")
+                {
+                    var nextStatus = card.Status == "Confirmed" ? "InProgress" : "Completed";
+                    var btnLabel   = card.Status == "Confirmed" ? "Start job" : "Mark complete";
+                    <div class="emp-task-card__actions">
+                        <form method="post" asp-page-handler="UpdateStatus">
+                            <input type="hidden" name="id" value="@card.BookingId" />
+                            <input type="hidden" name="status" value="@nextStatus" />
+                            <input type="hidden" name="weekStart" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+                            <input type="hidden" name="view" value="week" />
+                            <button type="submit" class="btn btn-sm">@btnLabel</button>
+                        </form>
+                        <a asp-page="/Admin/BookingDetail" asp-route-id="@card.BookingId" class="btn btn-sm">Details</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="emp-task-card__actions">
+                        <a asp-page="/Admin/BookingDetail" asp-route-id="@card.BookingId" class="btn btn-sm">Details</a>
+                    </div>
+                }
+            </div>
+        }
+    }
+
+    if (!Model.Board.Days.Any(d => d.Bookings.Any()))
+    {
+        <div class="alert alert-info">No tasks assigned to you this week.</div>
+    }
+}
+
+@* ── WEEK VIEW ────────────────────────────────────────────────────────── *@
+else if (Model.View == "week")
+{
+    <div class="cal-layout">
+        <div>
+            <div class="cal-week-grid">
+                @* Header row *@
+                <div class="cal-time-corner"></div>
+                @foreach (var day in Model.Board.Days)
+                {
+                    <div class="cal-day-header @(day.IsToday ? "today" : "")">
+                        @day.DayLabel
+                    </div>
+                }
+
+                @* Hour rows *@
+                @for (int h = startHour; h < endHour; h++)
+                {
+                    <div class="cal-time-label">@h:00</div>
+                    @foreach (var day in Model.Board.Days)
+                    {
+                        var cellBookings = day.Bookings.Where(b => b.Hour == h).ToList();
+                        <div class="cal-cell" ondragover="event.preventDefault()"
+                             ondrop="calDrop(event,'@day.Date.ToString("yyyy-MM-dd")',@h)">
+                            @foreach (var card in cellBookings)
+                            {
+                                <a asp-page="/Admin/BookingDetail" asp-route-id="@card.BookingId"
+                                   class="cal-card @CardCss(card.Status)"
+                                   draggable="true"
+                                   ondragstart="calDragStart(event,@card.BookingId)">
+                                    <div class="cal-card__client">@card.ClientName</div>
+                                    @if (!string.IsNullOrWhiteSpace(card.SiteName))
+                                    {
+                                        <div class="cal-card__meta">@card.SiteName</div>
+                                    }
+                                    <div class="cal-card__avatars">
+                                        @foreach (var emp in card.AssignedEmployees.Take(3))
+                                        {
+                                            <div class="cal-avatar" title="@emp.FullName">@Initials(emp.FullName)</div>
+                                        }
+                                        @if (card.AssignedEmployees.Count > 3)
+                                        {
+                                            <div class="cal-avatar">+@(card.AssignedEmployees.Count - 3)</div>
+                                        }
+                                    </div>
+                                    @if (card.HasSop)
+                                    {
+                                        <div class="cal-sop-bar">
+                                            <div class="cal-sop-bar__fill" style="width:@card.SopCompletionPct%"></div>
+                                        </div>
+                                    }
+                                </a>
+                            }
+                            @if (User.HasPermission(CleaningPlatformAPI.Common.PermissionKeys.BookingsCreate))
+                            {
+                                <a class="cal-cell--add"
+                                   href="/Admin/Bookings?date=@day.Date.ToString("yyyy-MM-dd")"
+                                   title="New booking @day.Date.ToString("d MMM") @h:00">+</a>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        @* Employee sidebar *@
+        <aside class="cal-sidebar">
+            <h3>Team</h3>
+            @foreach (var emp in Model.Board.Employees)
             {
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #eee; padding:.4rem 0;">
-                    <span>@employee.FullName</span>
-                    <span class="badge">@employee.JobsToday @(employee.IsFree ? "free" : "busy")</span>
+                <div class="cal-emp-row">
+                    <div class="cal-emp-dot @EmpDot(emp)"></div>
+                    <span class="cal-emp-name" title="@emp.Role">@emp.FullName</span>
+                    <span class="cal-emp-count">@emp.JobsToday</span>
                 </div>
             }
         </aside>
-    }
-</div>
+    </div>
 
-<form method="post" asp-page-handler="UpdateStatus" id="drag-status-form" style="display:none;">
-    <input type="hidden" name="id" id="drag-booking-id" />
-    <input type="hidden" name="status" id="drag-status" />
-    <input type="hidden" asp-for="SelectedDate" />
-    <input type="hidden" asp-for="AllOpen" />
-</form>
+    @* Hidden drag-to-reschedule form *@
+    <form method="post" asp-page-handler="UpdateStatus" id="cal-drag-form" style="display:none">
+        <input type="hidden" name="id"        id="cal-drag-id" />
+        <input type="hidden" name="status"    id="cal-drag-status" />
+        <input type="hidden" name="weekStart" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="view"      value="week" />
+    </form>
+}
+
+@* ── DAY VIEW ─────────────────────────────────────────────────────────── *@
+else if (Model.View == "day")
+{
+    var dayDate = Model.DayView ?? Model.WeekStart;
+    var dayData = Model.Board.Days.FirstOrDefault(d => d.Date.Date == dayDate.Date);
+
+    <div class="cal-layout">
+        <div>
+            <div class="cal-day-grid">
+                @for (int h = startHour; h < endHour; h++)
+                {
+                    <div class="cal-time-label" style="border-bottom:1px solid #f0f0f0; padding:0.5rem 0.4rem; background:#fafafa; font-size:0.72rem; color:#888; text-align:right;">@h:00</div>
+                    <div class="cal-cell" style="min-height:64px; padding:4px;">
+                        @if (dayData != null)
+                        {
+                            foreach (var card in dayData.Bookings.Where(b => b.Hour == h))
+                            {
+                                <a asp-page="/Admin/BookingDetail" asp-route-id="@card.BookingId"
+                                   class="cal-card @CardCss(card.Status)" style="font-size:0.82rem; padding:0.4rem 0.6rem;">
+                                    <div class="cal-card__client">@card.ClientName</div>
+                                    @if (!string.IsNullOrWhiteSpace(card.SiteAddress))
+                                    {
+                                        <div class="cal-card__meta">@card.SiteAddress</div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(card.ClientPhone))
+                                    {
+                                        <div class="cal-card__meta">@card.ClientPhone</div>
+                                    }
+                                    <div class="cal-card__meta">@card.ServiceType · @card.ServicesCount service(s)</div>
+                                    <div class="cal-card__avatars" style="margin-top:4px;">
+                                        @foreach (var emp in card.AssignedEmployees)
+                                        {
+                                            <div class="cal-avatar" title="@emp.FullName">@Initials(emp.FullName)</div>
+                                        }
+                                        @if (!card.AssignedEmployees.Any())
+                                        {
+                                            <span style="font-size:0.7rem; color:#e53935;">Unassigned</span>
+                                        }
+                                    </div>
+                                    @if (card.HasSop)
+                                    {
+                                        <div class="cal-sop-bar">
+                                            <div class="cal-sop-bar__fill" style="width:@card.SopCompletionPct%"></div>
+                                        </div>
+                                    }
+
+                                    @* Assign employee inline *@
+                                    @if (User.HasPermission(CleaningPlatformAPI.Common.PermissionKeys.BookingsEdit) && Model.Board.Employees.Any())
+                                    {
+                                        <form method="post" asp-page-handler="AddAssignment"
+                                              class="inline-form" style="margin-top:6px;"
+                                              onclick="event.stopPropagation()">
+                                            <input type="hidden" name="id" value="@card.BookingId" />
+                                            <input type="hidden" name="weekStart" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+                                            <input type="hidden" name="view" value="day" />
+                                            <input type="hidden" name="dayView" value="@dayDate.ToString("yyyy-MM-dd")" />
+                                            <select name="employeeId" class="status-select" style="font-size:0.75rem; padding:0.2rem 0.4rem;">
+                                                <option value="">Assign…</option>
+                                                @foreach (var emp in Model.Board.Employees)
+                                                {
+                                                    <option value="@emp.EmployeeId">@emp.FullName</option>
+                                                }
+                                            </select>
+                                            <button type="submit" class="btn btn-sm" style="font-size:0.72rem; padding:0.2rem 0.5rem;">Go</button>
+                                        </form>
+                                    }
+                                </a>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <aside class="cal-sidebar">
+            <h3>Team</h3>
+            @foreach (var emp in Model.Board.Employees)
+            {
+                <div class="cal-emp-row">
+                    <div class="cal-emp-dot @EmpDot(emp)"></div>
+                    <span class="cal-emp-name">@emp.FullName</span>
+                    <span class="cal-emp-count">@emp.JobsToday</span>
+                </div>
+            }
+        </aside>
+    </div>
+}
+
+@* ── MONTH VIEW ───────────────────────────────────────────────────────── *@
+else if (Model.View == "month")
+{
+    // Build a full calendar month grid
+    var firstOfMonth = new DateTime(Model.WeekStart.Year, Model.WeekStart.Month, 1);
+    var lastOfMonth  = firstOfMonth.AddMonths(1).AddDays(-1);
+    // Start from the Monday on or before the 1st
+    var gridStart    = firstOfMonth.AddDays(-(((int)firstOfMonth.DayOfWeek - 1 + 7) % 7));
+    // End on the Sunday on or after the last day
+    var gridEnd      = lastOfMonth.AddDays((7 - (int)lastOfMonth.DayOfWeek) % 7);
+
+    // Gather ALL bookings for the month display window
+    // The board already covers the current week; for month we use what we have
+    // and link days to the day view for full detail
+    var allBookings = Model.Board.Days.SelectMany(d => d.Bookings).ToList();
+
+    <div class="cal-month-grid">
+        @* Day-of-week headers *@
+        @foreach (var dow in new[]{"Mon","Tue","Wed","Thu","Fri","Sat","Sun"})
+        {
+            <div class="cal-day-header">@dow</div>
+        }
+
+        @* Cells *@
+        @{
+            var cur = gridStart;
+            while (cur <= gridEnd)
+            {
+                var cellDate   = cur;
+                var isThisMonth = cellDate.Month == firstOfMonth.Month;
+                var isToday2   = cellDate.Date == today;
+                var bookCount  = allBookings.Count(b => b.Hour >= 0 && Model.Board.Days
+                    .Any(d => d.Date.Date == cellDate.Date && d.Bookings.Any(bk => bk.BookingId > 0)));
+
+                // Count from board days
+                var dayNode = Model.Board.Days.FirstOrDefault(d => d.Date.Date == cellDate.Date);
+                var cnt = dayNode?.Bookings.Count ?? 0;
+
+                <a class="cal-month-cell @(isToday2 ? "cal-month-cell--today" : "") @(!isThisMonth ? "cal-month-cell--other" : "")"
+                   href="/Admin/Kanban?weekStart=@cellDate.ToString("yyyy-MM-dd")&view=day&dayView=@cellDate.ToString("yyyy-MM-dd")">
+                    <div class="cal-month-day-num">@cellDate.Day</div>
+                    @if (cnt > 0)
+                    {
+                        <span class="cal-month-badge">@cnt</span>
+                    }
+                </a>
+
+                cur = cur.AddDays(1);
+            }
+        }
+    </div>
+
+    <p style="margin-top:0.5rem; font-size:0.8rem; color:#888;">Click a day to see its bookings in detail.</p>
+}
 
 @section Scripts {
 <script>
-function dropStatus(event, status) {
-    const bookingId = event.dataTransfer.getData('bookingId');
-    if (!bookingId) return;
-    document.getElementById('drag-booking-id').value = bookingId;
-    document.getElementById('drag-status').value = status;
-    document.getElementById('drag-status-form').submit();
+// Drag-and-drop: just updates status for now (reschedule requires a dedicated endpoint)
+// Cards are draggable; dropping on a cell opens the booking detail
+let _dragId = null;
+
+function calDragStart(evt, bookingId) {
+    _dragId = bookingId;
+    evt.dataTransfer.setData('text/plain', bookingId);
+}
+
+function calDrop(evt, date, hour) {
+    evt.preventDefault();
+    if (_dragId === null) return;
+    // Navigate to booking detail — full reschedule via the detail page
+    window.location.href = '/Admin/BookingDetail/' + _dragId;
+    _dragId = null;
 }
 </script>
 }
