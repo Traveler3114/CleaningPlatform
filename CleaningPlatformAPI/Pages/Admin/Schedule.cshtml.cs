@@ -83,11 +83,7 @@ public class ScheduleModel : PageModel
             IsFullyClosed = OverrideClosed
         };
 
-        OperationResult<DateOverrideResponse> result;
-        if (OverrideId.HasValue && OverrideId.Value > 0)
-            result = await _dateOverrideManager.UpdateOverrideAsync(OverrideId.Value, request, ct);
-        else
-            result = await _dateOverrideManager.CreateOverrideAsync(request, ct);
+        var result = await _dateOverrideManager.CreateOverrideAsync(request, ct);
 
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage();
