@@ -184,7 +184,7 @@ INSERT INTO @AllowedKeys (KeyName) VALUES
     ('pages.daily'), ('pages.bookings'), ('pages.schedule'), ('pages.users'),
     ('pages.roles'), ('pages.clients'), ('pages.kanban'), ('pages.sop'), ('pages.reports'),
     -- Bookings
-    ('bookings.view'), ('bookings.create'), ('bookings.edit'), ('bookings.delete'),
+    ('bookings.view'), ('bookings.create'), ('bookings.edit'), ('bookings.delete'),('bookings.progress'),
     -- Clients
     ('clients.view'), ('clients.create'), ('clients.edit'), ('clients.delete'),
     -- Invoices
@@ -235,7 +235,7 @@ SELECT r.Id, k.KeyName
 FROM Roles r
 CROSS JOIN @AllowedKeys k
 WHERE r.Name = 'Employee'
-AND k.KeyName IN ('pages.daily','pages.kanban')
+AND k.KeyName IN ('pages.daily','pages.kanban','bookings.progress')
 AND NOT EXISTS (SELECT 1 FROM RolePermissions rp WHERE rp.RoleId = r.Id AND rp.PermissionKey = k.KeyName);
 
 -- Finance: bookings, clients, reports, and ability to record payments (bookings.edit)

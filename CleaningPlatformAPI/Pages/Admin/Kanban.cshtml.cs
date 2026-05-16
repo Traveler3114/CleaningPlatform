@@ -21,7 +21,6 @@ public class KanbanModel : PageModel
         _bookingManager = bookingManager;
     }
 
-    // ── Shared properties ──────────────────────────────────────────────────
     public bool IsEmployeeView { get; set; }
 
     [BindProperty(SupportsGet = true)] public string View { get; set; } = "week";
@@ -31,13 +30,9 @@ public class KanbanModel : PageModel
 
     [TempData] public string? ErrorMessage { get; set; }
 
-    // ── Employee view property (existing, unchanged) ───────────────────────
     public WeeklyBoardResponse Board { get; private set; } = null!;
-
-    // ── Admin resource grid property (new) ────────────────────────────────
     public ResourceGridResponse? ResourceGrid { get; private set; }
 
-    // ── Navigation helpers ─────────────────────────────────────────────────
     public DateTime WeekStartDate { get; private set; }
     public DateTime? DayView { get; private set; }
     public int GridStartHour { get; private set; } = 7;
@@ -67,13 +62,11 @@ public class KanbanModel : PageModel
         }
     }
 
-    // ── OnGetAsync ─────────────────────────────────────────────────────────
     public async Task OnGetAsync(CancellationToken ct)
     {
         var roleName = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
         IsEmployeeView = string.Equals(roleName, RoleNames.Employee, StringComparison.OrdinalIgnoreCase);
 
-        // Parse anchor date
         if (!string.IsNullOrEmpty(WeekStart) && DateTime.TryParse(WeekStart, out var parsedWeek))
             WeekStartDate = GetMondayOf(parsedWeek);
         else
@@ -84,7 +77,6 @@ public class KanbanModel : PageModel
         else if (View == "day")
             DayView = WeekStartDate;
 
-        // ── Employee path — completely unchanged ───────────────────────────
         if (IsEmployeeView)
         {
             var empId = User.GetEmployeeId();
@@ -101,7 +93,6 @@ public class KanbanModel : PageModel
             return;
         }
 
-        // ── Admin/dispatcher path — new resource grid ──────────────────────
         var anchorDate = View switch
         {
             "day" => DayView ?? WeekStartDate,
@@ -113,10 +104,37 @@ public class KanbanModel : PageModel
         ComputeAdminGridHours();
     }
 
-    // ── Handlers (unchanged) ───────────────────────────────────────────────
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
     {
-        if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
+        var canEdit = User.HasPermission(PermissionKeys.BookingsEdit);
+        var canProgress = User.HasPermission(PermissionKeys.BookingsProgress);
+
+        if (!canEdit && !canProgress)
+            return Forbid();
+
+        if (canProgress && !canEdit)
+        {
+            var booking = await _bookingManager.GetBookingDetailByIdAsync(id, ct);
+            if (booking == null)
+                return NotFound();
+
+            var currentEmployeeId = User.GetEmployeeId();
+            if (!booking.AssignedEmployees.Any(e => e.EmployeeId == currentEmployeeId))
+                return Forbid();
+
+            var allowedTransitions = new Dictionary<string, string>
+            {
+                ["Confirmed"] = "InProgress",
+                ["InProgress"] = "Completed"
+            };
+
+            if (!allowedTransitions.TryGetValue(booking.Status, out var expectedNext) || expectedNext != status)
+            {
+                ErrorMessage = "You can only progress a booking from Confirmed to InProgress or from InProgress to Completed.";
+                return RedirectToPage(new { view = View, weekStart = WeekStart, dayDate = DayDate });
+            }
+        }
+
         var result = await _bookingManager.UpdateStatusAsync(id, status, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new
@@ -142,7 +160,6 @@ public class KanbanModel : PageModel
         });
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────
     private void ComputeGridHours()
     {
         if (Board?.Days == null || !Board.Days.Any()) return;
