@@ -81,7 +81,7 @@ body {
 .nav-group__dropdown {
     display: none;
     position: absolute;
-    top: calc(100% + 4px);
+    top: 100%;
     left: 0;
     background: #283593;
     border-radius: 6px;
@@ -89,7 +89,19 @@ body {
     min-width: 160px;
     padding: 0.35rem 0;
     z-index: 300;
+    margin-top: 0;
 }
+
+    /* bridge to cover the gap */
+    .nav-group__dropdown::before {
+        content: '';
+        position: absolute;
+        top: -6px;
+        left: 0;
+        right: 0;
+        height: 6px;
+        background: transparent;
+    }
 
 .nav-group:hover .nav-group__dropdown {
     display: block;
