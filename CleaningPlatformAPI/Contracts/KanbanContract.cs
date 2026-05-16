@@ -1,12 +1,11 @@
 namespace CleaningPlatformAPI.Contracts;
 
-// ── Existing board (kept for pipeline API compat) ──────────────────────────
+// ── Existing contracts (kept for employee view and API compat) ─────────────
 public record KanbanBoardResponse(DateTime Date, List<KanbanColumnResponse> Columns, List<KanbanEmployeeResponse> Employees);
 public record KanbanColumnResponse(string Status, List<KanbanCardResponse> Cards);
 public record KanbanCardResponse(int BookingId, string ClientName, string? ClientPhone, string? SiteName, string? SiteAddress, int Hour, string ServiceType, int ServicesCount, List<AssignedEmployeeResponse> AssignedEmployees, bool HasSop, decimal SopCompletionPct);
 public record KanbanEmployeeResponse(int EmployeeId, string FullName, string Role, int JobsToday, bool IsFree);
 
-// ── Weekly calendar board ──────────────────────────────────────────────────
 public record WeeklyBoardResponse(
     DateTime WeekStart,
     DateTime WeekEnd,
@@ -16,8 +15,8 @@ public record WeeklyBoardResponse(
 
 public record DayColumnResponse(
     DateTime Date,
-    string DayName,       // e.g. "Mon", "Tue"
-    string DayLabel,      // e.g. "Mon 12 May"
+    string DayName,
+    string DayLabel,
     bool IsToday,
     List<WeeklyBookingCard> Bookings
 );
@@ -35,4 +34,31 @@ public record WeeklyBookingCard(
     List<AssignedEmployeeResponse> AssignedEmployees,
     bool HasSop,
     decimal SopCompletionPct
+);
+
+// ── New resource grid contracts (admin calendar only) ──────────────────────
+public record ResourceGridResponse(
+    DateTime AnchorDate,
+    string View,
+    List<ResourceEmployeeColumn> Employees,
+    List<ResourceBookingCard> Unassigned
+);
+
+public record ResourceEmployeeColumn(
+    int EmployeeId,
+    string FullName,
+    string Role,
+    bool IsFree,
+    List<ResourceBookingCard> Bookings
+);
+
+public record ResourceBookingCard(
+    int BookingId,
+    int ClientId,
+    string ClientName,
+    string ServiceType,
+    DateTime Date,
+    int Hour,
+    string Status,
+    string? SiteName
 );

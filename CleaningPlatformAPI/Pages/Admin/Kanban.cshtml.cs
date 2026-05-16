@@ -21,51 +21,38 @@ public class KanbanModel : PageModel
         _bookingManager = bookingManager;
     }
 
-    public WeeklyBoardResponse Board { get; private set; } = null!;
+    // ── Shared properties ──────────────────────────────────────────────────
     public bool IsEmployeeView { get; set; }
 
     [BindProperty(SupportsGet = true)] public string View { get; set; } = "week";
     [BindProperty(SupportsGet = true)] public string? WeekStart { get; set; }
     [BindProperty(SupportsGet = true)] public string? DayDate { get; set; }
-    [BindProperty(SupportsGet = true)] public string? MonthDate { get; set; }
     [BindProperty(SupportsGet = true)] public int? FilterEmployeeId { get; set; }
 
     [TempData] public string? ErrorMessage { get; set; }
 
-    // Computed navigation properties
+    // ── Employee view property (existing, unchanged) ───────────────────────
+    public WeeklyBoardResponse Board { get; private set; } = null!;
+
+    // ── Admin resource grid property (new) ────────────────────────────────
+    public ResourceGridResponse? ResourceGrid { get; private set; }
+
+    // ── Navigation helpers ─────────────────────────────────────────────────
     public DateTime WeekStartDate { get; private set; }
     public DateTime? DayView { get; private set; }
     public int GridStartHour { get; private set; } = 7;
     public int GridEndHour { get; private set; } = 19;
 
-    // Navigation helpers (safe against uninitialized dates)
     public DateTime PrevWeek => WeekStartDate.AddDays(-7);
     public DateTime NextWeek => WeekStartDate.AddDays(7);
 
-    public DateTime PrevDay
-    {
-        get
-        {
-            var baseDate = DayView ?? WeekStartDate;
-            return baseDate.AddDays(-1);
-        }
-    }
-
-    public DateTime NextDay
-    {
-        get
-        {
-            var baseDate = DayView ?? WeekStartDate;
-            return baseDate.AddDays(1);
-        }
-    }
+    public DateTime PrevDay => (DayView ?? WeekStartDate).AddDays(-1);
+    public DateTime NextDay => (DayView ?? WeekStartDate).AddDays(1);
 
     public DateTime PrevMonth
     {
         get
         {
-            if (WeekStartDate == default)
-                return GetMondayOf(DateTime.UtcNow).AddMonths(-1);
             var first = new DateTime(WeekStartDate.Year, WeekStartDate.Month, 1);
             return first.AddMonths(-1);
         }
@@ -75,19 +62,29 @@ public class KanbanModel : PageModel
     {
         get
         {
-            if (WeekStartDate == default)
-                return GetMondayOf(DateTime.UtcNow).AddMonths(1);
             var first = new DateTime(WeekStartDate.Year, WeekStartDate.Month, 1);
             return first.AddMonths(1);
         }
     }
 
-    // ----------------------------------------------------------------------
-    //  OnGetAsync – fully implemented for both employee and admin
-    // ----------------------------------------------------------------------
+    // ── OnGetAsync ─────────────────────────────────────────────────────────
     public async Task OnGetAsync(CancellationToken ct)
     {
-        // 1) Employee view (my schedule)
+        var roleName = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+        IsEmployeeView = string.Equals(roleName, RoleNames.Employee, StringComparison.OrdinalIgnoreCase);
+
+        // Parse anchor date
+        if (!string.IsNullOrEmpty(WeekStart) && DateTime.TryParse(WeekStart, out var parsedWeek))
+            WeekStartDate = GetMondayOf(parsedWeek);
+        else
+            WeekStartDate = GetMondayOf(DateTime.UtcNow);
+
+        if (View == "day" && !string.IsNullOrEmpty(DayDate) && DateTime.TryParse(DayDate, out var parsedDay))
+            DayView = parsedDay;
+        else if (View == "day")
+            DayView = WeekStartDate;
+
+        // ── Employee path — completely unchanged ───────────────────────────
         if (IsEmployeeView)
         {
             var empId = User.GetEmployeeId();
@@ -97,36 +94,26 @@ public class KanbanModel : PageModel
                 return;
             }
 
-            WeekStartDate = GetMondayOf(DateTime.UtcNow);
-            Board = await _kanbanManager.GetEmployeeWeekAsync(empId.Value, WeekStartDate, ct);
-            View = "week";                     // employee always sees week view
+            var empWeekStart = GetMondayOf(DateTime.UtcNow);
+            Board = await _kanbanManager.GetEmployeeWeekAsync(empId.Value, empWeekStart, ct);
+            View = "week";
             ComputeGridHours();
             return;
         }
 
-        // 2) Admin view – parse query parameters
-        // WeekStart
-        if (!string.IsNullOrEmpty(WeekStart) && DateTime.TryParse(WeekStart, out var parsedWeek))
-            WeekStartDate = GetMondayOf(parsedWeek);
-        else
-            WeekStartDate = GetMondayOf(DateTime.UtcNow);
+        // ── Admin/dispatcher path — new resource grid ──────────────────────
+        var anchorDate = View switch
+        {
+            "day" => DayView ?? WeekStartDate,
+            "month" => new DateTime(WeekStartDate.Year, WeekStartDate.Month, 1),
+            _ => WeekStartDate
+        };
 
-        // DayView (for day mode)
-        if (View == "day" && !string.IsNullOrEmpty(DayDate) && DateTime.TryParse(DayDate, out var parsedDay))
-            DayView = parsedDay;
-        else if (View == "day")
-            DayView = WeekStartDate;
-
-        // Fetch board data – expects a method GetWeekAsync in KanbanManager
-        Board = await _kanbanManager.GetWeekAsync(WeekStartDate, FilterEmployeeId, ct);
-
-        // Adjust grid hours based on actual bookings
-        ComputeGridHours();
+        ResourceGrid = await _kanbanManager.GetResourceGridAsync(anchorDate, View, ct);
+        ComputeAdminGridHours();
     }
 
-    // ----------------------------------------------------------------------
-    //  Handlers
-    // ----------------------------------------------------------------------
+    // ── Handlers (unchanged) ───────────────────────────────────────────────
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
     {
         if (!User.HasPermission(PermissionKeys.BookingsEdit)) return Forbid();
@@ -155,27 +142,29 @@ public class KanbanModel : PageModel
         });
     }
 
-    // ----------------------------------------------------------------------
-    //  Helpers
-    // ----------------------------------------------------------------------
+    // ── Helpers ────────────────────────────────────────────────────────────
     private void ComputeGridHours()
     {
-        if (Board?.Days == null || !Board.Days.Any())
-        {
-            // fallback defaults
-            GridStartHour = 7;
-            GridEndHour = 19;
-            return;
-        }
-
+        if (Board?.Days == null || !Board.Days.Any()) return;
         var allBookings = Board.Days.SelectMany(d => d.Bookings).ToList();
-        if (!allBookings.Any())
-            return;
+        if (!allBookings.Any()) return;
+        GridStartHour = Math.Max(0, allBookings.Min(b => b.Hour) - 1);
+        GridEndHour = Math.Min(24, allBookings.Max(b => b.Hour) + 2);
+    }
 
-        var minHour = allBookings.Min(b => b.Hour);
-        var maxHour = allBookings.Max(b => b.Hour);
-        GridStartHour = Math.Max(0, minHour - 1);
-        GridEndHour = Math.Min(24, maxHour + 2);
+    private void ComputeAdminGridHours()
+    {
+        if (ResourceGrid == null) return;
+
+        var allBookings = ResourceGrid.Employees
+            .SelectMany(e => e.Bookings)
+            .Concat(ResourceGrid.Unassigned)
+            .ToList();
+
+        if (!allBookings.Any()) return;
+
+        GridStartHour = Math.Max(6, allBookings.Min(b => b.Hour) - 1);
+        GridEndHour = Math.Min(23, allBookings.Max(b => b.Hour) + 2);
     }
 
     private static DateTime GetMondayOf(DateTime date)

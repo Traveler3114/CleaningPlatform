@@ -12,7 +12,8 @@ public class KanbanManager
 
     public KanbanManager(AppDbContext db) => _db = db;
 
-    // ── Pipeline board (existing, kept for API compat) ─────────────────────
+    // ── Existing methods (kept for API compat and employee view) ───────────
+
     public async Task<KanbanBoardResponse> GetBoardAsync(DateTime date, int? employeeId = null, CancellationToken ct = default)
     {
         var query = BaseBookingQuery().Where(b => b.ScheduledDate.Date == date.Date);
@@ -32,7 +33,6 @@ public class KanbanManager
         return new KanbanBoardResponse(DateTime.UtcNow.Date, BuildColumns(bookings), await GetEmployeesForDateAsync(DateTime.UtcNow.Date, ct));
     }
 
-    // ── Weekly calendar board (admin view) ─────────────────────────────────
     public async Task<WeeklyBoardResponse> GetWeekAsync(DateTime weekStart, int? filterEmployeeId = null, CancellationToken ct = default)
     {
         var weekEnd = weekStart.AddDays(6);
@@ -63,13 +63,10 @@ public class KanbanManager
             );
         }).ToList();
 
-        // Employees: use the whole week window for job counts
         var employees = await GetEmployeesForWeekAsync(weekStart, weekEnd, ct);
-
         return new WeeklyBoardResponse(weekStart, weekEnd, days, employees);
     }
 
-    // ── Employee-filtered week (employee self-view) ────────────────────────
     public async Task<WeeklyBoardResponse> GetEmployeeWeekAsync(int employeeId, DateTime weekStart, CancellationToken ct = default)
     {
         var weekEnd = weekStart.AddDays(6);
@@ -102,7 +99,78 @@ public class KanbanManager
         return new WeeklyBoardResponse(weekStart, weekEnd, days, []);
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────
+    // ── New resource grid method (admin calendar) ──────────────────────────
+
+    public async Task<ResourceGridResponse> GetResourceGridAsync(
+        DateTime anchorDate,
+        string view,
+        CancellationToken ct = default)
+    {
+        // Determine date range
+        DateTime rangeStart;
+        DateTime rangeEnd;
+
+        switch (view.ToLower())
+        {
+            case "day":
+                rangeStart = anchorDate.Date;
+                rangeEnd = anchorDate.Date;
+                break;
+            case "month":
+                rangeStart = new DateTime(anchorDate.Year, anchorDate.Month, 1);
+                rangeEnd = rangeStart.AddMonths(1).AddDays(-1);
+                break;
+            default: // week
+                rangeStart = GetMondayOf(anchorDate);
+                rangeEnd = rangeStart.AddDays(6);
+                break;
+        }
+
+        // Load bookings in range (exclude cancelled)
+        var bookings = await BaseBookingQuery()
+            .Where(b => b.ScheduledDate.Date >= rangeStart.Date
+                     && b.ScheduledDate.Date <= rangeEnd.Date
+                     && b.Status != BookingStatus.Cancelled)
+            .OrderBy(b => b.ScheduledDate)
+            .ThenBy(b => b.ScheduledTimeSlot)
+            .ToListAsync(ct);
+
+        // Load all active employees
+        var employees = await _db.Employees
+            .Include(e => e.Role)
+            .Where(e => e.IsActive)
+            .OrderBy(e => e.FirstName)
+            .ThenBy(e => e.LastName)
+            .ToListAsync(ct);
+
+        // Unassigned = bookings with no assignments at all
+        var unassigned = bookings
+            .Where(b => !b.Assignments.Any())
+            .Select(ToResourceCard)
+            .ToList();
+
+        // Build employee columns
+        var employeeColumns = employees.Select(e =>
+        {
+            var empBookings = bookings
+                .Where(b => b.Assignments.Any(a => a.EmployeeId == e.Id))
+                .Select(ToResourceCard)
+                .ToList();
+
+            return new ResourceEmployeeColumn(
+                e.Id,
+                $"{e.FirstName} {e.LastName}".Trim(),
+                e.Role?.Name ?? string.Empty,
+                !empBookings.Any(),
+                empBookings
+            );
+        }).ToList();
+
+        return new ResourceGridResponse(anchorDate, view, employeeColumns, unassigned);
+    }
+
+    // ── Shared helpers ─────────────────────────────────────────────────────
+
     private IQueryable<Entities.Booking> BaseBookingQuery() => _db.Bookings
         .Include(b => b.Client).ThenInclude(c => c.Contacts)
         .Include(b => b.Site)
@@ -150,6 +218,17 @@ public class KanbanManager
             b.SopAssignments.Count != 0,
             pct);
     }
+
+    private static ResourceBookingCard ToResourceCard(Entities.Booking b) => new(
+        b.Id,
+        b.ClientId,
+        b.Client.ClientName,
+        b.ServiceType.ToString(),
+        b.ScheduledDate,
+        b.ScheduledTimeSlot?.Hours ?? 0,
+        b.Status.ToString(),
+        b.Site?.SiteName
+    );
 
     private static List<AssignedEmployeeResponse> MapAssignees(Entities.Booking b) =>
         b.Assignments.Select(a => new AssignedEmployeeResponse
@@ -210,5 +289,12 @@ public class KanbanManager
                 e.Role?.Name ?? string.Empty, count,
                 !e.MaxJobsPerDay.HasValue || count < e.MaxJobsPerDay.Value);
         }).ToList();
+    }
+
+    private static DateTime GetMondayOf(DateTime date)
+    {
+        var d = date.Date;
+        var diff = (7 + (d.DayOfWeek - DayOfWeek.Monday)) % 7;
+        return d.AddDays(-diff);
     }
 }
