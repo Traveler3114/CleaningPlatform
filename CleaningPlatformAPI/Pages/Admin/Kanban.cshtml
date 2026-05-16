@@ -1,6 +1,8 @@
 @page
 @model CleaningPlatformAPI.Pages.Admin.KanbanModel
 @using System.Security.Claims
+@using CleaningPlatformAPI.Common
+@using CleaningPlatformAPI.Extensions
 @{
     ViewData["Title"] = "Calendar";
     ViewData["ActivePage"] = "kanban";
@@ -34,13 +36,16 @@
         if (!e.IsFree) return "cal-emp-dot--full";
         return e.JobsToday > 0 ? "cal-emp-dot--busy" : "cal-emp-dot--free";
     }
+
+    // Resolve strongly-typed week start from the model
+    var weekStart = Model.WeekStartDate;
 }
 
 @* ── Toolbar ─────────────────────────────────────────────────────────── *@
 <div class="page-header">
     <h1>@(Model.IsEmployeeView ? "My Schedule" : "Calendar")</h1>
 
-    @if (!Model.IsEmployeeView && User.HasPermission(CleaningPlatformAPI.Common.PermissionKeys.BookingsCreate))
+    @if (!Model.IsEmployeeView && User.HasPermission(PermissionKeys.BookingsCreate))
     {
         <a asp-page="/Admin/Bookings" class="btn btn-sm">+ New Booking</a>
     }
@@ -53,13 +58,13 @@
     {
         <div class="cal-view-pills">
             <a asp-page="/Admin/Kanban"
-               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.WeekStart.ToString("yyyy-MM-dd")},{"view","week"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",weekStart.ToString("yyyy-MM-dd")},{"view","week"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
                class="@(Model.View == "week" ? "active" : "")">Week</a>
             <a asp-page="/Admin/Kanban"
-               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.WeekStart.ToString("yyyy-MM-dd")},{"view","day"},{"dayView",(Model.DayView ?? Model.WeekStart).ToString("yyyy-MM-dd")},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",weekStart.ToString("yyyy-MM-dd")},{"view","day"},{"dayDate",(Model.DayView ?? weekStart).ToString("yyyy-MM-dd")},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
                class="@(Model.View == "day" ? "active" : "")">Day</a>
             <a asp-page="/Admin/Kanban"
-               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.WeekStart.ToString("yyyy-MM-dd")},{"view","month"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",weekStart.ToString("yyyy-MM-dd")},{"view","month"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
                class="@(Model.View == "month" ? "active" : "")">Month</a>
         </div>
     }
@@ -72,7 +77,7 @@
                asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.PrevWeek.ToString("yyyy-MM-dd")},{"view",Model.View},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
                class="cal-nav-btn">&#8592;</a>
             <span class="cal-range-label">
-                @Model.WeekStart.ToString("d MMM") – @Model.Board.WeekEnd.ToString("d MMM yyyy")
+                @weekStart.ToString("d MMM") – @Model.Board.WeekEnd.ToString("d MMM yyyy")
             </span>
             <a asp-page="/Admin/Kanban"
                asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.NextWeek.ToString("yyyy-MM-dd")},{"view",Model.View},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
@@ -81,14 +86,14 @@
     }
     else if (Model.View == "day")
     {
-        var curDay = Model.DayView ?? Model.WeekStart;
+        var curDay = Model.DayView ?? weekStart;
         <div class="cal-nav">
             <a asp-page="/Admin/Kanban"
-               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.PrevDay.ToString("yyyy-MM-dd")},{"view","day"},{"dayView",Model.PrevDay.ToString("yyyy-MM-dd")},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.PrevDay.ToString("yyyy-MM-dd")},{"view","day"},{"dayDate",Model.PrevDay.ToString("yyyy-MM-dd")},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
                class="cal-nav-btn">&#8592;</a>
             <span class="cal-range-label">@curDay.ToString("dddd, d MMM yyyy")</span>
             <a asp-page="/Admin/Kanban"
-               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.NextDay.ToString("yyyy-MM-dd")},{"view","day"},{"dayView",Model.NextDay.ToString("yyyy-MM-dd")},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
+               asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.NextDay.ToString("yyyy-MM-dd")},{"view","day"},{"dayDate",Model.NextDay.ToString("yyyy-MM-dd")},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
                class="cal-nav-btn">&#8594;</a>
         </div>
     }
@@ -98,7 +103,7 @@
             <a asp-page="/Admin/Kanban"
                asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.PrevMonth.ToString("yyyy-MM-dd")},{"view","month"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
                class="cal-nav-btn">&#8592;</a>
-            <span class="cal-range-label">@Model.WeekStart.ToString("MMMM yyyy")</span>
+            <span class="cal-range-label">@weekStart.ToString("MMMM yyyy")</span>
             <a asp-page="/Admin/Kanban"
                asp-all-route-data='@(new Dictionary<string,string?>{{"weekStart",Model.NextMonth.ToString("yyyy-MM-dd")},{"view","month"},{"filterEmployeeId",Model.FilterEmployeeId?.ToString()}})'
                class="cal-nav-btn">&#8594;</a>
@@ -109,15 +114,20 @@
     @if (!Model.IsEmployeeView && Model.Board.Employees.Count > 0)
     {
         <form method="get" style="display:flex; gap:0.4rem; align-items:center;">
-            <input type="hidden" name="weekStart" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="weekStart" value="@weekStart.ToString("yyyy-MM-dd")" />
             <input type="hidden" name="view" value="@Model.View" />
             <select name="filterEmployeeId" class="status-select" onchange="this.form.submit()">
                 <option value="">All employees</option>
                 @foreach (var emp in Model.Board.Employees)
                 {
-                    <option value="@emp.EmployeeId" @(Model.FilterEmployeeId == emp.EmployeeId ? "selected" : "")>
-                        @emp.FullName
-                    </option>
+                    if (Model.FilterEmployeeId == emp.EmployeeId)
+                    {
+                        <option value="@emp.EmployeeId" selected="selected">@emp.FullName</option>
+                    }
+                    else
+                    {
+                        <option value="@emp.EmployeeId">@emp.FullName</option>
+                    }
                 }
             </select>
         </form>
@@ -179,7 +189,7 @@
                         <form method="post" asp-page-handler="UpdateStatus">
                             <input type="hidden" name="id" value="@card.BookingId" />
                             <input type="hidden" name="status" value="@nextStatus" />
-                            <input type="hidden" name="weekStart" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+                            <input type="hidden" name="weekStart" value="@weekStart.ToString("yyyy-MM-dd")" />
                             <input type="hidden" name="view" value="week" />
                             <button type="submit" class="btn btn-sm">@btnLabel</button>
                         </form>
@@ -255,7 +265,7 @@ else if (Model.View == "week")
                                     }
                                 </a>
                             }
-                            @if (User.HasPermission(CleaningPlatformAPI.Common.PermissionKeys.BookingsCreate))
+                            @if (User.HasPermission(PermissionKeys.BookingsCreate))
                             {
                                 <a class="cal-cell--add"
                                    href="/Admin/Bookings?date=@day.Date.ToString("yyyy-MM-dd")"
@@ -285,7 +295,7 @@ else if (Model.View == "week")
     <form method="post" asp-page-handler="UpdateStatus" id="cal-drag-form" style="display:none">
         <input type="hidden" name="id"        id="cal-drag-id" />
         <input type="hidden" name="status"    id="cal-drag-status" />
-        <input type="hidden" name="weekStart" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="weekStart" value="@weekStart.ToString("yyyy-MM-dd")" />
         <input type="hidden" name="view"      value="week" />
     </form>
 }
@@ -293,7 +303,7 @@ else if (Model.View == "week")
 @* ── DAY VIEW ─────────────────────────────────────────────────────────── *@
 else if (Model.View == "day")
 {
-    var dayDate = Model.DayView ?? Model.WeekStart;
+    var dayDate = Model.DayView ?? weekStart;
     var dayData = Model.Board.Days.FirstOrDefault(d => d.Date.Date == dayDate.Date);
 
     <div class="cal-layout">
@@ -337,15 +347,15 @@ else if (Model.View == "day")
                                     }
 
                                     @* Assign employee inline *@
-                                    @if (User.HasPermission(CleaningPlatformAPI.Common.PermissionKeys.BookingsEdit) && Model.Board.Employees.Any())
+                                    @if (User.HasPermission(PermissionKeys.BookingsEdit) && Model.Board.Employees.Any())
                                     {
                                         <form method="post" asp-page-handler="AddAssignment"
                                               class="inline-form" style="margin-top:6px;"
                                               onclick="event.stopPropagation()">
                                             <input type="hidden" name="id" value="@card.BookingId" />
-                                            <input type="hidden" name="weekStart" value="@Model.WeekStart.ToString("yyyy-MM-dd")" />
+                                            <input type="hidden" name="weekStart" value="@weekStart.ToString("yyyy-MM-dd")" />
                                             <input type="hidden" name="view" value="day" />
-                                            <input type="hidden" name="dayView" value="@dayDate.ToString("yyyy-MM-dd")" />
+                                            <input type="hidden" name="dayDate" value="@dayDate.ToString("yyyy-MM-dd")" />
                                             <select name="employeeId" class="status-select" style="font-size:0.75rem; padding:0.2rem 0.4rem;">
                                                 <option value="">Assign…</option>
                                                 @foreach (var emp in Model.Board.Employees)
@@ -381,43 +391,31 @@ else if (Model.View == "day")
 @* ── MONTH VIEW ───────────────────────────────────────────────────────── *@
 else if (Model.View == "month")
 {
-    // Build a full calendar month grid
-    var firstOfMonth = new DateTime(Model.WeekStart.Year, Model.WeekStart.Month, 1);
+    var firstOfMonth = new DateTime(weekStart.Year, weekStart.Month, 1);
     var lastOfMonth  = firstOfMonth.AddMonths(1).AddDays(-1);
-    // Start from the Monday on or before the 1st
     var gridStart    = firstOfMonth.AddDays(-(((int)firstOfMonth.DayOfWeek - 1 + 7) % 7));
-    // End on the Sunday on or after the last day
     var gridEnd      = lastOfMonth.AddDays((7 - (int)lastOfMonth.DayOfWeek) % 7);
 
-    // Gather ALL bookings for the month display window
-    // The board already covers the current week; for month we use what we have
-    // and link days to the day view for full detail
     var allBookings = Model.Board.Days.SelectMany(d => d.Bookings).ToList();
 
     <div class="cal-month-grid">
-        @* Day-of-week headers *@
         @foreach (var dow in new[]{"Mon","Tue","Wed","Thu","Fri","Sat","Sun"})
         {
             <div class="cal-day-header">@dow</div>
         }
 
-        @* Cells *@
         @{
             var cur = gridStart;
             while (cur <= gridEnd)
             {
-                var cellDate   = cur;
+                var cellDate    = cur;
                 var isThisMonth = cellDate.Month == firstOfMonth.Month;
-                var isToday2   = cellDate.Date == today;
-                var bookCount  = allBookings.Count(b => b.Hour >= 0 && Model.Board.Days
-                    .Any(d => d.Date.Date == cellDate.Date && d.Bookings.Any(bk => bk.BookingId > 0)));
-
-                // Count from board days
-                var dayNode = Model.Board.Days.FirstOrDefault(d => d.Date.Date == cellDate.Date);
-                var cnt = dayNode?.Bookings.Count ?? 0;
+                var isToday2    = cellDate.Date == today;
+                var dayNode     = Model.Board.Days.FirstOrDefault(d => d.Date.Date == cellDate.Date);
+                var cnt         = dayNode?.Bookings.Count ?? 0;
 
                 <a class="cal-month-cell @(isToday2 ? "cal-month-cell--today" : "") @(!isThisMonth ? "cal-month-cell--other" : "")"
-                   href="/Admin/Kanban?weekStart=@cellDate.ToString("yyyy-MM-dd")&view=day&dayView=@cellDate.ToString("yyyy-MM-dd")">
+                   href="/Admin/Kanban?weekStart=@cellDate.ToString("yyyy-MM-dd")&view=day&dayDate=@cellDate.ToString("yyyy-MM-dd")">
                     <div class="cal-month-day-num">@cellDate.Day</div>
                     @if (cnt > 0)
                     {
@@ -435,8 +433,6 @@ else if (Model.View == "month")
 
 @section Scripts {
 <script>
-// Drag-and-drop: just updates status for now (reschedule requires a dedicated endpoint)
-// Cards are draggable; dropping on a cell opens the booking detail
 let _dragId = null;
 
 function calDragStart(evt, bookingId) {
@@ -447,7 +443,6 @@ function calDragStart(evt, bookingId) {
 function calDrop(evt, date, hour) {
     evt.preventDefault();
     if (_dragId === null) return;
-    // Navigate to booking detail — full reschedule via the detail page
     window.location.href = '/Admin/BookingDetail/' + _dragId;
     _dragId = null;
 }

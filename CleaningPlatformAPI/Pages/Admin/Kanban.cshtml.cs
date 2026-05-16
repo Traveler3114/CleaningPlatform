@@ -32,9 +32,27 @@ public class KanbanModel : PageModel
 
     [TempData] public string? ErrorMessage { get; set; }
 
-    public DateTime CurrentWeekStart { get; private set; }
-    public DateTime CurrentDay { get; private set; }
-    public DateTime CurrentMonth { get; private set; }
+    // ── Computed navigation helpers used by the view ──────────────────────
+
+    /// <summary>The resolved week start date (always a Monday).</summary>
+    public DateTime WeekStartDate { get; private set; }
+
+    /// <summary>The resolved day for day-view navigation.</summary>
+    public DateTime? DayView { get; private set; }
+
+    /// <summary>First hour shown on the calendar grid.</summary>
+    public int GridStartHour { get; private set; } = 7;
+
+    /// <summary>Last hour (exclusive) shown on the calendar grid.</summary>
+    public int GridEndHour { get; private set; } = 19;
+
+    // Navigation dates
+    public DateTime PrevWeek  => WeekStartDate.AddDays(-7);
+    public DateTime NextWeek  => WeekStartDate.AddDays(7);
+    public DateTime PrevDay   => (DayView ?? WeekStartDate).AddDays(-1);
+    public DateTime NextDay   => (DayView ?? WeekStartDate).AddDays(1);
+    public DateTime PrevMonth => new DateTime(WeekStartDate.Year, WeekStartDate.Month, 1).AddMonths(-1);
+    public DateTime NextMonth => new DateTime(WeekStartDate.Year, WeekStartDate.Month, 1).AddMonths(1);
 
     public async Task OnGetAsync(CancellationToken ct)
     {
@@ -44,24 +62,29 @@ public class KanbanModel : PageModel
         if (IsEmployeeView)
         {
             var empId = User.GetEmployeeId();
-            CurrentWeekStart = GetMondayOf(DateTime.UtcNow);
-            Board = await _kanbanManager.GetEmployeeWeekAsync(empId!.Value, CurrentWeekStart, ct);
+            WeekStartDate = GetMondayOf(DateTime.UtcNow);
+            Board = await _kanbanManager.GetEmployeeWeekAsync(empId!.Value, WeekStartDate, ct);
             View = "week";
+            ComputeGridHours();
             return;
         }
 
-        CurrentWeekStart = GetMondayOf(
+        WeekStartDate = GetMondayOf(
             DateTime.TryParse(WeekStart, out var ws) ? ws : DateTime.UtcNow);
-        CurrentDay = DateTime.TryParse(DayDate, out var dd) ? dd.Date : DateTime.UtcNow.Date;
+
+        DayView = DateTime.TryParse(DayDate, out var dd) ? dd.Date : null;
+
         var md = DateTime.TryParse(MonthDate, out var m) ? m : DateTime.UtcNow;
-        CurrentMonth = new DateTime(md.Year, md.Month, 1);
+        var currentMonth = new DateTime(md.Year, md.Month, 1);
 
         Board = View switch
         {
-            "day"   => await _kanbanManager.GetWeekAsync(CurrentDay, FilterEmployeeId, ct),
-            "month" => await _kanbanManager.GetWeekAsync(CurrentMonth, FilterEmployeeId, ct),
-            _       => await _kanbanManager.GetWeekAsync(CurrentWeekStart, FilterEmployeeId, ct)
+            "day"   => await _kanbanManager.GetWeekAsync(DayView ?? WeekStartDate, FilterEmployeeId, ct),
+            "month" => await _kanbanManager.GetWeekAsync(currentMonth, FilterEmployeeId, ct),
+            _       => await _kanbanManager.GetWeekAsync(WeekStartDate, FilterEmployeeId, ct)
         };
+
+        ComputeGridHours();
     }
 
     public async Task<IActionResult> OnPostUpdateStatusAsync(int id, string status, CancellationToken ct)
@@ -78,6 +101,27 @@ public class KanbanModel : PageModel
         var result = await _bookingManager.AddAssignmentAsync(id, employeeId, ct);
         if (!result.Success) ErrorMessage = result.Message;
         return RedirectToPage(new { view = View, weekStart = WeekStart, filterEmployeeId = FilterEmployeeId });
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+
+    private void ComputeGridHours()
+    {
+        // Derive grid bounds from the board days so the calendar always shows
+        // relevant hours without unnecessary empty rows.
+        if (Board?.Days == null || !Board.Days.Any())
+            return;
+
+        var allBookings = Board.Days.SelectMany(d => d.Bookings).ToList();
+        if (!allBookings.Any())
+            return;
+
+        var minHour = allBookings.Min(b => b.Hour);
+        var maxHour = allBookings.Max(b => b.Hour);
+
+        // Pad by one hour on each side and clamp to reasonable limits.
+        GridStartHour = Math.Max(0,  minHour - 1);
+        GridEndHour   = Math.Min(24, maxHour + 2);   // +2 so the last booking row is visible
     }
 
     private static DateTime GetMondayOf(DateTime date)
