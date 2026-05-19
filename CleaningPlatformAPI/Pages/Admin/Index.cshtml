@@ -37,12 +37,12 @@
     {
         <table class="admin-table">
             <thead>
-                <tr><th>ID</th><th>Client</th><th>Time</th><th>Status</th></tr>
+                <tr><th>ID</th><th>Client</th><th>Time</th><th>Status</th><th>Assigned Employees</th></tr>
             </thead>
             <tbody>
                 @foreach (var b in Model.TodaysBookings)
                 {
-                    <tr><td>#@b.Id</td><td>@b.ClientName</td><td>@b.Hour:00</td><td><span class="badge badge-@b.Status.ToLower()">@b.Status</span></td></tr>
+                    <tr><td>#@b.Id</td><td>@b.ClientName</td><td>@b.Hour:00</td><td><span class="badge badge-@b.Status.ToLower()">@b.Status</span></td><td>@string.Join(", ", b.AssignedEmployees.Select(e => e.FullName))</td></tr>
                 }
             </tbody>
         </table>
