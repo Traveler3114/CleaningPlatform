@@ -56,6 +56,7 @@ public class BookingDetailModel : PageModel
         ActiveEmployees = await _employeeManager.GetActiveEmployeesAsync(ct);
         ServiceCatalog = await _serviceCatalogManager.GetAllAsync(ct);
         SopTemplates = await _sopManager.GetAllTemplatesAsync(ct);
+        await _sopManager.EnsureServiceSopsAssignedAsync(Id, ct);
         BookingSops = await _sopManager.GetBookingSopsAsync(Id, ct);
         return Page();
     }

@@ -326,4 +326,41 @@ public class SopManager
 
         return OperationResult<ChecklistResponseResponse>.Ok(SopMapper.ToChecklistResponseResponse(item, response));
     }
+
+    public async Task EnsureServiceSopsAssignedAsync(int bookingId, CancellationToken ct = default)
+    {
+        var serviceCatalogIds = await _db.BookingServices
+            .Where(bs => bs.BookingId == bookingId)
+            .Select(bs => bs.ServiceCatalogId)
+            .ToListAsync(ct);
+
+        if (!serviceCatalogIds.Any()) return;
+
+        var linkedTemplateIds = await _db.SopTemplates
+            .Where(t => t.IsActive
+                     && t.ServiceCatalogId != null
+                     && serviceCatalogIds.Contains(t.ServiceCatalogId.Value))
+            .Select(t => t.Id)
+            .ToListAsync(ct);
+
+        var alreadyAssignedIds = await _db.BookingSopAssignments
+            .Where(a => a.BookingId == bookingId)
+            .Select(a => a.SopTemplateId)
+            .ToListAsync(ct);
+
+        var toAssign = linkedTemplateIds.Except(alreadyAssignedIds).ToList();
+        if (!toAssign.Any()) return;
+
+        foreach (var templateId in toAssign)
+        {
+            _db.BookingSopAssignments.Add(new BookingSopAssignment
+            {
+                BookingId = bookingId,
+                SopTemplateId = templateId,
+                AssignedAt = DateTime.UtcNow
+            });
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
 }

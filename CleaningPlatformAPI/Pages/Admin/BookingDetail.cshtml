@@ -290,21 +290,6 @@
             </div>
         }
     }
-
-    @if (User.HasPermission(PermissionKeys.BookingsEdit))
-    {
-        <form method="post" asp-page-handler="AssignSop" class="inline-form" style="margin-top:1rem;">
-            <input type="hidden" name="id" value="@Model.Booking.Id" />
-            <select name="sopTemplateId" class="status-select" required>
-                <option value="">Assign SOP template</option>
-                @foreach (var template in Model.SopTemplates.Where(t => t.IsActive))
-                {
-                    <option value="@template.Id">@template.Name (@template.ServiceType)</option>
-                }
-            </select>
-            <button type="submit" class="btn btn-sm">Assign SOP</button>
-        </form>
-    }
 </section>
 
 <a asp-page="/Admin/Bookings" class="btn btn-sm" style="margin-top:0.5rem;">← Back</a>
