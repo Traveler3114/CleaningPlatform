@@ -484,6 +484,284 @@ VALUES (
 );
 GO
 
+WITH N AS (
+    SELECT TOP (50) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+),
+Seeded AS (
+    SELECT
+        n,
+        LOWER(
+            LEFT(CHOOSE((n % 10) + 1, 'Matej','Ana','Ivan','Luka','Sara','Petra','Niko','Tina','Filip','Maja'), 1)
+            + CHOOSE((n % 10) + 1, 'Kovac','Horvat','Novak','Maric','Klaric','Botic','Skoko','Jukic','Peric','Skoric')
+        ) AS BaseUsername,
+        ROW_NUMBER() OVER (
+            PARTITION BY LOWER(
+                LEFT(CHOOSE((n % 10) + 1, 'Matej','Ana','Ivan','Luka','Sara','Petra','Niko','Tina','Filip','Maja'), 1)
+                + CHOOSE((n % 10) + 1, 'Kovac','Horvat','Novak','Maric','Klaric','Botic','Skoko','Jukic','Peric','Skoric')
+            )
+            ORDER BY n
+        ) AS rn
+    FROM N
+)
+INSERT INTO Employees (Username, PasswordHash, FirstName, LastName, Phone, EmployeeCode, HourlyRate, MaxJobsPerDay, IsActive, RoleId)
+SELECT
+    CASE WHEN rn = 1 THEN BaseUsername ELSE BaseUsername + CAST(rn AS NVARCHAR(10)) END,
+    '$2y$10$qZKh.FlEZrHNSyAcazlNdOyBMHA.SJSfnLDoPtuFKt9Mrj99tdNEe',
+    CHOOSE((n % 10) + 1, 'Matej','Ana','Ivan','Luka','Sara','Petra','Niko','Tina','Filip','Maja'),
+    CHOOSE((n % 10) + 1, 'Kovac','Horvat','Novak','Maric','Klaric','Botic','Skoko','Jukic','Peric','Skoric'),
+    CONCAT('+385 9', RIGHT('0000000' + CAST(n AS VARCHAR(7)), 7)),
+    CONCAT('EMP-', RIGHT('000' + CAST(n + 1 AS VARCHAR(3)), 3)),
+    CAST(25 + (n % 15) AS DECIMAL(10,2)),
+    2 + (n % 4),
+    CASE WHEN n % 12 = 0 THEN 0 ELSE 1 END,
+    (SELECT Id FROM Roles WHERE Name = CHOOSE((n % 4) + 1, 'Admin', 'Dispatcher', 'Employee', 'Finance'))
+FROM Seeded;
+GO
+
+WITH N AS (
+    SELECT TOP (40) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO Clients (ClientName, Type, Oib, PaymentTerms, Notes, IsActive)
+SELECT
+    CONCAT('Client ', n),
+    CHOOSE((n % 3) + 1, 'OneTime', 'RepeatIndividual', 'RepeatBusiness'),
+    RIGHT('00000000000' + CAST(10000000000 + n AS VARCHAR(11)), 11),
+    CHOOSE((n % 4) + 1, 'Net30', 'Net15', 'DueOnReceipt', 'Net45'),
+    CONCAT('Mock client notes for client ', n),
+    CASE WHEN n % 15 = 0 THEN 0 ELSE 1 END
+FROM N;
+GO
+
+INSERT INTO Contacts (ClientId, ContactName, Role, Phone, Email, Address, IsPrimary, IsActive)
+SELECT
+    c.Id,
+    CONCAT('Contact ', c.Id),
+    'Primary',
+    CONCAT('+385 98', RIGHT('000000' + CAST(c.Id AS VARCHAR(6)), 6)),
+    CONCAT('contact', c.Id, '@client.com'),
+    CONCAT('Main Street ', c.Id, ', Zagreb'),
+    1,
+    1
+FROM Clients c;
+GO
+
+INSERT INTO Contacts (ClientId, ContactName, Role, Phone, Email, Address, IsPrimary, IsActive)
+SELECT
+    c.Id,
+    CONCAT('Alt Contact ', c.Id),
+    'Secondary',
+    CONCAT('+385 99', RIGHT('000000' + CAST(c.Id AS VARCHAR(6)), 6)),
+    CONCAT('alt', c.Id, '@client.com'),
+    CONCAT('Second Street ', c.Id, ', Split'),
+    0,
+    1
+FROM Clients c
+WHERE c.Id % 3 = 0;
+GO
+
+WITH SiteNums AS (
+    SELECT 1 AS s UNION ALL SELECT 2 UNION ALL SELECT 3
+)
+INSERT INTO Sites (ClientId, SiteName, Address, City, PostalCode, SiteType, FloorAreaM2, AccessNotes, IsActive)
+SELECT
+    c.Id,
+    CONCAT('Site ', c.Id, '-', s.s),
+    CONCAT('Site Address ', c.Id, '-', s.s),
+    CHOOSE((c.Id % 5) + 1, 'Zagreb', 'Split', 'Rijeka', 'Osijek', 'Zadar'),
+    RIGHT('10000' + CAST((c.Id * 7 + s.s) AS VARCHAR(5)), 5),
+    CHOOSE(((c.Id + s.s) % 7) + 1, 'Office', 'Stairwell', 'Garage', 'Facility', 'Boat', 'Vehicle', 'Other'),
+    CAST(50 + (c.Id * 3 + s.s * 10) AS DECIMAL(10,2)),
+    CONCAT('Access notes for site ', c.Id, '-', s.s),
+    1
+FROM Clients c
+JOIN SiteNums s ON s.s <= CASE WHEN c.Id % 4 = 0 THEN 3 WHEN c.Id % 2 = 0 THEN 2 ELSE 1 END;
+GO
+
+WITH N AS (
+    SELECT TOP (20) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO DateOverride (Date, StartHour, EndHour, Capacity, IsFullyClosed)
+SELECT
+    DATEADD(DAY, n * 5, '2026-01-05'),
+    CASE WHEN n % 5 = 0 THEN NULL ELSE 9 END,
+    CASE WHEN n % 5 = 0 THEN NULL ELSE 14 END,
+    CASE WHEN n % 4 = 0 THEN NULL ELSE 2 END,
+    CASE WHEN n % 5 = 0 THEN 1 ELSE 0 END
+FROM N;
+GO
+
+WITH N AS (
+    SELECT TOP (120) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO Bookings (
+    ClientId, SiteId, ServiceType, ScheduledDate, ScheduledTimeSlot, Status, Notes, CreatedAt, UpdatedAt, CompletedAt
+)
+SELECT
+    ((n - 1) % (SELECT COUNT(*) FROM Clients)) + 1,
+    CASE WHEN n % 5 = 0 THEN NULL ELSE ((n - 1) % (SELECT COUNT(*) FROM Sites)) + 1 END,
+    CHOOSE((n % 3) + 1, 'Vehicle', 'SiteBased', 'Boat'),
+    DATEADD(DAY, (n % 60) - 20, CAST('2026-05-01' AS DATE)),
+    CASE WHEN n % 4 = 0 THEN NULL ELSE CAST(CONCAT(8 + (n % 8), ':00') AS TIME) END,
+    s.Status,
+    CONCAT('Mock booking note ', n),
+    DATEADD(DAY, -1 * (n % 30), GETUTCDATE()),
+    GETUTCDATE(),
+    CASE WHEN s.Status = 'Completed' THEN DATEADD(DAY, -1, GETUTCDATE()) ELSE NULL END
+FROM N
+CROSS APPLY (SELECT CHOOSE((n % 5) + 1, 'Pending', 'Confirmed', 'InProgress', 'Completed', 'Cancelled') AS Status) s;
+GO
+
+INSERT INTO BookingAssignments (BookingId, EmployeeId, AssignedAt)
+SELECT
+    b.Id,
+    ((b.Id - 1) % (SELECT COUNT(*) FROM Employees)) + 1,
+    GETUTCDATE()
+FROM Bookings b
+WHERE b.Id % 7 <> 0;
+GO
+
+WITH S AS (
+    SELECT 1 AS s UNION ALL SELECT 2
+)
+INSERT INTO BookingServices (BookingId, ServiceCatalogId, EstimatedPrice, FinalPrice, Quantity, Notes)
+SELECT
+    b.Id,
+    ((b.Id + s.s) % (SELECT COUNT(*) FROM ServiceCatalog)) + 1,
+    CAST(20 + ((b.Id + s.s) % 50) * 5 AS DECIMAL(10,2)),
+    CASE WHEN b.Status = 'Completed' THEN CAST(25 + ((b.Id + s.s) % 50) * 5 AS DECIMAL(10,2)) ELSE NULL END,
+    CAST(1 + (b.Id % 3) AS DECIMAL(10,2)),
+    CONCAT('Service note for booking ', b.Id, ' item ', s.s)
+FROM Bookings b
+CROSS JOIN S;
+GO
+
+INSERT INTO VehicleBookingDetails (BookingId, LicensePlate, CarModel, Notes)
+SELECT
+    b.Id,
+    CONCAT('ZG', RIGHT('0000' + CAST(b.Id AS VARCHAR(4)), 4), 'CP'),
+    CHOOSE((b.Id % 6) + 1, 'Skoda Octavia', 'VW Golf', 'Toyota Corolla', 'Renault Clio', 'Audi A4', 'Ford Focus'),
+    CONCAT('Vehicle details for booking ', b.Id)
+FROM Bookings b
+WHERE b.ServiceType = 'Vehicle';
+GO
+
+INSERT INTO BoatBookingDetails (BookingId, BoatType, LengthMeters, Notes)
+SELECT
+    b.Id,
+    CHOOSE((b.Id % 5) + 1, 'Sailboat', 'Yacht', 'Motorboat', 'Catamaran', 'Fishing'),
+    CAST(6 + (b.Id % 12) AS DECIMAL(5,2)),
+    CONCAT('Boat details for booking ', b.Id)
+FROM Bookings b
+WHERE b.ServiceType = 'Boat';
+GO
+
+-- ============================================================
+-- INVOICE SEED (unchanged)
+-- ============================================================
+
+DECLARE @InvoiceMap TABLE (BookingId INT, InvoiceId INT);
+
+WITH BookingTotals AS (
+    SELECT
+        b.Id                                                        AS BookingId,
+        b.ClientId,
+        aa.EmployeeId                                               AS CreatedByEmployeeId,
+        b.ScheduledDate,
+        b.Status,
+        SUM(bs.EstimatedPrice * bs.Quantity)                        AS SubTotal,
+        ROW_NUMBER() OVER (ORDER BY b.Id)                           AS RowNum
+    FROM Bookings b
+    OUTER APPLY (
+        SELECT TOP 1 ba.EmployeeId
+        FROM BookingAssignments ba
+        WHERE ba.BookingId = b.Id
+        ORDER BY ba.Id
+    ) aa
+    JOIN BookingServices bs ON bs.BookingId = b.Id
+    WHERE b.Id % 2 = 0
+    GROUP BY b.Id, b.ClientId, aa.EmployeeId, b.ScheduledDate, b.Status
+)
+INSERT INTO Invoices (
+    InvoiceNumber, ClientId, IssueDate, DueDate, SubTotal, DiscountAmount,
+    VatPct, VatAmount, TotalAmount, Status, Notes, CreatedByEmployeeId
+)
+SELECT
+    CONCAT('INV-', YEAR(ScheduledDate), '-', RIGHT('0000' + CAST(RowNum AS NVARCHAR(10)), 4)),
+    ClientId,
+    ScheduledDate,
+    DATEADD(DAY, 15, ScheduledDate),
+    SubTotal,
+    CASE WHEN BookingId % 5 = 0 THEN 10 ELSE 0 END,
+    25,
+    ROUND((SubTotal - CASE WHEN BookingId % 5 = 0 THEN 10 ELSE 0 END) * 0.25, 2),
+    ROUND((SubTotal - CASE WHEN BookingId % 5 = 0 THEN 10 ELSE 0 END) * 1.25, 2),
+    CHOOSE((BookingId % 5) + 1, 'Draft', 'Sent', 'PartiallyPaid', 'Paid', 'Overdue'),
+    CONCAT('Invoice for booking ', BookingId),
+    CreatedByEmployeeId
+FROM BookingTotals;
+
+INSERT INTO @InvoiceMap (BookingId, InvoiceId)
+SELECT
+    bt.BookingId,
+    i.Id
+FROM Invoices i
+JOIN (
+    SELECT
+        b.Id                                        AS BookingId,
+        b.ScheduledDate,
+        ROW_NUMBER() OVER (ORDER BY b.Id)           AS RowNum
+    FROM Bookings b
+    JOIN BookingServices bs ON bs.BookingId = b.Id
+    WHERE b.Id % 2 = 0
+    GROUP BY b.Id, b.ScheduledDate
+) bt ON i.InvoiceNumber = CONCAT('INV-', YEAR(bt.ScheduledDate), '-', RIGHT('0000' + CAST(bt.RowNum AS NVARCHAR(10)), 4));
+
+INSERT INTO InvoiceBookings (InvoiceId, BookingId)
+SELECT InvoiceId, BookingId
+FROM @InvoiceMap;
+
+INSERT INTO InvoiceLines (InvoiceId, Description, Quantity, UnitPrice, DiscountPct, VatPct, SourceType, SourceId)
+SELECT
+    im.InvoiceId,
+    CONCAT('Service ', sc.CatalogCode, ' - ', sc.Name),
+    bs.Quantity,
+    CAST(CASE WHEN bs.EstimatedPrice IS NULL THEN 0 ELSE bs.EstimatedPrice END / NULLIF(bs.Quantity, 0) AS DECIMAL(10,2)),
+    CASE WHEN bs.BookingId % 6 = 0 THEN 5 ELSE 0 END,
+    25,
+    'Booking',
+    bs.BookingId
+FROM @InvoiceMap im
+JOIN BookingServices bs ON bs.BookingId = im.BookingId
+JOIN ServiceCatalog sc ON sc.Id = bs.ServiceCatalogId;
+
+INSERT INTO InvoiceLines (InvoiceId, Description, Quantity, UnitPrice, DiscountPct, VatPct, SourceType, SourceId)
+SELECT
+    i.Id,
+    'Administrative fee',
+    1,
+    15.00,
+    0,
+    25,
+    'Manual',
+    NULL
+FROM Invoices i
+WHERE i.Id % 4 = 0;
+
+INSERT INTO Payments (InvoiceId, PaymentDate, Amount, Method, Reference, Notes, RecordedBy)
+SELECT
+    i.Id,
+    DATEADD(DAY, 2, i.IssueDate),
+    CASE WHEN i.Status = 'PartiallyPaid' THEN ROUND(i.TotalAmount * 0.5, 2) ELSE i.TotalAmount END,
+    CHOOSE((i.Id % 4) + 1, 'BankTransfer', 'Cash', 'Card', 'Other'),
+    CONCAT('PAY-', i.InvoiceNumber),
+    CONCAT('Payment for invoice ', i.InvoiceNumber),
+    i.CreatedByEmployeeId
+FROM Invoices i
+WHERE i.Status IN ('Paid', 'PartiallyPaid');
 GO
 
 -- ============================================================
@@ -589,6 +867,44 @@ INSERT INTO ChecklistItems (SopTemplateId, ItemText, SortOrder, IsRequired) VALU
 (5, 'Očistiti prozore i prozorske klupčice', 3, 1),
 (5, 'Očistiti ulazna vrata i okvire', 4, 1),
 (5, 'Provjera sigurnosne rasvjete', 5, 0);
+
+INSERT INTO BookingSopAssignments (BookingId, SopTemplateId, CustomInstructions)
+SELECT b.Id, st.Id, NULL
+FROM Bookings b
+CROSS JOIN (SELECT Id FROM SopTemplates WHERE ServiceType = 'SiteBased') st
+WHERE b.Id BETWEEN 1 AND 15
+  AND b.ServiceType = 'SiteBased'
+  AND b.Status NOT IN ('Cancelled')
+  AND b.Id % 2 = 0;
+
+INSERT INTO BookingSopAssignments (BookingId, SopTemplateId, CustomInstructions)
+SELECT b.Id, st.Id, 'Preskočiti vosak - klijent ne želi'
+FROM Bookings b
+CROSS JOIN (SELECT Id FROM SopTemplates WHERE Name = 'Carwash LIM komplet') st
+WHERE b.ServiceType = 'Vehicle'
+  AND b.Id BETWEEN 5 AND 10;
+
+INSERT INTO ChecklistResponses (BookingAssignmentId, ChecklistItemId, IsCompleted, CompletedAt, Notes)
+SELECT
+    ba.Id,
+    ci.Id,
+    CASE WHEN b.Status = 'Completed' THEN 1 ELSE 0 END,
+    CASE WHEN b.Status = 'Completed' THEN DATEADD(HOUR, -1, GETUTCDATE()) ELSE NULL END,
+    CASE WHEN b.Status = 'InProgress' THEN 'U tijeku' ELSE NULL END
+FROM BookingAssignments ba
+INNER JOIN Bookings b ON ba.BookingId = b.Id
+INNER JOIN BookingSopAssignments bsa ON bsa.BookingId = b.Id
+INNER JOIN ChecklistItems ci ON ci.SopTemplateId = bsa.SopTemplateId
+WHERE b.Id IN (SELECT BookingId FROM BookingSopAssignments)
+  AND ba.EmployeeId IS NOT NULL;
+
+UPDATE ChecklistResponses
+SET Notes = 'Klijent tražio preskakanje - uredski tepisi već oprani jučer'
+WHERE BookingAssignmentId IN (
+    SELECT ba.Id FROM BookingAssignments ba
+    JOIN Bookings b ON ba.BookingId = b.Id
+    WHERE b.Id = 6
+) AND ChecklistItemId = (SELECT Id FROM ChecklistItems WHERE ItemText LIKE '%tepih%');
 GO
 
 -- ============================================================
