@@ -52,22 +52,18 @@ else
                 <th>Phone</th>
                 <th>Total Bookings</th>
                 <th>Created</th>
-                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var c in Model.Clients)
             {
-                <tr>
+                <tr class="client-row" data-href="@Url.Page("/Admin/ClientDetail", new { id = c.Id })" title="Click to open client details">
                     <td>@c.ClientName</td>
                     <td><span class="badge badge-@c.Type.ToLower()">@c.Type</span></td>
                     <td>@(c.PrimaryContactName ?? "-")</td>
                     <td>@(c.PrimaryContactPhone ?? "-")</td>
                     <td>@c.TotalBookings</td>
                     <td>@c.CreatedAt.ToString("dd MMM yyyy")</td>
-                    <td>
-                        <a asp-page="/Admin/ClientDetail" asp-route-id="@c.Id" class="btn btn-sm">View</a>
-                    </td>
                 </tr>
             }
         </tbody>
@@ -137,6 +133,18 @@ else
 
     typeSelect.addEventListener('change', sync);
     sync();
+    document.querySelectorAll('.client-row').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', (event) => {
+            if (event.target.closest('a, button, select, input, form, label')) {
+                return;
+            }
+            const href = row.dataset.href;
+            if (href) {
+                window.location.href = href;
+            }
+        });
+    });
 })();
 </script>
 }
