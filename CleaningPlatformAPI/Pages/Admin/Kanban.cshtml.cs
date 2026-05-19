@@ -165,8 +165,22 @@ public class KanbanModel : PageModel
         if (Board?.Days == null || !Board.Days.Any()) return;
         var allBookings = Board.Days.SelectMany(d => d.Bookings).ToList();
         if (!allBookings.Any()) return;
-        GridStartHour = Math.Max(0, allBookings.Min(b => b.Hour) - 1);
-        GridEndHour = Math.Min(24, allBookings.Max(b => b.Hour) + 2);
+
+        var minHour = allBookings.Min(b => b.Hour);
+        var maxHour = allBookings.Max(b => b.Hour);
+
+        // Guard: Hour=0 comes from null ScheduledTimeSlot, treat as unscheduled
+        if (minHour == 0 && maxHour == 0) return;
+
+        GridStartHour = Math.Max(0, minHour - 1);
+        GridEndHour = Math.Min(24, maxHour + 2);
+
+        // Ensure range is valid
+        if (GridStartHour >= GridEndHour)
+        {
+            GridStartHour = 7;
+            GridEndHour = 19;
+        }
     }
 
     private void ComputeAdminGridHours()
@@ -180,8 +194,22 @@ public class KanbanModel : PageModel
 
         if (!allBookings.Any()) return;
 
-        GridStartHour = Math.Max(6, allBookings.Min(b => b.Hour) - 1);
-        GridEndHour = Math.Min(23, allBookings.Max(b => b.Hour) + 2);
+        // Filter out hour=0 (null timeslot) before computing range
+        var scheduledBookings = allBookings.Where(b => b.Hour > 0).ToList();
+        if (!scheduledBookings.Any()) return;
+
+        var minHour = scheduledBookings.Min(b => b.Hour);
+        var maxHour = scheduledBookings.Max(b => b.Hour);
+
+        GridStartHour = Math.Max(6, minHour - 1);
+        GridEndHour = Math.Min(23, maxHour + 2);
+
+        // Ensure Enumerable.Range count is always positive
+        if (GridStartHour >= GridEndHour)
+        {
+            GridStartHour = 7;
+            GridEndHour = 19;
+        }
     }
 
     private static DateTime GetMondayOf(DateTime date)

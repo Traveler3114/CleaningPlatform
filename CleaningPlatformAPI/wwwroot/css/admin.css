@@ -751,8 +751,42 @@ body {
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     background: white;
     position: relative;
+    /* Force scroll container to be independently scrollable */
+    -webkit-overflow-scrolling: touch;
+    will-change: scroll-position;
+    /* Prevent sticky children from capturing pointer events during scroll */
+    isolation: isolate;
 }
 
+.resource-grid-wrapper::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.resource-grid-wrapper::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.resource-grid-wrapper::-webkit-scrollbar-thumb {
+    background: #c5cae9;
+    border-radius: 4px;
+}
+
+.resource-grid-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #3949ab;
+}
+
+.resource-col-time-header,
+.resource-col-unassigned-header,
+.resource-cell--time,
+.resource-cell--unassigned {
+    pointer-events: auto;
+}
+
+.resource-grid-wrapper * {
+    -webkit-transform: translateZ(0);
+}
 .resource-grid {
     border-collapse: collapse;
     min-width: 100%;
