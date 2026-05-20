@@ -1,27 +1,26 @@
-// ===== Vehicle Cleaning Customer Booking App =====
-// Config: update API_BASE to match your deployed API URL
+// ===== Customer Website App =====
 const API_BASE = '';
 
-// State
+// ── State ──────────────────────────────────────────────────
 const state = {
     step: 1,
+    selectedService: null,
     selectedDate: null,
     selectedHour: null,
     slots: [],
     customerName: '',
     phone: '',
-    booking: null
+    email: '',
+    booking: null,
+    services: [],
+    activeCategory: 'all'
 };
 
-// DOM refs
-const stepsEl = document.querySelectorAll('.step');
-const stepContents = document.querySelectorAll('.step-panel');
-
-// Helper to format date as YYYY-MM-DD local time
+// ── Helpers ─────────────────────────────────────────────────
 function formatDate(date) {
     const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
+    const mm   = String(date.getMonth() + 1).padStart(2, '0');
+    const dd   = String(date.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 }
 
@@ -31,266 +30,458 @@ function formatHour(h) {
     return `${hour}:00 ${ampm}`;
 }
 
-function updateStepUI() {
-    stepsEl.forEach((el, i) => {
-        el.classList.remove('active', 'done');
-        if (i + 1 === state.step) el.classList.add('active');
-        if (i + 1 < state.step) el.classList.add('done');
-    });
-    stepContents.forEach((el, i) => {
-        el.style.display = (i + 1 === state.step) ? 'block' : 'none';
+function formatDateLong(date) {
+    return date.toLocaleDateString('en-US', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 }
 
-// ===== STEP 1: Date Selection =====
-async function initStep1() {
-    const dateInput = document.getElementById('date-input');
-    const nextBtn = document.getElementById('step1-next');
-
-    // Start with today's date
-    let defaultDate = new Date();
-
-    try {
-        // Fetch today's availability from the API
-        const dateStr = formatDate(defaultDate);
-        const res = await fetch(`${API_BASE}/api/availability?date=${dateStr}`);
-        const result = await res.json();
-
-        // Check if there are any slots today that are NOT closed and have availability > 0[cite: 2, 4]
-        // Also ensure those slots are in the future relative to the current time
-        const currentHour = new Date().getHours();
-        const hasAvailableFutureSlots = result.success && result.data && result.data.some(s =>
-            !s.isClosed && s.available > 0 && s.hour > currentHour
-        );
-
-        // If the workday is over or fully booked, skip to the next day[cite: 1]
-        if (!hasAvailableFutureSlots) {
-            defaultDate.setDate(defaultDate.getDate() + 1);
-        }
-    } catch (e) {
-        console.error("End-of-day check failed, defaulting to current date.");
+// ── Mobile nav toggle ────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('menu-toggle');
+    const nav    = document.getElementById('site-nav');
+    if (toggle && nav) {
+        toggle.addEventListener('click', () => nav.classList.toggle('open'));
+        nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => nav.classList.remove('open')));
     }
+});
 
-    const finalDateStr = formatDate(defaultDate);
-    dateInput.value = finalDateStr;
-    dateInput.min = finalDateStr; // Prevents the user from manually selecting a finished workday
+// ── Services ─────────────────────────────────────────────────
+async function loadServices() {
+    const grid = document.getElementById('services-grid');
+    if (!grid) return;
 
-    dateInput.addEventListener('change', () => {
-        nextBtn.disabled = !dateInput.value;
-    });
+    grid.innerHTML = '<p class="services-loading"><span class="spinner"></span> Loading services…</p>';
 
-    nextBtn.addEventListener('click', () => {
-        if (!dateInput.value) return;
-        state.selectedDate = new Date(dateInput.value + 'T00:00:00');
-        goToStep2();
-    });
-}
-
-function goToStep2() {
-    state.step = 2;
-    updateStepUI();
-    loadSlots();
-}
-
-// ===== STEP 2: Time Slot Selection =====
-async function loadSlots() {
-    const slotsContainer = document.getElementById('slots-container');
-    const nextBtn = document.getElementById('step2-next');
-    slotsContainer.innerHTML = '<div class="loading"><span class="spinner"></span> Loading available times...</div>';
-    nextBtn.disabled = true;
-
-    const dateStr = formatDate(state.selectedDate);
     try {
-        const res = await fetch(`${API_BASE}/api/availability?date=${dateStr}`);
+        const res    = await fetch(`${API_BASE}/api/services`);
         const result = await res.json();
+
         if (!result.success || !result.data || result.data.length === 0) {
-            slotsContainer.innerHTML = '<p class="no-slots">No available slots for this date. Please choose another day.</p>';
+            grid.innerHTML = '<p class="services-loading">No services available at the moment.</p>';
             return;
         }
-        state.slots = result.data;
-        renderSlots();
+
+        state.services = result.data.filter(s => s.isActive);
+        renderCategoryFilters();
+        renderServiceCards('all');
     } catch (e) {
-        slotsContainer.innerHTML = '<p class="no-slots error-msg">Error loading slots. Please try again.</p>';
+        grid.innerHTML = '<p class="services-loading">Could not load services. Please refresh.</p>';
     }
 }
 
-function renderSlots() {
-    const slotsContainer = document.getElementById('slots-container');
-    const nextBtn = document.getElementById('step2-next');
+function renderCategoryFilters() {
+    const bar = document.getElementById('category-filter');
+    if (!bar) return;
 
-    const now = new Date();
-    const isToday = formatDate(state.selectedDate) === formatDate(now);
-    const currentHour = now.getHours();
+    const cats = ['all', ...new Set(state.services.map(s => s.category).filter(Boolean))];
 
-    // Filter: 1. Not closed, 2. Has capacity, 3. Is in the future (if today)[cite: 2, 4]
-    const availableSlots = state.slots.filter(s => {
-        const isNotClosed = !s.isClosed && s.available > 0;
-        if (isToday) {
-            return isNotClosed && s.hour > currentHour; // Past hours removed[cite: 2]
-        }
-        return isNotClosed;
+    bar.innerHTML = cats.map(cat => `
+        <button class="cat-btn ${cat === 'all' ? 'active' : ''}"
+                data-cat="${cat}"
+                onclick="filterCategory('${cat}')">
+            ${cat === 'all' ? 'All Services' : cat}
+        </button>
+    `).join('');
+}
+
+function filterCategory(cat) {
+    state.activeCategory = cat;
+    document.querySelectorAll('.cat-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.cat === cat);
     });
+    renderServiceCards(cat);
+}
 
-    if (availableSlots.length === 0) {
-        slotsContainer.innerHTML = '<p class="no-slots">No open slots for this date.</p>';
+function renderServiceCards(cat) {
+    const grid = document.getElementById('services-grid');
+    if (!grid) return;
+
+    const filtered = cat === 'all'
+        ? state.services
+        : state.services.filter(s => s.category === cat);
+
+    if (filtered.length === 0) {
+        grid.innerHTML = '<p class="services-loading">No services in this category.</p>';
         return;
     }
 
-    slotsContainer.innerHTML = '<div class="slots-grid"></div>';
-    const grid = slotsContainer.querySelector('.slots-grid');
+    grid.innerHTML = filtered.map(s => {
+        const priceLabel = s.priceMin && s.priceMax
+            ? `<strong>${s.priceMin}–${s.priceMax} €</strong> / ${s.unit || 'per service'}`
+            : s.priceAvg
+            ? `<strong>from ${s.priceAvg} €</strong> / ${s.unit || 'per service'}`
+            : '';
 
-    availableSlots.forEach(slot => {
+        return `
+            <div class="service-card" data-id="${s.id}" onclick="selectServiceFromCard(${s.id})">
+                ${s.category ? `<div class="service-category-badge">${s.category}</div>` : ''}
+                <h3>${s.name}</h3>
+                ${priceLabel ? `<p class="service-price">${priceLabel}</p>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function selectServiceFromCard(id) {
+    const service = state.services.find(s => s.id === id);
+    if (!service) return;
+
+    state.selectedService = service;
+
+    // Highlight card
+    document.querySelectorAll('.service-card').forEach(c => {
+        c.classList.toggle('selected', parseInt(c.dataset.id) === id);
+    });
+
+    // Scroll to booking
+    document.getElementById('booking').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Pre-populate service in booking step 1 and advance to step 2
+    setTimeout(() => {
+        goToStep(2);
+    }, 400);
+}
+
+// ── Booking Steps ────────────────────────────────────────────
+function updateStepUI() {
+    const panels = document.querySelectorAll('.step-panel');
+    const dots   = document.querySelectorAll('.progress-step');
+
+    panels.forEach((p, i) => {
+        p.classList.toggle('active', i + 1 === state.step);
+    });
+
+    dots.forEach((d, i) => {
+        d.classList.remove('active', 'done');
+        if (i + 1 === state.step) d.classList.add('active');
+        if (i + 1 < state.step)  d.classList.add('done');
+    });
+
+    // Sync step 1 service display
+    if (state.step === 1) renderBookingServiceList();
+    if (state.step === 2) renderDateStep();
+    if (state.step === 3) renderDetailsStep();
+    if (state.step === 4) renderConfirmation();
+}
+
+function goToStep(step) {
+    state.step = step;
+    updateStepUI();
+
+    const bookingEl = document.getElementById('booking');
+    if (bookingEl) bookingEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Step 1: Service Selection ────────────────────────────────
+function renderBookingServiceList() {
+    const container = document.getElementById('booking-service-list');
+    if (!container) return;
+
+    if (state.services.length === 0) {
+        container.innerHTML = '<p class="info-msg"><span class="spinner"></span> Loading services…</p>';
+        return;
+    }
+
+    container.innerHTML = state.services.map(s => {
+        const selected = state.selectedService && state.selectedService.id === s.id;
+        const priceLabel = s.priceMin && s.priceMax
+            ? `${s.priceMin}–${s.priceMax} €`
+            : s.priceAvg ? `from ${s.priceAvg} €` : '';
+
+        return `
+            <div class="service-card ${selected ? 'selected' : ''}"
+                 data-booking-service-id="${s.id}"
+                 onclick="selectBookingService(${s.id})"
+                 style="margin-bottom:0.6rem;">
+                ${s.category ? `<div class="service-category-badge">${s.category}</div>` : ''}
+                <h3>${s.name}</h3>
+                ${priceLabel ? `<p class="service-price"><strong>${priceLabel}</strong>${s.unit ? ' / ' + s.unit : ''}</p>` : ''}
+            </div>
+        `;
+    }).join('');
+
+    updateStep1Next();
+}
+
+function selectBookingService(id) {
+    const service = state.services.find(s => s.id === id);
+    if (!service) return;
+    state.selectedService = service;
+
+    document.querySelectorAll('[data-booking-service-id]').forEach(c => {
+        c.classList.toggle('selected', parseInt(c.dataset.bookingServiceId) === id);
+    });
+
+    updateStep1Next();
+}
+
+function updateStep1Next() {
+    const btn = document.getElementById('step1-next');
+    if (btn) btn.disabled = !state.selectedService;
+}
+
+// ── Step 2: Date & Time ──────────────────────────────────────
+function renderDateStep() {
+    initDatePicker();
+    if (state.selectedDate) loadSlots(state.selectedDate);
+}
+
+function initDatePicker() {
+    const input = document.getElementById('date-input');
+    if (!input) return;
+
+    const today = new Date();
+    const minDate = formatDate(today);
+    input.min = minDate;
+
+    if (!state.selectedDate) {
+        input.value = minDate;
+        state.selectedDate = new Date(minDate + 'T00:00:00');
+    } else {
+        input.value = formatDate(state.selectedDate);
+    }
+
+    input.onchange = () => {
+        if (!input.value) return;
+        state.selectedDate = new Date(input.value + 'T00:00:00');
+        state.selectedHour = null;
+        updateStep2Next();
+        loadSlots(state.selectedDate);
+    };
+}
+
+async function loadSlots(date) {
+    const container = document.getElementById('slots-container');
+    if (!container) return;
+
+    container.innerHTML = '<p class="info-msg"><span class="spinner"></span> Loading available times…</p>';
+    updateStep2Next();
+
+    const dateStr = formatDate(date);
+    try {
+        const res    = await fetch(`${API_BASE}/api/availability?date=${dateStr}`);
+        const result = await res.json();
+
+        if (!result.success || !result.data || result.data.length === 0) {
+            container.innerHTML = '<p class="info-msg">No available slots for this date. Please choose another day.</p>';
+            return;
+        }
+
+        state.slots = result.data;
+        renderSlots(date);
+    } catch (e) {
+        container.innerHTML = '<p class="error-msg">Error loading available times. Please try again.</p>';
+    }
+}
+
+function renderSlots(date) {
+    const container = document.getElementById('slots-container');
+    if (!container) return;
+
+    const now      = new Date();
+    const isToday  = formatDate(date) === formatDate(now);
+    const currHour = now.getHours();
+
+    const available = state.slots.filter(s => {
+        const open = !s.isClosed && s.available > 0;
+        return isToday ? open && s.hour > currHour : open;
+    });
+
+    if (available.length === 0) {
+        container.innerHTML = '<p class="info-msg">No open slots for this date. Please choose another day.</p>';
+        return;
+    }
+
+    container.innerHTML = '<div class="slots-grid"></div>';
+    const grid = container.querySelector('.slots-grid');
+
+    available.forEach(slot => {
         const btn = document.createElement('button');
-        btn.className = 'slot-btn';
-        if (state.selectedHour === slot.hour) btn.classList.add('selected');
-
-        // Capacity defaults to 2 if not overridden by the daily schedule[cite: 1, 4]
+        btn.type = 'button';
+        btn.className = `slot-btn ${state.selectedHour === slot.hour ? 'selected' : ''}`;
         btn.innerHTML = `
             <div class="slot-time">${formatHour(slot.hour)}</div>
             <div class="slot-avail">${slot.available} spot${slot.available !== 1 ? 's' : ''} left</div>
         `;
-
         btn.addEventListener('click', () => {
             state.selectedHour = slot.hour;
             grid.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
-            nextBtn.disabled = false;
+            updateStep2Next();
         });
-
         grid.appendChild(btn);
     });
 }
 
-function initStep2() {
-    const nextBtn = document.getElementById('step2-next');
-    const backBtn = document.getElementById('step2-back');
-
-    nextBtn.addEventListener('click', () => {
-        if (state.selectedHour === null) return;
-        goToStep3();
-    });
-
-    backBtn.addEventListener('click', () => {
-        state.step = 1;
-        state.selectedHour = null;
-        updateStepUI();
-    });
+function updateStep2Next() {
+    const btn = document.getElementById('step2-next');
+    if (btn) btn.disabled = state.selectedHour === null;
 }
 
-// ===== STEP 3: Customer Details =====
-function goToStep3() {
-    state.step = 3;
-    updateStepUI();
-    renderBookingSummary();
+// ── Step 3: Customer Details ─────────────────────────────────
+function renderDetailsStep() {
+    // Show summary of what's been selected
+    const summary = document.getElementById('step3-summary');
+    if (summary && state.selectedService && state.selectedDate && state.selectedHour !== null) {
+        summary.innerHTML = `
+            <div class="summary-row">
+                <span>Service</span>
+                <span>${state.selectedService.name}</span>
+            </div>
+            <div class="summary-row">
+                <span>Date</span>
+                <span>${formatDateLong(state.selectedDate)}</span>
+            </div>
+            <div class="summary-row">
+                <span>Time</span>
+                <span>${formatHour(state.selectedHour)}</span>
+            </div>
+        `;
+    }
+
+    // Restore values if coming back
+    const nameInput  = document.getElementById('customer-name');
+    const phoneInput = document.getElementById('customer-phone');
+    const emailInput = document.getElementById('customer-email');
+    if (nameInput  && state.customerName) nameInput.value  = state.customerName;
+    if (phoneInput && state.phone)        phoneInput.value = state.phone;
+    if (emailInput && state.email)        emailInput.value = state.email;
 }
 
-function renderBookingSummary() {
-    const summaryEl = document.getElementById('booking-summary');
-    const dateStr = state.selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    summaryEl.innerHTML = `<strong>Date:</strong> ${dateStr} &nbsp;|&nbsp; <strong>Time:</strong> ${formatHour(state.selectedHour)}`;
+// ── Step 4: Confirmation ─────────────────────────────────────
+function renderConfirmation() {
+    const el = document.getElementById('confirmation-details');
+    if (!el) return;
+
+    el.innerHTML = `
+        <div class="summary-row">
+            <span>Booking ID</span>
+            <span>#${state.booking?.id || 'N/A'}</span>
+        </div>
+        <div class="summary-row">
+            <span>Service</span>
+            <span>${state.selectedService?.name || '—'}</span>
+        </div>
+        <div class="summary-row">
+            <span>Date</span>
+            <span>${state.selectedDate ? formatDateLong(state.selectedDate) : '—'}</span>
+        </div>
+        <div class="summary-row">
+            <span>Time</span>
+            <span>${state.selectedHour !== null ? formatHour(state.selectedHour) : '—'}</span>
+        </div>
+        <div class="summary-row">
+            <span>Name</span>
+            <span>${state.customerName}</span>
+        </div>
+        <div class="summary-row">
+            <span>Phone</span>
+            <span>${state.phone}</span>
+        </div>
+        ${state.email ? `
+        <div class="summary-row">
+            <span>Email</span>
+            <span>${state.email}</span>
+        </div>` : ''}
+        <div class="summary-row">
+            <span>Status</span>
+            <span>${state.booking?.status || 'Pending'}</span>
+        </div>
+    `;
 }
 
-function initStep3() {
-    const form = document.getElementById('details-form');
-    const backBtn = document.getElementById('step3-back');
-    const errorEl = document.getElementById('step3-error');
-
-    backBtn.addEventListener('click', () => {
-        state.step = 2;
-        updateStepUI();
-    });
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        errorEl.textContent = '';
-        const name = document.getElementById('customer-name').value.trim();
-        const phone = document.getElementById('customer-phone').value.trim();
-        if (!name || !phone) {
-            errorEl.textContent = 'Please fill in all fields.';
-            return;
-        }
-        state.customerName = name;
-        state.phone = phone;
-        await submitBooking();
-    });
-}
-
+// ── Submit Booking ───────────────────────────────────────────
 async function submitBooking() {
-    const errorEl = document.getElementById('step3-error');
+    const errorEl  = document.getElementById('step3-error');
     const submitBtn = document.getElementById('step3-submit');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Booking...';
+
+    errorEl.textContent = '';
+
+    const name  = document.getElementById('customer-name').value.trim();
+    const phone = document.getElementById('customer-phone').value.trim();
+    const email = document.getElementById('customer-email').value.trim();
+
+    if (!name)  { errorEl.textContent = 'Please enter your full name.'; return; }
+    if (!phone) { errorEl.textContent = 'Please enter your phone number.'; return; }
+
+    state.customerName = name;
+    state.phone        = phone;
+    state.email        = email;
+
+    submitBtn.disabled    = true;
+    submitBtn.textContent = 'Booking…';
 
     const payload = {
         customerName: state.customerName,
-        phone: state.phone,
-        date: formatDate(state.selectedDate),
-        hour: state.selectedHour
+        phone:        state.phone,
+        date:         formatDate(state.selectedDate),
+        hour:         state.selectedHour
     };
 
     try {
-        const res = await fetch(`${API_BASE}/api/bookings`, {
-            method: 'POST',
+        const res    = await fetch(`${API_BASE}/api/bookings`, {
+            method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body:    JSON.stringify(payload)
         });
         const result = await res.json();
+
         if (result.success) {
             state.booking = result.data;
-            goToStep4();
+            goToStep(4);
         } else {
             errorEl.textContent = result.message || 'Booking failed. Please try again.';
         }
     } catch (e) {
         errorEl.textContent = 'Network error. Please try again.';
     } finally {
-        submitBtn.disabled = false;
+        submitBtn.disabled    = false;
         submitBtn.textContent = 'Confirm Booking';
     }
 }
 
-// ===== STEP 4: Confirmation =====
-function goToStep4() {
-    state.step = 4;
+// ── Reset ─────────────────────────────────────────────────────
+function resetBooking() {
+    state.step            = 1;
+    state.selectedService = null;
+    state.selectedDate    = null;
+    state.selectedHour    = null;
+    state.slots           = [];
+    state.customerName    = '';
+    state.phone           = '';
+    state.email           = '';
+    state.booking         = null;
+
+    const fields = ['customer-name', 'customer-phone', 'customer-email'];
+    fields.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+
     updateStepUI();
-    renderConfirmation();
 }
 
-function renderConfirmation() {
-    const detailsEl = document.getElementById('confirmation-details');
-    const dateStr = state.selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    detailsEl.innerHTML = `
-        <p><strong>Name:</strong> ${state.customerName}</p>
-        <p><strong>Phone:</strong> ${state.phone}</p>
-        <p><strong>Date:</strong> ${dateStr}</p>
-        <p><strong>Time:</strong> ${formatHour(state.selectedHour)}</p>
-        <p><strong>Booking ID:</strong> #${state.booking?.id || 'N/A'}</p>
-        <p><strong>Status:</strong> ${state.booking?.status || 'Pending'}</p>
-    `;
-}
-
-function initStep4() {
-    const restartBtn = document.getElementById('restart-btn');
-    restartBtn.addEventListener('click', () => {
-        state.step = 1;
-        state.selectedDate = null;
-        state.selectedHour = null;
-        state.slots = [];
-        state.customerName = '';
-        state.phone = '';
-        state.booking = null;
-        document.getElementById('customer-name').value = '';
-        document.getElementById('customer-phone').value = '';
-        updateStepUI();
-        initStep1(); // Refresh today's check
-    });
-}
-
-// ===== Init =====
+// ── Wire up DOM events ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    initStep1();
-    initStep2();
-    initStep3();
-    initStep4();
+    // Load services
+    loadServices();
     updateStepUI();
+
+    // Step 1 next
+    const step1Next = document.getElementById('step1-next');
+    if (step1Next) step1Next.addEventListener('click', () => goToStep(2));
+
+    // Step 2 nav
+    const step2Back = document.getElementById('step2-back');
+    const step2Next = document.getElementById('step2-next');
+    if (step2Back) step2Back.addEventListener('click', () => goToStep(1));
+    if (step2Next) step2Next.addEventListener('click', () => goToStep(3));
+
+    // Step 3 submit
+    const step3Back   = document.getElementById('step3-back');
+    const step3Submit = document.getElementById('step3-submit');
+    if (step3Back)   step3Back.addEventListener('click', () => goToStep(2));
+    if (step3Submit) step3Submit.addEventListener('click', submitBooking);
+
+    // Restart
+    const restartBtn = document.getElementById('restart-btn');
+    if (restartBtn) restartBtn.addEventListener('click', resetBooking);
 });

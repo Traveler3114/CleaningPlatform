@@ -16,7 +16,8 @@ public class ServiceCatalogController : ControllerBase
     public ServiceCatalogController(ServiceCatalogManager manager) { _manager = manager; }
 
     [HttpGet]
-    [Authorize(Policy = PermissionKeys.ServicesView)]
+    //[Authorize(Policy = PermissionKeys.ServicesView)]
+    [AllowAnonymous]
     public async Task<OperationResult<List<ServiceCatalogResponse>>> Get(CancellationToken ct)
         => OperationResult<List<ServiceCatalogResponse>>.Ok(await _manager.GetAllAsync(ct));
 
