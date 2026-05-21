@@ -12,9 +12,9 @@ public class BookingManager
 {
     private readonly AppDbContext _db;
     private readonly AvailabilityManager _availability;
-    private readonly SopManager? _sopManager;
+    private readonly SopManager _sopManager;
 
-    public BookingManager(AppDbContext db, AvailabilityManager availability, SopManager? sopManager = null)
+    public BookingManager(AppDbContext db, AvailabilityManager availability, SopManager sopManager)
     {
         _db = db;
         _availability = availability;
