@@ -14,7 +14,7 @@
 ['cs', 'js', 'html', 'css', 'cpp', 'py']
 
 ## Top Keywords
-['public', 'get', 'set', 'string', 'using', 'return', 'int', 'var', 'await', 'cleaningplatformapi', 'operationresult', 'task', '_db', 'async', 'new', 'cancellationtoken', 'class', 'result', 'dto', 'list', 'booking', 'null', 'rem', 'user', 'request', 'microsoft', 'date', 'datetime', 'fail', 'client']
+['public', 'get', 'set', 'string', 'var', 'return', 'using', 'int', 'await', 'rem', 'operationresult', 'cleaningplatformapi', 'class', 'task', '_db', 'new', 'async', 'booking', 'div', 'cancellationtoken', 'date', 'list', 'dto', 'null', 'color', 'result', 'user', 'background', 'datetime', 'font']
 
 ## Notes
 - Multi-ignore system enabled

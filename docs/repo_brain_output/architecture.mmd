@@ -1,165 +1,23 @@
 graph TD
-    Contracts["Contracts"]
-    InvoiceContract["InvoiceContract"]
-    Contracts --> InvoiceContract
-    SopContract["SopContract"]
-    Contracts --> SopContract
-    AuthContract["AuthContract"]
-    Contracts --> AuthContract
-    ClientContract["ClientContract"]
-    Contracts --> ClientContract
-    KanbanContract["KanbanContract"]
-    Contracts --> KanbanContract
-    ServiceCatalogContract["ServiceCatalogContract"]
-    Contracts --> ServiceCatalogContract
-    ScheduleContract["ScheduleContract"]
-    Contracts --> ScheduleContract
-    ReportingContract["ReportingContract"]
-    Contracts --> ReportingContract
-    BookingContract["BookingContract"]
-    Contracts --> BookingContract
-    RoleContract["RoleContract"]
-    Contracts --> RoleContract
-    Entities["Entities"]
-    BoatBookingDetails["BoatBookingDetails"]
-    Entities --> BoatBookingDetails
-    JobCompletionRateView["JobCompletionRateView"]
-    Entities --> JobCompletionRateView
-    Client["Client"]
-    Entities --> Client
-    TopClientView["TopClientView"]
-    Entities --> TopClientView
-    RolePermission["RolePermission"]
-    Entities --> RolePermission
-    BookingService["BookingService"]
-    Entities --> BookingService
-    ChecklistItem["ChecklistItem"]
-    Entities --> ChecklistItem
-    BookingView["BookingView"]
-    Entities --> BookingView
-    ServiceCatalog["ServiceCatalog"]
-    Entities --> ServiceCatalog
-    InvoiceBooking["InvoiceBooking"]
-    Entities --> InvoiceBooking
-    VehicleBookingDetails["VehicleBookingDetails"]
-    Entities --> VehicleBookingDetails
-    ChecklistResponse["ChecklistResponse"]
-    Entities --> ChecklistResponse
-    WeeklySchedule["WeeklySchedule"]
-    Entities --> WeeklySchedule
-    InvoiceSummaryView["InvoiceSummaryView"]
-    Entities --> InvoiceSummaryView
-    BookingSopAssignment["BookingSopAssignment"]
-    Entities --> BookingSopAssignment
-    InvoiceLine["InvoiceLine"]
-    Entities --> InvoiceLine
-    Site["Site"]
-    Entities --> Site
-    Invoice["Invoice"]
-    Entities --> Invoice
-    Payment["Payment"]
-    Entities --> Payment
-    OverdueInvoiceSummaryView["OverdueInvoiceSummaryView"]
-    Entities --> OverdueInvoiceSummaryView
-    DateOverride["DateOverride"]
-    Entities --> DateOverride
-    Role["Role"]
-    Entities --> Role
-    SopTemplate["SopTemplate"]
-    Entities --> SopTemplate
-    EmployeeUtilizationView["EmployeeUtilizationView"]
-    Entities --> EmployeeUtilizationView
-    MonthlyRevenueView["MonthlyRevenueView"]
-    Entities --> MonthlyRevenueView
-    BookingAssignment["BookingAssignment"]
-    Entities --> BookingAssignment
-    Contact["Contact"]
-    Entities --> Contact
-    Employee["Employee"]
-    Entities --> Employee
-    Booking["Booking"]
-    Entities --> Booking
-    net10_0["net10.0"]
-    CleaningPlatformAPI_GlobalUsings_g["CleaningPlatformAPI.GlobalUsings.g"]
-    net10_0 --> CleaningPlatformAPI_GlobalUsings_g
-    CleaningPlatformAPI_MvcApplicationPartsAssemblyInfo["CleaningPlatformAPI.MvcApplicationPartsAssemblyInfo"]
-    net10_0 --> CleaningPlatformAPI_MvcApplicationPartsAssemblyInfo
-    CleaningPlatformAPI_RazorAssemblyInfo["CleaningPlatformAPI.RazorAssemblyInfo"]
-    net10_0 --> CleaningPlatformAPI_RazorAssemblyInfo
-    _NETCoreAppVersionv10_0_AssemblyAttributes[".NETCoreApp,Version=v10.0.AssemblyAttributes"]
-    net10_0 --> _NETCoreAppVersionv10_0_AssemblyAttributes
-    CleaningPlatformAPI_AssemblyInfo["CleaningPlatformAPI.AssemblyInfo"]
-    net10_0 --> CleaningPlatformAPI_AssemblyInfo
-    js["js"]
-    site["site"]
-    js --> site
-    app["app"]
-    js --> app
-    Managers["Managers"]
-    AuthManager["AuthManager"]
-    Managers --> AuthManager
-    TokenManager["TokenManager"]
-    Managers --> TokenManager
-    ScheduleManager["ScheduleManager"]
-    Managers --> ScheduleManager
-    KanbanManager["KanbanManager"]
-    Managers --> KanbanManager
-    EmployeeManager["EmployeeManager"]
-    Managers --> EmployeeManager
-    DateOverrideManager["DateOverrideManager"]
-    Managers --> DateOverrideManager
-    InvoiceManager["InvoiceManager"]
-    Managers --> InvoiceManager
-    ClientManager["ClientManager"]
-    Managers --> ClientManager
-    RoleManager["RoleManager"]
-    Managers --> RoleManager
-    AvailabilityManager["AvailabilityManager"]
-    Managers --> AvailabilityManager
-    ServiceCatalogManager["ServiceCatalogManager"]
-    Managers --> ServiceCatalogManager
-    ReportingManager["ReportingManager"]
-    Managers --> ReportingManager
-    SopManager["SopManager"]
-    Managers --> SopManager
-    BookingManager["BookingManager"]
-    Managers --> BookingManager
-    Admin["Admin"]
-    Invoices_cshtml["Invoices.cshtml"]
-    Admin --> Invoices_cshtml
-    Bookings_cshtml["Bookings.cshtml"]
-    Admin --> Bookings_cshtml
-    Sops_cshtml["Sops.cshtml"]
-    Admin --> Sops_cshtml
-    Profile_cshtml["Profile.cshtml"]
-    Admin --> Profile_cshtml
-    ClientDetail_cshtml["ClientDetail.cshtml"]
-    Admin --> ClientDetail_cshtml
-    Roles_cshtml["Roles.cshtml"]
-    Admin --> Roles_cshtml
-    Login_cshtml["Login.cshtml"]
-    Admin --> Login_cshtml
-    Users_cshtml["Users.cshtml"]
-    Admin --> Users_cshtml
-    InvoiceDetail_cshtml["InvoiceDetail.cshtml"]
-    Admin --> InvoiceDetail_cshtml
-    Clients_cshtml["Clients.cshtml"]
-    Admin --> Clients_cshtml
-    Reports_cshtml["Reports.cshtml"]
-    Admin --> Reports_cshtml
-    Services_cshtml["Services.cshtml"]
-    Admin --> Services_cshtml
-    Schedule_cshtml["Schedule.cshtml"]
-    Admin --> Schedule_cshtml
-    Kanban_cshtml["Kanban.cshtml"]
-    Admin --> Kanban_cshtml
-    BookingDetail_cshtml["BookingDetail.cshtml"]
-    Admin --> BookingDetail_cshtml
-    Index_cshtml["Index.cshtml"]
-    Admin --> Index_cshtml
-    CleaningPlatform["CleaningPlatform"]
-    Index["Index"]
-    CleaningPlatform --> Index
+    Mapping["Mapping"]
+    ClientMapper["ClientMapper"]
+    Mapping --> ClientMapper
+    RoleMapper["RoleMapper"]
+    Mapping --> RoleMapper
+    ScheduleMapper["ScheduleMapper"]
+    Mapping --> ScheduleMapper
+    ServiceCatalogMapper["ServiceCatalogMapper"]
+    Mapping --> ServiceCatalogMapper
+    UserMapper["UserMapper"]
+    Mapping --> UserMapper
+    SopMapper["SopMapper"]
+    Mapping --> SopMapper
+    BookingMapper["BookingMapper"]
+    Mapping --> BookingMapper
+    ReportingMapper["ReportingMapper"]
+    Mapping --> ReportingMapper
+    InvoiceMapper["InvoiceMapper"]
+    Mapping --> InvoiceMapper
     Common["Common"]
     OperationResult["OperationResult"]
     Common --> OperationResult
@@ -167,81 +25,223 @@ graph TD
     Common --> RoleNames
     PermissionKeys["PermissionKeys"]
     Common --> PermissionKeys
+    Managers["Managers"]
+    TokenManager["TokenManager"]
+    Managers --> TokenManager
+    BookingManager["BookingManager"]
+    Managers --> BookingManager
+    EmployeeManager["EmployeeManager"]
+    Managers --> EmployeeManager
+    ServiceCatalogManager["ServiceCatalogManager"]
+    Managers --> ServiceCatalogManager
+    ClientManager["ClientManager"]
+    Managers --> ClientManager
+    DateOverrideManager["DateOverrideManager"]
+    Managers --> DateOverrideManager
+    KanbanManager["KanbanManager"]
+    Managers --> KanbanManager
+    ScheduleManager["ScheduleManager"]
+    Managers --> ScheduleManager
+    ReportingManager["ReportingManager"]
+    Managers --> ReportingManager
+    SopManager["SopManager"]
+    Managers --> SopManager
+    InvoiceManager["InvoiceManager"]
+    Managers --> InvoiceManager
+    AuthManager["AuthManager"]
+    Managers --> AuthManager
+    RoleManager["RoleManager"]
+    Managers --> RoleManager
+    AvailabilityManager["AvailabilityManager"]
+    Managers --> AvailabilityManager
+    Contracts["Contracts"]
+    KanbanContract["KanbanContract"]
+    Contracts --> KanbanContract
+    RoleContract["RoleContract"]
+    Contracts --> RoleContract
+    InvoiceContract["InvoiceContract"]
+    Contracts --> InvoiceContract
+    ServiceCatalogContract["ServiceCatalogContract"]
+    Contracts --> ServiceCatalogContract
+    ScheduleContract["ScheduleContract"]
+    Contracts --> ScheduleContract
+    ClientContract["ClientContract"]
+    Contracts --> ClientContract
+    AuthContract["AuthContract"]
+    Contracts --> AuthContract
+    SopContract["SopContract"]
+    Contracts --> SopContract
+    BookingContract["BookingContract"]
+    Contracts --> BookingContract
+    ReportingContract["ReportingContract"]
+    Contracts --> ReportingContract
+    Entities["Entities"]
+    BookingView["BookingView"]
+    Entities --> BookingView
+    BookingAssignment["BookingAssignment"]
+    Entities --> BookingAssignment
+    VehicleBookingDetails["VehicleBookingDetails"]
+    Entities --> VehicleBookingDetails
+    InvoiceLine["InvoiceLine"]
+    Entities --> InvoiceLine
+    EmployeeUtilizationView["EmployeeUtilizationView"]
+    Entities --> EmployeeUtilizationView
+    ChecklistResponse["ChecklistResponse"]
+    Entities --> ChecklistResponse
+    DateOverride["DateOverride"]
+    Entities --> DateOverride
+    Employee["Employee"]
+    Entities --> Employee
+    Client["Client"]
+    Entities --> Client
+    BookingService["BookingService"]
+    Entities --> BookingService
+    InvoiceBooking["InvoiceBooking"]
+    Entities --> InvoiceBooking
+    OverdueInvoiceSummaryView["OverdueInvoiceSummaryView"]
+    Entities --> OverdueInvoiceSummaryView
+    Site["Site"]
+    Entities --> Site
+    WeeklySchedule["WeeklySchedule"]
+    Entities --> WeeklySchedule
+    InvoiceSummaryView["InvoiceSummaryView"]
+    Entities --> InvoiceSummaryView
+    Payment["Payment"]
+    Entities --> Payment
+    Invoice["Invoice"]
+    Entities --> Invoice
+    ChecklistItem["ChecklistItem"]
+    Entities --> ChecklistItem
+    SopTemplate["SopTemplate"]
+    Entities --> SopTemplate
+    Contact["Contact"]
+    Entities --> Contact
+    Booking["Booking"]
+    Entities --> Booking
+    BoatBookingDetails["BoatBookingDetails"]
+    Entities --> BoatBookingDetails
+    ServiceCatalog["ServiceCatalog"]
+    Entities --> ServiceCatalog
+    TopClientView["TopClientView"]
+    Entities --> TopClientView
+    JobCompletionRateView["JobCompletionRateView"]
+    Entities --> JobCompletionRateView
+    RolePermission["RolePermission"]
+    Entities --> RolePermission
+    Role["Role"]
+    Entities --> Role
+    MonthlyRevenueView["MonthlyRevenueView"]
+    Entities --> MonthlyRevenueView
+    BookingSopAssignment["BookingSopAssignment"]
+    Entities --> BookingSopAssignment
     Controllers["Controllers"]
-    InvoiceController["InvoiceController"]
-    Controllers --> InvoiceController
-    ReportingController["ReportingController"]
-    Controllers --> ReportingController
-    ScheduleController["ScheduleController"]
-    Controllers --> ScheduleController
-    SopController["SopController"]
-    Controllers --> SopController
-    EmployeeController["EmployeeController"]
-    Controllers --> EmployeeController
+    AuthController["AuthController"]
+    Controllers --> AuthController
     KanbanController["KanbanController"]
     Controllers --> KanbanController
+    ScheduleController["ScheduleController"]
+    Controllers --> ScheduleController
+    ReportingController["ReportingController"]
+    Controllers --> ReportingController
     RoleController["RoleController"]
     Controllers --> RoleController
-    AvailabilityController["AvailabilityController"]
-    Controllers --> AvailabilityController
     DateOverrideController["DateOverrideController"]
     Controllers --> DateOverrideController
     ServiceCatalogController["ServiceCatalogController"]
     Controllers --> ServiceCatalogController
-    AuthController["AuthController"]
-    Controllers --> AuthController
+    AvailabilityController["AvailabilityController"]
+    Controllers --> AvailabilityController
+    EmployeeController["EmployeeController"]
+    Controllers --> EmployeeController
+    SopController["SopController"]
+    Controllers --> SopController
     ClientController["ClientController"]
     Controllers --> ClientController
+    InvoiceController["InvoiceController"]
+    Controllers --> InvoiceController
     BookingController["BookingController"]
     Controllers --> BookingController
-    Mapping["Mapping"]
-    UserMapper["UserMapper"]
-    Mapping --> UserMapper
-    ReportingMapper["ReportingMapper"]
-    Mapping --> ReportingMapper
-    RoleMapper["RoleMapper"]
-    Mapping --> RoleMapper
-    InvoiceMapper["InvoiceMapper"]
-    Mapping --> InvoiceMapper
-    ClientMapper["ClientMapper"]
-    Mapping --> ClientMapper
-    BookingMapper["BookingMapper"]
-    Mapping --> BookingMapper
-    SopMapper["SopMapper"]
-    Mapping --> SopMapper
-    ScheduleMapper["ScheduleMapper"]
-    Mapping --> ScheduleMapper
-    ServiceCatalogMapper["ServiceCatalogMapper"]
-    Mapping --> ServiceCatalogMapper
-    CleaningPlatformAPI["CleaningPlatformAPI"]
-    Program["Program"]
-    CleaningPlatformAPI --> Program
-    Enums["Enums"]
-    BookingStatus["BookingStatus"]
-    Enums --> BookingStatus
-    BookingServiceType["BookingServiceType"]
-    Enums --> BookingServiceType
+    Admin["Admin"]
+    BookingDetail_cshtml["BookingDetail.cshtml"]
+    Admin --> BookingDetail_cshtml
+    Invoices_cshtml["Invoices.cshtml"]
+    Admin --> Invoices_cshtml
+    Roles_cshtml["Roles.cshtml"]
+    Admin --> Roles_cshtml
+    Kanban_cshtml["Kanban.cshtml"]
+    Admin --> Kanban_cshtml
+    Users_cshtml["Users.cshtml"]
+    Admin --> Users_cshtml
+    Login_cshtml["Login.cshtml"]
+    Admin --> Login_cshtml
+    Schedule_cshtml["Schedule.cshtml"]
+    Admin --> Schedule_cshtml
+    Bookings_cshtml["Bookings.cshtml"]
+    Admin --> Bookings_cshtml
+    Sops_cshtml["Sops.cshtml"]
+    Admin --> Sops_cshtml
+    ClientDetail_cshtml["ClientDetail.cshtml"]
+    Admin --> ClientDetail_cshtml
+    Profile_cshtml["Profile.cshtml"]
+    Admin --> Profile_cshtml
+    Reports_cshtml["Reports.cshtml"]
+    Admin --> Reports_cshtml
+    Clients_cshtml["Clients.cshtml"]
+    Admin --> Clients_cshtml
+    Index_cshtml["Index.cshtml"]
+    Admin --> Index_cshtml
+    Services_cshtml["Services.cshtml"]
+    Admin --> Services_cshtml
+    InvoiceDetail_cshtml["InvoiceDetail.cshtml"]
+    Admin --> InvoiceDetail_cshtml
+    Extensions["Extensions"]
+    ClaimsPrincipalExtensions["ClaimsPrincipalExtensions"]
+    Extensions --> ClaimsPrincipalExtensions
     Authorization["Authorization"]
-    PermissionHandler["PermissionHandler"]
-    Authorization --> PermissionHandler
     PermissionRequirement["PermissionRequirement"]
     Authorization --> PermissionRequirement
+    PermissionHandler["PermissionHandler"]
+    Authorization --> PermissionHandler
+    Data["Data"]
+    AppDbContext["AppDbContext"]
+    Data --> AppDbContext
+    CleaningPlatform["CleaningPlatform"]
+    Index["Index"]
+    CleaningPlatform --> Index
+    Middleware["Middleware"]
+    SecurityStampValidator["SecurityStampValidator"]
+    Middleware --> SecurityStampValidator
+    Enums["Enums"]
+    BookingServiceType["BookingServiceType"]
+    Enums --> BookingServiceType
+    BookingStatus["BookingStatus"]
+    Enums --> BookingStatus
+    js["js"]
+    app["app"]
+    js --> app
+    site["site"]
+    js --> site
+    wwwroot["wwwroot"]
+    index["index"]
+    wwwroot --> index
     css["css"]
-    customer["customer"]
-    css --> customer
     site["site"]
     css --> site
     admin["admin"]
     css --> admin
-    Extensions["Extensions"]
-    ClaimsPrincipalExtensions["ClaimsPrincipalExtensions"]
-    Extensions --> ClaimsPrincipalExtensions
-    Middleware["Middleware"]
-    SecurityStampValidator["SecurityStampValidator"]
-    Middleware --> SecurityStampValidator
-    Data["Data"]
-    AppDbContext["AppDbContext"]
-    Data --> AppDbContext
-    wwwroot["wwwroot"]
-    index["index"]
-    wwwroot --> index
+    customer["customer"]
+    css --> customer
+    net10_0["net10.0"]
+    CleaningPlatformAPI_RazorAssemblyInfo["CleaningPlatformAPI.RazorAssemblyInfo"]
+    net10_0 --> CleaningPlatformAPI_RazorAssemblyInfo
+    _NETCoreAppVersionv10_0_AssemblyAttributes[".NETCoreApp,Version=v10.0.AssemblyAttributes"]
+    net10_0 --> _NETCoreAppVersionv10_0_AssemblyAttributes
+    CleaningPlatformAPI_MvcApplicationPartsAssemblyInfo["CleaningPlatformAPI.MvcApplicationPartsAssemblyInfo"]
+    net10_0 --> CleaningPlatformAPI_MvcApplicationPartsAssemblyInfo
+    CleaningPlatformAPI_GlobalUsings_g["CleaningPlatformAPI.GlobalUsings.g"]
+    net10_0 --> CleaningPlatformAPI_GlobalUsings_g
+    CleaningPlatformAPI_AssemblyInfo["CleaningPlatformAPI.AssemblyInfo"]
+    net10_0 --> CleaningPlatformAPI_AssemblyInfo
+    CleaningPlatformAPI["CleaningPlatformAPI"]
+    Program["Program"]
+    CleaningPlatformAPI --> Program
