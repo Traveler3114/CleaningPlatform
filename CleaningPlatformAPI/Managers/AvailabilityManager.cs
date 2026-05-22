@@ -34,6 +34,8 @@ public class AvailabilityManager
             .ToListAsync(ct);
 
         var slots = new List<AvailabilityResponse>();
+
+        // This is fine for a single-region business but worth a config option if the software is ever reused.
         TimeZoneInfo croatiaZone;
         try
         {
