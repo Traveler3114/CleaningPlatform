@@ -16,10 +16,16 @@ public class KanbanController : ControllerBase
     public KanbanController(KanbanManager kanbanManager) => _kanbanManager = kanbanManager;
 
     [HttpGet]
-    public async Task<OperationResult<KanbanBoardResponse>> Get([FromQuery] DateTime? date, [FromQuery] int? employeeId, CancellationToken ct) =>
-        OperationResult<KanbanBoardResponse>.Ok(await _kanbanManager.GetBoardAsync(date ?? DateTime.UtcNow.Date, employeeId, ct));
+    public async Task<ActionResult<OperationResult<KanbanBoardResponse>>> Get([FromQuery] DateTime? date, [FromQuery] int? employeeId, CancellationToken ct)
+    {
+        var board = await _kanbanManager.GetBoardAsync(date ?? DateTime.UtcNow.Date, employeeId, ct);
+        return Ok(OperationResult<KanbanBoardResponse>.Ok(board));
+    }
 
     [HttpGet("pipeline")]
-    public async Task<OperationResult<KanbanBoardResponse>> Pipeline(CancellationToken ct) =>
-        OperationResult<KanbanBoardResponse>.Ok(await _kanbanManager.GetPipelineAsync(ct));
+    public async Task<ActionResult<OperationResult<KanbanBoardResponse>>> Pipeline(CancellationToken ct)
+    {
+        var pipeline = await _kanbanManager.GetPipelineAsync(ct);
+        return Ok(OperationResult<KanbanBoardResponse>.Ok(pipeline));
+    }
 }

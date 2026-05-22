@@ -15,21 +15,30 @@ public class ClientManager
 
     public ClientManager(AppDbContext db) { _db = db; }
 
-    public async Task<List<ClientResponse>> GetAllAsync(string? search, string? type, CancellationToken ct = default)
+    public async Task<PagedResult<ClientResponse>> GetAllAsync(
+        PaginationParams pagination,
+        string? type = null,
+        CancellationToken ct = default)
     {
         var query = _db.Clients.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(search))
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
         {
-            var term = search.Trim().ToLower();
-            query = query.Where(c => c.ClientName.ToLower().Contains(term) || c.Contacts.Any(con => con.Phone.Contains(term)));
+            var term = pagination.Search.Trim().ToLower();
+            query = query.Where(c =>
+                c.ClientName.ToLower().Contains(term) ||
+                c.Contacts.Any(con => con.Phone.Contains(term)));
         }
 
         if (!string.IsNullOrWhiteSpace(type))
             query = query.Where(c => c.Type == type);
 
-        return await query
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
             .OrderBy(c => c.ClientName)
+            .Skip(pagination.Skip)
+            .Take(pagination.Take)
             .Select(c => new ClientResponse
             {
                 Id                   = c.Id,
@@ -46,9 +55,11 @@ public class ClientManager
                 TotalBookings        = c.Bookings.Count
             })
             .ToListAsync(ct);
+
+        return PagedResult<ClientResponse>.From(items, totalCount, pagination.Page, pagination.PageSize);
     }
 
-    public async Task<ClientResponse?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<OperationResult<ClientResponse>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var client = await _db.Clients
             .Include(c => c.Contacts)
@@ -62,7 +73,9 @@ public class ClientManager
                         .ThenInclude(e => e.Role)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
-        return client == null ? null : ClientMapper.ToProfileResponse(client);
+        return client == null
+            ? OperationResult<ClientResponse>.Fail($"Client #{id} was not found.")
+            : OperationResult<ClientResponse>.Ok(ClientMapper.ToProfileResponse(client));
     }
 
     public async Task<OperationResult<ClientResponse>> CreateAsync(CreateClientRequest dto, CancellationToken ct = default)
@@ -167,57 +180,13 @@ public class ClientManager
             client.Notes        = string.IsNullOrWhiteSpace(dto.Notes)        ? null : dto.Notes.Trim();
             client.UpdatedAt    = now;
 
-            var existingContactsById = client.Contacts.ToDictionary(c => c.Id, c => c);
-            var touchedContactIds    = new HashSet<int>();
-
-            foreach (var contactRequest in rawContacts)
-            {
-                Contact contact;
-                var contactId = contactRequest.Id.GetValueOrDefault();
-
-                if (contactId > 0)
-                {
-                    if (!existingContactsById.TryGetValue(contactId, out contact!))
-                        return OperationResult<ClientResponse>.Fail($"Contact #{contactId} was not found for client #{id}. It may have been deleted.");
-
-                    touchedContactIds.Add(contactId);
-                }
-                else
-                {
-                    contact = new Contact { ClientId = client.Id, CreatedAt = now };
-                    _db.Contacts.Add(contact);
-                    client.Contacts.Add(contact);
-                }
-
-                contact.ContactName = contactRequest.ContactName.Trim();
-                contact.Role        = string.IsNullOrWhiteSpace(contactRequest.Role)    ? null : contactRequest.Role.Trim();
-                contact.Phone       = contactRequest.Phone.Trim();
-                contact.Email       = string.IsNullOrWhiteSpace(contactRequest.Email)   ? null : contactRequest.Email.Trim();
-                contact.Address     = string.IsNullOrWhiteSpace(contactRequest.Address) ? null : contactRequest.Address.Trim();
-                contact.IsPrimary   = contactRequest.IsPrimary;
-                contact.IsActive    = contactRequest.IsActive;
-                contact.UpdatedAt   = now;
-            }
-
-            // Deactivate contacts not included in the update
-            foreach (var existing in client.Contacts.Where(c => c.Id > 0 && !touchedContactIds.Contains(c.Id)))
-            {
-                existing.IsActive  = false;
-                existing.IsPrimary = false;
-                existing.UpdatedAt = now;
-            }
+            SyncContacts(client, rawContacts, now);
 
             var activeContacts = client.Contacts.Where(c => c.IsActive).ToList();
             if (activeContacts.Count == 0)
                 return OperationResult<ClientResponse>.Fail("At least one active contact is required. You cannot deactivate all contacts.");
 
-            // Ensure exactly one primary
-            var primaryContact = activeContacts.FirstOrDefault(c => c.IsPrimary) ?? activeContacts.First();
-            foreach (var ac in activeContacts)
-            {
-                ac.IsPrimary  = ac.Id == primaryContact.Id;
-                ac.UpdatedAt  = now;
-            }
+            EnforceSinglePrimary(activeContacts, now);
 
             await _db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
@@ -227,6 +196,56 @@ public class ClientManager
         {
             await transaction.RollbackAsync(ct);
             throw;
+        }
+    }
+
+    private void SyncContacts(Client client, List<UpsertContactRequest> incoming, DateTime now)
+    {
+        var existingById     = client.Contacts.ToDictionary(c => c.Id, c => c);
+        var touchedContactIds = new HashSet<int>();
+
+        foreach (var req in incoming)
+        {
+            var contactId = req.Id.GetValueOrDefault();
+            Contact contact;
+
+            if (contactId > 0 && existingById.TryGetValue(contactId, out var existing))
+            {
+                contact = existing;
+                touchedContactIds.Add(contactId);
+            }
+            else
+            {
+                contact = new Contact { ClientId = client.Id, CreatedAt = now };
+                _db.Contacts.Add(contact);
+                client.Contacts.Add(contact);
+            }
+
+            contact.ContactName = req.ContactName.Trim();
+            contact.Role        = string.IsNullOrWhiteSpace(req.Role)    ? null : req.Role.Trim();
+            contact.Phone       = req.Phone.Trim();
+            contact.Email       = string.IsNullOrWhiteSpace(req.Email)   ? null : req.Email.Trim();
+            contact.Address     = string.IsNullOrWhiteSpace(req.Address) ? null : req.Address.Trim();
+            contact.IsPrimary   = req.IsPrimary;
+            contact.IsActive    = req.IsActive;
+            contact.UpdatedAt   = now;
+        }
+
+        foreach (var c in client.Contacts.Where(c => c.Id > 0 && !touchedContactIds.Contains(c.Id)))
+        {
+            c.IsActive  = false;
+            c.IsPrimary = false;
+            c.UpdatedAt = now;
+        }
+    }
+
+    private static void EnforceSinglePrimary(List<Contact> activeContacts, DateTime now)
+    {
+        var primary = activeContacts.FirstOrDefault(c => c.IsPrimary) ?? activeContacts[0];
+        foreach (var c in activeContacts)
+        {
+            c.IsPrimary = c.Id == primary.Id;
+            c.UpdatedAt = now;
         }
     }
 

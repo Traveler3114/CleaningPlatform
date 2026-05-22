@@ -16,21 +16,33 @@ public class ScheduleController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.ScheduleView)]
-    public async Task<OperationResult<List<WeeklyScheduleResponse>>> Get(CancellationToken ct)
-        => OperationResult<List<WeeklyScheduleResponse>>.Ok(await _manager.GetScheduleAsync(ct));
+    public async Task<ActionResult<OperationResult<List<WeeklyScheduleResponse>>>> Get(CancellationToken ct)
+    {
+        var schedule = await _manager.GetScheduleAsync(ct);
+        return Ok(OperationResult<List<WeeklyScheduleResponse>>.Ok(schedule));
+    }
 
     [HttpPost]
     [Authorize(Policy = PermissionKeys.ScheduleEdit)]
-    public async Task<OperationResult<WeeklyScheduleResponse>> Post([FromBody] WeeklyScheduleRequest request, CancellationToken ct)
-        => await _manager.CreateDayAsync(request, ct);
+    public async Task<ActionResult<OperationResult<WeeklyScheduleResponse>>> Post([FromBody] WeeklyScheduleRequest request, CancellationToken ct)
+    {
+        var result = await _manager.CreateDayAsync(request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
 
     [HttpPut("{dayOfWeek}")]
     [Authorize(Policy = PermissionKeys.ScheduleEdit)]
-    public async Task<OperationResult<WeeklyScheduleResponse>> Put(int dayOfWeek, [FromBody] UpdateWeeklyScheduleRequest request, CancellationToken ct)
-        => await _manager.UpdateDayAsync(dayOfWeek, request, ct);
+    public async Task<ActionResult<OperationResult<WeeklyScheduleResponse>>> Put(int dayOfWeek, [FromBody] UpdateWeeklyScheduleRequest request, CancellationToken ct)
+    {
+        var result = await _manager.UpdateDayAsync(dayOfWeek, request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
 
     [HttpDelete("{dayOfWeek}")]
     [Authorize(Policy = PermissionKeys.ScheduleEdit)]
-    public async Task<OperationResult<bool>> Delete(int dayOfWeek, CancellationToken ct)
-        => await _manager.DeleteDayAsync(dayOfWeek, ct);
+    public async Task<ActionResult<OperationResult<bool>>> Delete(int dayOfWeek, CancellationToken ct)
+    {
+        var result = await _manager.DeleteDayAsync(dayOfWeek, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
 }

@@ -19,15 +19,17 @@ public class AuthController : ControllerBase
 
     [Authorize(Policy = PermissionKeys.UsersCreate)]
     [HttpPost("register")]
-    public async Task<OperationResult<string>> Register([FromBody] CreateUserRequest request, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<string>>> Register([FromBody] CreateUserRequest request, CancellationToken ct)
     {
-        return await _authManager.RegisterAsync(request, ct);
+        var result = await _authManager.RegisterAsync(request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<OperationResult<string>> Login([FromBody] LoginRequest request, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<string>>> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        return await _authManager.LoginAsync(request, ct);
+        var result = await _authManager.LoginAsync(request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 }

@@ -32,11 +32,33 @@ public class BookingManager
         return bookings.Select(BookingMapper.ToResponse).ToList();
     }
 
-    public async Task<List<BookingResponse>> GetAllBookingsAsync(CancellationToken ct = default)
+    public async Task<PagedResult<BookingResponse>> GetAllBookingsAsync(
+        PaginationParams pagination,
+        string? statusFilter = null,
+        CancellationToken ct = default)
     {
-        var bookings = await _db.BookingViews.AsNoTracking()
-            .OrderByDescending(b => b.ScheduledDate).ToListAsync(ct);
-        return bookings.Select(b => BookingMapper.ToResponse(b, b.ClientId)).ToList();
+        var query = _db.BookingViews.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+        {
+            var term = pagination.Search.Trim().ToLower();
+            query = query.Where(b => b.ClientName.ToLower().Contains(term));
+        }
+
+        if (!string.IsNullOrWhiteSpace(statusFilter))
+            query = query.Where(b => b.Status == statusFilter);
+
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
+            .OrderByDescending(b => b.ScheduledDate)
+            .ThenByDescending(b => b.BookingId)
+            .Skip(pagination.Skip)
+            .Take(pagination.Take)
+            .ToListAsync(ct);
+
+        var mapped = items.Select(b => BookingMapper.ToResponse(b, b.ClientId)).ToList();
+        return PagedResult<BookingResponse>.From(mapped, totalCount, pagination.Page, pagination.PageSize);
     }
 
     public async Task<List<BookingResponse>> GetAssignedBookingsForEmployeeAsync(int employeeId, CancellationToken ct = default)
@@ -51,14 +73,16 @@ public class BookingManager
         return bookings.Select(BookingMapper.ToResponse).ToList();
     }
 
-    public async Task<BookingResponse?> GetBookingDetailByIdAsync(int id, CancellationToken ct = default)
+    public async Task<OperationResult<BookingResponse>> GetBookingDetailByIdAsync(int id, CancellationToken ct = default)
     {
         var booking = await _db.Bookings
             .Include(b => b.Client).ThenInclude(c => c.Contacts)
             .Include(b => b.Assignments).ThenInclude(a => a.Employee).ThenInclude(e => e.Role)
             .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
             .FirstOrDefaultAsync(b => b.Id == id, ct);
-        return booking is null ? null : BookingMapper.ToDetailResponse(booking);
+        return booking is null
+            ? OperationResult<BookingResponse>.Fail($"Booking #{id} was not found.")
+            : OperationResult<BookingResponse>.Ok(BookingMapper.ToDetailResponse(booking));
     }
 
     public async Task<OperationResult<BookingResponse>> CreateBookingAsync(CreateBookingRequest dto, CancellationToken ct = default)
@@ -180,17 +204,12 @@ public class BookingManager
         _db.Bookings.Add(booking);
         await _db.SaveChangesAsync(ct);
 
-        if (_sopManager is not null)
-        {
-            var templates = await _sopManager.GetDefaultTemplatesForServiceTypeAsync(dto.ServiceType.ToString(), ct);
-            foreach (var template in templates)
-                await _sopManager.AssignSopToBookingAsync(booking.Id, new AssignSopRequest { SopTemplateId = template.Id }, ct);
-        }
+        var templates = await _sopManager.GetDefaultTemplatesForServiceTypeAsync(dto.ServiceType.ToString(), ct);
+        foreach (var template in templates)
+            await _sopManager.AssignSopToBookingAsync(booking.Id, new AssignSopRequest { SopTemplateId = template.Id }, ct);
 
         var detail = await GetBookingDetailByIdAsync(booking.Id, ct);
-        return detail is null
-            ? OperationResult<BookingResponse>.Fail("Booking was created but could not be loaded. Please refresh.")
-            : OperationResult<BookingResponse>.Ok(detail);
+        return detail.Success ? detail : OperationResult<BookingResponse>.Fail("Booking was created but could not be loaded. Please refresh.");
     }
 
     public async Task<OperationResult<BookingResponse>> UpdateStatusAsync(int id, string status, CancellationToken ct = default)
@@ -244,9 +263,7 @@ public class BookingManager
         await _db.SaveChangesAsync(ct);
 
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
-        return detail == null
-            ? OperationResult<BookingResponse>.Fail($"Booking #{bookingId} was not found after update.")
-            : OperationResult<BookingResponse>.Ok(detail);
+        return detail;
     }
 
     public async Task<OperationResult<string>> RemoveAssignmentAsync(int bookingId, int assignmentId, CancellationToken ct = default)
@@ -299,9 +316,7 @@ public class BookingManager
         await _db.SaveChangesAsync(ct);
 
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
-        return detail == null
-            ? OperationResult<BookingResponse>.Fail($"Booking #{bookingId} was not found after update.")
-            : OperationResult<BookingResponse>.Ok(detail);
+        return detail;
     }
 
     public async Task<OperationResult<string>> RemoveServiceAsync(int bookingId, int bookingServiceId, CancellationToken ct = default)
@@ -335,8 +350,6 @@ public class BookingManager
         await _db.SaveChangesAsync(ct);
 
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
-        return detail == null
-            ? OperationResult<BookingResponse>.Fail($"Booking #{bookingId} was not found after update.")
-            : OperationResult<BookingResponse>.Ok(detail);
+        return detail;
     }
 }

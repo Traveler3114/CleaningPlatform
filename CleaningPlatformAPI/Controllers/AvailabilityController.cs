@@ -19,8 +19,9 @@ public class AvailabilityController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<OperationResult<List<AvailabilityResponse>>> Get([FromQuery] DateTime date, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<AvailabilityResponse>>>> Get([FromQuery] DateTime date, CancellationToken ct)
     {
-        return OperationResult<List<AvailabilityResponse>>.Ok(await _manager.GetSlotsAsync(date, ct));
+        var slots = await _manager.GetSlotsAsync(date, ct);
+        return Ok(OperationResult<List<AvailabilityResponse>>.Ok(slots));
     }
 }

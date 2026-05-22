@@ -16,24 +16,39 @@ public class ReportingController : ControllerBase
     public ReportingController(ReportingManager reportingManager) => _reportingManager = reportingManager;
 
     [HttpGet("revenue")]
-    public async Task<OperationResult<List<MonthlyRevenueResponse>>> Revenue(CancellationToken ct)
-        => OperationResult<List<MonthlyRevenueResponse>>.Ok(await _reportingManager.GetMonthlyRevenueAsync(ct));
+    public async Task<ActionResult<OperationResult<List<MonthlyRevenueResponse>>>> Revenue(CancellationToken ct)
+    {
+        var data = await _reportingManager.GetMonthlyRevenueAsync(ct);
+        return Ok(OperationResult<List<MonthlyRevenueResponse>>.Ok(data));
+    }
 
     [HttpGet("top-clients")]
-    public async Task<OperationResult<List<TopClientResponse>>> TopClients(CancellationToken ct)
-        => OperationResult<List<TopClientResponse>>.Ok(await _reportingManager.GetTopClientsAsync(ct));
+    public async Task<ActionResult<OperationResult<List<TopClientResponse>>>> TopClients(CancellationToken ct)
+    {
+        var data = await _reportingManager.GetTopClientsAsync(ct);
+        return Ok(OperationResult<List<TopClientResponse>>.Ok(data));
+    }
 
     [HttpGet("utilization")]
-    public async Task<OperationResult<List<EmployeeUtilizationResponse>>> Utilization(CancellationToken ct)
-        => OperationResult<List<EmployeeUtilizationResponse>>.Ok(await _reportingManager.GetEmployeeUtilizationAsync(ct));
+    public async Task<ActionResult<OperationResult<List<EmployeeUtilizationResponse>>>> Utilization(CancellationToken ct)
+    {
+        var data = await _reportingManager.GetEmployeeUtilizationAsync(ct);
+        return Ok(OperationResult<List<EmployeeUtilizationResponse>>.Ok(data));
+    }
 
     [HttpGet("completion")]
-    public async Task<OperationResult<List<JobCompletionRateResponse>>> Completion(CancellationToken ct)
-        => OperationResult<List<JobCompletionRateResponse>>.Ok(await _reportingManager.GetJobCompletionRateAsync(ct));
+    public async Task<ActionResult<OperationResult<List<JobCompletionRateResponse>>>> Completion(CancellationToken ct)
+    {
+        var data = await _reportingManager.GetJobCompletionRateAsync(ct);
+        return Ok(OperationResult<List<JobCompletionRateResponse>>.Ok(data));
+    }
 
     [HttpGet("overdue")]
-    public async Task<OperationResult<OverdueInvoiceSummaryResponse>> Overdue(CancellationToken ct)
-        => OperationResult<OverdueInvoiceSummaryResponse>.Ok(await _reportingManager.GetOverdueInvoiceSummaryAsync(ct));
+    public async Task<ActionResult<OperationResult<OverdueInvoiceSummaryResponse>>> Overdue(CancellationToken ct)
+    {
+        var data = await _reportingManager.GetOverdueInvoiceSummaryAsync(ct);
+        return Ok(OperationResult<OverdueInvoiceSummaryResponse>.Ok(data));
+    }
 
     [HttpGet("export")]
     [Authorize(Policy = PermissionKeys.ReportsExport)]

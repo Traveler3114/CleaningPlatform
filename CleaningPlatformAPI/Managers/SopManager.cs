@@ -23,13 +23,15 @@ public class SopManager
         return templates.Select(SopMapper.ToTemplateResponse).ToList();
     }
 
-    public async Task<SopTemplateResponse?> GetTemplateByIdAsync(int id, CancellationToken ct = default)
+    public async Task<OperationResult<SopTemplateResponse>> GetTemplateByIdAsync(int id, CancellationToken ct = default)
     {
         var template = await _db.SopTemplates
             .Include(t => t.ServiceCatalog)
             .Include(t => t.ChecklistItems)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
-        return template is null ? null : SopMapper.ToTemplateResponse(template);
+        return template is null
+            ? OperationResult<SopTemplateResponse>.Fail($"SOP template #{id} was not found.")
+            : OperationResult<SopTemplateResponse>.Ok(SopMapper.ToTemplateResponse(template));
     }
 
     public async Task<OperationResult<SopTemplateResponse>> CreateTemplateAsync(CreateSopTemplateRequest dto, CancellationToken ct = default)
@@ -50,7 +52,7 @@ public class SopManager
         };
         _db.SopTemplates.Add(template);
         await _db.SaveChangesAsync(ct);
-        return OperationResult<SopTemplateResponse>.Ok((await GetTemplateByIdAsync(template.Id, ct))!);
+        return OperationResult<SopTemplateResponse>.Ok((await GetTemplateByIdAsync(template.Id, ct)).Data!);
     }
 
     public async Task<OperationResult<SopTemplateResponse>> UpdateTemplateAsync(int id, CreateSopTemplateRequest dto, CancellationToken ct = default)
@@ -66,7 +68,7 @@ public class SopManager
         template.IsActive = dto.IsActive;
         template.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
-        return OperationResult<SopTemplateResponse>.Ok((await GetTemplateByIdAsync(id, ct))!);
+        return OperationResult<SopTemplateResponse>.Ok((await GetTemplateByIdAsync(id, ct)).Data!);
     }
 
     public async Task<OperationResult<string>> DeleteTemplateAsync(int id, CancellationToken ct = default)
@@ -82,7 +84,6 @@ public class SopManager
 
         if (hasAssignments)
         {
-            // Soft-delete: cannot remove a template that is linked to existing bookings
             template.IsActive = false;
             template.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
@@ -92,7 +93,6 @@ public class SopManager
         await using var tx = await _db.Database.BeginTransactionAsync(ct);
         try
         {
-            // Cascade: remove checklist responses first (EF is set to Restrict, not Cascade)
             var itemIds = template.ChecklistItems.Select(i => i.Id).ToList();
             if (itemIds.Count > 0)
             {
@@ -162,8 +162,6 @@ public class SopManager
         await using var tx = await _db.Database.BeginTransactionAsync(ct);
         try
         {
-            // Cascade: remove all recorded responses for this item before removing it
-            // (EF FK is Restrict so we must do this manually)
             var responses = await _db.ChecklistResponses
                 .Where(r => r.ChecklistItemId == itemId)
                 .ToListAsync(ct);

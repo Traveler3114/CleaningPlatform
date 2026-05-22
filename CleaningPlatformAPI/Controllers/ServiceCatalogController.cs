@@ -1,4 +1,3 @@
-// ===== ServiceCatalogController.cs =====
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
@@ -16,23 +15,34 @@ public class ServiceCatalogController : ControllerBase
     public ServiceCatalogController(ServiceCatalogManager manager) { _manager = manager; }
 
     [HttpGet]
-    //[Authorize(Policy = PermissionKeys.ServicesView)]
     [AllowAnonymous]
-    public async Task<OperationResult<List<ServiceCatalogResponse>>> Get(CancellationToken ct)
-        => OperationResult<List<ServiceCatalogResponse>>.Ok(await _manager.GetAllAsync(ct));
+    public async Task<ActionResult<OperationResult<List<ServiceCatalogResponse>>>> Get(CancellationToken ct)
+    {
+        var services = await _manager.GetAllAsync(ct);
+        return Ok(OperationResult<List<ServiceCatalogResponse>>.Ok(services));
+    }
 
     [HttpPost]
     [Authorize(Policy = PermissionKeys.ServicesManage)]
-    public async Task<OperationResult<ServiceCatalogResponse>> Post([FromBody] ServiceCatalogUpsertRequest request, CancellationToken ct)
-        => await _manager.CreateAsync(request, ct);
+    public async Task<ActionResult<OperationResult<ServiceCatalogResponse>>> Post([FromBody] ServiceCatalogUpsertRequest request, CancellationToken ct)
+    {
+        var result = await _manager.CreateAsync(request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
 
     [HttpPut("{id}")]
     [Authorize(Policy = PermissionKeys.ServicesManage)]
-    public async Task<OperationResult<ServiceCatalogResponse>> Put(int id, [FromBody] ServiceCatalogUpsertRequest request, CancellationToken ct)
-        => await _manager.UpdateAsync(id, request, ct);
+    public async Task<ActionResult<OperationResult<ServiceCatalogResponse>>> Put(int id, [FromBody] ServiceCatalogUpsertRequest request, CancellationToken ct)
+    {
+        var result = await _manager.UpdateAsync(id, request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
 
     [HttpDelete("{id}")]
     [Authorize(Policy = PermissionKeys.ServicesManage)]
-    public async Task<OperationResult<string>> Delete(int id, CancellationToken ct)
-        => await _manager.DeleteAsync(id, ct);
+    public async Task<ActionResult<OperationResult<string>>> Delete(int id, CancellationToken ct)
+    {
+        var result = await _manager.DeleteAsync(id, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
 }
