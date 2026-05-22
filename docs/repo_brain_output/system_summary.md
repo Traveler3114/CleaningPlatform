@@ -2,19 +2,19 @@
 # PROJECT SUMMARY
 
 ## Files analyzed
-114
+133
 
 ## Files ignored
 32
 
 ## Modules
-18
+17
 
 ## Languages
 ['cs', 'js', 'html', 'css', 'cpp', 'py']
 
 ## Top Keywords
-['public', 'get', 'set', 'string', 'var', 'return', 'using', 'int', 'await', 'rem', 'operationresult', 'cleaningplatformapi', 'class', 'task', '_db', 'new', 'async', 'booking', 'div', 'cancellationtoken', 'date', 'list', 'dto', 'null', 'color', 'result', 'user', 'background', 'datetime', 'font']
+['class', 'div', 'public', 'get', 'set', 'string', 'nav', 'var', 'html', 'return', 'admin', 'document', 'await', 'button', 'const', 'int', 'getelementbyid', 'rem', 'operationresult', 'using', 'res', 'span', 'href', 'btn', 'value', 'date', 'data', 'async', 'booking', 'result']
 
 ## Notes
 - Multi-ignore system enabled
