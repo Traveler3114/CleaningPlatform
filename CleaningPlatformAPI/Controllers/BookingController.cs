@@ -1,8 +1,9 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
+using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CleaningPlatformAPI.Controllers;
 
@@ -115,5 +116,25 @@ public class BookingController : ControllerBase
     {
         var result = await _bookingManager.UpdateServicePriceAsync(id, serviceId, request.FinalPrice, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
+
+
+    [HttpGet("employee/assigned")]
+    [Authorize] // or [Authorize(Policy = PermissionKeys.BookingsView)] – any authenticated user can see their own assigned bookings
+    public async Task<ActionResult<OperationResult<List<BookingResponse>>>> GetAssignedForEmployee(
+        [FromQuery] int? employeeId,
+        CancellationToken ct)
+    {
+        var targetId = employeeId ?? User.GetEmployeeId();
+        if (targetId == null)
+            return Unauthorized(OperationResult<List<BookingResponse>>.Fail("Invalid token."));
+
+        // Optional: Check that the requesting user is allowed to see this employee's assignments
+        var currentUserId = User.GetEmployeeId();
+        if (currentUserId != targetId && !User.IsInRole(RoleNames.Owner) && !User.IsInRole(RoleNames.Admin))
+            return Forbid();
+
+        var result = await _bookingManager.GetAssignedBookingsForEmployeeAsync(targetId.Value, ct);
+        return Ok(OperationResult<List<BookingResponse>>.Ok(result));
     }
 }

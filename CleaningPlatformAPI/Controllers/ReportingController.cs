@@ -93,4 +93,11 @@ public class ReportingController : ControllerBase
         workbook.SaveAs(stream);
         return stream.ToArray();
     }
+
+    [HttpGet("dashboard")]
+    public async Task<ActionResult<OperationResult<DashboardSummaryResponse>>> GetDashboardSummary(CancellationToken ct)
+    {
+        var result = await _reportingManager.GetDashboardSummaryAsync(ct);
+        return Ok(OperationResult<DashboardSummaryResponse>.Ok(result));
+    }
 }

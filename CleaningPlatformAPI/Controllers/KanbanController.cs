@@ -1,8 +1,9 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
+using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CleaningPlatformAPI.Controllers;
 
@@ -28,4 +29,31 @@ public class KanbanController : ControllerBase
         var pipeline = await _kanbanManager.GetPipelineAsync(ct);
         return Ok(OperationResult<KanbanBoardResponse>.Ok(pipeline));
     }
+
+
+
+    [HttpGet("resourcegrid")]
+    public async Task<ActionResult<OperationResult<ResourceGridResponse>>> GetResourceGrid(
+        [FromQuery] DateTime anchorDate,
+        [FromQuery] string view,
+        CancellationToken ct)
+    {
+        var result = await _kanbanManager.GetResourceGridAsync(anchorDate, view, ct);
+        return Ok(OperationResult<ResourceGridResponse>.Ok(result));
+    }
+
+    [HttpGet("employee-week")]
+    [Authorize(Policy = PermissionKeys.PagesKanban)] // or use a more specific policy if needed
+    public async Task<ActionResult<OperationResult<WeeklyBoardResponse>>> GetEmployeeWeek(
+        [FromQuery] DateTime weekStart,
+        CancellationToken ct)
+    {
+        var userId = User.GetEmployeeId();
+        if (userId == null)
+            return Unauthorized(OperationResult<WeeklyBoardResponse>.Fail("Invalid token."));
+
+        var result = await _kanbanManager.GetEmployeeWeekAsync(userId.Value, weekStart, ct);
+        return Ok(OperationResult<WeeklyBoardResponse>.Ok(result));
+    }
 }
+
