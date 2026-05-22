@@ -1,0 +1,84 @@
+// admin-api.js – shared API client with JWT
+const API_BASE = '/api';
+
+function getToken() {
+    return localStorage.getItem('accessToken');
+}
+
+function setToken(token) {
+    if (token) localStorage.setItem('accessToken', token);
+    else localStorage.removeItem('accessToken');
+}
+
+function isAuthenticated() {
+    return !!getToken();
+}
+
+function logout() {
+    localStorage.removeItem('accessToken');
+    window.location.href = 'login.html';
+}
+
+async function apiFetch(endpoint, options = {}) {
+    const token = getToken();
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers
+    });
+    
+    // Handle 401 Unauthorized
+    if (response.status === 401) {
+        logout();
+        throw new Error('Session expired. Please login again.');
+    }
+    
+    // For file downloads, return raw response
+    if (options.download) return response;
+    
+    const data = await response.json();
+    if (!response.ok) {
+        // If the response is an OperationResult, use its message
+        const errorMsg = data.message || `HTTP ${response.status}`;
+        throw new Error(errorMsg);
+    }
+    return data; // OperationResult<T> shape: { success, message, data }
+}
+
+// Helper to check permissions from token claims (simplified – you may need to decode JWT)
+async function getUserPermissions() {
+    // Decode JWT payload (assuming it contains "permission" claims)
+    const token = getToken();
+    if (!token) return [];
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        // Owner gets all permissions (backend doesn't add individual permission claims for owner)
+        if (payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] === 'Owner') {
+            // Return a special marker or fetch all permissions from somewhere?
+            // For simplicity, we'll treat Owner as having everything.
+            return ['*'];
+        }
+        const perms = payload['permission'] || [];
+        return Array.isArray(perms) ? perms : [perms];
+    } catch (e) {
+        return [];
+    }
+}
+
+function hasPermission(permission) {
+    // This would need to be async if we decode token each time – but we can cache.
+    // We'll implement a cache after login.
+    return window._userPermissions ? window._userPermissions.includes('*') || window._userPermissions.includes(permission) : false;
+}
+
+async function loadCurrentUser() {
+    const result = await apiFetch('/users/me');
+    if (result.success) return result.data;
+    throw new Error(result.message);
+}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Users — Cleaning Platform</title>
+    <link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body>
+<header class="admin-header">
+    <div class="header-inner">
+        <span class="brand">Cleaning Platform</span>
+        <nav class="main-nav">
+            <div class="nav-group">
+                <button class="nav-group__label">Operations</button>
+                <div class="nav-group__dropdown">
+                    <a href="/admin/index.html" class="nav-group__item">Daily View</a>
+                    <a href="/admin/calendar.html" class="nav-group__item">Calendar</a>
+                </div>
+            </div>
+            <div class="nav-group">
+                <button class="nav-group__label">Bookings</button>
+                <div class="nav-group__dropdown">
+                    <a href="/admin/bookings.html" class="nav-group__item">Bookings</a>
+                    <a href="/admin/invoices.html" class="nav-group__item">Invoices</a>
+                </div>
+            </div>
+            <div class="nav-group">
+                <button class="nav-group__label">Clients</button>
+                <div class="nav-group__dropdown">
+                    <a href="/admin/clients.html" class="nav-group__item">Client List</a>
+                </div>
+            </div>
+            <div class="nav-group">
+                <button class="nav-group__label">Config</button>
+                <div class="nav-group__dropdown">
+                    <a href="/admin/schedule.html" class="nav-group__item">Schedule</a>
+                    <a href="/admin/services.html" class="nav-group__item">Services</a>
+                    <a href="/admin/sops.html" class="nav-group__item">SOPs</a>
+                </div>
+            </div>
+            <div class="nav-group">
+                <button class="nav-group__label">Admin</button>
+                <div class="nav-group__dropdown">
+                    <a href="/admin/users.html" class="nav-group__item">Users</a>
+                    <a href="/admin/roles.html" class="nav-group__item">Roles</a>
+                    <a href="/admin/reports.html" class="nav-group__item">Reports</a>
+                </div>
+            </div>
+        </nav>
+        <div class="user-pill">
+            <div class="user-pill-info">
+                <a href="/admin/profile.html" class="user-pill-name">Loading...</a>
+                <span class="user-pill-role"></span>
+            </div>
+            <button id="logout-btn" class="logout-btn">Sign out</button>
+        </div>
+    </div>
+</header>
+<main class="admin-main">
+    <div class="page-header">
+        <h1>Users</h1>
+        <button id="new-user-btn" class="btn">+ New User</button>
+    </div>
+    <div id="error-container"></div>
+    <div id="users-list"></div>
+
+    <!-- New User Modal -->
+    <div id="new-user-modal" class="modal-backdrop" style="display:none;">
+        <div class="modal-panel">
+            <h2 class="section-title">Create User</h2>
+            <form id="create-user-form" class="form-grid two-col">
+                <label>First name <input type="text" id="user-firstname" class="text-input" required /></label>
+                <label>Last name <input type="text" id="user-lastname" class="text-input" required /></label>
+                <label>Password <input type="password" id="user-password" class="text-input" required /></label>
+                <label>Role <select id="user-role" class="status-select"></select></label>
+                <div class="modal-actions full-span">
+                    <button type="submit" class="btn btn-sm">Create</button>
+                    <button type="button" class="btn btn-sm" onclick="closeUserModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Detail Modal -->
+    <div id="user-modal" class="modal-backdrop" style="display:none;">
+        <div class="modal-panel">
+            <h2 class="section-title">User Details</h2>
+            <div class="form-grid two-col">
+                <label>Username <input id="modal-username" class="text-input" readonly /></label>
+                <label>Full Name <input id="modal-fullname" class="text-input" readonly /></label>
+                <label>Role <input id="modal-role" class="text-input" readonly /></label>
+                <label>Active <input id="modal-active" class="text-input" readonly /></label>
+            </div>
+            <h3 class="section-title" style="margin-top:1rem;">Reset Password</h3>
+            <form id="reset-password-form" class="form-grid">
+                <input type="hidden" id="reset-user-id" />
+                <label>New Password <input type="password" id="reset-password" class="text-input" required minlength="8" /></label>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-sm">Reset Password</button>
+                    <button type="button" class="btn btn-sm" onclick="closeDetailUserModal()">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<footer class="admin-footer"><p>&copy; 2025 Cleaning Platform</p></footer>
+<script src="/admin/js/admin-api.js"></script>
+<script src="/admin/js/admin-common.js"></script>
+<script src="/admin/js/users.js"></script>
+</body>
+</html>

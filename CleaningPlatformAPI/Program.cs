@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Data.SqlClient;
@@ -9,7 +8,6 @@ using Scalar.AspNetCore;
 using System.Text;
 using System.Text.Json.Serialization;
 using CleaningPlatformAPI.Authorization;
-using CleaningPlatformAPI.Middleware;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Managers;
@@ -22,11 +20,14 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 builder.Services.AddOpenApi();
-builder.Services.AddRazorPages();
+
+// Razor Pages removed - using static HTML instead
+// builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Register all managers
 builder.Services.AddScoped<AvailabilityManager>();
 builder.Services.AddScoped<BookingManager>();
 builder.Services.AddScoped<ScheduleManager>();
@@ -50,42 +51,22 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = "MultiScheme";
-    options.DefaultAuthenticateScheme = "MultiScheme";
-    options.DefaultChallengeScheme = "MultiScheme";
-})
-.AddPolicyScheme("MultiScheme", "MultiScheme", options =>
-{
-    options.ForwardDefaultSelector = ctx =>
+// JWT only authentication - no cookies
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        if (ctx.Request.Path.StartsWithSegments("/api"))
-            return JwtBearerDefaults.AuthenticationScheme;
-        return CookieAuthenticationDefaults.AuthenticationScheme;
-    };
-})
-.AddJwtBearer(options =>
-{
-    options.MapInboundClaims = false;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-    };
-})
-.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
-{
-    options.LoginPath = "/Admin/Login";
-    options.AccessDeniedPath = "/Admin/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromHours(8);
-    options.SlidingExpiration = true;
-});
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
 
 builder.Services.AddAuthorization(options =>
 {
@@ -134,7 +115,6 @@ app.UseExceptionHandler(errorApp =>
         }
         else if (error?.Error is DbUpdateException dbEx)
         {
-            // Unwrap to find the inner SqlException
             var innerSql = dbEx.InnerException as SqlException;
             message = innerSql != null
                 ? GetSqlErrorMessage(innerSql)
@@ -166,15 +146,20 @@ app.UseExceptionHandler(errorApp =>
 
 app.UseRouting();
 app.UseAuthentication();
-app.UseMiddleware<SecurityStampValidator>();
 app.UseAuthorization();
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
+// Static files configuration for Option 1 (customer/ and admin/ folders)
+app.UseStaticFiles(); // Serves from wwwroot root
+
+// Root URL redirects
+app.MapGet("/", () => Results.Redirect("/customer/index.html"));
+app.MapGet("/admin", () => Results.Redirect("/admin/index.html"));
+
+// API controllers
 app.MapControllers();
-app.MapRazorPages();
-app.MapGet("/admin", () => Results.Redirect("/Admin/Index"));
-app.MapFallbackToFile("index.html");
+
+// Fallback - if no route matches, serve customer index.html
+app.MapFallbackToFile("customer/index.html");
 
 using (var scope = app.Services.CreateScope())
 {
@@ -189,7 +174,6 @@ app.Run();
 
 static string GetSqlErrorMessage(SqlException sqlEx)
 {
-    // Check all SQL errors in the collection
     foreach (SqlError err in sqlEx.Errors)
     {
         switch (err.Number)
