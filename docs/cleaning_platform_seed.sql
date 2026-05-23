@@ -49,7 +49,7 @@ CREATE TABLE Clients (
     IsActive        BIT             NOT NULL DEFAULT 1,
     CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
-    CONSTRAINT CHK_Client_Type CHECK (Type IN ('OneTime', 'RepeatIndividual', 'RepeatBusiness'))
+    CONSTRAINT CHK_Client_Type CHECK (Type IN ('Person', 'Business'))
 );
 GO
 CREATE INDEX IX_Clients_Name ON Clients(ClientName);
@@ -526,9 +526,9 @@ WITH N AS (
 INSERT INTO Clients (ClientName, Type, Oib, PaymentTerms, Notes, IsActive)
 SELECT
     CONCAT('Client ', n),
-    CHOOSE((n % 3) + 1, 'OneTime', 'RepeatIndividual', 'RepeatBusiness'),
+    CASE WHEN n % 2 = 0 THEN 'Person' ELSE 'Business' END,   -- alternate Person/Business
     RIGHT('00000000000' + CAST(10000000000 + n AS VARCHAR(11)), 11),
-    CHOOSE((n % 4) + 1, 'Net30', 'Net15', 'DueOnReceipt', 'Net45'),
+    CASE WHEN n % 4 = 0 THEN 'Net30' WHEN n % 3 = 0 THEN 'Net15' WHEN n % 5 = 0 THEN 'DueOnReceipt' ELSE NULL END,
     CONCAT('Mock client notes for client ', n),
     CASE WHEN n % 15 = 0 THEN 0 ELSE 1 END
 FROM N;

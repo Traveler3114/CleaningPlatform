@@ -50,14 +50,12 @@ function renderClients(pagedResult) {
 
 function renderKPIs(clients) {
     const total = clients.length;
-    const oneTime = clients.filter(c => c.type === 'OneTime').length;
-    const repeatInd = clients.filter(c => c.type === 'RepeatIndividual').length;
-    const repeatBus = clients.filter(c => c.type === 'RepeatBusiness').length;
+    const persons = clients.filter(c => c.type === 'Person').length;
+    const businesses = clients.filter(c => c.type === 'Business').length;
     document.getElementById('kpi-grid').innerHTML = `
         <div class="kpi-card"><span>Total clients</span><strong>${total}</strong></div>
-        <div class="kpi-card"><span>OneTime</span><strong>${oneTime}</strong></div>
-        <div class="kpi-card"><span>RepeatIndividual</span><strong>${repeatInd}</strong></div>
-        <div class="kpi-card"><span>RepeatBusiness</span><strong>${repeatBus}</strong></div>
+        <div class="kpi-card"><span>Persons</span><strong>${persons}</strong></div>
+        <div class="kpi-card"><span>Businesses</span><strong>${businesses}</strong></div>
     `;
 }
 
