@@ -17,18 +17,38 @@ public class InvoiceManager
 
     public InvoiceManager(AppDbContext db) { _db = db; }
 
-    public async Task<List<InvoiceSummaryResponse>> GetAllAsync(CancellationToken ct = default)
+    public async Task<PagedResult<InvoiceSummaryResponse>> GetAllAsync(
+        PaginationParams pagination,
+        CancellationToken ct = default)
     {
-        var invoices = await _db.Invoices
+        var query = _db.Invoices
             .Include(i => i.Client)
             .Include(i => i.Payments)
             .Include(i => i.InvoiceBookings)
-            .OrderByDescending(i => i.IssueDate).ThenByDescending(i => i.Id)
+            .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(pagination.Search))
+        {
+            var term = pagination.Search.ToLower();
+            query = query.Where(i =>
+                i.InvoiceNumber.ToLower().Contains(term) ||
+                i.Client.ClientName.ToLower().Contains(term));
+        }
+
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
+            .OrderByDescending(i => i.IssueDate)
+            .ThenByDescending(i => i.Id)
+            .Skip(pagination.Skip)
+            .Take(pagination.Take)
+            .Select(i => InvoiceMapper.ToSummaryResponse(i))
             .ToListAsync(ct);
-        return invoices.Select(InvoiceMapper.ToSummaryResponse).ToList();
+
+        return PagedResult<InvoiceSummaryResponse>.From(items, totalCount, pagination.Page, pagination.PageSize);
     }
 
-    public async Task<InvoiceDetailResponse?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<OperationResult<InvoiceDetailResponse>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var invoice = await _db.Invoices
             .Include(i => i.Client)
@@ -36,7 +56,9 @@ public class InvoiceManager
             .Include(i => i.Payments)
             .Include(i => i.InvoiceBookings)
             .FirstOrDefaultAsync(i => i.Id == id, ct);
-        return invoice == null ? null : InvoiceMapper.ToDetailResponse(invoice);
+        return invoice == null
+            ? OperationResult<InvoiceDetailResponse>.Fail($"Invoice #{id} was not found.")
+            : OperationResult<InvoiceDetailResponse>.Ok(InvoiceMapper.ToDetailResponse(invoice));
     }
 
     public async Task<OperationResult<InvoiceDetailResponse>> CreateFromBookingAsync(int bookingId, int? createdByEmployeeId, CancellationToken ct = default)
@@ -116,9 +138,7 @@ public class InvoiceManager
         await transaction.CommitAsync(ct);
 
         var created = await GetByIdAsync(invoice.Id, ct);
-        return created == null
-            ? OperationResult<InvoiceDetailResponse>.Fail("Invoice was created but could not be loaded. Please refresh.")
-            : OperationResult<InvoiceDetailResponse>.Ok(created);
+        return created;
     }
 
     public async Task<OperationResult<InvoiceDetailResponse>> RecordPaymentAsync(int invoiceId, RecordPaymentRequest request, int? recordedBy, CancellationToken ct = default)
@@ -156,9 +176,7 @@ public class InvoiceManager
         await _db.SaveChangesAsync(ct);
 
         var updated = await GetByIdAsync(invoiceId, ct);
-        return updated == null
-            ? OperationResult<InvoiceDetailResponse>.Fail($"Invoice #{invoiceId} was not found.")
-            : OperationResult<InvoiceDetailResponse>.Ok(updated);
+        return updated;
     }
 
     public async Task<OperationResult<InvoiceDetailResponse>> UpdateStatusAsync(int invoiceId, string status, CancellationToken ct = default)
@@ -176,9 +194,7 @@ public class InvoiceManager
         await _db.SaveChangesAsync(ct);
 
         var updated = await GetByIdAsync(invoiceId, ct);
-        return updated == null
-            ? OperationResult<InvoiceDetailResponse>.Fail($"Invoice #{invoiceId} was not found.")
-            : OperationResult<InvoiceDetailResponse>.Ok(updated);
+        return updated;
     }
 
     private async Task<string> GenerateInvoiceNumberAsync(CancellationToken ct)

@@ -20,39 +20,40 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpGet("me")]
-    public async Task<OperationResult<UserResponse>> Me(CancellationToken ct)
+    public async Task<ActionResult<OperationResult<UserResponse>>> Me(CancellationToken ct)
     {
         var userId = User.GetEmployeeId();
         if (userId == null)
-            return OperationResult<UserResponse>.Fail("Invalid token.");
+            return Unauthorized(OperationResult<UserResponse>.Fail("Invalid token."));
 
-        var user = await _userManager.GetByIdAsync(userId.Value, ct);
-        return user == null
-            ? OperationResult<UserResponse>.Fail("User not found.")
-            : OperationResult<UserResponse>.Ok(user);
+        var result = await _userManager.GetByIdAsync(userId.Value, ct);
+        return result.Success ? Ok(result) : Unauthorized(result);
     }
 
     [HttpGet("/api/employees")]
-    public async Task<OperationResult<List<EmployeeSimpleResponse>>> GetActiveEmployees(CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<EmployeeSimpleResponse>>>> GetActiveEmployees(CancellationToken ct)
     {
-        return OperationResult<List<EmployeeSimpleResponse>>.Ok(await _userManager.GetActiveEmployeesAsync(ct));
+        var employees = await _userManager.GetActiveEmployeesAsync(ct);
+        return Ok(OperationResult<List<EmployeeSimpleResponse>>.Ok(employees));
     }
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.UsersEdit)]
-    public async Task<OperationResult<List<UserResponse>>> GetAll(CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<UserResponse>>>> GetAll(CancellationToken ct)
     {
-        return OperationResult<List<UserResponse>>.Ok(await _userManager.GetAllUsersAsync(ct));
+        var users = await _userManager.GetAllUsersAsync(ct);
+        return Ok(OperationResult<List<UserResponse>>.Ok(users));
     }
 
     [HttpPut("{id}/toggle")]
     [Authorize(Policy = PermissionKeys.UsersEdit)]
-    public async Task<OperationResult<UserResponse>> Toggle(int id, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<UserResponse>>> Toggle(int id, CancellationToken ct)
     {
         var requestingUserId = User.GetEmployeeId();
         if (requestingUserId == null)
-            return OperationResult<UserResponse>.Fail("Invalid token.");
+            return Unauthorized(OperationResult<UserResponse>.Fail("Invalid token."));
 
-        return await _userManager.ToggleActiveAsync(id, requestingUserId.Value, ct);
+        var result = await _userManager.ToggleActiveAsync(id, requestingUserId.Value, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 }

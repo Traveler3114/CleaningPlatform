@@ -10,10 +10,7 @@ public class EmployeeManager
 {
     private readonly AppDbContext _db;
 
-    public EmployeeManager(AppDbContext db)
-    {
-        _db = db;
-    }
+    public EmployeeManager(AppDbContext db) => _db = db;
 
     public async Task<List<UserResponse>> GetAllUsersAsync(CancellationToken ct = default)
     {
@@ -30,19 +27,20 @@ public class EmployeeManager
         return users.Select(u => UserMapper.ToResponse(u, rolePermissions.GetValueOrDefault(u.Role?.Name ?? string.Empty, []))).ToList();
     }
 
-    public async Task<UserResponse?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<OperationResult<UserResponse>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var user = await _db.Employees
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
-        if (user == null) return null;
+        if (user == null)
+            return OperationResult<UserResponse>.Fail($"User #{id} was not found.");
 
         var permissions = await _db.RolePermissions
             .Where(rp => rp.RoleId == user.RoleId)
             .Select(rp => rp.PermissionKey)
             .ToListAsync(ct);
 
-        return UserMapper.ToResponse(user, permissions);
+        return OperationResult<UserResponse>.Ok(UserMapper.ToResponse(user, permissions));
     }
 
     public async Task<List<EmployeeSimpleResponse>> GetActiveEmployeesAsync(CancellationToken ct = default)

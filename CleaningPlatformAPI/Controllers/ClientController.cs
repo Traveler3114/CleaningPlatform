@@ -6,7 +6,6 @@ using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
 
-[ApiController]
 [Route("api/clients")]
 [Authorize]
 public class ClientController : ControllerBase
@@ -20,60 +19,73 @@ public class ClientController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.ClientsView)]
-    public async Task<OperationResult<List<ClientResponse>>> GetAll([FromQuery] string? search, [FromQuery] string? type, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<PagedResult<ClientResponse>>>> GetAll(
+        [FromQuery] PaginationParams pagination,
+        [FromQuery] string? type,
+        CancellationToken ct)
     {
-        return OperationResult<List<ClientResponse>>.Ok(await _clientManager.GetAllAsync(search, type, ct));
+        var paged = await _clientManager.GetAllAsync(pagination, type, ct);
+        return Ok(OperationResult<PagedResult<ClientResponse>>.Ok(paged));
     }
 
-    [HttpGet("{id:int}")]
+    [HttpGet("{id:int}", Name = "GetClientById")]
     [Authorize(Policy = PermissionKeys.ClientsView)]
-    public async Task<OperationResult<ClientResponse>> GetById(int id, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<ClientResponse>>> GetById(int id, CancellationToken ct)
     {
-        var client = await _clientManager.GetByIdAsync(id, ct);
-        return client is null
-            ? OperationResult<ClientResponse>.Fail($"Client #{id} was not found.")
-            : OperationResult<ClientResponse>.Ok(client);
+        var result = await _clientManager.GetByIdAsync(id, ct);
+        return result.Success ? Ok(result) : NotFound(result);
     }
 
     [HttpPost]
     [Authorize(Policy = PermissionKeys.ClientsCreate)]
-    public async Task<OperationResult<ClientResponse>> Create([FromBody] CreateClientRequest request, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<ClientResponse>>> Create(
+        [FromBody] CreateClientRequest request, CancellationToken ct)
     {
-        return await _clientManager.CreateAsync(request, ct);
+        var result = await _clientManager.CreateAsync(request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Policy = PermissionKeys.ClientsEdit)]
-    public async Task<OperationResult<ClientResponse>> UpdateProfile(int id, [FromBody] UpdateClientProfileRequest request, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<ClientResponse>>> UpdateProfile(
+        int id, [FromBody] UpdateClientProfileRequest request, CancellationToken ct)
     {
-        return await _clientManager.UpdateProfileAsync(id, request, ct);
+        var result = await _clientManager.UpdateProfileAsync(id, request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
     [HttpGet("{id:int}/sites")]
     [Authorize(Policy = PermissionKeys.ClientsView)]
-    public async Task<OperationResult<List<SiteResponse>>> GetSites(int id, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<SiteResponse>>>> GetSites(int id, CancellationToken ct)
     {
-        return await _clientManager.GetSitesAsync(id, ct);
+        var result = await _clientManager.GetSitesAsync(id, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
     [HttpPost("{id:int}/sites")]
     [Authorize(Policy = PermissionKeys.ClientsEdit)]
-    public async Task<OperationResult<SiteResponse>> CreateSite(int id, [FromBody] UpsertSiteRequest request, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<SiteResponse>>> CreateSite(
+        int id, [FromBody] UpsertSiteRequest request, CancellationToken ct)
     {
-        return await _clientManager.CreateSiteAsync(id, request, ct);
+        var result = await _clientManager.CreateSiteAsync(id, request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
     [HttpPut("{id:int}/sites/{siteId:int}")]
     [Authorize(Policy = PermissionKeys.ClientsEdit)]
-    public async Task<OperationResult<SiteResponse>> UpdateSite(int id, int siteId, [FromBody] UpsertSiteRequest request, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<SiteResponse>>> UpdateSite(
+        int id, int siteId, [FromBody] UpsertSiteRequest request, CancellationToken ct)
     {
-        return await _clientManager.UpdateSiteAsync(id, siteId, request, ct);
+        var result = await _clientManager.UpdateSiteAsync(id, siteId, request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
     [HttpDelete("{id:int}/sites/{siteId:int}")]
     [Authorize(Policy = PermissionKeys.ClientsDelete)]
-    public async Task<OperationResult<SiteResponse>> DeactivateSite(int id, int siteId, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<SiteResponse>>> DeactivateSite(
+        int id, int siteId, CancellationToken ct)
     {
-        return await _clientManager.DeactivateSiteAsync(id, siteId, ct);
+        var result = await _clientManager.DeactivateSiteAsync(id, siteId, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 }

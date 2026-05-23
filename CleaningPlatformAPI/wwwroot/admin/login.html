@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Login — Cleaning Platform</title>
+    <link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body class="login-page">
+<main class="login-card">
+    <h1>Admin Login</h1>
+    <div id="login-error" class="alert alert-danger" style="display:none;"></div>
+    <form id="login-form" class="form-grid">
+        <div>
+            <label>Username</label>
+            <input type="text" id="username" class="text-input full-width" required />
+        </div>
+        <div>
+            <label>Password</label>
+            <input type="password" id="password" class="text-input full-width" required />
+        </div>
+        <button type="submit" class="btn">Sign in</button>
+    </form>
+</main>
+<script>
+    const API_BASE = '/api';
+    const loginForm = document.getElementById('login-form');
+    const errorDiv = document.getElementById('login-error');
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorDiv.style.display = 'none';
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        try {
+            const res = await fetch(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const result = await res.json();
+            if (result.success && result.data) {
+                localStorage.setItem('accessToken', result.data);
+                window.location.href = 'index.html';
+            } else {
+                errorDiv.textContent = result.message || 'Invalid credentials.';
+                errorDiv.style.display = 'block';
+            }
+        } catch (err) {
+            errorDiv.textContent = 'Network error. Please try again.';
+            errorDiv.style.display = 'block';
+        }
+    });
+
+    // If already logged in, redirect to dashboard
+    if (localStorage.getItem('accessToken')) {
+        window.location.href = 'index.html';
+    }
+</script>
+</body>
+</html>

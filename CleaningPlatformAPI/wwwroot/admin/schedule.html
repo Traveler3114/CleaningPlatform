@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Schedule — Cleaning Platform</title>
+    <link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body>
+    <header class="admin-header">
+        <div class="header-inner">
+            <span class="brand">Cleaning Platform</span>
+            <nav class="main-nav">
+                <div class="nav-group">
+                    <button class="nav-group__label">Operations</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/index.html" class="nav-group__item">Daily View</a>
+                        <a href="/admin/calendar.html" class="nav-group__item">Calendar</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Bookings</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/bookings.html" class="nav-group__item">Bookings</a>
+                        <a href="/admin/invoices.html" class="nav-group__item">Invoices</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Clients</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/clients.html" class="nav-group__item">Client List</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Config</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/schedule.html" class="nav-group__item">Schedule</a>
+                        <a href="/admin/services.html" class="nav-group__item">Services</a>
+                        <a href="/admin/sops.html" class="nav-group__item">SOPs</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Admin</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/users.html" class="nav-group__item">Users</a>
+                        <a href="/admin/roles.html" class="nav-group__item">Roles</a>
+                        <a href="/admin/reports.html" class="nav-group__item">Reports</a>
+                    </div>
+                </div>
+            </nav>
+            <div class="user-pill">
+                <div class="user-pill-info">
+                    <a href="/admin/profile.html" class="user-pill-name">Loading...</a>
+                    <span class="user-pill-role"></span>
+                </div>
+                <button id="logout-btn" class="logout-btn">Sign out</button>
+            </div>
+        </div>
+    </header>
+    <main class="admin-main">
+        <div class="page-header">
+            <h1>Schedule</h1>
+            <button id="add-day-btn" class="btn">+ Add Day</button>
+        </div>
+        <div id="error-container"></div>
+        <div id="schedule-list"></div>
+
+        <section class="detail-section" style="margin-top: 2rem;">
+            <div class="page-header" style="margin-bottom:0;">
+                <h2 class="section-title">Date Overrides</h2>
+                <button id="open-override-modal" class="btn btn-sm">+ Add Override</button>
+            </div>
+            <div id="overrides-list"></div>
+        </section>
+
+        <!-- Schedule Modal -->
+        <div id="schedule-modal" class="modal-backdrop" style="display:none;">
+            <div class="modal-panel">
+                <h2 class="section-title" id="schedule-modal-title">Add Day</h2>
+                <form id="schedule-add-form" class="form-grid two-col">
+                    <label>Day <select id="schedule-day" class="status-select"><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></label>
+                    <label>Start Hour <input type="number" id="schedule-start" class="small-input" required /></label>
+                    <label>End Hour <input type="number" id="schedule-end" class="small-input" required /></label>
+                    <label>Capacity <input type="number" id="schedule-capacity" class="small-input" required /></label>
+                    <div class="modal-actions full-span"><button type="submit" class="btn btn-sm">Save</button><button type="button" class="btn btn-sm" onclick="closeScheduleModal()">Cancel</button></div>
+                </form>
+                <form id="schedule-delete-form" style="display:none; margin-top:0.75rem;"><button type="submit" class="btn btn-sm" onclick="return confirm('Delete this day?')">Delete</button></form>
+            </div>
+        </div>
+
+        <!-- Override Modal -->
+        <div id="override-modal" class="modal-backdrop" style="display:none;">
+            <div class="modal-panel">
+                <h2 id="override-modal-title">Date Override</h2>
+                <form id="override-form" class="form-grid two-col">
+                    <input type="hidden" id="override-id" />
+                    <label>Date <input type="date" id="override-date" class="date-input" required /></label>
+                    <label>Start hour <input type="number" id="override-start" class="small-input" /></label>
+                    <label>End hour <input type="number" id="override-end" class="small-input" /></label>
+                    <label>Capacity <input type="number" id="override-capacity" class="small-input" /></label>
+                    <label class="checkbox-label"><input type="checkbox" id="override-closed" /> Closed all day</label>
+                    <div class="modal-actions full-span"><button type="submit" class="btn btn-sm">Save Override</button><button type="button" class="btn btn-sm" onclick="closeOverrideModal()">Cancel</button></div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer class="admin-footer"><p>&copy; 2025 Cleaning Platform</p></footer>
+    <script src="/admin/js/admin-api.js"></script>
+    <script src="/admin/js/admin-common.js"></script>
+    <script src="/admin/js/schedule.js"></script>
+</body>
+</html>

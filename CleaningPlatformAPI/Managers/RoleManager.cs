@@ -11,10 +11,7 @@ public class RoleManager
 {
     private readonly AppDbContext _db;
 
-    public RoleManager(AppDbContext db)
-    {
-        _db = db;
-    }
+    public RoleManager(AppDbContext db) => _db = db;
 
     public async Task<List<RoleResponse>> GetAllRolesAsync(CancellationToken ct = default)
     {
@@ -26,13 +23,14 @@ public class RoleManager
         return roles.Select(RoleMapper.ToResponse).ToList();
     }
 
-    public async Task<RoleResponse?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<OperationResult<RoleResponse>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var role = await _db.Roles
             .Include(r => r.Permissions)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
-
-        return role == null ? null : RoleMapper.ToResponse(role);
+        return role == null
+            ? OperationResult<RoleResponse>.Fail($"Role #{id} was not found.")
+            : OperationResult<RoleResponse>.Ok(RoleMapper.ToResponse(role));
     }
 
     public List<AvailablePermissionResponse> GetAvailablePermissions()

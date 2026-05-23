@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking Detail — Cleaning Platform</title>
+    <link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body>
+    <header class="admin-header">
+        <div class="header-inner">
+            <span class="brand">Cleaning Platform</span>
+            <nav class="main-nav">
+                <div class="nav-group">
+                    <button class="nav-group__label">Operations</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/index.html" class="nav-group__item">Daily View</a>
+                        <a href="/admin/calendar.html" class="nav-group__item">Calendar</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Bookings</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/bookings.html" class="nav-group__item">Bookings</a>
+                        <a href="/admin/invoices.html" class="nav-group__item">Invoices</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Clients</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/clients.html" class="nav-group__item">Client List</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Config</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/schedule.html" class="nav-group__item">Schedule</a>
+                        <a href="/admin/services.html" class="nav-group__item">Services</a>
+                        <a href="/admin/sops.html" class="nav-group__item">SOPs</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Admin</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/users.html" class="nav-group__item">Users</a>
+                        <a href="/admin/roles.html" class="nav-group__item">Roles</a>
+                        <a href="/admin/reports.html" class="nav-group__item">Reports</a>
+                    </div>
+                </div>
+            </nav>
+            <div class="user-pill">
+                <div class="user-pill-info">
+                    <a href="/admin/profile.html" class="user-pill-name">Loading...</a>
+                    <span class="user-pill-role"></span>
+                </div>
+                <button id="logout-btn" class="logout-btn">Sign out</button>
+            </div>
+        </div>
+    </header>
+    <main class="admin-main">
+        <div id="error-container"></div>
+        <div id="booking-detail"></div>
+        <a href="/admin/bookings.html" class="btn btn-sm">← Back</a>
+    </main>
+    <footer class="admin-footer"><p>&copy; 2025 Cleaning Platform</p></footer>
+    <script src="/admin/js/admin-api.js"></script>
+    <script src="/admin/js/admin-common.js"></script>
+    <script src="/admin/js/booking-detail.js"></script>
+</body>
+</html>

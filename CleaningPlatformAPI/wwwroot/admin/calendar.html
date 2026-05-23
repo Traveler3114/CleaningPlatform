@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calendar — Cleaning Platform</title>
+    <link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body>
+    <header class="admin-header">
+        <div class="header-inner">
+            <span class="brand">Cleaning Platform</span>
+            <nav class="main-nav">
+                <div class="nav-group">
+                    <button class="nav-group__label">Operations</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/index.html" class="nav-group__item">Daily View</a>
+                        <a href="/admin/calendar.html" class="nav-group__item">Calendar</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Bookings</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/bookings.html" class="nav-group__item">Bookings</a>
+                        <a href="/admin/invoices.html" class="nav-group__item">Invoices</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Clients</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/clients.html" class="nav-group__item">Client List</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Config</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/schedule.html" class="nav-group__item">Schedule</a>
+                        <a href="/admin/services.html" class="nav-group__item">Services</a>
+                        <a href="/admin/sops.html" class="nav-group__item">SOPs</a>
+                    </div>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-group__label">Admin</button>
+                    <div class="nav-group__dropdown">
+                        <a href="/admin/users.html" class="nav-group__item">Users</a>
+                        <a href="/admin/roles.html" class="nav-group__item">Roles</a>
+                        <a href="/admin/reports.html" class="nav-group__item">Reports</a>
+                    </div>
+                </div>
+            </nav>
+            <div class="user-pill">
+                <div class="user-pill-info">
+                    <a href="/admin/profile.html" class="user-pill-name">Loading...</a>
+                    <span class="user-pill-role"></span>
+                </div>
+                <button id="logout-btn" class="logout-btn">Sign out</button>
+            </div>
+        </div>
+    </header>
+    <main class="admin-main">
+        <div class="page-header">
+            <h1>Calendar</h1>
+            <a href="/admin/bookings.html" class="btn btn-sm">+ New Booking</a>
+        </div>
+        <div id="employee-view" style="display:none;">
+            <div id="employee-week-view"></div>
+        </div>
+        <div id="admin-view">
+            <div class="cal-toolbar">
+                <div class="cal-view-pills">
+                    <button id="view-week" class="active">Week</button>
+                    <button id="view-day">Day</button>
+                    <button id="view-month">Month</button>
+                </div>
+                <div class="cal-nav">
+                    <button id="nav-prev" class="cal-nav-btn" title="Previous">←</button>
+                    <span id="cal-range-label" class="cal-range-label">Loading...</span>
+                    <button id="nav-next" class="cal-nav-btn" title="Next">→</button>
+                </div>
+                <div>
+                    <input type="text" id="emp-filter" placeholder="Filter employees…" class="text-input" style="min-width:160px;" />
+                </div>
+            </div>
+            <div id="error-container"></div>
+            <div id="resource-grid">
+                <div class="skeleton" style="height:200px; margin:1rem;"></div>
+            </div>
+        </div>
+    </main>
+    <footer class="admin-footer"><p>&copy; 2025 Cleaning Platform</p></footer>
+    <script src="/admin/js/admin-api.js"></script>
+    <script src="/admin/js/admin-common.js"></script>
+    <script src="/admin/js/calendar.js"></script>
+</body>
+</html>
