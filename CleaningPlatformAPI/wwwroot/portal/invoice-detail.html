@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice Detail — Client Portal</title>
+    <link rel="stylesheet" href="/portal/css/portal.css" />
+</head>
+<body>
+    <header class="portal-header">
+        <div class="header-inner">
+            <a href="/portal/index.html" class="portal-logo">Clean<span>Pro</span></a>
+            <div class="user-pill">
+                <div class="user-pill-info">
+                    <span class="user-pill-name">Loading...</span>
+                    <span class="user-pill-email"></span>
+                </div>
+                <button id="logout-btn" class="logout-btn">Sign out</button>
+            </div>
+        </div>
+    </header>
+    <nav class="portal-nav">
+        <div class="nav-inner">
+            <a href="/portal/index.html" class="nav-tab">Dashboard</a>
+            <a href="/portal/bookings.html" class="nav-tab">Bookings</a>
+            <a href="/portal/invoices.html" class="nav-tab">Invoices</a>
+            <a href="/portal/profile.html" class="nav-tab">Profile</a>
+        </div>
+    </nav>
+    <main class="portal-main">
+        <div class="page-header">
+            <h1><a href="/portal/invoices.html" class="link" style="font-weight:400;font-size:0.9rem;">&larr; Back</a> Invoice Details</h1>
+        </div>
+        <div id="error-container"></div>
+        <div id="invoice-detail"></div>
+    </main>
+    <footer class="portal-footer">&copy; 2026 CleanPro. All rights reserved.</footer>
+    <script src="/portal/js/mock-data.js"></script>
+    <script src="/portal/js/portal-common.js"></script>
+    <script src="/portal/js/invoice-detail.js"></script>
+</body>
+</html>

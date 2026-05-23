@@ -152,14 +152,14 @@ app.UseAuthorization();
 app.UseStaticFiles(); // Serves from wwwroot root
 
 // Root URL redirects
-app.MapGet("/", () => Results.Redirect("/customer/index.html"));
+app.MapGet("/", () => Results.Redirect("/public/index.html"));
 app.MapGet("/admin", () => Results.Redirect("/admin/index.html"));
 
 // API controllers
 app.MapControllers();
 
-// Fallback - if no route matches, serve customer index.html
-app.MapFallbackToFile("customer/index.html");
+// Fallback - if no route matches, serve public index.html
+app.MapFallbackToFile("public/index.html");
 
 using (var scope = app.Services.CreateScope())
 {

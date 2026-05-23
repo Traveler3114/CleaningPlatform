@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In — Client Portal</title>
+    <link rel="stylesheet" href="/portal/css/portal.css" />
+</head>
+<body class="login-page">
+    <div class="login-card">
+        <a href="/public/index.html" class="portal-logo" style="display:block;text-align:center;font-size:1.4rem;margin-bottom:0.5rem;">Clean<span>Pro</span></a>
+        <h1 style="text-align:center;">Welcome back</h1>
+        <p style="text-align:center;">Enter your email and we'll send you a magic link to sign in.</p>
+
+        <div id="error-container"></div>
+        <div id="success-container"></div>
+
+        <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" id="email" class="form-input" placeholder="ana@example.com" value="ana.horvat@email.com" />
+        </div>
+
+        <button id="send-link-btn" class="btn" style="width:100%;justify-content:center;padding:0.7rem;">Send Magic Link</button>
+
+        <p style="text-align:center;margin-top:1.25rem;font-size:0.8rem;">
+            <a href="/public/index.html" class="link">&larr; Back to website</a>
+        </p>
+
+        <div id="mock-login" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
+            <p style="font-size:0.78rem;color:var(--text-muted);text-align:center;margin-bottom:0.5rem;">Prototype: click to log in instantly</p>
+            <button id="mock-login-btn" class="btn btn-outline" style="width:100%;justify-content:center;">Log In as Ana Horvat</button>
+        </div>
+    </div>
+    <script src="/portal/js/mock-data.js"></script>
+    <script src="/portal/js/portal-common.js"></script>
+    <script>
+        document.getElementById('send-link-btn').addEventListener('click', () => {
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                showError('Please enter your email address.');
+                return;
+            }
+            showSuccess('Magic link sent! Check your inbox (prototype: click the mock login button below).');
+        });
+
+        document.getElementById('mock-login-btn').addEventListener('click', () => {
+            setStoredClient(MOCK_CLIENT);
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
