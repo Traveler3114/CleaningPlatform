@@ -1,435 +1,195 @@
-
 # Internal Cleaning Operations Platform
 
 A centralized operations platform for cleaning service businesses that combines CRM, booking management, workforce coordination, scheduling, SOP execution, invoicing, reporting, and customer operations into a single system.
 
 ---
 
-# Overview
+## Overview
 
-This platform is designed to replace fragmented tools and spreadsheets with one integrated operational system.
+This platform replaces fragmented tools and spreadsheets with one integrated operational system.
 
 The architecture follows a strict backend-driven approach:
-
 - Backend contains all business logic
 - Frontends are lightweight clients
 - Centralized API powers all applications
 - Operational data is managed from one source of truth
 
 The project currently includes:
-
-- ASP.NET Core API
-- Razor Pages admin dashboard
+- ASP.NET Core 10.0 Web API
+- Static HTML/JS admin dashboard
+- Static HTML/JS customer booking site
+- Static HTML/JS customer portal
 - SQL Server database
-- .NET MAUI worker application
-- Web frontend for customer booking
 
 ---
 
-# Core Objectives
+## System Architecture
 
-## Operational
-
-- Centralize bookings, jobs, employees, invoices, and reporting
-- Standardize workflows across teams
-- Reduce manual coordination
-- Improve scheduling visibility
-- Track service execution in real time
-
-## Financial
-
-- Accelerate invoicing
-- Improve receivables tracking
-- Generate operational and financial reporting
-- Reduce administrative overhead
-
-## Technical
-
-- Maintain strict separation of concerns
-- Keep business logic centralized
-- Support multiple frontend clients
-- Enable scalable module-based development
-
----
-
-# System Architecture
-
-```text
-                    +---------------------+
-                    |  Customer Website   |
-                    |  HTML / CSS / JS    |
-                    +----------+----------+
+```
+                    +-------------------------+
+                    |  Customer Website       |
+                    |  (HTML/CSS/JS)          |
+                    +----------+--------------+
                                |
                                v
-+----------------+    +----------------------+    +----------------+
-| Worker Mobile  |    |   ASP.NET Core API   |    | Razor Pages    |
-| .NET MAUI App  +--->+ Business Logic Layer +<---+ Admin Dashboard|
-+----------------+    +----------+-----------+    +----------------+
-                                  |
-                                  v
-                         +------------------+
-                         |   SQL Server     |
-                         |   Database       |
-                         +------------------+
++-------------------+    +---------------------+
+|  Customer Portal  |    |  ASP.NET Core API   |
+|  (HTML/CSS/JS)    +--->+  Business Logic     |
++-------------------+    |  (Managers)          |
+                         +----------+----------+
+                         +----------+----------+
+                         |  Admin Dashboard    |
+                         |  (HTML/CSS/JS)      |
+                         +----------+----------+
+                                    |
+                                    v
+                           +------------------+
+                           |   SQL Server     |
+                           |   Database       |
+                           +------------------+
 ```
 
 ---
 
-# Technology Stack
+## Technology Stack
 
-## Backend
-
-- ASP.NET Core Web API
-- ASP.NET Core Razor Pages
-- Entity Framework Core
+### Backend
+- ASP.NET Core 10.0 Web API
+- Entity Framework Core 10.0
 - Microsoft SQL Server
+- JWT Bearer authentication
+- BCrypt password hashing
+- Scalar/OpenAPI documentation
 
-## Frontend
+### Frontend
+- Vanilla HTML/CSS/JavaScript
+- Bootstrap 5
+- jQuery
+- jQuery Validation
 
-### Customer Booking Website
-
-- HTML
-- CSS
-- JavaScript
-
-### Internal Admin Dashboard
-
-- Razor Pages
-
-### Worker Mobile Application
-
-- .NET MAUI
+### Key Libraries
+- ClosedXML (Excel export)
+- SendGrid (email)
 
 ---
 
-# Main Modules
+## Project Structure
 
-## CRM & Client Management
-
-- Client profiles
-- Contact information
-- Site/location management
-- Contract and service tracking
-- Historical activity logs
+```
+CleaningPlatformAPI/
+├── Program.cs                 # App startup, DI, middleware, error handling
+├── Authorization/             # Custom permission handler
+├── Common/                    # Shared types (OperationResult, PermissionKeys, RoleNames)
+├── Contracts/                 # DTOs (request/response types)
+├── Controllers/               # REST API endpoints (16 controllers)
+├── Data/                      # EF Core DbContext
+├── Entities/                  # EF Core entity classes (29 files)
+├── Enums/                     # Enumerations (BookingServiceType, BookingStatus)
+├── Extensions/                # Extension methods (ClaimsPrincipal)
+├── Managers/                  # Business logic (15 managers)
+├── Mapping/                   # Static DTO mappers
+├── Services/                  # External services (EmailService)
+└── wwwroot/                   # Static frontend files
+    ├── admin/                 # Admin dashboard
+    ├── portal/                # Customer portal
+    ├── public/                # Customer booking site
+    └── lib/                   # Vendored libraries (Bootstrap, jQuery)
+```
 
 ---
 
-## Booking & Scheduling
+## Main Modules
 
-- Service booking
-- Time-slot availability
-- Capacity management
-- Schedule planning
-- Working hour configuration
-- Slot overrides
-- Recurring scheduling support
+### CRM & Client Management
+- Client profiles with contacts and sites
+- Multi-type clients (OneTime, RepeatIndividual, RepeatBusiness)
+- Service catalog with 26 predefined services
 
----
+### Booking & Scheduling
+- Multi-type bookings (vehicle, site-based, boat)
+- Time-slot availability with capacity management
+- Weekly schedule templates + date overrides
+- Full booking lifecycle: creation → assignment → execution → invoicing
 
-## Workforce Management
-
-- Employee assignments
-- Shift visibility
-- Mobile task execution
+### Workforce Management
+- Employee management with roles and permissions
+- Employee assignments to bookings
 - Job status tracking
-- Cleaner coordination
-- Attendance and accountability support
+
+### SOP & Task Execution
+- SOP templates with checklist items
+- Checklist execution per booking assignment
+- Proof-of-service tracking
+
+### Financial Operations
+- Invoice generation from bookings
+- Payment recording and tracking
+- Invoice status workflow (Draft → Sent → Paid / Overdue / WrittenOff)
+- Financial reporting
 
 ---
 
-## SOP & Task Execution
+## API Design
 
-- Cleaning checklists
-- SOP attribution
-- Task verification
-- Proof-of-service workflows
-- Standardized operational execution
-
----
-
-## Financial Operations
-
-- Invoice generation
-- Payment tracking
-- Revenue reporting
-- Receivables management
-- Client profitability visibility
+All endpoints follow a consistent pattern:
+- Base route: `/api/{plural-noun}`
+- All controllers have `[ApiController]`, `[Route]`, and class-level `[Authorize]`
+- Action-level authorization via granular permission policies
+- Responses wrapped in `OperationResult<T>`: `{ success, message, data }`
+- Global exception handler returns consistent error responses
 
 ---
 
-# Business Rules
+## Authentication
 
-## Backend as Source of Truth
-
-All validation, scheduling, and operational rules exist exclusively in the backend.
-
-Frontends only:
-
-- Display data
-- Send requests
-- Render UI
+- **Admin**: Username/password login → JWT token with role and permission claims
+- **Portal**: Email-based magic link → JWT session token
+- Both flows use the same token infrastructure
 
 ---
 
-## Working Hours
+## Database
 
-Working hours are configurable per day.
-
-Example:
-
-| Day | Hours |
-|---|---|
-| Monday–Friday | 08:00–17:00 |
-| Saturday | 09:00–13:00 |
-| Sunday | Closed |
+- Schema defined and maintained via SQL script (`docs/cleaning_platform.sql`)
+- No EF Core migrations
+- Entity classes reflect the SQL schema
+- SQL views provide consolidated read-only data for reporting
 
 ---
 
-## Booking Rules
+## Business Rules
 
-A booking is valid only when:
-
-- The selected time is inside working hours
-- Slot capacity is available
-- Slot is not blocked or closed
-- Validation passes all business constraints
-
----
-
-## Slot Capacity
-
-Default slot capacity can be overridden per hour or per date.
-
-Example:
-
-| Time Slot | Capacity |
-|---|---|
-| 09:00 | 2 |
-| 10:00 | 2 |
-| 11:00 | 0 (blocked) |
+- All validation and business rules in backend managers only
+- Working hours configurable per day of week
+- Slot capacity with date/hour overrides
+- Capacity = slot capacity - existing bookings
+- Valid booking requires: within working hours, capacity available, slot not blocked
 
 ---
 
-# Core Data Models
+## Frontend Applications
 
-## Booking
+### 1. Customer Booking Website (`wwwroot/public/`)
+Public booking interface for customers to view availability and create bookings.
 
-```text
-- Id
-- CustomerName
-- Phone
-- ScheduledDate
-- ScheduledHour
-- Status
-```
+### 2. Admin Dashboard (`wwwroot/admin/`)
+Internal management interface for all operations, built with static HTML/JS + Bootstrap.
+
+### 3. Customer Portal (`wwwroot/portal/`)
+Customer-facing portal for viewing bookings, invoices, and managing profile.
 
 ---
 
-## WorkingHours
+## Development Philosophy
 
-```text
-- Id
-- DayOfWeek
-- StartHour
-- EndHour
-- IsClosed
-```
+- Reliability and maintainability
+- Strict separation of concerns
+- Backend as single source of truth
+- API-first approach
+- Granular permission-based access control
 
 ---
 
-## SlotOverride
+## License
 
-```text
-- Id
-- Date
-- Hour
-- Capacity
-```
-
----
-
-# Frontend Applications
-
-## 1. Customer Website
-
-Public booking interface.
-
-### Features
-
-- View available time slots
-- Create bookings
-- Submit customer details
-- Receive confirmations
-
----
-
-## 2. Admin Dashboard
-
-Internal management system built with Razor Pages.
-
-### Features
-
-- Manage bookings
-- Configure working hours
-- Adjust slot capacities
-- Review schedules
-- Monitor operations
-- Update statuses
-
----
-
-## 3. Worker Mobile App
-
-Mobile application for operational staff.
-
-### Features
-
-- View assigned jobs
-- Access customer details
-- Review SOPs and checklists
-- Track completion
-- Update job status
-
----
-
-# Scheduling Flow
-
-## Customer Booking Flow
-
-```text
-1. Customer selects date
-2. Frontend requests available slots
-3. Backend validates availability
-4. User submits booking
-5. Backend stores booking
-6. Confirmation returned to client
-```
-
----
-
-## Availability Calculation
-
-```text
-Available Capacity = Slot Capacity - Existing Bookings
-```
-
-Validation process:
-
-1. Load working hours
-2. Check if day is closed
-3. Apply slot overrides
-4. Count active bookings
-5. Calculate remaining capacity
-6. Return availability response
-
----
-
-# Design Principles
-
-## Centralized Business Logic
-
-All rules live in one place to avoid inconsistencies between applications.
-
----
-
-## Modular Architecture
-
-Modules are separated by responsibility:
-
-- Scheduling
-- CRM
-- Finance
-- Workforce
-- Reporting
-- Operations
-
----
-
-## API-First Approach
-
-All external clients communicate through the backend API.
-
----
-
-## Scalable Foundation
-
-The system is structured to support:
-
-- Additional mobile apps
-- Multi-location operations
-- Advanced analytics
-- Role-based permissions
-- Automation workflows
-- Future integrations
-
----
-
-# Current Project Summary
-
-| Metric | Value |
-|---|---|
-| Files analyzed | 98 |
-| Modules | 16 |
-| Main languages | C#, JavaScript, HTML, CSS |
-| Architecture | Multi-client backend-driven system |
-
----
-
-# Future Roadmap
-
-## Planned Enhancements
-
-- Authentication & role management
-- Real-time notifications
-- GPS job tracking
-- Advanced reporting dashboards
-- Automated invoicing workflows
-- Multi-tenant architecture
-- Customer portal
-- Analytics and KPI dashboards
-- Employee performance tracking
-- Calendar synchronization
-
----
-
-# Development Philosophy
-
-The platform is being developed as a long-term operational foundation for internal business management.
-
-Primary focus areas:
-
-- Reliability
-- Maintainability
-- Scalability
-- Operational efficiency
-- Clear separation of concerns
-
----
-
-# Repository Structure
-
-```text
-/Backend
-    /API
-    /Services
-    /Managers
-    /Data
-    /Entities
-
-/Frontend
-    /CustomerWebsite
-    /AdminDashboard
-
-/Mobile
-    /WorkerApp
-
-/Documentation
-```
-
----
-
-# License
-
-Private internal business software.
-
-All rights reserved.
+Private internal business software. All rights reserved.
