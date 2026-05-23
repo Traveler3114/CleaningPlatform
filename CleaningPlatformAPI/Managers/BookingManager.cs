@@ -89,8 +89,9 @@ public class BookingManager
     {
         var dateStr = dto.Date.ToString("dd MMM yyyy");
 
+        // 1. Validate slot availability
         var slots = await _availability.GetSlotsAsync(dto.Date, ct);
-        var slot  = slots.FirstOrDefault(s => s.Hour == dto.Hour);
+        var slot = slots.FirstOrDefault(s => s.Hour == dto.Hour);
 
         if (slot == null || slot.IsClosed)
             return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is closed and not available for booking.");
@@ -99,7 +100,9 @@ public class BookingManager
             return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is fully booked ({slot.Booked}/{slot.Capacity} spots taken).");
 
         var customerName = dto.CustomerName.Trim();
-        var phone        = dto.Phone.Trim();
+        var phone = dto.Phone.Trim();
+        var email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();
+
         if (string.IsNullOrWhiteSpace(customerName))
             return OperationResult<BookingResponse>.Fail("Customer name is required.");
         if (string.IsNullOrWhiteSpace(phone))
@@ -109,41 +112,99 @@ public class BookingManager
         await using var transaction = await _db.Database.BeginTransactionAsync(ct);
         try
         {
-            var client = new Client
+            // 2. Client deduplication – search by phone or email in Contacts table
+            Client? client = null;
+
+            // First, try to find client by phone number
+            client = await _db.Clients
+                .Include(c => c.Contacts)
+                .FirstOrDefaultAsync(c => c.Contacts.Any(ct => ct.Phone == phone && ct.IsActive), ct);
+
+            // If not found, try by email
+            if (client == null && !string.IsNullOrWhiteSpace(email))
             {
-                ClientName = customerName,
-                Type       = "OneTime",
-                IsActive   = true,
-                CreatedAt  = now,
-                UpdatedAt  = now,
-                Contacts   =
-                [
+                client = await _db.Clients
+                    .Include(c => c.Contacts)
+                    .FirstOrDefaultAsync(c => c.Contacts.Any(ct => ct.Email == email && ct.IsActive), ct);
+            }
+
+            if (client != null)
+            {
+                // Update existing client info (name may have changed)
+                client.ClientName = customerName;
+                client.UpdatedAt = now;
+
+                // Update the primary contact (or add if missing)
+                var primaryContact = client.Contacts.FirstOrDefault(c => c.IsPrimary);
+                if (primaryContact != null)
+                {
+                    primaryContact.ContactName = customerName;
+                    primaryContact.Phone = phone;
+                    if (!string.IsNullOrWhiteSpace(email))
+                        primaryContact.Email = email;
+                    primaryContact.UpdatedAt = now;
+                }
+                else
+                {
+                    // Should not happen, but fallback: add a primary contact
+                    client.Contacts.Add(new Contact
+                    {
+                        ContactName = customerName,
+                        Phone = phone,
+                        Email = email,
+                        IsPrimary = true,
+                        IsActive = true,
+                        CreatedAt = now,
+                        UpdatedAt = now
+                    });
+                }
+            }
+            else
+            {
+                // Create a new client – type is "Person", not "OneTime"
+                client = new Client
+                {
+                    ClientName = customerName,
+                    Type = "Person",
+                    IsActive = true,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    Contacts = new List<Contact>
+                {
                     new Contact
                     {
                         ContactName = customerName,
-                        Phone       = phone,
-                        IsPrimary   = true,
-                        IsActive    = true,
-                        CreatedAt   = now,
-                        UpdatedAt   = now
+                        Phone = phone,
+                        Email = email,
+                        IsPrimary = true,
+                        IsActive = true,
+                        CreatedAt = now,
+                        UpdatedAt = now
                     }
-                ]
-            };
+                }
+                };
+                _db.Clients.Add(client);
+                // Save to get the client ID before creating the booking
+                await _db.SaveChangesAsync(ct);
+            }
 
+            // 3. Create the booking
             var booking = new Booking
             {
-                Client             = client,
-                ServiceType        = BookingServiceType.Vehicle,
-                ScheduledDate      = dto.Date.Date,
-                ScheduledTimeSlot  = TimeSpan.FromHours(dto.Hour),
-                Status             = BookingStatus.Pending,
-                CreatedAt          = now,
-                UpdatedAt          = now
+                ClientId = client.Id,
+                ServiceType = BookingServiceType.Vehicle,
+                ScheduledDate = dto.Date.Date,
+                ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
+                Status = BookingStatus.Pending,
+                CreatedAt = now,
+                UpdatedAt = now
             };
 
             _db.Bookings.Add(booking);
             await _db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
+
+            // 4. Return the response using your mapper
             return OperationResult<BookingResponse>.Ok(BookingMapper.ToResponse(booking));
         }
         catch

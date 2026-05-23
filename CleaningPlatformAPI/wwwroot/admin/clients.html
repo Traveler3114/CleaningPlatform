@@ -61,7 +61,11 @@
         <div class="page-header"><h1>Clients</h1><button id="new-client-btn" class="btn">+ New Client</button></div>
         <div class="filter-row card-lite">
             <input type="text" id="search-input" placeholder="Search by name or phone" class="text-input" />
-            <select id="type-filter" class="status-select"><option value="">All</option><option>OneTime</option><option>RepeatIndividual</option><option>RepeatBusiness</option></select>
+            <select id="type-filter" class="status-select">
+                <option value="">All</option>
+                <option>Person</option>
+                <option>Business</option>
+            </select>
             <button id="apply-filter" class="btn btn-sm">Apply</button>
         </div>
         <div id="kpi-grid" class="kpi-grid"></div>

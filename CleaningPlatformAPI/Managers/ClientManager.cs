@@ -83,8 +83,8 @@ public class ClientManager
         if (string.IsNullOrWhiteSpace(dto.ClientName))
             return OperationResult<ClientResponse>.Fail("Client name is required.");
 
-        if (dto.Type != "RepeatIndividual" && dto.Type != "RepeatBusiness")
-            return OperationResult<ClientResponse>.Fail("Client type must be RepeatIndividual or RepeatBusiness.");
+        if (dto.Type != "Person" && dto.Type != "Business")
+            return OperationResult<ClientResponse>.Fail("Client type must be Person or Business.");
 
         if (string.IsNullOrWhiteSpace(dto.PrimaryContactName))
             return OperationResult<ClientResponse>.Fail("Primary contact name is required.");

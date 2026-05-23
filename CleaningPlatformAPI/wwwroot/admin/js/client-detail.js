@@ -28,10 +28,10 @@ function showCreateForm() {
         <div class="card-lite">
             <form id="create-client-form" class="form-grid two-col">
                 <label>Client Name <input type="text" id="client-name" class="text-input" required /></label>
-                <label>Type 
+                <label>Type
                     <select id="client-type" class="status-select">
-                        <option value="RepeatIndividual">RepeatIndividual</option>
-                        <option value="RepeatBusiness">RepeatBusiness</option>
+                        <option value="Person">Person</option>
+                        <option value="Business">Business</option>
                     </select>
                 </label>
                 <label>Primary Contact Name <input type="text" id="primary-name" class="text-input" required /></label>
@@ -47,7 +47,7 @@ function showCreateForm() {
     const oibField = document.getElementById('oib-field');
     const ptField = document.getElementById('payment-terms-field');
     function sync() {
-        const isBusiness = typeSelect.value === 'RepeatBusiness';
+        const isBusiness = typeSelect.value === 'Business';
         oibField.style.display = isBusiness ? 'block' : 'none';
         ptField.style.display = isBusiness ? 'block' : 'none';
     }

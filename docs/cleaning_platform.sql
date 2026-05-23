@@ -49,7 +49,7 @@ CREATE TABLE Clients (
     IsActive        BIT             NOT NULL DEFAULT 1,
     CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
-    CONSTRAINT CHK_Client_Type CHECK (Type IN ('OneTime', 'RepeatIndividual', 'RepeatBusiness'))
+    CONSTRAINT CHK_Client_Type CHECK (Type IN ('Person', 'Business'))
 );
 GO
 CREATE INDEX IX_Clients_Name ON Clients(ClientName);
