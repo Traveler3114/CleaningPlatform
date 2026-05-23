@@ -13,13 +13,13 @@ namespace CleaningPlatformAPI.Entities
         public int ClientId { get; set; }
 
         [Required, MaxLength(200)]
-        public string ContactName { get; set; }
+        public string ContactName { get; set; } = string.Empty;
 
         [MaxLength(100)]
         public string? Role { get; set; }
 
         [Required, MaxLength(50)]
-        public string Phone { get; set; }
+        public string Phone { get; set; } = string.Empty;
 
         [MaxLength(255)]
         public string? Email { get; set; }
@@ -34,6 +34,6 @@ namespace CleaningPlatformAPI.Entities
 
         // Navigation
         [ForeignKey(nameof(ClientId))]
-        public Client Client { get; set; }
+        public Client Client { get; set; } = null!;
     }
 }

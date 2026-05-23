@@ -10,7 +10,7 @@ namespace CleaningPlatformAPI.Entities
         public int BookingId { get; set; }
 
         [Required, MaxLength(20)]
-        public string LicensePlate { get; set; }
+        public string LicensePlate { get; set; } = string.Empty;
 
         [MaxLength(100)]
         public string? CarModel { get; set; }
@@ -19,6 +19,6 @@ namespace CleaningPlatformAPI.Entities
 
         // Navigation
         [ForeignKey(nameof(BookingId))]
-        public Booking Booking { get; set; }
+        public Booking Booking { get; set; } = null!;
     }
 }

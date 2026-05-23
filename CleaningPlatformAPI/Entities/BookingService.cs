@@ -20,9 +20,9 @@ namespace CleaningPlatformAPI.Entities
 
         // Navigation
         [ForeignKey(nameof(BookingId))]
-        public Booking Booking { get; set; }
+        public Booking Booking { get; set; } = null!;
 
         [ForeignKey(nameof(ServiceCatalogId))]
-        public ServiceCatalog ServiceCatalog { get; set; }
+        public ServiceCatalog ServiceCatalog { get; set; } = null!;
     }
 }

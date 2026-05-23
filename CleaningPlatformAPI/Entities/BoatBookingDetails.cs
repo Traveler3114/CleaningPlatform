@@ -10,13 +10,13 @@ namespace CleaningPlatformAPI.Entities
         public int BookingId { get; set; }
 
         [Required, MaxLength(100)]
-        public string BoatType { get; set; }
+        public string BoatType { get; set; } = string.Empty;
 
         public decimal? LengthMeters { get; set; }
         public string? Notes { get; set; }
 
         // Navigation
         [ForeignKey(nameof(BookingId))]
-        public Booking Booking { get; set; }
+        public Booking Booking { get; set; } = null!;
     }
 }

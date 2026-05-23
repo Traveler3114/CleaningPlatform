@@ -12,9 +12,9 @@ namespace CleaningPlatformAPI.Entities
         public int RoleId { get; set; }
 
         [Required, MaxLength(100)]
-        public string PermissionKey { get; set; }
+        public string PermissionKey { get; set; } = string.Empty;
 
         [ForeignKey(nameof(RoleId))]
-        public Role Role { get; set; }
+        public Role Role { get; set; } = null!;
     }
 }

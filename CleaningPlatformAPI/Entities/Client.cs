@@ -12,10 +12,10 @@ namespace CleaningPlatformAPI.Entities
         public int Id { get; set; }
 
         [Required, MaxLength(200)]
-        public string ClientName { get; set; }
+        public string ClientName { get; set; } = string.Empty;
 
         [Required, MaxLength(50)]
-        public string Type { get; set; }   // OneTime, RepeatIndividual, RepeatBusiness
+        public string Type { get; set; } = string.Empty;   // OneTime, RepeatIndividual, RepeatBusiness
 
         [MaxLength(50)]
         public string? Oib { get; set; }

@@ -29,7 +29,7 @@ namespace CleaningPlatformAPI.Entities
 
         // Navigation
         [ForeignKey(nameof(ClientId))]
-        public Client Client { get; set; }
+        public Client Client { get; set; } = null!;
 
         [ForeignKey(nameof(SiteId))]
         public Site? Site { get; set; }

@@ -15,16 +15,16 @@ namespace CleaningPlatformAPI.Entities
         public string Username { get; set; } = string.Empty;
 
         [Required, MaxLength(255)]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
 
         [Required, MaxLength(100)]
         public string SecurityStamp { get; set; } = Guid.NewGuid().ToString();
 
         [Required, MaxLength(100)]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         [Required, MaxLength(100)]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         [MaxLength(50)]
         public string? Phone { get; set; }
@@ -41,7 +41,7 @@ namespace CleaningPlatformAPI.Entities
 
         // Foreign key and navigation
         public int RoleId { get; set; }
-        public Role Role { get; set; }
+        public Role Role { get; set; } = null!;
 
         public ICollection<BookingAssignment> BookingAssignments { get; set; } = new List<BookingAssignment>();
     }
