@@ -1,9 +1,7 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Managers;
@@ -69,10 +67,9 @@ public class PortalAuthController : ControllerBase
 
         try
         {
-            var handler = new JwtSecurityTokenHandler();
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
 
-            var result = await handler.ValidateTokenAsync(request.Token, new TokenValidationParameters
+            var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
                 ValidIssuer = _config["Jwt:Issuer"],
@@ -81,34 +78,34 @@ public class PortalAuthController : ControllerBase
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = key,
                 ClockSkew = TimeSpan.Zero
-            });
+            };
+
+            var handler = new Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler();
+            var result = await handler.ValidateTokenAsync(request.Token, validationParameters);
 
             if (!result.IsValid)
                 return UnprocessableEntity(OperationResult<string>.Fail("This link has expired or is invalid. Please request a new one."));
 
-            var principal = result.ClaimsIdentity != null
-                ? new ClaimsPrincipal(result.ClaimsIdentity)
-                : null;
+            // Read claims from the validated JWT payload via the JsonWebToken
+            var jwt = handler.ReadJsonWebToken(request.Token);
+            var payloadClaims = jwt.Claims.ToList();
 
-            if (principal == null)
-                return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
-
-            var authType = principal.FindFirst("auth_type")?.Value;
-            var purpose = principal.FindFirst("purpose")?.Value;
+            var authType = payloadClaims.FirstOrDefault(c => c.Type == "auth_type")?.Value;
+            var purpose = payloadClaims.FirstOrDefault(c => c.Type == "purpose")?.Value;
 
             if (authType != "portal" || purpose != "magic_link")
                 return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
 
-            var clientIdClaim = principal.FindFirst("client_id");
-            var emailClaim = principal.FindFirst("email");
-            var nameClaim = principal.FindFirst("name");
+            var clientIdClaim = payloadClaims.FirstOrDefault(c => c.Type == "client_id")?.Value;
+            var emailClaim = payloadClaims.FirstOrDefault(c => c.Type == "email")?.Value;
+            var nameClaim = payloadClaims.FirstOrDefault(c => c.Type == "name")?.Value;
 
             if (clientIdClaim == null || emailClaim == null || nameClaim == null)
                 return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
 
-            var clientId = int.Parse(clientIdClaim.Value);
-            var email = emailClaim.Value;
-            var name = nameClaim.Value;
+            var clientId = int.Parse(clientIdClaim);
+            var email = emailClaim;
+            var name = nameClaim;
 
             var sessionToken = _tokenManager.CreatePortalSessionToken(clientId, email, name);
             return Ok(OperationResult<string>.Ok(sessionToken));

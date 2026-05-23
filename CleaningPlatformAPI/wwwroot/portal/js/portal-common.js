@@ -36,10 +36,43 @@ function logout() {
     window.location.href = 'login.html';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Handle ?session=... in URL (fallback from auth flow)
-    const params = new URLSearchParams(window.location.search);
-    const sessionFromUrl = params.get('session');
+function apiFetch(path, options) {
+    var token = getSessionToken();
+    if (!token) {
+        logout();
+        return Promise.reject('No token');
+    }
+    return fetch(path, {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        ...options
+    }).then(function (r) { return r.json(); }).then(function (res) {
+        if (!res.success) throw new Error(res.message || 'Request failed');
+        return res.data;
+    });
+}
+
+function formatCurrency(amount) {
+    return '\u20AC' + Number(amount).toFixed(2);
+}
+
+function formatDate(dateStr) {
+    var d = new Date(dateStr);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function statusBadge(status) {
+    var cls = status.toLowerCase();
+    return '<span class="badge badge-' + cls + '">' + status + '</span>';
+}
+
+function formatTime(hour) {
+    return String(hour).padStart(2, '0') + ':00';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var params = new URLSearchParams(window.location.search);
+    var sessionFromUrl = params.get('session');
     if (sessionFromUrl) {
         localStorage.setItem(SESSION_KEY, sessionFromUrl);
         window.location.replace(window.location.pathname);
@@ -51,34 +84,34 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const payload = decodeToken(getSessionToken());
+    var payload = decodeToken(getSessionToken());
     if (!payload) return;
 
-    const pillName = document.querySelector('.user-pill-name');
-    const pillEmail = document.querySelector('.user-pill-email');
+    var pillName = document.querySelector('.user-pill-name');
+    var pillEmail = document.querySelector('.user-pill-email');
     if (pillName) pillName.textContent = payload.name || 'Client';
     if (pillEmail) pillEmail.textContent = payload.email || '';
 
-    const logoutBtn = document.getElementById('logout-btn');
+    var logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
 
-    const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-        const href = tab.getAttribute('href');
+    var currentPage = window.location.pathname.split('/').pop();
+    document.querySelectorAll('.nav-tab').forEach(function (tab) {
+        var href = tab.getAttribute('href');
         if (href && href === currentPage) tab.classList.add('active');
     });
 });
 
 function showError(message, containerId) {
-    const container = document.getElementById(containerId || 'error-container');
+    var container = document.getElementById(containerId || 'error-container');
     if (!container) return;
-    container.innerHTML = `<div class="alert alert-danger">${message}</div>`;
-    setTimeout(() => container.innerHTML = '', 5000);
+    container.innerHTML = '<div class="alert alert-danger">' + message + '</div>';
+    setTimeout(function () { container.innerHTML = ''; }, 5000);
 }
 
 function showSuccess(message, containerId) {
-    const container = document.getElementById(containerId || 'success-container');
+    var container = document.getElementById(containerId || 'success-container');
     if (!container) return;
-    container.innerHTML = `<div class="alert alert-success">${message}</div>`;
-    setTimeout(() => container.innerHTML = '', 3000);
+    container.innerHTML = '<div class="alert alert-success">' + message + '</div>';
+    setTimeout(function () { container.innerHTML = ''; }, 3000);
 }

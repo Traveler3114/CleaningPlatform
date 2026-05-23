@@ -1,61 +1,57 @@
 // dashboard.js
-function renderKpis() {
-    const upcoming = MOCK_UPCOMING.length;
-    const completed = MOCK_COMPLETED.length;
-    const totalSpent = MOCK_INVOICES.reduce((sum, i) => sum + i.totalAmount, 0);
-    const dueAmount = MOCK_INVOICES
-        .filter(i => i.status === 'sent' || i.status === 'partiallypaid')
-        .reduce((sum, i) => sum + i.totalAmount - i.payments.reduce((p, pay) => p + pay.amount, 0), 0);
-
-    document.getElementById('kpi-grid').innerHTML = `
-        <div class="kpi-card"><span>Upcoming Bookings</span><strong>${upcoming}</strong></div>
-        <div class="kpi-card"><span>Completed</span><strong>${completed}</strong></div>
-        <div class="kpi-card"><span>Total Spent</span><strong>${formatCurrency(totalSpent)}</strong></div>
-        <div class="kpi-card"><span>Outstanding</span><strong>${formatCurrency(dueAmount)}</strong></div>
-    `;
+function renderKpis(data) {
+    document.getElementById('kpi-grid').innerHTML =
+        '<div class="kpi-card"><span>Upcoming Bookings</span><strong>' + data.upcomingBookings + '</strong></div>' +
+        '<div class="kpi-card"><span>Completed</span><strong>' + data.completedBookings + '</strong></div>' +
+        '<div class="kpi-card"><span>Total Spent</span><strong>' + formatCurrency(data.totalSpent) + '</strong></div>' +
+        '<div class="kpi-card"><span>Outstanding</span><strong>' + formatCurrency(data.outstandingAmount) + '</strong></div>';
 }
 
-function renderUpcomingBookings() {
-    const container = document.getElementById('upcoming-bookings');
-    if (MOCK_UPCOMING.length === 0) {
+function renderUpcomingBookings(bookings) {
+    var container = document.getElementById('upcoming-bookings');
+    if (bookings.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>No upcoming bookings.</p></div>';
         return;
     }
-    const html = MOCK_UPCOMING.map(b => `
-        <div class="booking-card booking-card--${b.status}" onclick="window.location.href='booking-detail.html?id=${b.id}'">
-            <div class="booking-card__header">
-                <div class="booking-card__title">${b.serviceType} — ${formatDate(b.date)}</div>
-                ${statusBadge(b.status)}
-            </div>
-            <div class="booking-card__meta">${b.time} &middot; ${b.services.map(s => s.name).join(', ')}</div>
-            <div class="booking-card__footer">
-                <span>${b.site || 'No site'}</span>
-                <span>${formatCurrency(b.services.reduce((s, sv) => s + sv.price, 0))}</span>
-            </div>
-        </div>
-    `).join('');
+    var html = bookings.map(function (b) {
+        return '<div class="booking-card booking-card--' + b.status.toLowerCase() + '" onclick="window.location.href=\'booking-detail.html?id=' + b.id + '\'">' +
+            '<div class="booking-card__header">' +
+            '<div class="booking-card__title">' + b.serviceType + ' &mdash; ' + formatDate(b.date) + '</div>' +
+            statusBadge(b.status) +
+            '</div>' +
+            '<div class="booking-card__meta">' + formatTime(b.hour) + ' &middot; ' + b.services + '</div>' +
+            '<div class="booking-card__footer">' +
+            '<span>' + (b.siteName || 'No site') + '</span>' +
+            '<span>' + formatCurrency(b.estimatedTotal) + '</span>' +
+            '</div>' +
+            '</div>';
+    }).join('');
     container.innerHTML = html;
 }
 
-function renderRecentInvoices() {
-    const container = document.getElementById('recent-invoices');
-    if (MOCK_INVOICES.length === 0) {
+function renderRecentInvoices(invoices) {
+    var container = document.getElementById('recent-invoices');
+    if (invoices.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>No invoices yet.</p></div>';
         return;
     }
-    let html = '<table class="portal-table"><thead><tr><th>Invoice</th><th>Date</th><th>Status</th><th>Amount</th></tr></thead><tbody>';
-    MOCK_INVOICES.slice(0, 5).forEach(i => {
-        html += `<tr onclick="window.location.href='invoice-detail.html?id=${i.id}'">
-            <td><a href="invoice-detail.html?id=${i.id}" class="link">${i.number}</a></td>
-            <td>${formatDate(i.issueDate)}</td>
-            <td>${statusBadge(i.status)}</td>
-            <td>${formatCurrency(i.totalAmount)}</td>
-        </tr>`;
+    var html = '<table class="portal-table"><thead><tr><th>Invoice</th><th>Date</th><th>Status</th><th>Amount</th></tr></thead><tbody>';
+    invoices.slice(0, 5).forEach(function (i) {
+        html += '<tr onclick="window.location.href=\'invoice-detail.html?id=' + i.id + '\'">' +
+            '<td><a href="invoice-detail.html?id=' + i.id + '" class="link">' + i.number + '</a></td>' +
+            '<td>' + formatDate(i.issueDate) + '</td>' +
+            '<td>' + statusBadge(i.status) + '</td>' +
+            '<td>' + formatCurrency(i.totalAmount) + '</td>' +
+            '</tr>';
     });
     html += '</tbody></table>';
     container.innerHTML = html;
 }
 
-renderKpis();
-renderUpcomingBookings();
-renderRecentInvoices();
+apiFetch('/api/portal/dashboard').then(function (data) {
+    renderKpis(data);
+    renderUpcomingBookings(data.upcomingBookingList);
+    renderRecentInvoices(data.recentInvoices);
+}).catch(function (err) {
+    showError(err.message || 'Failed to load dashboard');
+});

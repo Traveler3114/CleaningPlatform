@@ -43,6 +43,7 @@ builder.Services.AddScoped<InvoiceManager>();
 builder.Services.AddScoped<ReportingManager>();
 builder.Services.AddScoped<KanbanManager>();
 builder.Services.AddScoped<SopManager>();
+builder.Services.AddScoped<PortalDataManager>();
 builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
@@ -75,6 +76,9 @@ builder.Services.AddAuthorization(options =>
 {
     foreach (var key in PermissionKeys.All)
         options.AddPolicy(key, policy => policy.AddRequirements(new PermissionRequirement(key)));
+
+    options.AddPolicy("PortalOnly", policy =>
+        policy.RequireAssertion(ctx => ctx.User.HasClaim("auth_type", "portal")));
 });
 
 var app = builder.Build();

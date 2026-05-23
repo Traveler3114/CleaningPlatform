@@ -1,44 +1,52 @@
 // bookings.js
-let currentFilter = 'all';
+var currentFilter = 'all';
 
 function filterBookings(filter) {
     currentFilter = filter;
-    document.querySelectorAll('.btn-outline').forEach(b => b.classList.remove('btn-outline'));
+    document.querySelectorAll('.btn-outline').forEach(function (b) { b.classList.remove('btn-outline'); });
     document.getElementById('filter-' + filter).classList.add('btn-outline');
-    renderBookings();
+    loadBookings();
 }
 
-function renderBookings() {
-    const container = document.getElementById('bookings-list');
-    let filtered = MOCK_BOOKINGS;
-    if (currentFilter === 'upcoming') filtered = MOCK_UPCOMING;
-    else if (currentFilter === 'completed') filtered = MOCK_COMPLETED;
+function loadBookings() {
+    var url = '/api/portal/bookings';
+    if (currentFilter !== 'all') url += '?status=' + currentFilter;
 
-    if (filtered.length === 0) {
+    apiFetch(url).then(function (bookings) {
+        renderBookings(bookings);
+    }).catch(function (err) {
+        showError(err.message || 'Failed to load bookings');
+        document.getElementById('bookings-list').innerHTML = '<div class="empty-state"><p>Failed to load bookings. Please try again.</p></div>';
+    });
+}
+
+function renderBookings(bookings) {
+    var container = document.getElementById('bookings-list');
+    if (bookings.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>No bookings found.</p></div>';
         return;
     }
 
-    const html = filtered.map(b => {
-        const serviceNames = b.services.map(s => s.name).join(', ');
-        return `
-        <div class="booking-card booking-card--${b.status}" onclick="window.location.href='booking-detail.html?id=${b.id}'">
-            <div class="booking-card__header">
-                <div>
-                    <div class="booking-card__title">${b.serviceType}</div>
-                    <div class="booking-card__meta">${formatDate(b.date)} at ${b.time}</div>
-                </div>
-                ${statusBadge(b.status)}
-            </div>
-            <div class="booking-card__meta">${serviceNames}</div>
-            <div class="booking-card__footer">
-                <span>${b.site || 'No location specified'}</span>
-                <span>${formatCurrency(b.services.reduce((s, sv) => s + sv.price, 0))}</span>
-            </div>
-        </div>`;
+    var html = bookings.map(function (b) {
+        return '<div class="booking-card booking-card--' + b.status.toLowerCase() + '" onclick="window.location.href=\'booking-detail.html?id=' + b.id + '\'">' +
+            '<div class="booking-card__header">' +
+            '<div>' +
+            '<div class="booking-card__title">' + b.serviceType + '</div>' +
+            '<div class="booking-card__meta">' + formatDate(b.date) + ' at ' + formatTime(b.hour) + '</div>' +
+            '</div>' +
+            statusBadge(b.status) +
+            '</div>' +
+            '<div class="booking-card__meta">' + b.services + '</div>' +
+            '<div class="booking-card__footer">' +
+            '<span>' + (b.siteName || 'No location specified') + '</span>' +
+            '<span>' + formatCurrency(b.estimatedTotal) + '</span>' +
+            '</div>' +
+            '</div>';
     }).join('');
     container.innerHTML = html;
 }
 
-document.getElementById('filter-all').classList.add('btn-outline');
-renderBookings();
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('filter-all').classList.add('btn-outline');
+    loadBookings();
+});
