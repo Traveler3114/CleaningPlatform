@@ -12,7 +12,7 @@ namespace CleaningPlatformAPI.Controllers;
 public class AssignmentController : ControllerBase
 {
     private readonly SopManager _sopManager;
-    public AssignmentController(SopManager sopManager) => _sopManager = sopManager;
+    public AssignmentController(SopManager sopManager) { _sopManager = sopManager; }
 
     [HttpGet("{assignmentId:int}/checklist")]
     public async Task<ActionResult<OperationResult<List<ChecklistResponseResponse>>>> GetChecklist(int assignmentId, CancellationToken ct)

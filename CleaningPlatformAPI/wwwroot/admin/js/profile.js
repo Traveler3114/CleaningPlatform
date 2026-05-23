@@ -3,7 +3,7 @@ let currentUser = null;
 
 async function loadProfile() {
     try {
-        const res = await apiFetch('/users/me');
+        const res = await apiFetch('/employees/me');
         if (res.success && res.data) {
             currentUser = res.data;
             renderProfile();

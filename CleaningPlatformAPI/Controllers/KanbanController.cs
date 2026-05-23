@@ -14,7 +14,7 @@ public class KanbanController : ControllerBase
 {
     private readonly KanbanManager _kanbanManager;
 
-    public KanbanController(KanbanManager kanbanManager) => _kanbanManager = kanbanManager;
+    public KanbanController(KanbanManager kanbanManager) { _kanbanManager = kanbanManager; }
 
     [HttpGet]
     public async Task<ActionResult<OperationResult<KanbanBoardResponse>>> Get([FromQuery] DateTime? date, [FromQuery] int? employeeId, CancellationToken ct)
@@ -29,8 +29,6 @@ public class KanbanController : ControllerBase
         var pipeline = await _kanbanManager.GetPipelineAsync(ct);
         return Ok(OperationResult<KanbanBoardResponse>.Ok(pipeline));
     }
-
-
 
     [HttpGet("resourcegrid")]
     public async Task<ActionResult<OperationResult<ResourceGridResponse>>> GetResourceGrid(

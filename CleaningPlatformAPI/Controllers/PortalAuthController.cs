@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Managers;
+using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Services;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -18,17 +19,7 @@ public class PortalAuthController : ControllerBase
     private readonly EmailService _emailService;
     private readonly IConfiguration _config;
 
-    public PortalAuthController(
-        AppDbContext db,
-        TokenManager tokenManager,
-        EmailService emailService,
-        IConfiguration config)
-    {
-        _db = db;
-        _tokenManager = tokenManager;
-        _emailService = emailService;
-        _config = config;
-    }
+    public PortalAuthController(AppDbContext db, TokenManager tokenManager, EmailService emailService, IConfiguration config) { _db = db; _tokenManager = tokenManager; _emailService = emailService; _config = config; }
 
     [HttpPost("send-link")]
     public async Task<ActionResult<OperationResult<string>>> SendLink([FromBody] SendMagicLinkRequest request)
@@ -65,64 +56,47 @@ public class PortalAuthController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Token))
             return UnprocessableEntity(OperationResult<string>.Fail("Token is required."));
 
-        try
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+
+        var validationParameters = new TokenValidationParameters
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            ValidateIssuer = true,
+            ValidIssuer = _config["Jwt:Issuer"],
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = key,
+            ClockSkew = TimeSpan.Zero
+        };
 
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = _config["Jwt:Issuer"],
-                ValidateAudience = false,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = key,
-                ClockSkew = TimeSpan.Zero
-            };
+        var handler = new Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler();
+        var result = await handler.ValidateTokenAsync(request.Token, validationParameters);
 
-            var handler = new Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler();
-            var result = await handler.ValidateTokenAsync(request.Token, validationParameters);
-
-            if (!result.IsValid)
-                return UnprocessableEntity(OperationResult<string>.Fail("This link has expired or is invalid. Please request a new one."));
-
-            // Read claims from the validated JWT payload via the JsonWebToken
-            var jwt = handler.ReadJsonWebToken(request.Token);
-            var payloadClaims = jwt.Claims.ToList();
-
-            var authType = payloadClaims.FirstOrDefault(c => c.Type == "auth_type")?.Value;
-            var purpose = payloadClaims.FirstOrDefault(c => c.Type == "purpose")?.Value;
-
-            if (authType != "portal" || purpose != "magic_link")
-                return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
-
-            var clientIdClaim = payloadClaims.FirstOrDefault(c => c.Type == "client_id")?.Value;
-            var emailClaim = payloadClaims.FirstOrDefault(c => c.Type == "email")?.Value;
-            var nameClaim = payloadClaims.FirstOrDefault(c => c.Type == "name")?.Value;
-
-            if (clientIdClaim == null || emailClaim == null || nameClaim == null)
-                return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
-
-            var clientId = int.Parse(clientIdClaim);
-            var email = emailClaim;
-            var name = nameClaim;
-
-            var sessionToken = _tokenManager.CreatePortalSessionToken(clientId, email, name);
-            return Ok(OperationResult<string>.Ok(sessionToken));
-        }
-        catch
-        {
+        if (!result.IsValid)
             return UnprocessableEntity(OperationResult<string>.Fail("This link has expired or is invalid. Please request a new one."));
-        }
+
+        // Read claims from the validated JWT payload via the JsonWebToken
+        var jwt = handler.ReadJsonWebToken(request.Token);
+        var payloadClaims = jwt.Claims.ToList();
+
+        var authType = payloadClaims.FirstOrDefault(c => c.Type == "auth_type")?.Value;
+        var purpose = payloadClaims.FirstOrDefault(c => c.Type == "purpose")?.Value;
+
+        if (authType != "portal" || purpose != "magic_link")
+            return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
+
+        var clientIdClaim = payloadClaims.FirstOrDefault(c => c.Type == "client_id")?.Value;
+        var emailClaim = payloadClaims.FirstOrDefault(c => c.Type == "email")?.Value;
+        var nameClaim = payloadClaims.FirstOrDefault(c => c.Type == "name")?.Value;
+
+        if (clientIdClaim == null || emailClaim == null || nameClaim == null)
+            return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
+
+        var clientId = int.Parse(clientIdClaim);
+        var email = emailClaim;
+        var name = nameClaim;
+
+        var sessionToken = _tokenManager.CreatePortalSessionToken(clientId, email, name);
+        return Ok(OperationResult<string>.Ok(sessionToken));
     }
-}
-
-public record SendMagicLinkRequest
-{
-    public string? Email { get; set; }
-}
-
-public record ValidateTokenRequest
-{
-    public string? Token { get; set; }
 }

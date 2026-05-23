@@ -13,10 +13,7 @@ public class AuthController : ControllerBase
 {
     private readonly AuthManager _authManager;
 
-    public AuthController(AuthManager authManager)
-    {
-        _authManager = authManager;
-    }
+    public AuthController(AuthManager authManager) { _authManager = authManager; }
 
     [Authorize(Policy = PermissionKeys.UsersCreate)]
     [HttpPost("register")]
@@ -33,7 +30,6 @@ public class AuthController : ControllerBase
         var result = await _authManager.LoginAsync(request, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
-
 
     [HttpPost("change-password")]
     [Authorize]

@@ -13,10 +13,7 @@ public class AvailabilityController : ControllerBase
 {
     private readonly AvailabilityManager _manager;
 
-    public AvailabilityController(AvailabilityManager manager)
-    {
-        _manager = manager;
-    }
+    public AvailabilityController(AvailabilityManager manager) { _manager = manager; }
 
     [HttpGet]
     public async Task<ActionResult<OperationResult<List<AvailabilityResponse>>>> Get([FromQuery] DateTime date, CancellationToken ct)

@@ -12,7 +12,7 @@ namespace CleaningPlatformAPI.Controllers;
 public class SopController : ControllerBase
 {
     private readonly SopManager _sopManager;
-    public SopController(SopManager sopManager) => _sopManager = sopManager;
+    public SopController(SopManager sopManager) { _sopManager = sopManager; }
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.SopsView)]

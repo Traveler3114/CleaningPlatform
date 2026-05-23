@@ -245,7 +245,7 @@ public class SopManager
 
         var primaryAssignmentId = bookingAssignmentIds.OrderBy(id => id).FirstOrDefault();
         var responsesByItem = primaryAssignmentId == 0
-            ? new Dictionary<int, ChecklistResponse>()
+            ? []
             : responses
                 .Where(r => r.BookingAssignmentId == primaryAssignmentId)
                 .GroupBy(r => r.ChecklistItemId)

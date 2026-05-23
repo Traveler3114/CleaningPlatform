@@ -8,16 +8,13 @@ using CleaningPlatformAPI.Managers;
 namespace CleaningPlatformAPI.Controllers;
 
 [ApiController]
-[Route("api/users")]
+[Route("api/employees")]
 [Authorize]
 public class EmployeeController : ControllerBase
 {
     private readonly EmployeeManager _userManager;
 
-    public EmployeeController(EmployeeManager userManager)
-    {
-        _userManager = userManager;
-    }
+    public EmployeeController(EmployeeManager userManager) { _userManager = userManager; }
 
     [HttpGet("me")]
     public async Task<ActionResult<OperationResult<UserResponse>>> Me(CancellationToken ct)
@@ -30,7 +27,7 @@ public class EmployeeController : ControllerBase
         return result.Success ? Ok(result) : Unauthorized(result);
     }
 
-    [HttpGet("/api/employees")]
+    [HttpGet("active")]
     public async Task<ActionResult<OperationResult<List<EmployeeSimpleResponse>>>> GetActiveEmployees(CancellationToken ct)
     {
         var employees = await _userManager.GetActiveEmployeesAsync(ct);

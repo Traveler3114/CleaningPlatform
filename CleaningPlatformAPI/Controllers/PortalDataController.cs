@@ -6,21 +6,19 @@ using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
 
+[ApiController]
 [Route("api/portal")]
 [Authorize]
 public class PortalDataController : ControllerBase
 {
     private readonly PortalDataManager _portalManager;
 
-    public PortalDataController(PortalDataManager portalManager)
-    {
-        _portalManager = portalManager;
-    }
+    public PortalDataController(PortalDataManager portalManager) { _portalManager = portalManager; }
 
     private int GetClientId()
     {
         var claim = User.FindFirst("client_id")?.Value;
-        return claim != null ? int.Parse(claim) : 0;
+        return claim != null && int.TryParse(claim, out var id) ? id : 0;
     }
 
     [HttpGet("dashboard")]

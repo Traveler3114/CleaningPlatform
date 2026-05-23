@@ -32,7 +32,7 @@ public class AvailabilityManager
             .Select(g => new { Hour = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.Hour, g => g.Count, ct);
 
-        var slots = new List<AvailabilityResponse>();
+        List<AvailabilityResponse> slots = [];
         TimeZoneInfo croatiaZone;
         try
         {

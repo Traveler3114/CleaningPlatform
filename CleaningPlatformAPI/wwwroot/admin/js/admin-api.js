@@ -78,7 +78,7 @@ function hasPermission(permission) {
 }
 
 async function loadCurrentUser() {
-    const result = await apiFetch('/users/me');
+    const result = await apiFetch('/employees/me');
     if (result.success) return result.data;
     throw new Error(result.message);
 }

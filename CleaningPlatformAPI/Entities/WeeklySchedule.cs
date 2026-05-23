@@ -1,17 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CleaningPlatformAPI.Entities
+namespace CleaningPlatformAPI.Entities;
+[Table("WeeklySchedule")]
+public class WeeklySchedule
 {
-    [Table("WeeklySchedule")]
-    public class WeeklySchedule
-    {
-        [Key]
-        public int Id { get; set; }
+    [Key]
+    public int Id { get; set; }
 
-        public int DayOfWeek { get; set; }   // 0=Sunday...
-        public int StartHour { get; set; }
-        public int EndHour { get; set; }
-        public int Capacity { get; set; }
-    }
+    public int DayOfWeek { get; set; }   // 0=Sunday...
+    public int StartHour { get; set; }
+    public int EndHour { get; set; }
+    public int Capacity { get; set; }
 }

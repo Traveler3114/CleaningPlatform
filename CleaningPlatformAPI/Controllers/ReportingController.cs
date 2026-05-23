@@ -13,7 +13,7 @@ namespace CleaningPlatformAPI.Controllers;
 public class ReportingController : ControllerBase
 {
     private readonly ReportingManager _reportingManager;
-    public ReportingController(ReportingManager reportingManager) => _reportingManager = reportingManager;
+    public ReportingController(ReportingManager reportingManager) { _reportingManager = reportingManager; }
 
     [HttpGet("revenue")]
     public async Task<ActionResult<OperationResult<List<MonthlyRevenueResponse>>>> Revenue(CancellationToken ct)

@@ -223,7 +223,7 @@ public class ClientManager
     private void SyncContacts(Client client, List<UpsertContactRequest> incoming, DateTime now)
     {
         var existingById     = client.Contacts.ToDictionary(c => c.Id, c => c);
-        var touchedContactIds = new HashSet<int>();
+        HashSet<int> touchedContactIds = [];
 
         foreach (var req in incoming)
         {

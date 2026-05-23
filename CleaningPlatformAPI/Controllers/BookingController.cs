@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CleaningPlatformAPI.Controllers;
 
+[ApiController]
 [Route("api/bookings")]
 [Authorize]
 public class BookingController : ControllerBase
@@ -14,11 +15,7 @@ public class BookingController : ControllerBase
     private readonly BookingManager _bookingManager;
     private readonly SopManager _sopManager;
 
-    public BookingController(BookingManager bookingManager, SopManager sopManager)
-    {
-        _bookingManager = bookingManager;
-        _sopManager = sopManager;
-    }
+    public BookingController(BookingManager bookingManager, SopManager sopManager) { _bookingManager = bookingManager; _sopManager = sopManager; }
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.BookingsView)]
@@ -119,7 +116,6 @@ public class BookingController : ControllerBase
         var result = await _bookingManager.UpdateServicePriceAsync(id, serviceId, request.FinalPrice, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
-
 
     [HttpGet("{id:int}/sops")]
     [Authorize(Policy = PermissionKeys.BookingsView)]

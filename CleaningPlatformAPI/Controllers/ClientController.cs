@@ -6,16 +6,14 @@ using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
 
+[ApiController]
 [Route("api/clients")]
 [Authorize]
 public class ClientController : ControllerBase
 {
     private readonly ClientManager _clientManager;
 
-    public ClientController(ClientManager clientManager)
-    {
-        _clientManager = clientManager;
-    }
+    public ClientController(ClientManager clientManager) { _clientManager = clientManager; }
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.ClientsView)]

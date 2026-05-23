@@ -3,7 +3,7 @@ let users = [];
 
 async function loadUsers() {
     try {
-        const res = await apiFetch('/users');
+        const res = await apiFetch('/employees');
         if (res.success && res.data) {
             users = res.data;
             renderUsers();
@@ -56,7 +56,7 @@ function renderUsers() {
 
 async function toggleUserStatus(id, isActive) {
     try {
-        const res = await apiFetch(`/users/${id}/toggle`, { method: 'PUT' });
+        const res = await apiFetch(`/employees/${id}/toggle`, { method: 'PUT' });
         if (res.success) {
             showSuccess('User status updated');
             loadUsers();
