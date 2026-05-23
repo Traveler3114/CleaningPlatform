@@ -9,7 +9,7 @@ function render(invoice) {
         '<div class="card">' +
         '<div class="invoice-header">' +
         '<div>' +
-        '<h2 class="card-title" style="margin-bottom:0.15rem;">' + invoice.number + '</h2>' +
+        '<h2 class="card-title" style="margin-bottom:0.15rem;">' + invoice.invoiceNumber + '</h2>' +
         '<p style="color:var(--text-muted);font-size:0.85rem;">Issued ' + formatDate(invoice.issueDate) + ' &middot; Due ' + formatDate(invoice.dueDate) + '</p>' +
         '</div>' +
         '<div style="text-align:right;">' +

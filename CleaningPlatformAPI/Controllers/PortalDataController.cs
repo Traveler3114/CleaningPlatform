@@ -31,7 +31,7 @@ public class PortalDataController : ControllerBase
 
     [HttpGet("bookings")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<List<PortalBookingSummary>>>> GetBookings(
+    public async Task<ActionResult<OperationResult<List<BookingResponse>>>> GetBookings(
         [FromQuery] string? status, CancellationToken ct)
     {
         var result = await _portalManager.GetBookingsAsync(GetClientId(), status, ct);
@@ -40,7 +40,7 @@ public class PortalDataController : ControllerBase
 
     [HttpGet("bookings/{id:int}")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<PortalBookingDetailResponse>>> GetBookingDetail(
+    public async Task<ActionResult<OperationResult<BookingResponse>>> GetBookingDetail(
         int id, CancellationToken ct)
     {
         var result = await _portalManager.GetBookingDetailAsync(GetClientId(), id, ct);
@@ -49,7 +49,7 @@ public class PortalDataController : ControllerBase
 
     [HttpGet("invoices")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<List<PortalInvoiceSummary>>>> GetInvoices(CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<InvoiceResponse>>>> GetInvoices(CancellationToken ct)
     {
         var result = await _portalManager.GetInvoicesAsync(GetClientId(), ct);
         return result.Success ? Ok(result) : NotFound(result);
@@ -57,7 +57,7 @@ public class PortalDataController : ControllerBase
 
     [HttpGet("invoices/{id:int}")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<PortalInvoiceDetailResponse>>> GetInvoiceDetail(
+    public async Task<ActionResult<OperationResult<InvoiceResponse>>> GetInvoiceDetail(
         int id, CancellationToken ct)
     {
         var result = await _portalManager.GetInvoiceDetailAsync(GetClientId(), id, ct);

@@ -5,12 +5,12 @@ namespace CleaningPlatformAPI.Mapping;
 
 public static class InvoiceMapper
 {
-    public static InvoiceSummaryResponse ToSummaryResponse(Invoice invoice)
+    public static InvoiceResponse ToResponse(Invoice invoice)
     {
         var paidAmount = invoice.Payments.Sum(p => p.Amount);
         var balanceDue = invoice.TotalAmount - paidAmount;
 
-        return new InvoiceSummaryResponse
+        return new InvoiceResponse
         {
             Id = invoice.Id,
             InvoiceNumber = invoice.InvoiceNumber,
@@ -22,33 +22,13 @@ public static class InvoiceMapper
             PaidAmount = paidAmount,
             BalanceDue = balanceDue < 0 ? 0 : balanceDue,
             Status = invoice.Status,
-            BookingCount = invoice.InvoiceBookings.Count
-        };
-    }
-
-    public static InvoiceDetailResponse ToDetailResponse(Invoice invoice)
-    {
-        var summary = ToSummaryResponse(invoice);
-
-        return new InvoiceDetailResponse
-        {
-            Id = summary.Id,
-            InvoiceNumber = summary.InvoiceNumber,
-            ClientId = summary.ClientId,
-            ClientName = summary.ClientName,
-            IssueDate = summary.IssueDate,
-            DueDate = summary.DueDate,
-            TotalAmount = summary.TotalAmount,
-            PaidAmount = summary.PaidAmount,
-            BalanceDue = summary.BalanceDue,
-            Status = summary.Status,
-            BookingCount = summary.BookingCount,
+            BookingCount = invoice.InvoiceBookings.Count,
             SubTotal = invoice.SubTotal,
             DiscountAmount = invoice.DiscountAmount,
             VatPct = invoice.VatPct,
             VatAmount = invoice.VatAmount,
             Notes = invoice.Notes,
-            Lines = invoice.Lines
+            Lines = invoice.Lines?
                 .OrderBy(l => l.Id)
                 .Select(l =>
                 {
@@ -72,7 +52,7 @@ public static class InvoiceMapper
                     };
                 })
                 .ToList(),
-            Payments = invoice.Payments
+            Payments = invoice.Payments?
                 .OrderByDescending(p => p.PaymentDate)
                 .ThenByDescending(p => p.Id)
                 .Select(p => new PaymentResponse

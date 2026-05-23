@@ -4,6 +4,7 @@ using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Enums;
+using CleaningPlatformAPI.Mapping;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -35,6 +36,7 @@ public class PortalDataManager
 
         var upcomingBookings = await _db.Bookings
             .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
+            .Include(b => b.Assignments).ThenInclude(a => a.Employee)
             .Include(b => b.Site)
             .Where(b => b.ClientId == clientId && b.Status != BookingStatus.Completed && b.Status != BookingStatus.Cancelled)
             .OrderBy(b => b.ScheduledDate).ThenBy(b => b.ScheduledTimeSlot)
@@ -42,6 +44,7 @@ public class PortalDataManager
             .ToListAsync(ct);
 
         var recentInvoices = await _db.Invoices
+            .Include(i => i.Lines)
             .Include(i => i.Payments)
             .Where(i => i.ClientId == clientId)
             .OrderByDescending(i => i.IssueDate)
@@ -54,19 +57,20 @@ public class PortalDataManager
             CompletedBookings = completedCount,
             TotalSpent = totalSpent,
             OutstandingAmount = outstanding,
-            UpcomingBookingList = upcomingBookings.Select(MapBookingSummary).ToList(),
-            RecentInvoices = recentInvoices.Select(MapInvoiceSummary).ToList()
+            UpcomingBookingList = upcomingBookings.Select(BookingMapper.ToDetailResponse).ToList(),
+            RecentInvoices = recentInvoices.Select(InvoiceMapper.ToResponse).ToList()
         });
     }
 
-    public async Task<OperationResult<List<PortalBookingSummary>>> GetBookingsAsync(int clientId, string? status, CancellationToken ct = default)
+    public async Task<OperationResult<List<BookingResponse>>> GetBookingsAsync(int clientId, string? status, CancellationToken ct = default)
     {
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<List<PortalBookingSummary>>.Fail("Client not found.");
+            return OperationResult<List<BookingResponse>>.Fail("Client not found.");
 
         var query = _db.Bookings
             .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
+            .Include(b => b.Assignments).ThenInclude(a => a.Employee)
             .Include(b => b.Site)
             .Where(b => b.ClientId == clientId);
 
@@ -79,10 +83,10 @@ public class PortalDataManager
             .OrderByDescending(b => b.ScheduledDate).ThenByDescending(b => b.ScheduledTimeSlot)
             .ToListAsync(ct);
 
-        return OperationResult<List<PortalBookingSummary>>.Ok(bookings.Select(MapBookingSummary).ToList());
+        return OperationResult<List<BookingResponse>>.Ok(bookings.Select(BookingMapper.ToDetailResponse).ToList());
     }
 
-    public async Task<OperationResult<PortalBookingDetailResponse>> GetBookingDetailAsync(int clientId, int bookingId, CancellationToken ct = default)
+    public async Task<OperationResult<BookingResponse>> GetBookingDetailAsync(int clientId, int bookingId, CancellationToken ct = default)
     {
         var booking = await _db.Bookings
             .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
@@ -91,48 +95,28 @@ public class PortalDataManager
             .FirstOrDefaultAsync(b => b.Id == bookingId && b.ClientId == clientId, ct);
 
         if (booking is null)
-            return OperationResult<PortalBookingDetailResponse>.Fail("Booking not found.");
+            return OperationResult<BookingResponse>.Fail("Booking not found.");
 
-        return OperationResult<PortalBookingDetailResponse>.Ok(new PortalBookingDetailResponse
-        {
-            Id = booking.Id,
-            Date = booking.ScheduledDate,
-            Hour = booking.ScheduledTimeSlot?.Hours ?? 0,
-            ServiceType = booking.ServiceType.ToString(),
-            Status = booking.Status.ToString(),
-            SiteName = booking.Site?.SiteName,
-            Notes = booking.Notes,
-            CreatedAt = booking.CreatedAt,
-            Services = booking.BookingServices.Select(bs => new PortalBookingService
-            {
-                Name = bs.ServiceCatalog?.Name ?? string.Empty,
-                Quantity = bs.Quantity,
-                EstimatedPrice = bs.EstimatedPrice,
-                FinalPrice = bs.FinalPrice
-            }).ToList(),
-            AssignedEmployees = booking.Assignments.Select(a => new PortalAssignedEmployee
-            {
-                FullName = $"{a.Employee.FirstName} {a.Employee.LastName}".Trim()
-            }).ToList()
-        });
+        return OperationResult<BookingResponse>.Ok(BookingMapper.ToDetailResponse(booking));
     }
 
-    public async Task<OperationResult<List<PortalInvoiceSummary>>> GetInvoicesAsync(int clientId, CancellationToken ct = default)
+    public async Task<OperationResult<List<InvoiceResponse>>> GetInvoicesAsync(int clientId, CancellationToken ct = default)
     {
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<List<PortalInvoiceSummary>>.Fail("Client not found.");
+            return OperationResult<List<InvoiceResponse>>.Fail("Client not found.");
 
         var invoices = await _db.Invoices
+            .Include(i => i.Lines)
             .Include(i => i.Payments)
             .Where(i => i.ClientId == clientId)
             .OrderByDescending(i => i.IssueDate)
             .ToListAsync(ct);
 
-        return OperationResult<List<PortalInvoiceSummary>>.Ok(invoices.Select(MapInvoiceSummary).ToList());
+        return OperationResult<List<InvoiceResponse>>.Ok(invoices.Select(InvoiceMapper.ToResponse).ToList());
     }
 
-    public async Task<OperationResult<PortalInvoiceDetailResponse>> GetInvoiceDetailAsync(int clientId, int invoiceId, CancellationToken ct = default)
+    public async Task<OperationResult<InvoiceResponse>> GetInvoiceDetailAsync(int clientId, int invoiceId, CancellationToken ct = default)
     {
         var invoice = await _db.Invoices
             .Include(i => i.Lines)
@@ -140,39 +124,9 @@ public class PortalDataManager
             .FirstOrDefaultAsync(i => i.Id == invoiceId && i.ClientId == clientId, ct);
 
         if (invoice is null)
-            return OperationResult<PortalInvoiceDetailResponse>.Fail("Invoice not found.");
+            return OperationResult<InvoiceResponse>.Fail("Invoice not found.");
 
-        var paidAmount = invoice.Payments.Sum(p => p.Amount);
-        var balanceDue = Math.Max(invoice.TotalAmount - paidAmount, 0);
-
-        return OperationResult<PortalInvoiceDetailResponse>.Ok(new PortalInvoiceDetailResponse
-        {
-            Id = invoice.Id,
-            Number = invoice.InvoiceNumber,
-            IssueDate = invoice.IssueDate,
-            DueDate = invoice.DueDate,
-            Status = invoice.Status,
-            SubTotal = invoice.SubTotal,
-            DiscountAmount = invoice.DiscountAmount,
-            VatPct = invoice.VatPct,
-            VatAmount = invoice.VatAmount,
-            TotalAmount = invoice.TotalAmount,
-            PaidAmount = paidAmount,
-            BalanceDue = balanceDue,
-            Lines = invoice.Lines.OrderBy(l => l.Id).Select(l => new PortalInvoiceLine
-            {
-                Description = l.Description,
-                Quantity = l.Quantity,
-                UnitPrice = l.UnitPrice
-            }).ToList(),
-            Payments = invoice.Payments.OrderByDescending(p => p.PaymentDate).Select(p => new PortalPayment
-            {
-                PaymentDate = p.PaymentDate,
-                Amount = p.Amount,
-                Method = p.Method,
-                Reference = p.Reference
-            }).ToList()
-        });
+        return OperationResult<InvoiceResponse>.Ok(InvoiceMapper.ToResponse(invoice));
     }
 
     public async Task<OperationResult<PortalProfileResponse>> GetProfileAsync(int clientId, CancellationToken ct = default)
@@ -214,36 +168,5 @@ public class PortalDataManager
                     AccessNotes = s.AccessNotes
                 }).ToList()
         });
-    }
-
-    private static PortalBookingSummary MapBookingSummary(Booking b)
-    {
-        var serviceNames = string.Join(", ", b.BookingServices.Select(bs => bs.ServiceCatalog?.Name).Where(n => n is not null));
-        var estimatedTotal = b.BookingServices.Sum(bs => bs.EstimatedPrice ?? bs.FinalPrice ?? 0);
-
-        return new PortalBookingSummary
-        {
-            Id = b.Id,
-            Date = b.ScheduledDate,
-            Hour = b.ScheduledTimeSlot?.Hours ?? 0,
-            ServiceType = b.ServiceType.ToString(),
-            Status = b.Status.ToString(),
-            SiteName = b.Site?.SiteName,
-            Services = serviceNames,
-            EstimatedTotal = estimatedTotal
-        };
-    }
-
-    private static PortalInvoiceSummary MapInvoiceSummary(Invoice invoice)
-    {
-        return new PortalInvoiceSummary
-        {
-            Id = invoice.Id,
-            Number = invoice.InvoiceNumber,
-            IssueDate = invoice.IssueDate,
-            DueDate = invoice.DueDate,
-            Status = invoice.Status,
-            TotalAmount = invoice.TotalAmount
-        };
     }
 }

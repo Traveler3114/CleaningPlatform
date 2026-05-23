@@ -10,7 +10,9 @@ public class BookingResponse
     public DateTime Date { get; set; }
     public int Hour { get; set; }
     public string Status { get; set; } = string.Empty;
+    public string ServiceType { get; set; } = string.Empty;
     public int ServicesCount { get; set; }
+    public string? SiteName { get; set; }
     public List<AssignedEmployeeResponse> AssignedEmployees { get; set; } = new();
     public DateTime CreatedAt { get; set; }
 

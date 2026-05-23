@@ -321,7 +321,7 @@ public class AppDbContext : DbContext
             .IsUnique();
 
 
-        // Global DateTime precision (optional)
+        // Global DateTime precision
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             foreach (var property in entityType.GetProperties())
@@ -329,6 +329,21 @@ public class AppDbContext : DbContext
                 if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
                 {
                     property.SetColumnType("datetime2");
+                }
+            }
+        }
+
+        // Global decimal precision for properties without explicit configuration
+        // (catches keyless view entities that otherwise produce EF Core model validation warnings)
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if ((property.ClrType == typeof(decimal) || property.ClrType == typeof(decimal?))
+                    && !property.GetPrecision().HasValue)
+                {
+                    property.SetPrecision(18);
+                    property.SetScale(2);
                 }
             }
         }

@@ -12,8 +12,10 @@ public static class BookingMapper
         ClientName = b.Client?.ClientName ?? "Unknown",
         Date = b.ScheduledDate,
         Hour = b.ScheduledTimeSlot?.Hours ?? 0,
+        ServiceType = b.ServiceType.ToString(),
         Status = b.Status.ToString(),
         ServicesCount = b.BookingServices?.Count ?? 0,
+        SiteName = b.Site?.SiteName,
         AssignedEmployees = b.Assignments?.Select(a => new AssignedEmployeeResponse
         {
             AssignmentId = a.Id,
@@ -31,6 +33,7 @@ public static class BookingMapper
         ClientName = view.ClientName,
         Date = view.ScheduledDate,
         Hour = view.ScheduledTimeSlot?.Hours ?? 0,
+        ServiceType = string.Empty,
         Status = view.Status,
         ServicesCount = view.ServiceCount,
         AssignedEmployees = SplitAssignedEmployees(view.AssignedEmployee),

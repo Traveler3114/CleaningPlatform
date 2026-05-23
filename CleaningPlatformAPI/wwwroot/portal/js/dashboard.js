@@ -14,15 +14,17 @@ function renderUpcomingBookings(bookings) {
         return;
     }
     var html = bookings.map(function (b) {
+        var svcNames = (b.services || []).map(function (s) { return s.serviceName; }).join(', ');
+        var estTotal = (b.services || []).reduce(function (sum, s) { return sum + (s.estimatedPrice || s.finalPrice || 0); }, 0);
         return '<div class="booking-card booking-card--' + b.status.toLowerCase() + '" onclick="window.location.href=\'booking-detail.html?id=' + b.id + '\'">' +
             '<div class="booking-card__header">' +
             '<div class="booking-card__title">' + b.serviceType + ' &mdash; ' + formatDate(b.date) + '</div>' +
             statusBadge(b.status) +
             '</div>' +
-            '<div class="booking-card__meta">' + formatTime(b.hour) + ' &middot; ' + b.services + '</div>' +
+            '<div class="booking-card__meta">' + formatTime(b.hour) + ' &middot; ' + svcNames + '</div>' +
             '<div class="booking-card__footer">' +
             '<span>' + (b.siteName || 'No site') + '</span>' +
-            '<span>' + formatCurrency(b.estimatedTotal) + '</span>' +
+            '<span>' + formatCurrency(estTotal) + '</span>' +
             '</div>' +
             '</div>';
     }).join('');
@@ -38,7 +40,7 @@ function renderRecentInvoices(invoices) {
     var html = '<table class="portal-table"><thead><tr><th>Invoice</th><th>Date</th><th>Status</th><th>Amount</th></tr></thead><tbody>';
     invoices.slice(0, 5).forEach(function (i) {
         html += '<tr onclick="window.location.href=\'invoice-detail.html?id=' + i.id + '\'">' +
-            '<td><a href="invoice-detail.html?id=' + i.id + '" class="link">' + i.number + '</a></td>' +
+            '<td><a href="invoice-detail.html?id=' + i.id + '" class="link">' + i.invoiceNumber + '</a></td>' +
             '<td>' + formatDate(i.issueDate) + '</td>' +
             '<td>' + statusBadge(i.status) + '</td>' +
             '<td>' + formatCurrency(i.totalAmount) + '</td>' +

@@ -3,7 +3,7 @@ namespace CleaningPlatformAPI.Contracts;
 // ── Existing contracts (kept for employee view and API compat) ─────────────
 public record KanbanBoardResponse(DateTime Date, List<KanbanColumnResponse> Columns, List<KanbanEmployeeResponse> Employees);
 public record KanbanColumnResponse(string Status, List<KanbanCardResponse> Cards);
-public record KanbanCardResponse(int BookingId, string ClientName, string? ClientPhone, string? SiteName, string? SiteAddress, int Hour, string ServiceType, int ServicesCount, List<AssignedEmployeeResponse> AssignedEmployees, bool HasSop, decimal SopCompletionPct);
+public record KanbanCardResponse(int BookingId, string ClientName, string? ClientPhone, string? SiteName, string? SiteAddress, DateTime Date, int Hour, string ServiceType, string Status, int ServicesCount, List<AssignedEmployeeResponse> AssignedEmployees, bool HasSop, decimal SopCompletionPct);
 public record KanbanEmployeeResponse(int EmployeeId, string FullName, string Role, int JobsToday, bool IsFree);
 
 public record WeeklyBoardResponse(
@@ -18,22 +18,7 @@ public record DayColumnResponse(
     string DayName,
     string DayLabel,
     bool IsToday,
-    List<WeeklyBookingCard> Bookings
-);
-
-public record WeeklyBookingCard(
-    int BookingId,
-    int Hour,
-    string ClientName,
-    string? ClientPhone,
-    string? SiteName,
-    string? SiteAddress,
-    string ServiceType,
-    string Status,
-    int ServicesCount,
-    List<AssignedEmployeeResponse> AssignedEmployees,
-    bool HasSop,
-    decimal SopCompletionPct
+    List<KanbanCardResponse> Bookings
 );
 
 // ── New resource grid contracts (admin calendar only) ──────────────────────

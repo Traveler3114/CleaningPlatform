@@ -194,23 +194,25 @@ public class KanbanManager
         return new KanbanCardResponse(
             b.Id, b.Client.ClientName, primaryContact?.Phone,
             b.Site?.SiteName, b.Site?.Address,
-            b.ScheduledTimeSlot?.Hours ?? 0,
-            b.ServiceType.ToString(), b.BookingServices.Count,
+            b.ScheduledDate, b.ScheduledTimeSlot?.Hours ?? 0,
+            b.ServiceType.ToString(), b.Status.ToString(),
+            b.BookingServices.Count,
             MapAssignees(b), b.SopAssignments.Count != 0, pct);
     }
 
-    private static WeeklyBookingCard ToWeeklyCard(Entities.Booking b)
+    private static KanbanCardResponse ToWeeklyCard(Entities.Booking b)
     {
         var primaryContact = b.Client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)
             ?? b.Client.Contacts.FirstOrDefault(c => c.IsActive);
         var (pct, _) = GetSopProgress(b);
-        return new WeeklyBookingCard(
+        return new KanbanCardResponse(
             b.Id,
-            b.ScheduledTimeSlot?.Hours ?? 0,
             b.Client.ClientName,
             primaryContact?.Phone,
             b.Site?.SiteName,
             b.Site?.Address,
+            b.ScheduledDate,
+            b.ScheduledTimeSlot?.Hours ?? 0,
             b.ServiceType.ToString(),
             b.Status.ToString(),
             b.BookingServices.Count,

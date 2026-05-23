@@ -10,4 +10,5 @@ public class EmployeeUtilizationView
     public int JobsAssigned { get; set; }
     public int JobsCompleted { get; set; }
     public int DaysActive { get; set; }
+    public decimal CompletionRatePct { get; set; }
 }

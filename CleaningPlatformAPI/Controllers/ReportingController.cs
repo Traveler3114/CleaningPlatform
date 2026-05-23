@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
+using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Managers;
 
 namespace CleaningPlatformAPI.Controllers;
@@ -16,38 +17,38 @@ public class ReportingController : ControllerBase
     public ReportingController(ReportingManager reportingManager) { _reportingManager = reportingManager; }
 
     [HttpGet("revenue")]
-    public async Task<ActionResult<OperationResult<List<MonthlyRevenueResponse>>>> Revenue(CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<MonthlyRevenueView>>>> Revenue(CancellationToken ct)
     {
         var data = await _reportingManager.GetMonthlyRevenueAsync(ct);
-        return Ok(OperationResult<List<MonthlyRevenueResponse>>.Ok(data));
+        return Ok(OperationResult<List<MonthlyRevenueView>>.Ok(data));
     }
 
     [HttpGet("top-clients")]
-    public async Task<ActionResult<OperationResult<List<TopClientResponse>>>> TopClients([FromQuery] int? top, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<TopClientView>>>> TopClients([FromQuery] int? top, CancellationToken ct)
     {
         var data = await _reportingManager.GetTopClientsAsync(top ?? 10, ct);
-        return Ok(OperationResult<List<TopClientResponse>>.Ok(data));
+        return Ok(OperationResult<List<TopClientView>>.Ok(data));
     }
 
     [HttpGet("utilization")]
-    public async Task<ActionResult<OperationResult<List<EmployeeUtilizationResponse>>>> Utilization(CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<EmployeeUtilizationView>>>> Utilization(CancellationToken ct)
     {
         var data = await _reportingManager.GetEmployeeUtilizationAsync(ct);
-        return Ok(OperationResult<List<EmployeeUtilizationResponse>>.Ok(data));
+        return Ok(OperationResult<List<EmployeeUtilizationView>>.Ok(data));
     }
 
     [HttpGet("completion")]
-    public async Task<ActionResult<OperationResult<List<JobCompletionRateResponse>>>> Completion(CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<JobCompletionRateView>>>> Completion(CancellationToken ct)
     {
         var data = await _reportingManager.GetJobCompletionRateAsync(ct);
-        return Ok(OperationResult<List<JobCompletionRateResponse>>.Ok(data));
+        return Ok(OperationResult<List<JobCompletionRateView>>.Ok(data));
     }
 
     [HttpGet("overdue")]
-    public async Task<ActionResult<OperationResult<OverdueInvoiceSummaryResponse>>> Overdue(CancellationToken ct)
+    public async Task<ActionResult<OperationResult<OverdueInvoiceSummaryView>>> Overdue(CancellationToken ct)
     {
         var data = await _reportingManager.GetOverdueInvoiceSummaryAsync(ct);
-        return Ok(OperationResult<OverdueInvoiceSummaryResponse>.Ok(data));
+        return Ok(OperationResult<OverdueInvoiceSummaryView>.Ok(data));
     }
 
     [HttpGet("export")]
@@ -60,7 +61,7 @@ public class ReportingController : ControllerBase
             $"invoice-export-{DateTime.UtcNow:yyyyMMddHHmmss}.xlsx");
     }
 
-    internal static byte[] BuildInvoiceWorkbook(IEnumerable<InvoiceExportResponse> rows)
+    internal static byte[] BuildInvoiceWorkbook(IEnumerable<InvoiceSummaryView> rows)
     {
         using var workbook = new XLWorkbook();
         var ws = workbook.Worksheets.Add("Invoices");

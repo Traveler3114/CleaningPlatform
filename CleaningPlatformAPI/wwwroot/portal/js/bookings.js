@@ -28,6 +28,8 @@ function renderBookings(bookings) {
     }
 
     var html = bookings.map(function (b) {
+        var svcNames = (b.services || []).map(function (s) { return s.serviceName; }).join(', ');
+        var estTotal = (b.services || []).reduce(function (sum, s) { return sum + (s.estimatedPrice || s.finalPrice || 0); }, 0);
         return '<div class="booking-card booking-card--' + b.status.toLowerCase() + '" onclick="window.location.href=\'booking-detail.html?id=' + b.id + '\'">' +
             '<div class="booking-card__header">' +
             '<div>' +
@@ -36,10 +38,10 @@ function renderBookings(bookings) {
             '</div>' +
             statusBadge(b.status) +
             '</div>' +
-            '<div class="booking-card__meta">' + b.services + '</div>' +
+            '<div class="booking-card__meta">' + svcNames + '</div>' +
             '<div class="booking-card__footer">' +
             '<span>' + (b.siteName || 'No location specified') + '</span>' +
-            '<span>' + formatCurrency(b.estimatedTotal) + '</span>' +
+            '<span>' + formatCurrency(estTotal) + '</span>' +
             '</div>' +
             '</div>';
     }).join('');

@@ -32,7 +32,7 @@ function render(booking) {
         '<tbody>' +
         booking.services.map(function (s) {
             var price = s.finalPrice || s.estimatedPrice || 0;
-            return '<tr><td>' + s.name + '</td><td>' + s.quantity + '</td><td>' + formatCurrency(price) + '</td></tr>';
+            return '<tr><td>' + s.serviceName + '</td><td>' + s.quantity + '</td><td>' + formatCurrency(price) + '</td></tr>';
         }).join('') +
         '</tbody>' +
         '</table>' +
