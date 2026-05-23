@@ -27,6 +27,9 @@ namespace CleaningPlatformAPI.Entities
         public decimal? PriceAvg { get; set; }
         public decimal? DefaultMarginPct { get; set; }
 
+        [Required, MaxLength(50)]
+        public string ServiceType { get; set; } = "Vehicle";
+
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

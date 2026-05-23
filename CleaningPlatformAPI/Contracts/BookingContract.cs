@@ -45,6 +45,7 @@ public record CreateBookingRequest
     public string? Email { get; set; }
     public DateTime Date { get; set; }
     public int Hour { get; set; }
+    public int ServiceCatalogId { get; set; }
 }
 
 public record UpdateStatusRequest

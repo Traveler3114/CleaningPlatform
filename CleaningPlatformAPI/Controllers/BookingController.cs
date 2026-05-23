@@ -12,10 +12,12 @@ namespace CleaningPlatformAPI.Controllers;
 public class BookingController : ControllerBase
 {
     private readonly BookingManager _bookingManager;
+    private readonly SopManager _sopManager;
 
-    public BookingController(BookingManager bookingManager)
+    public BookingController(BookingManager bookingManager, SopManager sopManager)
     {
         _bookingManager = bookingManager;
+        _sopManager = sopManager;
     }
 
     [HttpGet]
@@ -118,6 +120,22 @@ public class BookingController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
+
+    [HttpGet("{id:int}/sops")]
+    [Authorize(Policy = PermissionKeys.BookingsView)]
+    public async Task<ActionResult<OperationResult<List<BookingSopAssignmentResponse>>>> GetBookingSops(int id, CancellationToken ct)
+    {
+        var assignments = await _sopManager.GetBookingSopsAsync(id, ct);
+        return Ok(OperationResult<List<BookingSopAssignmentResponse>>.Ok(assignments));
+    }
+
+    [HttpPost("{id:int}/sops")]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
+    public async Task<ActionResult<OperationResult<BookingSopAssignmentResponse>>> AssignSop(int id, [FromBody] AssignSopRequest request, CancellationToken ct)
+    {
+        var result = await _sopManager.AssignSopToBookingAsync(id, request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
 
     [HttpGet("employee/assigned")]
     [Authorize] // or [Authorize(Policy = PermissionKeys.BookingsView)] – any authenticated user can see their own assigned bookings

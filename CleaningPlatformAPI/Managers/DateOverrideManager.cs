@@ -14,7 +14,7 @@ public class DateOverrideManager
 
     public async Task<List<DateOverrideResponse>> GetOverridesAsync(CancellationToken ct = default)
     {
-        var cutoff    = DateTime.UtcNow.Date;
+        var cutoff    = DateOnly.FromDateTime(DateTime.UtcNow);
         var overrides = await _db.DateOverrides
             .Where(o => o.Date >= cutoff)
             .OrderBy(o => o.Date)
@@ -24,12 +24,12 @@ public class DateOverrideManager
 
     public async Task<OperationResult<DateOverrideResponse>> CreateOverrideAsync(DateOverrideRequest request, CancellationToken ct = default)
     {
-        if (request.Date.Date < DateTime.UtcNow.Date)
+        if (request.Date < DateOnly.FromDateTime(DateTime.UtcNow))
             return OperationResult<DateOverrideResponse>.Fail(
                 $"Date overrides cannot be created for past dates. The selected date was {request.Date:dd MMM yyyy}.");
 
         var existing = await _db.DateOverrides
-            .FirstOrDefaultAsync(o => o.Date.Date == request.Date.Date, ct);
+            .FirstOrDefaultAsync(o => o.Date == request.Date, ct);
 
         DateOverride entity;
 
@@ -45,7 +45,7 @@ public class DateOverrideManager
         {
             entity = new DateOverride
             {
-                Date          = request.Date.Date,
+                Date          = request.Date,
                 StartHour     = request.StartHour,
                 EndHour       = request.EndHour,
                 Capacity      = request.Capacity,

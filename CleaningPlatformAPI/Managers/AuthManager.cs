@@ -134,11 +134,7 @@ public class AuthManager
             .Select(rp => rp.PermissionKey)
             .ToListAsync(ct);
 
-        return OperationResult<LoginContext>.Ok(new LoginContext
-        {
-            User = user,
-            Permissions = permissions
-        });
+        return OperationResult<LoginContext>.Ok(new LoginContext(user, permissions));
     }
 
     public async Task<OperationResult<string>> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default)
@@ -184,6 +180,7 @@ public class AuthManager
         return OperationResult<string>.Ok("Password changed.");
     }
 
+    // Fallback of 12 intentionally matches the default in appsettings.json
     private int GetBcryptWorkFactor()
     {
         var configured = _config.GetValue<int?>("Security:BcryptWorkFactor");
@@ -216,9 +213,5 @@ public class AuthManager
         return hasUpper && hasLower && hasDigit;
     }
 
-    private sealed class LoginContext
-    {
-        public required Employee User { get; init; }
-        public required List<string> Permissions { get; init; }
-    }
+    private record LoginContext(Employee User, List<string> Permissions);
 }

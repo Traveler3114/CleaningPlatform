@@ -33,6 +33,11 @@ public class ServiceCatalogManager
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
             return OperationResult<ServiceCatalogResponse>.Fail("Catalog code and name are required.");
 
+        var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat" };
+        var serviceType = dto.ServiceType?.Trim();
+        if (string.IsNullOrWhiteSpace(serviceType) || !validServiceTypes.Contains(serviceType))
+            return OperationResult<ServiceCatalogResponse>.Fail("Service type must be one of: Vehicle, SiteBased, Boat.");
+
         var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code, ct);
         if (exists)
             return OperationResult<ServiceCatalogResponse>.Fail("Catalog code already exists.");
@@ -48,6 +53,7 @@ public class ServiceCatalogManager
             PriceMax = dto.PriceMax,
             PriceAvg = dto.PriceAvg,
             DefaultMarginPct = dto.DefaultMarginPct,
+            ServiceType = serviceType,
             IsActive = dto.IsActive,
             CreatedAt = now,
             UpdatedAt = now
@@ -70,6 +76,11 @@ public class ServiceCatalogManager
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
             return OperationResult<ServiceCatalogResponse>.Fail("Catalog code and name are required.");
 
+        var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat" };
+        var serviceType = dto.ServiceType?.Trim();
+        if (string.IsNullOrWhiteSpace(serviceType) || !validServiceTypes.Contains(serviceType))
+            return OperationResult<ServiceCatalogResponse>.Fail("Service type must be one of: Vehicle, SiteBased, Boat.");
+
         if (!string.Equals(entity.CatalogCode, code, StringComparison.OrdinalIgnoreCase))
         {
             var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code && s.Id != id, ct);
@@ -85,6 +96,7 @@ public class ServiceCatalogManager
         entity.PriceMax = dto.PriceMax;
         entity.PriceAvg = dto.PriceAvg;
         entity.DefaultMarginPct = dto.DefaultMarginPct;
+        entity.ServiceType = serviceType;
         entity.IsActive = dto.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
 

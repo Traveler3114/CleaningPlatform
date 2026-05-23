@@ -34,8 +34,11 @@ public static class ClientMapper
         IsActive = site.IsActive
     };
 
-    public static ClientResponse ToProfileResponse(Client client)
+    public static ClientResponse ToProfileResponse(Client client, List<Booking>? recentBookings = null)
     {
+        var primary = client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)
+            ?? client.Contacts.FirstOrDefault(c => c.IsActive);
+
         return new ClientResponse
         {
             Id = client.Id,
@@ -46,13 +49,10 @@ public static class ClientMapper
             Notes = client.Notes,
             IsActive = client.IsActive,
             CreatedAt = client.CreatedAt,
-            PrimaryContactName = client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)?.ContactName
-                ?? client.Contacts.FirstOrDefault(c => c.IsActive)?.ContactName,
-            PrimaryContactPhone = client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)?.Phone
-                ?? client.Contacts.FirstOrDefault(c => c.IsActive)?.Phone,
-            PrimaryContactEmail = client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)?.Email
-                ?? client.Contacts.FirstOrDefault(c => c.IsActive)?.Email,
-            TotalBookings = client.Bookings.Count,
+            PrimaryContactName = primary?.ContactName,
+            PrimaryContactPhone = primary?.Phone,
+            PrimaryContactEmail = primary?.Email,
+            TotalBookings = client.Bookings?.Count ?? 0,
             Contacts = client.Contacts
                 .OrderByDescending(c => c.IsPrimary)
                 .ThenByDescending(c => c.IsActive)
@@ -75,7 +75,7 @@ public static class ClientMapper
                 .ThenBy(s => s.SiteName)
                 .Select(ToSiteResponse)
                 .ToList(),
-            Bookings = client.Bookings
+            Bookings = (recentBookings ?? client.Bookings?.ToList() ?? [])
                 .OrderByDescending(b => b.ScheduledDate)
                 .Select(BookingMapper.ToResponse)
                 .ToList()

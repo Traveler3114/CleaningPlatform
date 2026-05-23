@@ -54,6 +54,15 @@ public class ClientController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
+    [HttpGet("{id:int}/bookings")]
+    [Authorize(Policy = PermissionKeys.ClientsView)]
+    public async Task<ActionResult<OperationResult<PagedResult<BookingResponse>>>> GetBookings(
+        int id, [FromQuery] PaginationParams pagination, CancellationToken ct)
+    {
+        var result = await _clientManager.GetClientBookingsAsync(id, pagination, ct);
+        return Ok(OperationResult<PagedResult<BookingResponse>>.Ok(result));
+    }
+
     [HttpGet("{id:int}/sites")]
     [Authorize(Policy = PermissionKeys.ClientsView)]
     public async Task<ActionResult<OperationResult<List<SiteResponse>>>> GetSites(int id, CancellationToken ct)

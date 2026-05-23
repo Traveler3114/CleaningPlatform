@@ -14,8 +14,8 @@ public class ReportingManager
     public async Task<List<MonthlyRevenueResponse>> GetMonthlyRevenueAsync(CancellationToken ct = default) =>
         (await _db.MonthlyRevenueViews.AsNoTracking().OrderByDescending(v => v.Year).ThenByDescending(v => v.Month).ToListAsync(ct)).Select(ReportingMapper.ToResponse).ToList();
 
-    public async Task<List<TopClientResponse>> GetTopClientsAsync(CancellationToken ct = default) =>
-        (await _db.TopClientViews.AsNoTracking().ToListAsync(ct)).Select(ReportingMapper.ToResponse).ToList();
+    public async Task<List<TopClientResponse>> GetTopClientsAsync(int count = 10, CancellationToken ct = default) =>
+        (await _db.TopClientViews.AsNoTracking().OrderByDescending(v => v.TotalBilled).Take(count).ToListAsync(ct)).Select(ReportingMapper.ToResponse).ToList();
 
     public async Task<List<EmployeeUtilizationResponse>> GetEmployeeUtilizationAsync(CancellationToken ct = default) =>
         (await _db.EmployeeUtilizationViews.AsNoTracking().OrderBy(v => v.EmployeeName).ToListAsync(ct)).Select(ReportingMapper.ToResponse).ToList();
@@ -32,7 +32,7 @@ public class ReportingManager
     public async Task<DashboardSummaryResponse> GetDashboardSummaryAsync(CancellationToken ct = default)
     {
         var revenue = (await GetMonthlyRevenueAsync(ct)).FirstOrDefault();
-        var topClient = (await GetTopClientsAsync(ct)).FirstOrDefault();
+        var topClient = (await GetTopClientsAsync(count: 10, ct)).FirstOrDefault();
         var completion = (await GetJobCompletionRateAsync(ct)).FirstOrDefault();
         var overdue = await GetOverdueInvoiceSummaryAsync(ct);
         return new DashboardSummaryResponse(revenue, topClient, completion, overdue);

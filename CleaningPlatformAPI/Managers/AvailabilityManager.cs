@@ -17,7 +17,7 @@ public class AvailabilityManager
 
     public async Task<List<AvailabilityResponse>> GetSlotsAsync(DateTime date, CancellationToken ct = default)
     {
-        var dateOverride = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date.Date == date.Date, ct);
+        var dateOverride = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date == DateOnly.FromDateTime(date.Date), ct);
         if (dateOverride != null && dateOverride.IsFullyClosed)
             return [];
 
@@ -29,9 +29,11 @@ public class AvailabilityManager
         var endHour = dateOverride?.EndHour ?? schedule.EndHour;
         var defaultCapacity = dateOverride?.Capacity ?? schedule.Capacity;
 
-        var bookings = await _db.Bookings
-            .Where(b => b.ScheduledDate.Date == date.Date && b.Status != BookingStatus.Cancelled)
-            .ToListAsync(ct);
+        var bookedCounts = await _db.Bookings
+            .Where(b => b.ScheduledDate.Date == date.Date && b.Status != BookingStatus.Cancelled && b.ScheduledTimeSlot != null)
+            .GroupBy(b => b.ScheduledTimeSlot!.Value.Hours)
+            .Select(g => new { Hour = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.Hour, g => g.Count, ct);
 
         var slots = new List<AvailabilityResponse>();
 
@@ -53,7 +55,7 @@ public class AvailabilityManager
             if (isToday && h <= now.Hour)
                 continue;
 
-            var booked = bookings.Count(b => b.ScheduledTimeSlot.HasValue && b.ScheduledTimeSlot.Value.Hours == h);
+            var booked = bookedCounts.GetValueOrDefault(h, 0);
             slots.Add(ScheduleMapper.ToAvailabilityResponse(h, defaultCapacity, booked, defaultCapacity == 0));
         }
 

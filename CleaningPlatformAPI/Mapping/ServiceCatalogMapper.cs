@@ -16,6 +16,7 @@ public static class ServiceCatalogMapper
         PriceMax = s.PriceMax,
         PriceAvg = s.PriceAvg,
         DefaultMarginPct = s.DefaultMarginPct,
+        ServiceType = s.ServiceType,
         IsActive = s.IsActive,
         CreatedAt = s.CreatedAt,
         UpdatedAt = s.UpdatedAt

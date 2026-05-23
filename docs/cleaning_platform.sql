@@ -105,41 +105,43 @@ CREATE TABLE ServiceCatalog (
     PriceMax            DECIMAL(10,2)   NULL,
     PriceAvg            DECIMAL(10,2)   NULL,
     DefaultMarginPct    DECIMAL(5,2)    NULL,
+    ServiceType         NVARCHAR(50)    NOT NULL DEFAULT 'Vehicle',
     IsActive            BIT             NOT NULL DEFAULT 1,
     CreatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
-    UpdatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE()
+    UpdatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT CHK_ServiceCatalog_ServiceType CHECK (ServiceType IN ('Vehicle', 'SiteBased', 'Boat'))
 );
 GO
 CREATE INDEX IX_ServiceCatalog_Code ON ServiceCatalog(CatalogCode);
 GO
 
-INSERT INTO ServiceCatalog (CatalogCode, Name, Category, Unit, PriceMin, PriceMax, PriceAvg, DefaultMarginPct) VALUES
-('A-01', 'Čišćenje stubišta — Osnovno (1x/tjed.)',       'Stubišta',  'Mj/objekt',    36.00,    80.00,    55.00,  45.0),
-('A-02', 'Čišćenje stubišta — Standard (+ tepih)',        'Stubišta',  'Mj/objekt',    80.00,   170.00,   110.00,  42.0),
-('A-03', 'Čišćenje stubišta — Premium (veliki objekt)',   'Stubišta',  'Mj/objekt',   160.00,   580.00,   280.00,  40.0),
-('A-04', 'Uredsko čišćenje — Osnovno',                   'Uredi',     'Mj/ured',     300.00,   700.00,   500.00,  40.0),
-('A-05', 'Uredsko čišćenje — Veliki objekt',             'Uredi',     'Mj/ured',     700.00,  3275.00,  1500.00,  38.0),
-('A-06', 'Pranje vozila — B2B ugovor (LIM/OBD)',         'Flota',     'Po vozilu',    13.50,    20.00,    16.00,  60.0),
-('A-07', 'Pranje vozila — B2B ugovor (SUV)',             'Flota',     'Po vozilu',    20.00,    30.00,    24.00,  58.0),
-('A-08', 'Pranje vozila — B2B ugovor (Dostavno/Kombi)',  'Flota',     'Po vozilu',    25.00,    35.00,    28.00,  55.0),
-('B-01', 'Carwash — Kompletno LIM (manja)',              'Carwash',   'Po dolasku',   15.00,    20.00,    17.00,  62.0),
-('B-02', 'Carwash — Kompletno SUV',                      'Carwash',   'Po dolasku',   20.00,    25.00,    23.00,  60.0),
-('B-03', 'Carwash — Kompletno Terenski/Pick-up',         'Carwash',   'Po dolasku',   25.00,    30.00,    28.00,  58.0),
-('B-04', 'Carwash — Teretno/Kombi',                      'Carwash',   'Po dolasku',   35.00,    50.00,    42.00,  50.0),
-('B-05', 'Pranje motora',                                'Carwash',   'Po vozilu',    20.00,    20.00,    20.00,  55.0),
-('B-06', 'Kemijsko čišćenje sjedala/tapeciranog',        'Carwash',   'Po kom',       55.00,    75.00,    63.00,  55.0),
-('B-07', 'Pranje tepiha — auto',                         'Tepisi',    'Po m²',         4.00,     5.00,     4.50,  60.0),
-('B-08', 'Pranje tepiha — podni',                        'Tepisi',    'Po m²',         4.00,     7.00,     5.00,  58.0),
-('B-09', 'Post-construction čišćenje',                   'Specijal',  'Po m²',         4.00,     9.00,     6.00,  48.0),
-('B-10', 'Čišćenje garaže',                              'Specijal',  'Po tretmanu',  50.00,   450.00,   200.00,  50.0),
-('B-11', 'Dezinfekcija prostora (kemijska/ozon)',        'Specijal',  'Po m²',         4.00,    10.00,     6.00,  55.0),
-('B-12', 'Industrijsko čišćenje hale',                   'Specijal',  'Po tretmanu', 300.00,   500.00,   400.00,  40.0),
-('B-13', 'Pranje jedrilice/broda — osnovno',             'Brodovi',   'Po brodu',    200.00,   500.00,   320.00,  58.0),
-('B-14', 'Pranje broda — detailing',                     'Brodovi',   'Po brodu',    500.00,  1500.00,   900.00,  62.0),
-('C-01', 'Košenje trave — osnovno',                      'Upsell',    'Po satu/m²',   20.00,    30.00,    25.00,  45.0),
-('C-02', 'Košenje + šiblje + odvoz',                     'Upsell',    'Po tretmanu', 100.00,   300.00,   180.00,  40.0),
-('C-03', 'Najam i pranje tepiha (otirači)',               'Upsell',    'Mj/tepih',     10.00,    15.00,    12.00,  65.0),
-('C-04', 'Uniforme — pranje hotelskih/medicinskih',      'Upsell',    'Mj/ugovor',   100.00,   300.00,   180.00,  50.0);
+INSERT INTO ServiceCatalog (CatalogCode, Name, Category, Unit, PriceMin, PriceMax, PriceAvg, DefaultMarginPct, ServiceType) VALUES
+('A-01', 'Čišćenje stubišta — Osnovno (1x/tjed.)',       'Stubišta',  'Mj/objekt',    36.00,    80.00,    55.00,  45.0,  'SiteBased'),
+('A-02', 'Čišćenje stubišta — Standard (+ tepih)',        'Stubišta',  'Mj/objekt',    80.00,   170.00,   110.00,  42.0,  'SiteBased'),
+('A-03', 'Čišćenje stubišta — Premium (veliki objekt)',   'Stubišta',  'Mj/objekt',   160.00,   580.00,   280.00,  40.0,  'SiteBased'),
+('A-04', 'Uredsko čišćenje — Osnovno',                   'Uredi',     'Mj/ured',     300.00,   700.00,   500.00,  40.0,  'SiteBased'),
+('A-05', 'Uredsko čišćenje — Veliki objekt',             'Uredi',     'Mj/ured',     700.00,  3275.00,  1500.00,  38.0,  'SiteBased'),
+('A-06', 'Pranje vozila — B2B ugovor (LIM/OBD)',         'Flota',     'Po vozilu',    13.50,    20.00,    16.00,  60.0,  'Vehicle'),
+('A-07', 'Pranje vozila — B2B ugovor (SUV)',             'Flota',     'Po vozilu',    20.00,    30.00,    24.00,  58.0,  'Vehicle'),
+('A-08', 'Pranje vozila — B2B ugovor (Dostavno/Kombi)',  'Flota',     'Po vozilu',    25.00,    35.00,    28.00,  55.0,  'Vehicle'),
+('B-01', 'Carwash — Kompletno LIM (manja)',              'Carwash',   'Po dolasku',   15.00,    20.00,    17.00,  62.0,  'Vehicle'),
+('B-02', 'Carwash — Kompletno SUV',                      'Carwash',   'Po dolasku',   20.00,    25.00,    23.00,  60.0,  'Vehicle'),
+('B-03', 'Carwash — Kompletno Terenski/Pick-up',         'Carwash',   'Po dolasku',   25.00,    30.00,    28.00,  58.0,  'Vehicle'),
+('B-04', 'Carwash — Teretno/Kombi',                      'Carwash',   'Po dolasku',   35.00,    50.00,    42.00,  50.0,  'Vehicle'),
+('B-05', 'Pranje motora',                                'Carwash',   'Po vozilu',    20.00,    20.00,    20.00,  55.0,  'Vehicle'),
+('B-06', 'Kemijsko čišćenje sjedala/tapeciranog',        'Carwash',   'Po kom',       55.00,    75.00,    63.00,  55.0,  'Vehicle'),
+('B-07', 'Pranje tepiha — auto',                         'Tepisi',    'Po m²',         4.00,     5.00,     4.50,  60.0,  'Vehicle'),
+('B-08', 'Pranje tepiha — podni',                        'Tepisi',    'Po m²',         4.00,     7.00,     5.00,  58.0,  'Vehicle'),
+('B-09', 'Post-construction čišćenje',                   'Specijal',  'Po m²',         4.00,     9.00,     6.00,  48.0,  'SiteBased'),
+('B-10', 'Čišćenje garaže',                              'Specijal',  'Po tretmanu',  50.00,   450.00,   200.00,  50.0,  'SiteBased'),
+('B-11', 'Dezinfekcija prostora (kemijska/ozon)',        'Specijal',  'Po m²',         4.00,    10.00,     6.00,  55.0,  'SiteBased'),
+('B-12', 'Industrijsko čišćenje hale',                   'Specijal',  'Po tretmanu', 300.00,   500.00,   400.00,  40.0,  'SiteBased'),
+('B-13', 'Pranje jedrilice/broda — osnovno',             'Brodovi',   'Po brodu',    200.00,   500.00,   320.00,  58.0,  'Boat'),
+('B-14', 'Pranje broda — detailing',                     'Brodovi',   'Po brodu',    500.00,  1500.00,   900.00,  62.0,  'Boat'),
+('C-01', 'Košenje trave — osnovno',                      'Upsell',    'Po satu/m²',   20.00,    30.00,    25.00,  45.0,  'SiteBased'),
+('C-02', 'Košenje + šiblje + odvoz',                     'Upsell',    'Po tretmanu', 100.00,   300.00,   180.00,  40.0,  'SiteBased'),
+('C-03', 'Najam i pranje tepiha (otirači)',               'Upsell',    'Mj/tepih',     10.00,    15.00,    12.00,  65.0,  'SiteBased'),
+('C-04', 'Uniforme — pranje hotelskih/medicinskih',      'Upsell',    'Mj/ugovor',   100.00,   300.00,   180.00,  50.0,  'SiteBased');
 GO
 
 CREATE TABLE Roles (
@@ -610,7 +612,7 @@ GROUP BY YEAR(i.IssueDate), MONTH(i.IssueDate);
 GO
 
 CREATE VIEW vw_TopClients AS
-SELECT TOP 10
+SELECT
     c.Id           AS ClientId,
     c.ClientName,
     COUNT(i.Id)    AS InvoiceCount,
@@ -624,8 +626,7 @@ LEFT JOIN (
     GROUP BY InvoiceId
 ) p ON p.InvoiceId = i.Id
 WHERE i.IssueDate >= DATEADD(YEAR, -1, CAST(GETUTCDATE() AS DATE))
-GROUP BY c.Id, c.ClientName
-ORDER BY SUM(i.TotalAmount) DESC;
+GROUP BY c.Id, c.ClientName;
 GO
 
 CREATE VIEW vw_EmployeeUtilization AS

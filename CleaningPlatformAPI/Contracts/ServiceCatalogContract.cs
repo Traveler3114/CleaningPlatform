@@ -11,6 +11,7 @@ public class ServiceCatalogResponse
     public decimal? PriceMax { get; set; }
     public decimal? PriceAvg { get; set; }
     public decimal? DefaultMarginPct { get; set; }
+    public string ServiceType { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -26,5 +27,6 @@ public record ServiceCatalogUpsertRequest
     public decimal? PriceMax { get; set; }
     public decimal? PriceAvg { get; set; }
     public decimal? DefaultMarginPct { get; set; }
+    public string ServiceType { get; set; } = "Vehicle";
     public bool IsActive { get; set; } = true;
 }

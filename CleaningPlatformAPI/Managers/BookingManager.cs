@@ -188,11 +188,20 @@ public class BookingManager
                 await _db.SaveChangesAsync(ct);
             }
 
-            // 3. Create the booking
+            // 3. Load the selected service catalog entry
+            var catalogEntry = await _db.ServiceCatalog
+                .FirstOrDefaultAsync(s => s.Id == dto.ServiceCatalogId && s.IsActive, ct);
+            if (catalogEntry == null)
+                return OperationResult<BookingResponse>.Fail("Selected service was not found or is no longer available.");
+
+            if (!Enum.TryParse<BookingServiceType>(catalogEntry.ServiceType, true, out var serviceType))
+                return OperationResult<BookingResponse>.Fail($"Invalid service type '{catalogEntry.ServiceType}'.");
+
+            // 4. Create the booking
             var booking = new Booking
             {
                 ClientId = client.Id,
-                ServiceType = BookingServiceType.Vehicle,
+                ServiceType = serviceType,
                 ScheduledDate = dto.Date.Date,
                 ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
                 Status = BookingStatus.Pending,
@@ -200,11 +209,18 @@ public class BookingManager
                 UpdatedAt = now
             };
 
+            booking.BookingServices.Add(new BookingService
+            {
+                ServiceCatalogId = catalogEntry.Id,
+                EstimatedPrice = catalogEntry.PriceAvg,
+                Quantity = 1
+            });
+
             _db.Bookings.Add(booking);
             await _db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
 
-            // 4. Return the response using your mapper
+            // 5. Return the response using your mapper
             return OperationResult<BookingResponse>.Ok(BookingMapper.ToResponse(booking));
         }
         catch

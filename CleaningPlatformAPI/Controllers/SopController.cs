@@ -8,12 +8,13 @@ namespace CleaningPlatformAPI.Controllers;
 
 [ApiController]
 [Authorize]
+[Route("api/sops")]
 public class SopController : ControllerBase
 {
     private readonly SopManager _sopManager;
     public SopController(SopManager sopManager) => _sopManager = sopManager;
 
-    [HttpGet("api/sops")]
+    [HttpGet]
     [Authorize(Policy = PermissionKeys.SopsView)]
     public async Task<ActionResult<OperationResult<List<SopTemplateResponse>>>> Get(CancellationToken ct)
     {
@@ -21,7 +22,7 @@ public class SopController : ControllerBase
         return Ok(OperationResult<List<SopTemplateResponse>>.Ok(templates));
     }
 
-    [HttpGet("api/sops/{id:int}")]
+    [HttpGet("{id:int}")]
     [Authorize(Policy = PermissionKeys.SopsView)]
     public async Task<ActionResult<OperationResult<SopTemplateResponse>>> GetById(int id, CancellationToken ct)
     {
@@ -29,7 +30,7 @@ public class SopController : ControllerBase
         return result.Success ? Ok(result) : NotFound(result);
     }
 
-    [HttpPost("api/sops")]
+    [HttpPost]
     [Authorize(Policy = PermissionKeys.SopsManage)]
     public async Task<ActionResult<OperationResult<SopTemplateResponse>>> Create([FromBody] CreateSopTemplateRequest request, CancellationToken ct)
     {
@@ -37,7 +38,7 @@ public class SopController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpPut("api/sops/{id:int}")]
+    [HttpPut("{id:int}")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
     public async Task<ActionResult<OperationResult<SopTemplateResponse>>> Update(int id, [FromBody] CreateSopTemplateRequest request, CancellationToken ct)
     {
@@ -45,7 +46,7 @@ public class SopController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpDelete("api/sops/{id:int}")]
+    [HttpDelete("{id:int}")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
     public async Task<ActionResult<OperationResult<string>>> Delete(int id, CancellationToken ct)
     {
@@ -53,7 +54,7 @@ public class SopController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpPost("api/sops/{id:int}/items")]
+    [HttpPost("{id:int}/items")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
     public async Task<ActionResult<OperationResult<ChecklistItemResponse>>> AddItem(int id, [FromBody] UpsertChecklistItemRequest request, CancellationToken ct)
     {
@@ -61,7 +62,7 @@ public class SopController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpPut("api/sops/items/{itemId:int}")]
+    [HttpPut("items/{itemId:int}")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
     public async Task<ActionResult<OperationResult<ChecklistItemResponse>>> UpdateItem(int itemId, [FromBody] UpsertChecklistItemRequest request, CancellationToken ct)
     {
@@ -69,41 +70,11 @@ public class SopController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpDelete("api/sops/items/{itemId:int}")]
+    [HttpDelete("items/{itemId:int}")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
     public async Task<ActionResult<OperationResult<string>>> DeleteItem(int itemId, CancellationToken ct)
     {
         var result = await _sopManager.DeleteChecklistItemAsync(itemId, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
-    }
-
-    [HttpGet("api/bookings/{id:int}/sops")]
-    [Authorize(Policy = PermissionKeys.BookingsView)]
-    public async Task<ActionResult<OperationResult<List<BookingSopAssignmentResponse>>>> GetBookingSops(int id, CancellationToken ct)
-    {
-        var assignments = await _sopManager.GetBookingSopsAsync(id, ct);
-        return Ok(OperationResult<List<BookingSopAssignmentResponse>>.Ok(assignments));
-    }
-
-    [HttpPost("api/bookings/{id:int}/sops")]
-    [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<BookingSopAssignmentResponse>>> AssignSop(int id, [FromBody] AssignSopRequest request, CancellationToken ct)
-    {
-        var result = await _sopManager.AssignSopToBookingAsync(id, request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
-    }
-
-    [HttpGet("api/assignments/{assignmentId:int}/checklist")]
-    public async Task<ActionResult<OperationResult<List<ChecklistResponseResponse>>>> GetChecklist(int assignmentId, CancellationToken ct)
-    {
-        var checklist = await _sopManager.GetChecklistForAssignmentAsync(assignmentId, ct);
-        return Ok(OperationResult<List<ChecklistResponseResponse>>.Ok(checklist));
-    }
-
-    [HttpPost("api/assignments/{assignmentId:int}/checklist/{itemId:int}")]
-    public async Task<ActionResult<OperationResult<ChecklistResponseResponse>>> CompleteItem(int assignmentId, int itemId, [FromBody] CompleteChecklistItemRequest request, CancellationToken ct)
-    {
-        var result = await _sopManager.CompleteChecklistItemAsync(assignmentId, itemId, request, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 }

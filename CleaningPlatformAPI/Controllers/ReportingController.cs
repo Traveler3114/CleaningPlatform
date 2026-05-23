@@ -23,9 +23,9 @@ public class ReportingController : ControllerBase
     }
 
     [HttpGet("top-clients")]
-    public async Task<ActionResult<OperationResult<List<TopClientResponse>>>> TopClients(CancellationToken ct)
+    public async Task<ActionResult<OperationResult<List<TopClientResponse>>>> TopClients([FromQuery] int? top, CancellationToken ct)
     {
-        var data = await _reportingManager.GetTopClientsAsync(ct);
+        var data = await _reportingManager.GetTopClientsAsync(top ?? 10, ct);
         return Ok(OperationResult<List<TopClientResponse>>.Ok(data));
     }
 

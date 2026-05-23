@@ -211,7 +211,8 @@ async function submitBooking() {
         customerName: state.customerName,
         phone: state.phone,
         date: formatDate(state.selectedDate),
-        hour: state.selectedHour
+        hour: state.selectedHour,
+        serviceCatalogId: state.selectedService ? state.selectedService.id : 0
     };
     try {
         const res = await fetch(`${API_BASE}/api/bookings`, {

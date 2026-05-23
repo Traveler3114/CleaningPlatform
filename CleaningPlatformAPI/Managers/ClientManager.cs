@@ -64,18 +64,39 @@ public class ClientManager
         var client = await _db.Clients
             .Include(c => c.Contacts)
             .Include(c => c.Sites)
-            .Include(c => c.Bookings)
-                .ThenInclude(b => b.BookingServices)
-                    .ThenInclude(bs => bs.ServiceCatalog)
-            .Include(c => c.Bookings)
-                .ThenInclude(b => b.Assignments)
-                    .ThenInclude(a => a.Employee)
-                        .ThenInclude(e => e.Role)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
-        return client == null
-            ? OperationResult<ClientResponse>.Fail($"Client #{id} was not found.")
-            : OperationResult<ClientResponse>.Ok(ClientMapper.ToProfileResponse(client));
+        if (client == null)
+            return OperationResult<ClientResponse>.Fail($"Client #{id} was not found.");
+
+        var recentBookings = await _db.Bookings
+            .Where(b => b.ClientId == id)
+            .OrderByDescending(b => b.ScheduledDate)
+            .Take(5)
+            .ToListAsync(ct);
+
+        return OperationResult<ClientResponse>.Ok(ClientMapper.ToProfileResponse(client, recentBookings));
+    }
+
+    public async Task<PagedResult<BookingResponse>> GetClientBookingsAsync(int clientId, PaginationParams pagination, CancellationToken ct = default)
+    {
+        var query = _db.Bookings
+            .Include(b => b.Client).ThenInclude(c => c.Contacts)
+            .Include(b => b.BookingServices)
+            .Include(b => b.Assignments).ThenInclude(a => a.Employee).ThenInclude(e => e.Role)
+            .Where(b => b.ClientId == clientId);
+
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
+            .OrderByDescending(b => b.ScheduledDate)
+            .ThenByDescending(b => b.Id)
+            .Skip(pagination.Skip)
+            .Take(pagination.Take)
+            .ToListAsync(ct);
+
+        var mapped = items.Select(BookingMapper.ToResponse).ToList();
+        return PagedResult<BookingResponse>.From(mapped, totalCount, pagination.Page, pagination.PageSize);
     }
 
     public async Task<OperationResult<ClientResponse>> CreateAsync(CreateClientRequest dto, CancellationToken ct = default)
@@ -157,13 +178,6 @@ public class ClientManager
         var client = await _db.Clients
             .Include(c => c.Contacts)
             .Include(c => c.Sites)
-            .Include(c => c.Bookings)
-                .ThenInclude(b => b.BookingServices)
-                    .ThenInclude(bs => bs.ServiceCatalog)
-            .Include(c => c.Bookings)
-                .ThenInclude(b => b.Assignments)
-                    .ThenInclude(a => a.Employee)
-                        .ThenInclude(e => e.Role)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
         if (client == null)
@@ -190,7 +204,14 @@ public class ClientManager
 
             await _db.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
-            return OperationResult<ClientResponse>.Ok(ClientMapper.ToProfileResponse(client));
+
+            var recentBookings = await _db.Bookings
+                .Where(b => b.ClientId == id)
+                .OrderByDescending(b => b.ScheduledDate)
+                .Take(5)
+                .ToListAsync(ct);
+
+            return OperationResult<ClientResponse>.Ok(ClientMapper.ToProfileResponse(client, recentBookings));
         }
         catch
         {
