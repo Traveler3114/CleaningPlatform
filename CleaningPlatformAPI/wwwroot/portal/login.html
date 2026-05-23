@@ -51,7 +51,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showSuccess(data.message);
+                    showSuccess(data.data || data.message || 'Magic link sent! Check the server console.');
                     document.getElementById('email').value = '';
                 } else {
                     showError(data.message || 'Something went wrong.');
