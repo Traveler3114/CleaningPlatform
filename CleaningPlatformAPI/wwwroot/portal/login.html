@@ -17,7 +17,7 @@
 
         <div class="form-group">
             <label for="email">Email address</label>
-            <input type="email" id="email" class="form-input" placeholder="ana@example.com" value="ana.horvat@email.com" />
+            <input type="email" id="email" class="form-input" placeholder="ana@example.com" />
         </div>
 
         <button id="send-link-btn" class="btn" style="width:100%;justify-content:center;padding:0.7rem;">Send Magic Link</button>
@@ -26,26 +26,42 @@
             <a href="/public/index.html" class="link">&larr; Back to website</a>
         </p>
 
-        <div id="mock-login" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);">
-            <p style="font-size:0.78rem;color:var(--text-muted);text-align:center;margin-bottom:0.5rem;">Prototype: click to log in instantly</p>
-            <button id="mock-login-btn" class="btn btn-outline" style="width:100%;justify-content:center;">Log In as Ana Horvat</button>
-        </div>
+        <p style="text-align:center;margin-top:1rem;font-size:0.75rem;color:var(--text-muted);">
+            For testing, the magic link will appear in the server console.
+        </p>
     </div>
-    <script src="/portal/js/mock-data.js"></script>
     <script src="/portal/js/portal-common.js"></script>
     <script>
-        document.getElementById('send-link-btn').addEventListener('click', () => {
+        document.getElementById('send-link-btn').addEventListener('click', async () => {
             const email = document.getElementById('email').value.trim();
             if (!email) {
                 showError('Please enter your email address.');
                 return;
             }
-            showSuccess('Magic link sent! Check your inbox (prototype: click the mock login button below).');
-        });
 
-        document.getElementById('mock-login-btn').addEventListener('click', () => {
-            setStoredClient(MOCK_CLIENT);
-            window.location.href = 'index.html';
+            const btn = document.getElementById('send-link-btn');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const res = await fetch('/api/portal/send-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showSuccess(data.message);
+                    document.getElementById('email').value = '';
+                } else {
+                    showError(data.message || 'Something went wrong.');
+                }
+            } catch (e) {
+                showError('Could not connect to server. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send Magic Link';
+            }
         });
     </script>
 </body>

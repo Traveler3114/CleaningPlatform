@@ -84,7 +84,7 @@ public class AuthManager
         if (!auth.Success || auth.Data is null)
             return OperationResult<string>.Fail(auth.Message ?? "Invalid credentials.");
 
-        var token = _tokenManager.CreateToken(auth.Data.User, auth.Data.Permissions);
+        var token = _tokenManager.CreateAdminToken(auth.Data.User, auth.Data.Permissions);
         return OperationResult<string>.Ok(token);
     }
 

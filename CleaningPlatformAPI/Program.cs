@@ -11,6 +11,7 @@ using CleaningPlatformAPI.Authorization;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Managers;
+using CleaningPlatformAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,7 @@ builder.Services.AddScoped<InvoiceManager>();
 builder.Services.AddScoped<ReportingManager>();
 builder.Services.AddScoped<KanbanManager>();
 builder.Services.AddScoped<SopManager>();
+builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
