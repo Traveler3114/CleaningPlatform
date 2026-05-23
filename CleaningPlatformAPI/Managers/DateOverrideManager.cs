@@ -33,7 +33,7 @@ public class DateOverrideManager
 
         DateOverride entity;
 
-        if (existing != null)
+        if (existing is not null)
         {
             existing.StartHour     = request.StartHour;
             existing.EndHour       = request.EndHour;
@@ -61,7 +61,7 @@ public class DateOverrideManager
     public async Task<OperationResult<bool>> DeleteOverrideAsync(int id, CancellationToken ct = default)
     {
         var entity = await _db.DateOverrides.FindAsync([id], ct);
-        if (entity == null)
+        if (entity is null)
             return OperationResult<bool>.Fail($"Date override #{id} was not found.");
 
         _db.DateOverrides.Remove(entity);

@@ -17,12 +17,7 @@ public class AuthManager
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
 
-    public AuthManager(TokenManager tokenManager, AppDbContext db, IConfiguration config)
-    {
-        _tokenManager = tokenManager;
-        _db = db;
-        _config = config;
-    }
+    public AuthManager(TokenManager tokenManager, AppDbContext db, IConfiguration config) { _tokenManager = tokenManager; _db = db; _config = config; }
 
     public async Task<OperationResult<string>> RegisterAsync(CreateUserRequest request, CancellationToken ct = default)
     {
@@ -31,7 +26,7 @@ public class AuthManager
             return OperationResult<string>.Fail("Role is required.");
 
         var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName, ct);
-        if (role == null)
+        if (role is null)
             return OperationResult<string>.Fail("Invalid role name.");
 
         var firstName = request.FirstName.Trim();
@@ -123,7 +118,7 @@ public class AuthManager
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Username == username, ct);
 
-        if (user == null || !user.IsActive)
+        if (user is null || !user.IsActive)
             return OperationResult<LoginContext>.Fail("Invalid credentials.");
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
@@ -145,7 +140,7 @@ public class AuthManager
             return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
 
         var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == request.UserId, ct);
-        if (user == null)
+        if (user is null)
             return OperationResult<string>.Fail("User not found.");
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, GetBcryptWorkFactor());
@@ -166,7 +161,7 @@ public class AuthManager
             return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
 
         var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == requestingUserId, ct);
-        if (user == null)
+        if (user is null)
             return OperationResult<string>.Fail("User not found.");
 
         if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
@@ -189,7 +184,7 @@ public class AuthManager
 
     private static bool IsUniqueConstraintViolation(DbUpdateException exception)
     {
-        for (Exception? current = exception; current != null; current = current.InnerException)
+        for (Exception? current = exception; current is not null; current = current.InnerException)
         {
             if (current is SqlException sqlException &&
                 sqlException.Errors.Cast<SqlError>().Any(error => error.Number is 2601 or 2627))

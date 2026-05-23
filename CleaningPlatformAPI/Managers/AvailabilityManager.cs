@@ -10,19 +10,16 @@ public class AvailabilityManager
 {
     private readonly AppDbContext _db;
 
-    public AvailabilityManager(AppDbContext db)
-    {
-        _db = db;
-    }
+    public AvailabilityManager(AppDbContext db) { _db = db; }
 
     public async Task<List<AvailabilityResponse>> GetSlotsAsync(DateTime date, CancellationToken ct = default)
     {
         var dateOverride = await _db.DateOverrides.FirstOrDefaultAsync(o => o.Date == DateOnly.FromDateTime(date.Date), ct);
-        if (dateOverride != null && dateOverride.IsFullyClosed)
+        if (dateOverride is not null && dateOverride.IsFullyClosed)
             return [];
 
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == (int)date.DayOfWeek, ct);
-        if (schedule == null)
+        if (schedule is null)
             return [];
 
         var startHour = dateOverride?.StartHour ?? schedule.StartHour;
@@ -36,8 +33,6 @@ public class AvailabilityManager
             .ToDictionaryAsync(g => g.Hour, g => g.Count, ct);
 
         var slots = new List<AvailabilityResponse>();
-
-        // This is fine for a single-region business but worth a config option if the software is ever reused.
         TimeZoneInfo croatiaZone;
         try
         {

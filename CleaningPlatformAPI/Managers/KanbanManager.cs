@@ -10,7 +10,7 @@ public class KanbanManager
     private readonly AppDbContext _db;
     private static readonly string[] Statuses = ["Pending", "Confirmed", "InProgress", "Completed", "Cancelled"];
 
-    public KanbanManager(AppDbContext db) => _db = db;
+    public KanbanManager(AppDbContext db) { _db = db; }
 
     // ── Existing methods (kept for API compat and employee view) ───────────
 

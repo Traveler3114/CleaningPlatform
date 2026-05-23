@@ -11,10 +11,7 @@ public class TokenManager
 {
     private readonly IConfiguration _config;
 
-    public TokenManager(IConfiguration config)
-    {
-        _config = config;
-    }
+    public TokenManager(IConfiguration config) { _config = config; }
 
     private (SymmetricSecurityKey Key, SigningCredentials Creds, string Issuer) GetSigningConfig()
     {

@@ -10,7 +10,7 @@ public class EmployeeManager
 {
     private readonly AppDbContext _db;
 
-    public EmployeeManager(AppDbContext db) => _db = db;
+    public EmployeeManager(AppDbContext db) { _db = db; }
 
     public async Task<List<UserResponse>> GetAllUsersAsync(CancellationToken ct = default)
     {
@@ -32,7 +32,7 @@ public class EmployeeManager
         var user = await _db.Employees
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
-        if (user == null)
+        if (user is null)
             return OperationResult<UserResponse>.Fail($"User #{id} was not found.");
 
         var permissions = await _db.RolePermissions
@@ -63,7 +63,7 @@ public class EmployeeManager
         var user = await _db.Employees
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
-        if (user == null)
+        if (user is null)
             return OperationResult<UserResponse>.Fail("User not found.");
 
         user.IsActive = !user.IsActive;

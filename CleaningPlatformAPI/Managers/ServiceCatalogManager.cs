@@ -11,10 +11,7 @@ public class ServiceCatalogManager
 {
     private readonly AppDbContext _db;
 
-    public ServiceCatalogManager(AppDbContext db)
-    {
-        _db = db;
-    }
+    public ServiceCatalogManager(AppDbContext db) { _db = db; }
 
     public async Task<List<ServiceCatalogResponse>> GetAllAsync(CancellationToken ct = default)
     {
@@ -68,7 +65,7 @@ public class ServiceCatalogManager
     public async Task<OperationResult<ServiceCatalogResponse>> UpdateAsync(int id, ServiceCatalogUpsertRequest dto, CancellationToken ct = default)
     {
         var entity = await _db.ServiceCatalog.FindAsync([id], ct);
-        if (entity == null)
+        if (entity is null)
             return OperationResult<ServiceCatalogResponse>.Fail("Service not found.");
 
         var code = dto.CatalogCode.Trim();
@@ -107,7 +104,7 @@ public class ServiceCatalogManager
     public async Task<OperationResult<string>> DeleteAsync(int id, CancellationToken ct = default)
     {
         var entity = await _db.ServiceCatalog.FindAsync([id], ct);
-        if (entity == null)
+        if (entity is null)
             return OperationResult<string>.Fail("Service not found.");
 
         _db.ServiceCatalog.Remove(entity);

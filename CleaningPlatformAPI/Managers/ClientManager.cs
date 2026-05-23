@@ -66,7 +66,7 @@ public class ClientManager
             .Include(c => c.Sites)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
-        if (client == null)
+        if (client is null)
             return OperationResult<ClientResponse>.Fail($"Client #{id} was not found.");
 
         var recentBookings = await _db.Bookings
@@ -180,7 +180,7 @@ public class ClientManager
             .Include(c => c.Sites)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
-        if (client == null)
+        if (client is null)
             return OperationResult<ClientResponse>.Fail($"Client #{id} was not found.");
 
         var now = DateTime.UtcNow;
@@ -289,7 +289,7 @@ public class ClientManager
     public async Task<OperationResult<SiteResponse>> CreateSiteAsync(int clientId, UpsertSiteRequest dto, CancellationToken ct = default)
     {
         var validationError = ValidateSiteDto(dto);
-        if (validationError != null)
+        if (validationError is not null)
             return OperationResult<SiteResponse>.Fail(validationError);
 
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
@@ -320,11 +320,11 @@ public class ClientManager
     public async Task<OperationResult<SiteResponse>> UpdateSiteAsync(int clientId, int siteId, UpsertSiteRequest dto, CancellationToken ct = default)
     {
         var validationError = ValidateSiteDto(dto);
-        if (validationError != null)
+        if (validationError is not null)
             return OperationResult<SiteResponse>.Fail(validationError);
 
         var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId && s.ClientId == clientId, ct);
-        if (site == null)
+        if (site is null)
             return OperationResult<SiteResponse>.Fail($"Site #{siteId} was not found for client #{clientId}.");
 
         site.SiteName    = dto.SiteName.Trim();
@@ -344,7 +344,7 @@ public class ClientManager
     public async Task<OperationResult<SiteResponse>> DeactivateSiteAsync(int clientId, int siteId, CancellationToken ct = default)
     {
         var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId && s.ClientId == clientId, ct);
-        if (site == null)
+        if (site is null)
             return OperationResult<SiteResponse>.Fail($"Site #{siteId} was not found for client #{clientId}.");
 
         site.IsActive  = false;

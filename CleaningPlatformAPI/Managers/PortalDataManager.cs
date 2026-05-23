@@ -90,7 +90,7 @@ public class PortalDataManager
             .Include(b => b.Site)
             .FirstOrDefaultAsync(b => b.Id == bookingId && b.ClientId == clientId, ct);
 
-        if (booking == null)
+        if (booking is null)
             return OperationResult<PortalBookingDetailResponse>.Fail("Booking not found.");
 
         return OperationResult<PortalBookingDetailResponse>.Ok(new PortalBookingDetailResponse
@@ -139,7 +139,7 @@ public class PortalDataManager
             .Include(i => i.Payments)
             .FirstOrDefaultAsync(i => i.Id == invoiceId && i.ClientId == clientId, ct);
 
-        if (invoice == null)
+        if (invoice is null)
             return OperationResult<PortalInvoiceDetailResponse>.Fail("Invoice not found.");
 
         var paidAmount = invoice.Payments.Sum(p => p.Amount);
@@ -182,7 +182,7 @@ public class PortalDataManager
             .Include(c => c.Sites)
             .FirstOrDefaultAsync(c => c.Id == clientId, ct);
 
-        if (client == null)
+        if (client is null)
             return OperationResult<PortalProfileResponse>.Fail("Client not found.");
 
         var primary = client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)
@@ -218,7 +218,7 @@ public class PortalDataManager
 
     private static PortalBookingSummary MapBookingSummary(Booking b)
     {
-        var serviceNames = string.Join(", ", b.BookingServices.Select(bs => bs.ServiceCatalog?.Name).Where(n => n != null));
+        var serviceNames = string.Join(", ", b.BookingServices.Select(bs => bs.ServiceCatalog?.Name).Where(n => n is not null));
         var estimatedTotal = b.BookingServices.Sum(bs => bs.EstimatedPrice ?? bs.FinalPrice ?? 0);
 
         return new PortalBookingSummary

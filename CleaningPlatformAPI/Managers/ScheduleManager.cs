@@ -21,11 +21,11 @@ public class ScheduleManager
     public async Task<OperationResult<WeeklyScheduleResponse>> CreateDayAsync(WeeklyScheduleRequest request, CancellationToken ct = default)
     {
         var err = ValidateScheduleRequest(request.DayOfWeek, request.StartHour, request.EndHour, request.Capacity, true);
-        if (err != null) return OperationResult<WeeklyScheduleResponse>.Fail(err);
+        if (err is not null) return OperationResult<WeeklyScheduleResponse>.Fail(err);
 
         var dayName  = ((DayOfWeek)request.DayOfWeek).ToString();
         var existing = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == request.DayOfWeek, ct);
-        if (existing != null)
+        if (existing is not null)
             return OperationResult<WeeklyScheduleResponse>.Fail(
                 $"A schedule entry for {dayName} already exists. Click the row to edit the existing entry instead.");
 
@@ -44,10 +44,10 @@ public class ScheduleManager
     public async Task<OperationResult<WeeklyScheduleResponse>> UpdateDayAsync(int dayOfWeek, UpdateWeeklyScheduleRequest request, CancellationToken ct = default)
     {
         var err = ValidateScheduleRequest(dayOfWeek, request.StartHour, request.EndHour, request.Capacity, false);
-        if (err != null) return OperationResult<WeeklyScheduleResponse>.Fail(err);
+        if (err is not null) return OperationResult<WeeklyScheduleResponse>.Fail(err);
 
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == dayOfWeek, ct);
-        if (schedule == null)
+        if (schedule is null)
             return OperationResult<WeeklyScheduleResponse>.Fail(
                 $"No schedule entry found for {((DayOfWeek)dayOfWeek)}.");
 
@@ -61,7 +61,7 @@ public class ScheduleManager
     public async Task<OperationResult<bool>> DeleteDayAsync(int dayOfWeek, CancellationToken ct = default)
     {
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == dayOfWeek, ct);
-        if (schedule == null)
+        if (schedule is null)
             return OperationResult<bool>.Fail($"No schedule entry found for {((DayOfWeek)dayOfWeek)}.");
 
         _db.WeeklySchedules.Remove(schedule);

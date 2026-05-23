@@ -11,7 +11,7 @@ public class SopManager
 {
     private readonly AppDbContext _db;
 
-    public SopManager(AppDbContext db) => _db = db;
+    public SopManager(AppDbContext db) { _db = db; }
 
     public async Task<List<SopTemplateResponse>> GetAllTemplatesAsync(CancellationToken ct = default)
     {

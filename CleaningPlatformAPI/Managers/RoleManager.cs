@@ -11,7 +11,7 @@ public class RoleManager
 {
     private readonly AppDbContext _db;
 
-    public RoleManager(AppDbContext db) => _db = db;
+    public RoleManager(AppDbContext db) { _db = db; }
 
     public async Task<List<RoleResponse>> GetAllRolesAsync(CancellationToken ct = default)
     {
@@ -28,7 +28,7 @@ public class RoleManager
         var role = await _db.Roles
             .Include(r => r.Permissions)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
-        return role == null
+        return role is null
             ? OperationResult<RoleResponse>.Fail($"Role #{id} was not found.")
             : OperationResult<RoleResponse>.Ok(RoleMapper.ToResponse(role));
     }
@@ -75,7 +75,7 @@ public class RoleManager
             .Include(r => r.Permissions)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
-        if (role == null)
+        if (role is null)
             return OperationResult<RoleResponse>.Fail("Role not found.");
 
         if (role.IsProtected)
@@ -107,7 +107,7 @@ public class RoleManager
             .Include(r => r.Permissions)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
-        if (role == null)
+        if (role is null)
             return OperationResult<string>.Fail("Role not found.");
 
         if (role.IsProtected)
