@@ -107,6 +107,14 @@ public class BookingManager
         await using var transaction = await _db.Database.BeginTransactionAsync(ct);
         try
         {
+            // Re-check availability inside the transaction to prevent overbooking under concurrency
+            var actualBooked = await _db.Bookings
+                .CountAsync(b => b.ScheduledDate.Date == dto.Date.Date
+                    && b.ScheduledTimeSlot == TimeSpan.FromHours(dto.Hour)
+                    && b.Status != BookingStatus.Cancelled, ct);
+            if (slot.Capacity - actualBooked <= 0)
+                return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is fully booked ({actualBooked}/{slot.Capacity} spots taken).");
+
             // 2. Client deduplication – search by phone or email in Contacts table
             Client? client = null;
 

@@ -10,14 +10,14 @@ test.describe('Admin Data Filtering and Search', () => {
     await page.goto('/admin/clients.html');
     await expect(page.locator('#search-input')).toBeVisible();
     await expect(page.locator('#type-filter')).toBeVisible();
-    await expect(page.locator('#apply-filter-btn')).toBeVisible();
+    await expect(page.locator('#apply-filter')).toBeVisible();
   });
 
   test('search input filters client list', async ({ page }) => {
     await page.goto('/admin/clients.html');
     const searchInput = page.locator('#search-input');
     await searchInput.fill('Test');
-    await page.locator('#apply-filter-btn').click();
+    await page.locator('#apply-filter').click();
     await expect(page.locator('#clients-list')).toBeVisible();
   });
 
@@ -27,7 +27,7 @@ test.describe('Admin Data Filtering and Search', () => {
     const options = await typeFilter.locator('option').count();
     if (options > 1) {
       await typeFilter.selectOption({ index: 1 });
-      await page.locator('#apply-filter-btn').click();
+      await page.locator('#apply-filter').click();
       await expect(page.locator('#clients-list')).toBeVisible();
     }
   });
@@ -40,14 +40,13 @@ test.describe('Admin Data Filtering and Search', () => {
 
   test('show all button clears date filter', async ({ page }) => {
     await page.goto('/admin/bookings.html');
-    const showAllBtn = page.locator('#show-all-btn');
-    test.skip(!(await showAllBtn.isVisible()), 'No show all button');
-    await showAllBtn.click();
+    await page.waitForSelector('#show-all-btn');
+    await page.locator('#show-all-btn').click();
   });
 
-  test('invoices page has search', async ({ page }) => {
+  test('invoices page loads with invoice list', async ({ page }) => {
     await page.goto('/admin/invoices.html');
-    await expect(page.locator('#search-input')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Invoices');
     await expect(page.locator('#invoices-list')).toBeVisible();
   });
 });

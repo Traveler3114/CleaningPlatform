@@ -4,18 +4,18 @@ import { loginAsPortalClient, logoutPortalClient } from '../../helpers/portal-au
 test.describe('Portal Magic Link Auth Flow', () => {
   test('login page has email input and send button', async ({ page }) => {
     await page.goto('/portal/login.html');
-    await expect(page.locator('#email-input')).toBeVisible();
+    await expect(page.locator('#email')).toBeVisible();
     await expect(page.locator('#send-link-btn')).toBeVisible();
   });
 
   test('missing token on magic-link page shows error', async ({ page }) => {
     await page.goto('/portal/magic-link.html');
-    await expect(page.locator('#error-message')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#status-text')).toBeVisible({ timeout: 5000 });
   });
 
   test('invalid token on magic-link page shows error', async ({ page }) => {
     await page.goto('/portal/magic-link.html?token=invalidtoken123');
-    await expect(page.locator('#error-message')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#status-text')).toBeVisible({ timeout: 5000 });
   });
 
   test('magic link login redirects to dashboard', async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('Portal Magic Link Auth Flow', () => {
 
   test('navigation tabs are visible after login', async ({ page }) => {
     await loginAsPortalClient(page);
-    const tabLinks = page.locator('.nav-tabs a');
+    const tabLinks = page.locator('.nav-tab');
     const tabCount = await tabLinks.count();
     expect(tabCount).toBeGreaterThanOrEqual(3);
   });

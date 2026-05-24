@@ -21,6 +21,7 @@ test.describe('Admin Invoices', () => {
 
   test('invoice rows link to detail pages', async ({ page }) => {
     await page.goto('/admin/invoices.html');
+    await page.waitForSelector('#invoices-list table, #invoices-list .alert-info', { timeout: 10000 }).catch(() => {});
     const invoiceLink = page.locator('#invoices-list a.link').first();
     test.skip(!(await invoiceLink.isVisible()), 'No invoices exist');
     await invoiceLink.click();

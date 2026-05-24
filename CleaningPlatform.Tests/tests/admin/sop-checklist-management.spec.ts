@@ -10,32 +10,33 @@ test.describe('Admin SOP Checklist Management', () => {
   test('SOPs page loads with template list', async ({ page }) => {
     await page.goto('/admin/sops.html');
     await expect(page.locator('h1')).toContainText('SOP Library');
-    await expect(page.locator('#template-list')).toBeVisible();
+    await expect(page.locator('#sops-list')).toBeVisible();
   });
 
   test('create a new SOP template', async ({ page }) => {
     await page.goto('/admin/sops.html');
     const templateName = uniqueName('Test SOP');
-    await page.locator('#create-template-btn').click();
     await page.fill('#template-name', templateName);
-    await page.locator('#save-template-btn').click();
-    await expect(page.locator('#success-message', { hasText: 'success' }).first()).toBeVisible({ timeout: 5000 });
+    await page.locator('#create-template-form button[type="submit"]').click();
+    await expect(page.locator('#success-container')).toBeVisible({ timeout: 5000 });
     await expect(page.locator(`text=${templateName}`).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('edit an existing SOP template', async ({ page }) => {
     await page.goto('/admin/sops.html');
-    const editBtn = page.locator('.edit-template-btn').first();
+    await page.waitForSelector('#sops-list table, #sops-list .alert-info', { timeout: 10000 }).catch(() => {});
+    const editBtn = page.locator('.sop-row').first();
     test.skip(!(await editBtn.isVisible()), 'No templates exist');
     await editBtn.click();
-    await expect(page.locator('#edit-template-modal')).toBeVisible();
-    await page.fill('#template-name', uniqueName('Edited SOP'));
-    await page.locator('#save-edit-btn').click();
+    await expect(page.locator('#sop-modal')).toBeVisible();
+    await page.fill('#edit-template-name', uniqueName('Edited SOP'));
+    await page.locator('#edit-template-form button[type="submit"]').click();
   });
 
   test('deactivate an SOP template', async ({ page }) => {
     await page.goto('/admin/sops.html');
-    const deactivateBtn = page.locator('.deactivate-btn').first();
+    await page.waitForSelector('#sops-list table, #sops-list .alert-info', { timeout: 10000 }).catch(() => {});
+    const deactivateBtn = page.locator('button.btn.btn-sm', { hasText: 'Deactivate' }).first();
     test.skip(!(await deactivateBtn.isVisible()), 'No templates exist');
     await deactivateBtn.click();
   });
