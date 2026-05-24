@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Public Services Page', () => {
   test('services page loads and shows service catalog', async ({ page }) => {
     await page.goto('/public/services.html');
-    await expect(page.locator('h1')).toContainText('Services');
+    await expect(page.locator('.section-label')).toContainText('Services');
     await expect(page.locator('#services-grid')).toBeVisible();
   });
 

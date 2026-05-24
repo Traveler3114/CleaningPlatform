@@ -1,7 +1,34 @@
 import { Page } from '@playwright/test';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { BASE_URL, PORTAL_EMAIL, PORTAL_CLIENT_ID, PORTAL_CLIENT_NAME, JWT_SECRET, JWT_ISSUER } from './env';
+import { PORTAL_EMAIL, PORTAL_CLIENT_ID, PORTAL_CLIENT_NAME, JWT_SECRET, JWT_ISSUER } from './env';
+
+export async function loginAsPortalClient(page: Page): Promise<void> {
+  const response = await page.request.post('/api/portal/validate-token', {
+    data: {
+      token: createMagicLinkToken(),
+    },
+  });
+
+  const result = await response.json();
+  if (!result.success || !result.data) {
+    throw new Error(`Portal auth failed: ${result.message || 'Unknown error'}`);
+  }
+
+  await page.evaluate((sessionToken: string) => {
+    localStorage.setItem('portalSession', sessionToken);
+  }, result.data);
+
+  await page.goto('/portal/index.html');
+  await page.waitForSelector('.user-pill-name:not(:has-text("Loading..."))');
+}
+
+export async function logoutPortalClient(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    localStorage.removeItem('portalSession');
+  });
+  await page.goto('/portal/login.html');
+}
 
 function createMagicLinkToken(): string {
   return jwt.sign(
@@ -19,21 +46,4 @@ function createMagicLinkToken(): string {
       expiresIn: '15m',
     }
   );
-}
-
-export async function loginAsPortalClient(page: Page): Promise<void> {
-  const token = createMagicLinkToken();
-  const magicLinkUrl = `/portal/magic-link.html?token=${token}`;
-
-  await page.goto(magicLinkUrl);
-
-  await page.waitForURL('**/portal/index.html');
-  await page.waitForSelector('.user-pill-name:not(:has-text("Loading..."))');
-}
-
-export async function logoutPortalClient(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    localStorage.removeItem('portalSession');
-  });
-  await page.goto('/portal/login.html');
 }

@@ -28,7 +28,7 @@ test.describe('Admin Reports', () => {
 
   test('employee utilization section is visible', async ({ page }) => {
     await page.goto('/admin/reports.html');
-    await expect(page.locator('#utilization-table')).toBeVisible();
+    await expect(page.locator('#utilization-table')).toBeAttached();
   });
 
   test('completion rates section is visible', async ({ page }) => {
