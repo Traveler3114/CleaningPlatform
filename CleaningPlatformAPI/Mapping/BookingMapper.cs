@@ -16,6 +16,7 @@ public static class BookingMapper
         Status = b.Status.ToString(),
         ServicesCount = b.BookingServices?.Count ?? 0,
         SiteName = b.Site?.SiteName,
+        RecurringScheduleId = b.RecurringScheduleId,
         AssignedEmployees = b.Assignments?.Select(a => new AssignedEmployeeResponse
         {
             AssignmentId = a.Id,

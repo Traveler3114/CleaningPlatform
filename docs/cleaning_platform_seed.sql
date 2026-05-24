@@ -307,6 +307,7 @@ CREATE TABLE Bookings (
     CreatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     UpdatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
     CompletedAt         DATETIME2       NULL,
+    RecurringScheduleId INT             NULL,
     CONSTRAINT FK_Booking_Client    FOREIGN KEY (ClientId)           REFERENCES Clients(Id),
     CONSTRAINT FK_Booking_Site      FOREIGN KEY (SiteId)             REFERENCES Sites(Id),
     CONSTRAINT CHK_Booking_ServiceType CHECK (ServiceType IN ('Vehicle', 'SiteBased', 'Boat')),
@@ -348,6 +349,37 @@ CREATE TABLE BookingServices (
 );
 GO
 CREATE INDEX IX_BookingServices_Booking ON BookingServices(BookingId);
+GO
+
+-- ============================================================
+-- RECURRING SCHEDULES
+-- ============================================================
+
+CREATE TABLE RecurringSchedules (
+    Id                          INT             PRIMARY KEY IDENTITY(1,1),
+    SourceBookingId             INT             NOT NULL,
+    Frequency                   NVARCHAR(20)    NOT NULL,
+    DayOfWeek                   INT             NULL,
+    DayOfMonth                  INT             NULL,
+    AutoGenerateWeeksAhead      INT             NOT NULL DEFAULT 4,
+    IsActive                    BIT             NOT NULL DEFAULT 1,
+    EndsOn                      DATE            NULL,
+    CreatedAt                   DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedAt                   DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT FK_RecurringSchedule_SourceBooking FOREIGN KEY (SourceBookingId) REFERENCES Bookings(Id),
+    CONSTRAINT CHK_RecurringSchedule_Frequency CHECK (Frequency IN ('Weekly', 'Biweekly', 'Monthly')),
+    CONSTRAINT CHK_RecurringSchedule_DayOfWeek CHECK (DayOfWeek IS NULL OR (DayOfWeek >= 0 AND DayOfWeek <= 6)),
+    CONSTRAINT CHK_RecurringSchedule_DayOfMonth CHECK (DayOfMonth IS NULL OR (DayOfMonth >= 1 AND DayOfMonth <= 28)),
+    CONSTRAINT CHK_RecurringSchedule_AutoGenerateWeeksAhead CHECK (AutoGenerateWeeksAhead BETWEEN 1 AND 52)
+);
+GO
+CREATE INDEX IX_RecurringSchedules_SourceBookingId ON RecurringSchedules(SourceBookingId);
+CREATE INDEX IX_RecurringSchedules_IsActive ON RecurringSchedules(IsActive);
+GO
+
+ALTER TABLE Bookings ADD CONSTRAINT FK_Booking_RecurringSchedule FOREIGN KEY (RecurringScheduleId) REFERENCES RecurringSchedules(Id) ON DELETE SET NULL;
+GO
+CREATE INDEX IX_Bookings_RecurringScheduleId ON Bookings(RecurringScheduleId);
 GO
 
 CREATE TABLE VehicleBookingDetails (
@@ -600,7 +632,7 @@ WITH N AS (
     FROM sys.all_objects
 )
 INSERT INTO Bookings (
-    ClientId, SiteId, ServiceType, ScheduledDate, ScheduledTimeSlot, Status, Notes, CreatedAt, UpdatedAt, CompletedAt
+    ClientId, SiteId, ServiceType, ScheduledDate, ScheduledTimeSlot, Status, Notes, CreatedAt, UpdatedAt, CompletedAt, RecurringScheduleId
 )
 SELECT
     ((n - 1) % (SELECT COUNT(*) FROM Clients)) + 1,
@@ -612,7 +644,8 @@ SELECT
     CONCAT('Mock booking note ', n),
     DATEADD(DAY, -1 * (n % 30), GETUTCDATE()),
     GETUTCDATE(),
-    CASE WHEN s.Status = 'Completed' THEN DATEADD(DAY, -1, GETUTCDATE()) ELSE NULL END
+    CASE WHEN s.Status = 'Completed' THEN DATEADD(DAY, -1, GETUTCDATE()) ELSE NULL END,
+    NULL
 FROM N
 CROSS APPLY (SELECT CHOOSE((n % 5) + 1, 'Pending', 'Confirmed', 'InProgress', 'Completed', 'Cancelled') AS Status) s;
 GO

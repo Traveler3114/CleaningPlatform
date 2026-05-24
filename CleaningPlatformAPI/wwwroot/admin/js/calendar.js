@@ -50,9 +50,10 @@ function renderEmployeeWeek(board) {
         html += `<h3 style="margin:1rem 0 0.5rem;">${day.dayLabel} ${day.isToday ? '— Today' : ''}</h3>`;
         day.bookings.sort((a, b) => a.hour - b.hour).forEach(card => {
             const cssStatus = card.status.toLowerCase();
+            const recIcon = card.recurringScheduleId ? '<span class="badge badge-info" title="Recurring" style="margin-right:0.3rem;">↻</span>' : '';
             html += `<div class="emp-task-card emp-task-card--${cssStatus}">
                 <div class="emp-task-card__header">
-                    <span class="emp-task-card__title">${card.hour}:00 — ${card.clientName}</span>
+                    <span class="emp-task-card__title">${recIcon}${card.hour}:00 — ${card.clientName}</span>
                     <span class="badge badge-${cssStatus}">${card.status}</span>
                 </div>
                 <div class="emp-task-card__meta">
@@ -145,8 +146,9 @@ function renderDayView(employees, unassigned) {
         html += `<tr><td class="resource-cell resource-cell--time">${hour}:00</td>`;
         html += `<td class="resource-cell resource-cell--unassigned">`;
         unassigned.filter(c => c.hour === hour).forEach(card => {
+            const recIcon = card.recurringScheduleId ? '↻ ' : '';
             html += `<a href="booking-detail.html?id=${card.bookingId}" class="resource-card resource-card--${card.status.toLowerCase()}">
-                <div class="resource-card__time">${card.hour}:00</div><div class="resource-card__client">${card.clientName}</div>
+                <div class="resource-card__time">${card.hour}:00</div><div class="resource-card__client">${recIcon}${card.clientName}</div>
                 <div class="resource-card__meta">${card.serviceType}${card.siteName ? ' · ' + card.siteName : ''}</div>
             </a>`;
         });
@@ -155,8 +157,9 @@ function renderDayView(employees, unassigned) {
             const cellBookings = emp.bookings.filter(c => c.hour === hour);
             html += `<td class="resource-cell ${!cellBookings.length ? 'resource-cell--free' : ''}" data-emp-name="${emp.fullName.toLowerCase()}">`;
             cellBookings.forEach(card => {
+                const recIcon = card.recurringScheduleId ? '↻ ' : '';
                 html += `<a href="booking-detail.html?id=${card.bookingId}" class="resource-card resource-card--${card.status.toLowerCase()}">
-                    <div class="resource-card__time">${card.hour}:00</div><div class="resource-card__client">${card.clientName}</div>
+                    <div class="resource-card__time">${card.hour}:00</div><div class="resource-card__client">${recIcon}${card.clientName}</div>
                     <div class="resource-card__meta">${card.serviceType}${card.siteName ? ' · ' + card.siteName : ''}</div>
                 </a>`;
             });
@@ -194,7 +197,8 @@ function renderWeekView(employees, unassigned) {
             const cardDate = new Date(c.date);
             return formatDateForApi(cardDate) === formatDateForApi(day);
         }).forEach(card => {
-            html += `<a href="booking-detail.html?id=${card.bookingId}" class="resource-chip resource-chip--${card.status.toLowerCase()}">${card.hour}:00 ${card.clientName}</a>`;
+            const recIcon = card.recurringScheduleId ? '↻ ' : '';
+            html += `<a href="booking-detail.html?id=${card.bookingId}" class="resource-chip resource-chip--${card.status.toLowerCase()}">${recIcon}${card.hour}:00 ${card.clientName}</a>`;
         });
         html += `</td>`;
         employees.forEach(emp => {
@@ -204,7 +208,8 @@ function renderWeekView(employees, unassigned) {
             });
             html += `<td class="resource-cell ${!dayBookings.length ? 'resource-cell--free' : ''}" data-emp-name="${emp.fullName.toLowerCase()}">`;
             dayBookings.forEach(card => {
-                html += `<a href="booking-detail.html?id=${card.bookingId}" class="resource-chip resource-chip--${card.status.toLowerCase()}">${card.hour}:00 ${card.clientName}</a>`;
+                const recIcon = card.recurringScheduleId ? '↻ ' : '';
+                html += `<a href="booking-detail.html?id=${card.bookingId}" class="resource-chip resource-chip--${card.status.toLowerCase()}">${recIcon}${card.hour}:00 ${card.clientName}</a>`;
             });
             html += `</td>`;
         });

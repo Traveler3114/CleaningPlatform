@@ -1,0 +1,126 @@
+name: Playwright E2E Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: windows-latest
+
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: TestPassword123!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestPassword123! -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # ── Checkout ────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── .NET setup ──────────────────────────────────────────────────────
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # ── Node.js setup ───────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: CleaningPlatform.Tests/package-lock.json
+
+      # ── Wait for SQL Server to be ready ─────────────────────────────────
+      - name: Wait for SQL Server
+        run: |
+          for i in {1..30}; do
+            if sqlcmd -S localhost -U sa -P "TestPassword123!" -Q "SELECT 1" &> /dev/null; then
+              echo "SQL Server is ready"
+              break
+            fi
+            echo "Waiting for SQL Server... ($i/30)"
+            sleep 5
+          done
+        shell: bash
+
+      # ── Seed the database ────────────────────────────────────────────────
+      - name: Seed database
+        run: |
+          sqlcmd -S localhost -U sa -P "TestPassword123!" -i "docs/cleaning_platform_seed.sql"
+        shell: bash
+
+      # ── Restore & build API ──────────────────────────────────────────────
+      - name: Restore API dependencies
+        run: dotnet restore CleaningPlatformAPI/CleaningPlatformAPI.csproj
+
+      - name: Build API
+        run: dotnet build CleaningPlatformAPI/CleaningPlatformAPI.csproj --no-restore --configuration Release
+
+      # ── Start API in background ──────────────────────────────────────────
+      - name: Start API
+        run: |
+          dotnet run --project CleaningPlatformAPI/CleaningPlatformAPI.csproj \
+            --configuration Release \
+            --no-build \
+            -- \
+            --urls "https://localhost:7124;http://localhost:5098" \
+            --ConnectionStrings:DefaultConnection "Server=localhost;Database=CleaningPlatformDB;User Id=sa;Password=TestPassword123!;TrustServerCertificate=True" \
+            &
+          echo "API_PID=$!" >> $GITHUB_ENV
+        shell: bash
+
+      # ── Wait for API to be ready ─────────────────────────────────────────
+      - name: Wait for API
+        run: |
+          for i in {1..30}; do
+            if curl -sk https://localhost:7124/api/availability?date=2026-01-01 &> /dev/null; then
+              echo "API is ready"
+              break
+            fi
+            echo "Waiting for API... ($i/30)"
+            sleep 3
+          done
+        shell: bash
+
+      # ── Install Playwright ───────────────────────────────────────────────
+      - name: Install Node dependencies
+        run: npm ci
+        working-directory: CleaningPlatform.Tests
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: CleaningPlatform.Tests
+
+      # ── Run tests ────────────────────────────────────────────────────────
+      - name: Run Playwright tests
+        run: npx playwright test
+        working-directory: CleaningPlatform.Tests
+        env:
+          BASE_URL: https://localhost:7124
+          ADMIN_USERNAME: owner
+          ADMIN_PASSWORD: ChangeMe123!
+          EMPLOYEE_USERNAME: mkovac
+          EMPLOYEE_PASSWORD: ChangeMe123!
+          CI: true
+
+      # ── Upload test report on failure ────────────────────────────────────
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: CleaningPlatform.Tests/playwright-report/
+          retention-days: 7

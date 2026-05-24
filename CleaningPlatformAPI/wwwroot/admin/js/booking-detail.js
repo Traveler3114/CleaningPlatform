@@ -37,6 +37,7 @@ function renderBookingDetail() {
                 </select>
                 <button id="update-status-btn" class="btn btn-sm">Save</button>
                 ${booking.status === 'Completed' ? '<button id="generate-invoice-btn" class="btn btn-sm">Generate Invoice</button>' : ''}
+                ${renderRecurringButtons()}
             </div>
         </section>
         <section class="detail-section">
@@ -283,5 +284,140 @@ async function completeChecklistItem(assignmentId, itemId, isCompleted) {
         else loadBookingSops();
     } catch(e) { showError(e.message); }
 }
+
+// ── Recurring Schedule UI ────────────────────────────────────
+
+function renderRecurringButtons() {
+    if (booking.recurringScheduleId) {
+        return `<span style="margin-left:0.5rem; font-size:0.85rem; color:#666;">
+            ↻ Part of <a href="recurring.html" style="text-decoration:underline;">schedule #${booking.recurringScheduleId}</a>
+            <button id="end-series-here-btn" class="btn btn-sm" style="margin-left:0.5rem; background:#c62828; color:#fff;">End series from here</button>
+        </span>`;
+    }
+    if (booking.status === 'Confirmed' || booking.status === 'Completed') {
+        return '<button id="make-recurring-btn" class="btn btn-sm" style="margin-left:0.5rem;">Make Recurring</button>';
+    }
+    return '';
+}
+
+// ── Make Recurring Modal ─────────────────────────────────────
+
+function makeRecurringModalHtml() {
+    return `
+    <div id="recurring-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content" style="max-width:450px;">
+            <h2>Make Recurring</h2>
+            <p>Create a recurring schedule from booking #${booking.id}.</p>
+            <form id="make-recurring-form" class="form-grid two-col">
+                <label>Frequency
+                    <select id="rec-frequency" class="text-input">
+                        <option value="Weekly">Weekly</option>
+                        <option value="Biweekly">Biweekly</option>
+                        <option value="Monthly">Monthly</option>
+                    </select>
+                </label>
+                <label id="rec-dayofweek-group">Day of Week
+                    <select id="rec-dayofweek" class="text-input">
+                        <option value="">--</option>
+                        <option value="0">Sunday</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                    </select>
+                </label>
+                <label id="rec-dayofmonth-group" style="display:none;">Day of Month (1-28)
+                    <input type="number" id="rec-dayofmonth" class="text-input" min="1" max="28" value="1" />
+                </label>
+                <label>Weeks Ahead (1-52)
+                    <input type="number" id="rec-weeksahead" class="text-input" min="1" max="52" value="4" />
+                </label>
+                <label class="full-span">End Date (optional)
+                    <input type="date" id="rec-endson" class="text-input" />
+                </label>
+                <div class="full-span" style="display:flex; gap:0.5rem;">
+                    <button type="submit" class="btn btn-sm">Create Schedule</button>
+                    <button type="button" id="rec-cancel-btn" class="btn btn-sm">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>`;
+}
+
+function toggleRecFields(frequency) {
+    const dow = document.getElementById('rec-dayofweek-group');
+    const dom = document.getElementById('rec-dayofmonth-group');
+    if (frequency === 'Weekly' || frequency === 'Biweekly') {
+        dow.style.display = 'block';
+        dom.style.display = 'none';
+    } else if (frequency === 'Monthly') {
+        dow.style.display = 'none';
+        dom.style.display = 'block';
+    } else {
+        dow.style.display = 'none';
+        dom.style.display = 'none';
+    }
+}
+
+document.addEventListener('click', function (e) {
+    // Make Recurring
+    if (e.target.id === 'make-recurring-btn') {
+        const existing = document.getElementById('recurring-modal');
+        if (existing) { existing.style.display = 'flex'; return; }
+        const div = document.createElement('div');
+        div.innerHTML = makeRecurringModalHtml();
+        document.body.appendChild(div);
+        document.getElementById('recurring-modal').style.display = 'flex';
+        const freq = document.getElementById('rec-frequency');
+        freq.addEventListener('change', function () { toggleRecFields(this.value); });
+        toggleRecFields(freq.value);
+        document.getElementById('rec-cancel-btn').addEventListener('click', function () {
+            document.getElementById('recurring-modal').style.display = 'none';
+        });
+        document.getElementById('make-recurring-form').addEventListener('submit', async function (ev) {
+            ev.preventDefault();
+            const frequency = document.getElementById('rec-frequency').value;
+            const dayOfWeek = (frequency === 'Weekly' || frequency === 'Biweekly')
+                ? parseInt(document.getElementById('rec-dayofweek').value) || null
+                : null;
+            const dayOfMonth = frequency === 'Monthly'
+                ? parseInt(document.getElementById('rec-dayofmonth').value) || null
+                : null;
+            const autoGenerateWeeksAhead = parseInt(document.getElementById('rec-weeksahead').value) || 4;
+            const endsOn = document.getElementById('rec-endson').value || null;
+            try {
+                const res = await apiFetch(`/recurring/from-booking/${bookingId}`, {
+                    method: 'POST',
+                    body: JSON.stringify({ frequency, dayOfWeek, dayOfMonth, autoGenerateWeeksAhead, endsOn })
+                });
+                if (res.success) {
+                    showSuccess('Recurring schedule created');
+                    document.getElementById('recurring-modal').style.display = 'none';
+                    loadBookingDetail();
+                } else showError(res.message);
+            } catch (err) { showError(err.message); }
+        });
+    }
+
+    // End series from here
+    if (e.target.id === 'end-series-here-btn') {
+        const today = new Date().toISOString().split('T')[0];
+        if (!confirm(`End recurring series from ${today}? All future pending bookings will be cancelled.`)) return;
+        (async function () {
+            try {
+                const res = await apiFetch(`/recurring/${booking.recurringScheduleId}/end`, {
+                    method: 'POST',
+                    body: JSON.stringify({ endsOn: today })
+                });
+                if (res.success) {
+                    showSuccess('Series ended');
+                    loadBookingDetail();
+                } else showError(res.message);
+            } catch (err) { showError(err.message); }
+        })();
+    }
+});
 
 loadBookingDetail();

@@ -30,9 +30,10 @@ function renderBookingsFlat(bookings) {
     }
     let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Client</th><th>Date</th><th>Hour</th><th>Status</th><th>Update Status</th></tr></thead><tbody>';
     bookings.forEach(b => {
+        const recurringBadge = b.recurringScheduleId ? '<span class="badge badge-info" title="Part of recurring schedule">↻</span> ' : '';
         html += `<tr class="booking-row" data-id="${b.id}" style="cursor:pointer;">
             <td><a href="booking-detail.html?id=${b.id}" class="link">${b.id}</a></td>
-            <td><a href="client-detail.html?id=${b.clientId}" class="link">${b.clientName}</a></td>
+            <td><a href="client-detail.html?id=${b.clientId}" class="link">${recurringBadge}${b.clientName}</a></td>
             <td>${b.date.split('T')[0]}</td>
             <td>${b.hour}:00</td>
             <td><span class="badge badge-${b.status.toLowerCase()}">${b.status}</span></td>
@@ -60,9 +61,10 @@ function renderBookingsPaginated(pagedResult) {
     }
     let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Client</th><th>Date</th><th>Hour</th><th>Status</th><th>Update Status</th></tr></thead><tbody>';
     bookings.forEach(b => {
+        const recurringBadge = b.recurringScheduleId ? '<span class="badge badge-info" title="Part of recurring schedule">↻</span> ' : '';
         html += `<tr class="booking-row" data-id="${b.id}" style="cursor:pointer;">
             <td><a href="booking-detail.html?id=${b.id}" class="link">${b.id}</a></td>
-            <td><a href="client-detail.html?id=${b.clientId}" class="link">${b.clientName}</a></td>
+            <td><a href="client-detail.html?id=${b.clientId}" class="link">${recurringBadge}${b.clientName}</a></td>
             <td>${b.date.split('T')[0]}</td>
             <td>${b.hour}:00</td>
             <td><span class="badge badge-${b.status.toLowerCase()}">${b.status}</span></td>

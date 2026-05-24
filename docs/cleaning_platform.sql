@@ -670,6 +670,43 @@ WHERE i.DueDate < CAST(GETUTCDATE() AS DATE)
   AND i.Status NOT IN ('Paid','WrittenOff');
 GO
 
+-- ============================================================
+-- RECURRING SCHEDULES MODULE
+-- ============================================================
+
+CREATE TABLE RecurringSchedules (
+    Id                          INT             PRIMARY KEY IDENTITY(1,1),
+    SourceBookingId             INT             NOT NULL,
+    Frequency                   NVARCHAR(20)    NOT NULL,
+    DayOfWeek                   INT             NULL,
+    DayOfMonth                  INT             NULL,
+    AutoGenerateWeeksAhead      INT             NOT NULL DEFAULT 4,
+    IsActive                    BIT             NOT NULL DEFAULT 1,
+    EndsOn                      DATE            NULL,
+    CreatedAt                   DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedAt                   DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT FK_RecurringSchedule_SourceBooking FOREIGN KEY (SourceBookingId) REFERENCES Bookings(Id),
+    CONSTRAINT CHK_RecurringSchedule_Frequency CHECK (Frequency IN ('Weekly', 'Biweekly', 'Monthly')),
+    CONSTRAINT CHK_RecurringSchedule_DayOfWeek CHECK (DayOfWeek IS NULL OR (DayOfWeek >= 0 AND DayOfWeek <= 6)),
+    CONSTRAINT CHK_RecurringSchedule_DayOfMonth CHECK (DayOfMonth IS NULL OR (DayOfMonth >= 1 AND DayOfMonth <= 28)),
+    CONSTRAINT CHK_RecurringSchedule_AutoGenerateWeeksAhead CHECK (AutoGenerateWeeksAhead BETWEEN 1 AND 52)
+);
+GO
+CREATE INDEX IX_RecurringSchedules_SourceBookingId ON RecurringSchedules(SourceBookingId);
+CREATE INDEX IX_RecurringSchedules_IsActive ON RecurringSchedules(IsActive);
+GO
+
+ALTER TABLE Bookings ADD RecurringScheduleId INT NULL;
+GO
+ALTER TABLE Bookings ADD CONSTRAINT FK_Booking_RecurringSchedule FOREIGN KEY (RecurringScheduleId) REFERENCES RecurringSchedules(Id) ON DELETE SET NULL;
+GO
+CREATE INDEX IX_Bookings_RecurringScheduleId ON Bookings(RecurringScheduleId);
+GO
+
+-- ============================================================
+-- DASHBOARD VIEWS (unchanged)
+-- ============================================================
+
 CREATE VIEW vw_BookingSopStatus AS
 SELECT
     b.Id                                              AS BookingId,
