@@ -16,6 +16,8 @@ public class BookingResponse
     public List<AssignedEmployeeResponse> AssignedEmployees { get; set; } = new();
     public DateTime CreatedAt { get; set; }
 
+    public int? RecurringScheduleId { get; set; }
+
     public string? ClientPhone { get; set; }
     public string? ClientEmail { get; set; }
     public List<BookingServiceResponse>? Services { get; set; }

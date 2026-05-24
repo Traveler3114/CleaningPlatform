@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
     public DbSet<ChecklistItem> ChecklistItems { get; set; }
     public DbSet<BookingSopAssignment> BookingSopAssignments { get; set; }
     public DbSet<ChecklistResponse> ChecklistResponses { get; set; }
+    public DbSet<RecurringSchedule> RecurringSchedules { get; set; }
     public DbSet<InvoiceSummaryView> InvoiceSummaryViews { get; set; }
     public DbSet<MonthlyRevenueView> MonthlyRevenueViews { get; set; }
     public DbSet<TopClientView> TopClientViews { get; set; }
@@ -213,6 +214,27 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<BookingAssignment>()
             .HasIndex(ba => new { ba.BookingId, ba.EmployeeId })
             .IsUnique();
+
+        // RecurringSchedule → SourceBooking
+        modelBuilder.Entity<RecurringSchedule>()
+            .HasOne(rs => rs.SourceBooking)
+            .WithMany()
+            .HasForeignKey(rs => rs.SourceBookingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // RecurringSchedule → Bookings (generated occurrences)
+        modelBuilder.Entity<Booking>()
+            .HasOne(b => b.RecurringSchedule)
+            .WithMany(rs => rs.Bookings)
+            .HasForeignKey(b => b.RecurringScheduleId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Booking>()
+            .HasIndex(b => b.RecurringScheduleId);
+
+        modelBuilder.Entity<RecurringSchedule>()
+            .Property(rs => rs.Frequency)
+            .HasMaxLength(20);
 
         // Site → Bookings
         modelBuilder.Entity<Booking>()

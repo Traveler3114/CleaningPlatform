@@ -43,8 +43,11 @@ builder.Services.AddScoped<InvoiceManager>();
 builder.Services.AddScoped<ReportingManager>();
 builder.Services.AddScoped<KanbanManager>();
 builder.Services.AddScoped<SopManager>();
+builder.Services.AddScoped<RecurringScheduleManager>();
 builder.Services.AddScoped<PortalDataManager>();
 builder.Services.AddScoped<EmailService>();
+
+builder.Services.AddHostedService<RecurringJobService>();
 
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 

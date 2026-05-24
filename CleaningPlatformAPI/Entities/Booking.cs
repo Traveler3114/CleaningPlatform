@@ -25,6 +25,7 @@ public class Booking
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
+    public int? RecurringScheduleId { get; set; }
 
     // Navigation
     [ForeignKey(nameof(ClientId))]
@@ -32,6 +33,9 @@ public class Booking
 
     [ForeignKey(nameof(SiteId))]
     public Site? Site { get; set; }
+
+    [ForeignKey(nameof(RecurringScheduleId))]
+    public RecurringSchedule? RecurringSchedule { get; set; }
 
     public VehicleBookingDetails? VehicleDetails { get; set; }
     public BoatBookingDetails? BoatDetails { get; set; }
