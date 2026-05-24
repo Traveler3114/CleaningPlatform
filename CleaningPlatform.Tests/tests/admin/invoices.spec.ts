@@ -22,9 +22,8 @@ test.describe('Admin Invoices', () => {
   test('invoice rows link to detail pages', async ({ page }) => {
     await page.goto('/admin/invoices.html');
     const invoiceLink = page.locator('#invoices-list a.link').first();
-    if (await invoiceLink.isVisible()) {
-      await invoiceLink.click();
-      await expect(page).toHaveURL(/invoice-detail\.html\?id=\d+/);
-    }
+    test.skip(!(await invoiceLink.isVisible()), 'No invoices exist');
+    await invoiceLink.click();
+    await expect(page).toHaveURL(/invoice-detail\.html\?id=\d+/);
   });
 });

@@ -46,6 +46,7 @@ test.describe('Admin Clients', () => {
     await page.fill('#primary-email', `client${uniqueId}@test.com`);
 
     await page.locator('#create-client-form button[type="submit"]').click();
+    await expect(page.locator('#success-message').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('KPI cards are visible on clients page', async ({ page }) => {

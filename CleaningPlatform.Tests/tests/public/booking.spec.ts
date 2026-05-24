@@ -72,11 +72,11 @@ test.describe('Public Booking Flow (4-Step Wizard)', () => {
     const dateStr = tomorrow.toISOString().split('T')[0];
     await page.fill('#date-input', dateStr);
 
-    await page.waitForTimeout(2000);
+    const slotBtn = page.locator('.slot-btn').first();
+    await expect(slotBtn).toBeVisible({ timeout: 10000 });
   });
 
   test('can complete full booking flow to confirmation', async ({ page }) => {
-    // Step 1: Select service
     await page.waitForSelector('.service-card', { timeout: 10000 });
     const serviceCards = page.locator('.service-card');
     const serviceCount = await serviceCards.count();
@@ -84,37 +84,28 @@ test.describe('Public Booking Flow (4-Step Wizard)', () => {
     await serviceCards.first().click();
     await page.locator('#step1-next').click();
 
-    // Step 2: Pick date and time slot
     await page.waitForSelector('#date-input');
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateStr = tomorrow.toISOString().split('T')[0];
     await page.fill('#date-input', dateStr);
 
-    await page.waitForTimeout(1500);
-
     const slotBtn = page.locator('.slot-btn').first();
-    if (await slotBtn.isVisible()) {
-      await slotBtn.click();
-      const step2Next = page.locator('#step2-next');
-      if (await step2Next.isEnabled()) {
-        await step2Next.click();
+    test.skip(!(await slotBtn.isVisible({ timeout: 10000 }).catch(() => false)), 'No available slots');
+    await slotBtn.click();
+    await expect(page.locator('#step2-next')).toBeEnabled();
+    await page.locator('#step2-next').click();
 
-        // Step 3: Fill details
-        await page.waitForSelector('#step3-summary');
-        const uniqueId = Date.now();
-        await page.fill('#customer-name', `Test User ${uniqueId}`);
-        await page.fill('#customer-phone', `+385 91 ${uniqueId}`.slice(0, 15));
-        await page.fill('#customer-email', `test${uniqueId}@email.com`);
+    await page.waitForSelector('#step3-summary');
+    const uniqueId = Date.now();
+    await page.fill('#customer-name', `Test User ${uniqueId}`);
+    await page.fill('#customer-phone', `+385 91 ${uniqueId}`.slice(0, 15));
+    await page.fill('#customer-email', `test${uniqueId}@email.com`);
+    await page.locator('#step3-submit').click();
 
-        await page.locator('#step3-submit').click();
-
-        // Step 4: Confirmation
-        await page.waitForSelector('#panel-4', { timeout: 10000 });
-        await expect(page.locator('#panel-4')).toBeVisible();
-        await expect(page.locator('#confirmation-details')).toBeVisible();
-      }
-    }
+    await page.waitForSelector('#panel-4', { timeout: 10000 });
+    await expect(page.locator('#panel-4')).toBeVisible();
+    await expect(page.locator('#confirmation-details')).toBeVisible();
   });
 
   test('restart button resets the flow', async ({ page }) => {

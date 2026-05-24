@@ -6,8 +6,8 @@ config({ path: path.resolve(__dirname, '.env') });
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,
-  workers: 1,
+  fullyParallel: true,
+  workers: 3,
   retries: 0,
   timeout: 60000,
   expect: {

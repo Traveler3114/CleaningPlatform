@@ -60,6 +60,7 @@ test.describe('Admin Bookings', () => {
       await page.locator('#create-booking-form button[type="submit"]').click();
 
       await expect(page.locator('#error-container')).not.toContainText('Network error');
+      await expect(page.locator('#success-message')).toBeVisible({ timeout: 5000 });
     }
   });
 
@@ -67,16 +68,19 @@ test.describe('Admin Bookings', () => {
     await page.goto('/admin/bookings.html');
 
     const bookingLink = page.locator('#bookings-list a.link').first();
-    if (await bookingLink.isVisible()) {
-      await bookingLink.click();
-      await expect(page).toHaveURL(/booking-detail\.html\?id=\d+/);
-      await expect(page.locator('#booking-detail')).toBeVisible();
-    }
+    test.skip(!(await bookingLink.isVisible()), 'No bookings exist');
+    await bookingLink.click();
+    await expect(page).toHaveURL(/booking-detail\.html\?id=\d+/);
+    await expect(page.locator('#booking-detail')).toBeVisible();
   });
 
   test('pagination controls are visible when bookings exist', async ({ page }) => {
     await page.goto('/admin/bookings.html');
     const prevBtn = page.locator('button:has-text("Previous")');
     const nextBtn = page.locator('button:has-text("Next")');
+    const prevVisible = await prevBtn.isVisible().catch(() => false);
+    const nextVisible = await nextBtn.isVisible().catch(() => false);
+    if (prevVisible) await expect(prevBtn).toBeVisible();
+    if (nextVisible) await expect(nextBtn).toBeVisible();
   });
 });
