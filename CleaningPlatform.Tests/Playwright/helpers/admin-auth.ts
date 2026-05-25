@@ -10,7 +10,7 @@ export async function loginAsAdmin(page: Page): Promise<void> {
   await page.click('button[type="submit"]');
 
   await page.waitForURL('**/admin/index.html');
-  await page.waitForSelector('.user-pill-name:not(:has-text("Loading..."))');
+  await page.waitForSelector('.user-name:not(:has-text("Loading..."))');
 }
 
 export async function logoutAdmin(page: Page): Promise<void> {

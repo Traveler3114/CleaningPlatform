@@ -9,7 +9,7 @@ test.describe('Admin Auth', () => {
 
   test('login shows username in user pill', async ({ page }) => {
     await loginAsAdmin(page);
-    const userName = page.locator('.user-pill-name');
+    const userName = page.locator('.user-name');
     await expect(userName).not.toContainText('Loading...');
   });
 
