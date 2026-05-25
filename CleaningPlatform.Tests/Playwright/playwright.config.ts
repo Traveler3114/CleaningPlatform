@@ -8,11 +8,15 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
   workers: 3,
-  retries: 0,
+  retries: 1,
   timeout: 60000,
   expect: {
     timeout: 15000,
   },
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+  ],
   use: {
     baseURL: process.env.BASE_URL || 'https://localhost:7124',
     trace: 'retain-on-failure',

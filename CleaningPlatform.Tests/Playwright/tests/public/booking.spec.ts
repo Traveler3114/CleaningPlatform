@@ -137,7 +137,7 @@ test.describe('Public Booking Flow (4-Step Wizard)', () => {
         await page.fill('#customer-phone', '+385 91 123 4567');
         await page.locator('#step3-submit').click();
 
-        await page.waitForSelector('#panel-4', { timeout: 10000 });
+        await expect(page.locator('#panel-4')).toBeVisible({ timeout: 10000 });
         await page.locator('#restart-btn').click();
         await expect(page.locator('#panel-1')).toBeVisible();
       }
