@@ -106,17 +106,17 @@ jobs:
 
       # ── Install Playwright ───────────────────────────────────────────────
       - name: Install Node dependencies
-        run: npm install
-        working-directory: CleaningPlatform.Tests
+        run: npm ci
+        working-directory: CleaningPlatform.Tests/Playwright
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-        working-directory: CleaningPlatform.Tests
+        working-directory: CleaningPlatform.Tests/Playwright
 
       # ── Run tests ────────────────────────────────────────────────────────
       - name: Run Playwright tests
         run: npx playwright test
-        working-directory: CleaningPlatform.Tests
+        working-directory: CleaningPlatform.Tests/Playwright
         env:
           BASE_URL: https://localhost:7124
           ADMIN_USERNAME: owner
@@ -131,5 +131,5 @@ jobs:
         if: failure()
         with:
           name: playwright-report
-          path: CleaningPlatform.Tests/playwright-report/
+          path: CleaningPlatform.Tests/Playwright/playwright-report/
           retention-days: 7
