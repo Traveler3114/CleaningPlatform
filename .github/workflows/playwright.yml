@@ -106,7 +106,7 @@ jobs:
 
       # ── Install Playwright ───────────────────────────────────────────────
       - name: Install Node dependencies
-        run: npm ci
+        run: npm install
         working-directory: CleaningPlatform.Tests
 
       - name: Install Playwright browsers

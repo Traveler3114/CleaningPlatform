@@ -14,6 +14,7 @@ public abstract class TestBase : IDisposable
     {
         var config = new ConfigurationBuilder()
             .AddJsonFile("appsettings.Test.json")
+            .AddEnvironmentVariables()
             .Build();
         _connectionString = config.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("DefaultConnection string is missing from appsettings.Test.json");
