@@ -90,28 +90,18 @@ public class SopManager
             return OperationResult<string>.Ok("SOP template deactivated — it is linked to existing bookings and cannot be fully removed.");
         }
 
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
-        try
+        var itemIds = template.ChecklistItems.Select(i => i.Id).ToList();
+        if (itemIds.Count > 0)
         {
-            var itemIds = template.ChecklistItems.Select(i => i.Id).ToList();
-            if (itemIds.Count > 0)
-            {
-                var responses = await _db.ChecklistResponses
-                    .Where(r => itemIds.Contains(r.ChecklistItemId))
-                    .ToListAsync(ct);
-                _db.ChecklistResponses.RemoveRange(responses);
-            }
+            var responses = await _db.ChecklistResponses
+                .Where(r => itemIds.Contains(r.ChecklistItemId))
+                .ToListAsync(ct);
+            _db.ChecklistResponses.RemoveRange(responses);
+        }
 
-            _db.ChecklistItems.RemoveRange(template.ChecklistItems);
-            _db.SopTemplates.Remove(template);
-            await _db.SaveChangesAsync(ct);
-            await tx.CommitAsync(ct);
-        }
-        catch
-        {
-            await tx.RollbackAsync(ct);
-            throw;
-        }
+        _db.ChecklistItems.RemoveRange(template.ChecklistItems);
+        _db.SopTemplates.Remove(template);
+        await _db.SaveChangesAsync(ct);
 
         return OperationResult<string>.Ok("SOP template deleted successfully.");
     }
@@ -159,25 +149,15 @@ public class SopManager
         if (item is null)
             return OperationResult<string>.Fail($"Checklist item #{itemId} was not found.");
 
-        await using var tx = await _db.Database.BeginTransactionAsync(ct);
-        try
-        {
-            var responses = await _db.ChecklistResponses
-                .Where(r => r.ChecklistItemId == itemId)
-                .ToListAsync(ct);
+        var responses = await _db.ChecklistResponses
+            .Where(r => r.ChecklistItemId == itemId)
+            .ToListAsync(ct);
 
-            if (responses.Count > 0)
-                _db.ChecklistResponses.RemoveRange(responses);
+        if (responses.Count > 0)
+            _db.ChecklistResponses.RemoveRange(responses);
 
-            _db.ChecklistItems.Remove(item);
-            await _db.SaveChangesAsync(ct);
-            await tx.CommitAsync(ct);
-        }
-        catch
-        {
-            await tx.RollbackAsync(ct);
-            throw;
-        }
+        _db.ChecklistItems.Remove(item);
+        await _db.SaveChangesAsync(ct);
 
         return OperationResult<string>.Ok("Checklist item deleted successfully.");
     }

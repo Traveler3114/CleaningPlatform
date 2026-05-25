@@ -106,9 +106,17 @@ public class BookingManagerTests : TestBase
         var availability = new AvailabilityManager(db);
         var sop = new SopManager(db);
         var manager = new BookingManager(db, availability, sop);
-        var first = await manager.GetAllBookingsAsync(new PaginationParams { Page = 1, PageSize = 1 });
-        var bookingId = first.Items[0].Id;
-        var employee = await db.Employees.FirstAsync<Employee>();
+        var booking = await db.Bookings
+            .Where(b => b.Status != BookingStatus.Completed && b.Status != BookingStatus.Cancelled)
+            .FirstAsync();
+        var bookingId = booking.Id;
+
+        var assignedIds = await db.BookingAssignments
+            .Where(ba => ba.BookingId == bookingId)
+            .Select(ba => ba.EmployeeId)
+            .ToListAsync();
+        var employee = await db.Employees
+            .FirstAsync(e => !assignedIds.Contains(e.Id));
 
         var result = await manager.AddAssignmentAsync(bookingId, employee.Id);
 

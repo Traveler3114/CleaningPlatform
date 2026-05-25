@@ -82,7 +82,7 @@ public class ClientManagerTests : TestBase
         });
 
         result.Success.Should().BeTrue();
-        result.Data.Type.Should().Be("Business");
+        result.Data!.Type.Should().Be("Business");
     }
 
     [Fact]

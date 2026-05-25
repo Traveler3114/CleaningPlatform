@@ -1,0 +1,60 @@
+name: .NET Tests
+
+on:
+  push:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet test CleaningPlatform.Tests/Unit
+
+  integration:
+    runs-on: windows-latest
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: TestPassword123!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestPassword123! -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Wait for SQL Server
+        run: |
+          for i in {1..30}; do
+            if sqlcmd -S localhost -U sa -P "TestPassword123!" -Q "SELECT 1" &> /dev/null; then
+              echo "SQL Server is ready"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 5
+          done
+        shell: bash
+
+      - name: Create and seed CleaningPlatformDB_Test
+        run: |
+          sed 's/CleaningPlatformDB/CleaningPlatformDB_Test/g' docs/cleaning_platform_seed.sql | \
+            sqlcmd -S localhost -U sa -P "TestPassword123!"
+        shell: bash
+
+      - name: Run integration tests
+        run: dotnet test CleaningPlatform.Tests/Integration
+        env:
+          ConnectionStrings__DefaultConnection: Server=localhost;Database=CleaningPlatformDB_Test;User Id=sa;Password=TestPassword123!;TrustServerCertificate=True;

@@ -26,7 +26,7 @@ public class TokenManagerTests
     }
 
     [Fact]
-    public void CreateAdminToken_ReturnsValidJwt_WithCorrectClaims()
+    public async Task CreateAdminToken_ReturnsValidJwt_WithCorrectClaims()
     {
         var key = "this-is-a-test-key-that-is-at-least-32-characters-long!";
         var issuer = "TestIssuer";
@@ -43,7 +43,7 @@ public class TokenManagerTests
 
         var token = manager.CreateAdminToken(user, permissions);
         var handler = new JsonWebTokenHandler();
-        var result = handler.ValidateToken(token, new TokenValidationParameters
+        var result = await handler.ValidateTokenAsync(token, new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
@@ -63,7 +63,7 @@ public class TokenManagerTests
     }
 
     [Fact]
-    public void CreateAdminToken_OwnerRole_OmitsPermissions()
+    public async Task CreateAdminToken_OwnerRole_OmitsPermissions()
     {
         var config = CreateConfig("test-key-at-least-32-characters-for-testing!", "Issuer");
         var manager = new TokenManager(config);
@@ -77,7 +77,7 @@ public class TokenManagerTests
 
         var token = manager.CreateAdminToken(user, new List<string> { "some.permission" });
         var handler = new JsonWebTokenHandler();
-        var result = handler.ValidateToken(token, new TokenValidationParameters
+        var result = await handler.ValidateTokenAsync(token, new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("test-key-at-least-32-characters-for-testing!")),
@@ -92,14 +92,14 @@ public class TokenManagerTests
     }
 
     [Fact]
-    public void CreateMagicLinkToken_ContainsCorrectClaims()
+    public async Task CreateMagicLinkToken_ContainsCorrectClaims()
     {
         var config = CreateConfig("test-key-at-least-32-characters-for-testing!", "CP");
         var manager = new TokenManager(config);
 
         var token = manager.CreateMagicLinkToken(7, "test@email.com", "Test User");
         var handler = new JsonWebTokenHandler();
-        var result = handler.ValidateToken(token, new TokenValidationParameters
+        var result = await handler.ValidateTokenAsync(token, new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("test-key-at-least-32-characters-for-testing!")),
@@ -117,14 +117,14 @@ public class TokenManagerTests
     }
 
     [Fact]
-    public void CreatePortalSessionToken_ContainsCorrectClaims()
+    public async Task CreatePortalSessionToken_ContainsCorrectClaims()
     {
         var config = CreateConfig("test-key-at-least-32-characters-for-testing!", "CP");
         var manager = new TokenManager(config);
 
         var token = manager.CreatePortalSessionToken(3, "portal@test.com", "Portal User");
         var handler = new JsonWebTokenHandler();
-        var result = handler.ValidateToken(token, new TokenValidationParameters
+        var result = await handler.ValidateTokenAsync(token, new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("test-key-at-least-32-characters-for-testing!")),

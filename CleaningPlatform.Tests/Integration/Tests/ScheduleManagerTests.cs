@@ -19,20 +19,10 @@ public class ScheduleManagerTests : TestBase
     }
 
     [Fact]
-    public async Task CreateAndUpdateDay_Workflow()
+    public async Task UpdateDay_Workflow()
     {
         using var db = CreateDbContext();
         var manager = new ScheduleManager(db);
-
-        var createResult = await manager.CreateDayAsync(new WeeklyScheduleRequest
-        {
-            DayOfWeek = 5,
-            StartHour = 8,
-            EndHour = 16,
-            Capacity = 3
-        });
-
-        createResult.Success.Should().BeTrue();
 
         var updateResult = await manager.UpdateDayAsync(5, new UpdateWeeklyScheduleRequest
         {

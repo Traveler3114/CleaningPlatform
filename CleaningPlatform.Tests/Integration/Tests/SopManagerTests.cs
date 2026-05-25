@@ -55,7 +55,7 @@ public class SopManagerTests : TestBase
             IsActive = true
         });
 
-        var addResult = await manager.AddChecklistItemAsync(createResult.Data.Id, new UpsertChecklistItemRequest
+        var addResult = await manager.AddChecklistItemAsync(createResult.Data!.Id, new UpsertChecklistItemRequest
         {
             ItemText = "Test checklist item",
             SortOrder = 1,
@@ -63,7 +63,7 @@ public class SopManagerTests : TestBase
         });
 
         addResult.Success.Should().BeTrue();
-        addResult.Data.ItemText.Should().Be("Test checklist item");
+        addResult.Data!.ItemText.Should().Be("Test checklist item");
 
         var deleteItemResult = await manager.DeleteChecklistItemAsync(addResult.Data.Id);
 

@@ -17,7 +17,10 @@ public abstract class TestBase : IDisposable
             .Build();
         _connectionString = config.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("DefaultConnection string is missing from appsettings.Test.json");
-        _scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+        _scope = new TransactionScope(
+            TransactionScopeOption.Required,
+            new TransactionOptions { IsolationLevel = IsolationLevel.ReadCommitted },
+            TransactionScopeAsyncFlowOption.Enabled);
     }
 
     protected AppDbContext CreateDbContext()

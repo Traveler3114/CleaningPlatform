@@ -39,7 +39,7 @@ public class EmployeeManagerTests : TestBase
         var result = await manager.GetByIdAsync(firstId);
 
         result.Should().NotBeNull();
-        result.Data.Id.Should().Be(firstId);
+        result.Data!.Id.Should().Be(firstId);
     }
 
     [Fact]
@@ -50,7 +50,9 @@ public class EmployeeManagerTests : TestBase
         var all = await manager.GetAllUsersAsync();
         var target = all[0];
 
-        var result = await manager.ToggleActiveAsync(target.Id, target.Id);
+        var actor = all.Count > 1 ? all[1] : all[0];
+        var actorId = actor.Id == target.Id ? all[^1].Id : actor.Id;
+        var result = await manager.ToggleActiveAsync(target.Id, actorId);
 
         result.Success.Should().BeTrue();
     }

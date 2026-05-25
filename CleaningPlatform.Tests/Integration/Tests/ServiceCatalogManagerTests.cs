@@ -27,6 +27,7 @@ public class ServiceCatalogManagerTests : TestBase
 
         var createResult = await manager.CreateAsync(new ServiceCatalogUpsertRequest
         {
+            CatalogCode = $"T-{unique}",
             Name = $"Test Service {unique}",
             Category = "Cleaning",
             Unit = "hour",
