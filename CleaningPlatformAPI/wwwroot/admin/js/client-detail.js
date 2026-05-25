@@ -24,7 +24,7 @@ async function loadClient() {
 
 function showCreateForm() {
     document.getElementById('client-detail').innerHTML = `
-        <div class="page-header"><h1>New Client</h1></div>
+        <div class="page-header"></div>
         <div class="card-lite">
             <form id="create-client-form" class="form-grid two-col">
                 <label>Client Name <input type="text" id="client-name" class="text-input" required /></label>
@@ -84,7 +84,7 @@ function renderClientDetail() {
         <section class="detail-section">
             <div class="page-header">
                 <div>
-                    <h1>${client.clientName}</h1>
+                    <strong style="font-size:1.2rem;">${client.clientName}</strong>
                     <div><span class="badge badge-${client.type.toLowerCase()}">${client.type}</span>
                     <span class="badge ${client.isActive ? 'badge-active' : 'badge-inactive'}">${client.isActive ? 'Active' : 'Inactive'}</span></div>
                 </div>

@@ -7,60 +7,58 @@
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
-    <header class="admin-header">
-        <div class="header-inner">
-            <span class="brand">Cleaning Platform</span>
-            <nav class="main-nav">
-                <div class="nav-group">
-                    <button class="nav-group__label">Operations</button>
-                    <div class="nav-group__dropdown">
-                        <a href="/admin/index.html" class="nav-group__item">Daily View</a>
-                        <a href="/admin/calendar.html" class="nav-group__item">Calendar</a>
-                    </div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">Clean<span>Pro</span></div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <span class="nav-section-title">Operations</span>
+            <a href="/admin/index.html" class="nav-item">Daily View</a>
+            <a href="/admin/calendar.html" class="nav-item">Calendar</a>
+        </div>
+        <div class="nav-section">
+            <span class="nav-section-title">Bookings</span>
+            <a href="/admin/bookings.html" class="nav-item">Bookings</a>
+            <a href="/admin/recurring.html" class="nav-item">Recurring</a>
+            <a href="/admin/invoices.html" class="nav-item">Invoices</a>
+        </div>
+        <div class="nav-section">
+            <span class="nav-section-title">Clients</span>
+            <a href="/admin/clients.html" class="nav-item">Client List</a>
+        </div>
+        <div class="nav-section">
+            <span class="nav-section-title">Config</span>
+            <a href="/admin/schedule.html" class="nav-item">Schedule</a>
+            <a href="/admin/services.html" class="nav-item">Services</a>
+            <a href="/admin/sops.html" class="nav-item">SOPs</a>
+        </div>
+        <div class="nav-section">
+            <span class="nav-section-title">Admin</span>
+            <a href="/admin/users.html" class="nav-item">Users</a>
+            <a href="/admin/roles.html" class="nav-item">Roles</a>
+            <a href="/admin/reports.html" class="nav-item">Reports</a>
+        </div>
+    </nav>
+</aside>
+<div class="main-wrapper">
+    <header class="top-header">
+        <div class="header-left">
+            <button class="mobile-toggle" id="mobile-toggle">☰</button>
+            <div class="breadcrumb"><strong>Roles</strong></div>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <div class="user-avatar">U</div>
+                <div class="user-details">
+                    <a href="/admin/profile.html" class="user-name">Loading...</a>
+                    <span class="user-role"></span>
                 </div>
-                <div class="nav-group">
-                    <button class="nav-group__label">Bookings</button>
-                    <div class="nav-group__dropdown">
-                    <a href="/admin/bookings.html" class="nav-group__item">Bookings</a>
-                    <a href="/admin/recurring.html" class="nav-group__item">Recurring</a>
-                    <a href="/admin/invoices.html" class="nav-group__item">Invoices</a>
-                    </div>
-                </div>
-                <div class="nav-group">
-                    <button class="nav-group__label">Clients</button>
-                    <div class="nav-group__dropdown">
-                        <a href="/admin/clients.html" class="nav-group__item">Client List</a>
-                    </div>
-                </div>
-                <div class="nav-group">
-                    <button class="nav-group__label">Config</button>
-                    <div class="nav-group__dropdown">
-                        <a href="/admin/schedule.html" class="nav-group__item">Schedule</a>
-                        <a href="/admin/services.html" class="nav-group__item">Services</a>
-                        <a href="/admin/sops.html" class="nav-group__item">SOPs</a>
-                    </div>
-                </div>
-                <div class="nav-group">
-                    <button class="nav-group__label">Admin</button>
-                    <div class="nav-group__dropdown">
-                        <a href="/admin/users.html" class="nav-group__item">Users</a>
-                        <a href="/admin/roles.html" class="nav-group__item">Roles</a>
-                        <a href="/admin/reports.html" class="nav-group__item">Reports</a>
-                    </div>
-                </div>
-            </nav>
-            <div class="user-pill">
-                <div class="user-pill-info">
-                    <a href="/admin/profile.html" class="user-pill-name">Loading...</a>
-                    <span class="user-pill-role"></span>
-                </div>
-                <button id="logout-btn" class="logout-btn">Sign out</button>
             </div>
+            <button id="logout-btn" class="logout-btn">Sign out</button>
         </div>
     </header>
     <main class="admin-main">
         <div class="page-header">
-            <h1>Roles</h1>
+            
             <button id="new-role-btn" class="btn">+ New Role</button>
         </div>
         <div id="error-container"></div>
@@ -88,5 +86,6 @@
     <script src="/admin/js/admin-api.js"></script>
     <script src="/admin/js/admin-common.js"></script>
     <script src="/admin/js/roles.js"></script>
+</div>
 </body>
 </html>

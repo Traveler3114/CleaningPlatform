@@ -1,12 +1,10 @@
-// admin-common.js – shared UI helpers, navigation, logout, permission-based menu
+// admin-common.js – shared UI helpers, sidebar nav, logout
 document.addEventListener('DOMContentLoaded', async () => {
-    // Check authentication
     if (!isAuthenticated()) {
         window.location.href = 'login.html';
         return;
     }
-    
-    // Load user permissions and store globally
+
     const token = getToken();
     if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -14,34 +12,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         const perms = payload['permission'] || [];
         window._userPermissions = perms;
         window._userRole = role;
-        // Owner has all permissions
         if (role === 'Owner') window._userPermissions = ['*'];
     }
-    
-    // Populate user pill
-    const userPillName = document.querySelector('.user-pill-name');
-    if (userPillName) {
-        try {
-            const user = await loadCurrentUser();
-            userPillName.textContent = user.username;
-            document.querySelector('.user-pill-role').textContent = user.role;
-        } catch(e) { console.error(e); }
-    }
-    
-    // Setup logout button
+
+    // Load user info
+    try {
+        const user = await loadCurrentUser();
+        const userNameEl = document.querySelector('.user-name');
+        const roleEl = document.querySelector('.user-role');
+        const avatarEl = document.querySelector('.user-avatar');
+        if (userNameEl) userNameEl.textContent = user.username;
+        if (roleEl) roleEl.textContent = user.role;
+        if (avatarEl) avatarEl.textContent = (user.username || 'U')[0].toUpperCase();
+    } catch(e) { console.error(e); }
+
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
-    
-    // Highlight active page based on current file name
+
+    // Highlight active nav item
     const currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.nav-group__item').forEach(link => {
+    document.querySelectorAll('.nav-item').forEach(link => {
         const href = link.getAttribute('href');
         if (href && href === currentPage) link.classList.add('active');
     });
-    
-    // Show/hide navigation groups based on permissions (optional)
-    // We'll keep all nav items but rely on server-side authorization for API calls.
-    // You may want to hide based on permissions – for now we show all.
+
+    // Mobile sidebar toggle
+    const toggle = document.getElementById('mobile-toggle');
+    const sidebar = document.getElementById('sidebar');
+    if (toggle && sidebar) {
+        toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+        // Close sidebar on nav click (mobile)
+        sidebar.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => sidebar.classList.remove('open'));
+        });
+    }
 });
 
 function showError(message, containerId = 'error-container') {

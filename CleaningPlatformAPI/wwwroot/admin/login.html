@@ -9,17 +9,18 @@
 <body class="login-page">
 <main class="login-card">
     <h1>Admin Login</h1>
+    <p class="login-subtitle">Sign in to manage your platform</p>
     <div id="login-error" class="alert alert-danger" style="display:none;"></div>
     <form id="login-form" class="form-grid">
         <div>
             <label>Username</label>
-            <input type="text" id="username" class="text-input full-width" required />
+            <input type="text" id="username" class="text-input full-width" required placeholder="Enter your username" />
         </div>
         <div>
             <label>Password</label>
-            <input type="password" id="password" class="text-input full-width" required />
+            <input type="password" id="password" class="text-input full-width" required placeholder="Enter your password" />
         </div>
-        <button type="submit" class="btn">Sign in</button>
+        <button type="submit" class="btn" style="width:100%;justify-content:center;padding:0.6rem;margin-top:0.5rem;">Sign in</button>
     </form>
     <p style="text-align:center;margin-top:1.25rem;font-size:0.8rem;">
         <a href="/public/index.html" class="link" style="color:var(--text-muted);">&larr; Back to website</a>
@@ -56,7 +57,6 @@
         }
     });
 
-    // If already logged in, redirect to dashboard
     if (localStorage.getItem('accessToken')) {
         window.location.href = 'index.html';
     }

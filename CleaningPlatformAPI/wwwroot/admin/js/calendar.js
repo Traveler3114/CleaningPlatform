@@ -44,7 +44,7 @@ function renderEmployeeWeek(board) {
     const container = document.getElementById('employee-week-view');
     document.getElementById('employee-view').style.display = 'block';
     document.getElementById('admin-view').style.display = 'none';
-    let html = '<div class="page-header"><h1>My Schedule</h1></div>';
+    let html = '<div class="page-header"></div>';
     board.days.forEach(day => {
         if (!day.bookings.length) return;
         html += `<h3 style="margin:1rem 0 0.5rem;">${day.dayLabel} ${day.isToday ? '— Today' : ''}</h3>`;

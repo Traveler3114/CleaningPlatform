@@ -24,7 +24,7 @@ function renderBookingDetail() {
     container.innerHTML = `
         <section class="detail-section">
             <div class="page-header">
-                <div><h1>Booking #${booking.id}</h1><p>${booking.date.split('T')[0]} at ${booking.hour}:00</p></div>
+                <div><strong>Booking #${booking.id}</strong><p style="font-size:0.85rem;color:var(--text-muted);">${booking.date.split('T')[0]} at ${booking.hour}:00</p></div>
                 <span class="badge badge-${booking.status.toLowerCase()}">${booking.status}</span>
             </div>
             <div class="inline-form" style="margin-top:0.7rem;">

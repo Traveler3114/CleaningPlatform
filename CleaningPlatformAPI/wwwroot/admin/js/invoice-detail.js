@@ -20,7 +20,7 @@ function renderInvoice(invoice) {
     const payments = invoice.payments || [];
     document.getElementById('invoice-detail').innerHTML = `
         <div class="page-header">
-            <div><h1>${invoice.invoiceNumber}</h1><span class="badge badge-${invoice.status.toLowerCase()}">${invoice.status}</span></div>
+            <div><strong style="font-size:1.2rem;">${invoice.invoiceNumber}</strong><span class="badge badge-${invoice.status.toLowerCase()}" style="margin-left:0.5rem;">${invoice.status}</span></div>
         </div>
         <section class="stats-grid">
             <div class="kpi-card"><span>Total</span><strong>${invoice.totalAmount.toFixed(2)}</strong></div>
@@ -55,14 +55,14 @@ function renderInvoice(invoice) {
             <h2 class="section-title">Invoice Lines</h2>
             <table class="admin-table"><thead><tr><th>Description</th><th>Quantity</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>
                 ${lines.map(l => `<tr><td>${l.description}</td><td>${l.quantity}</td><td>${l.unitPrice.toFixed(2)}</td><td>${l.lineTotalAmount.toFixed(2)}</td></tr>`).join('')}
-            </tbody>}</table>
+            </tbody></table>
         </section>
         <section class="detail-section">
             <h2 class="section-title">Payments</h2>
             ${payments.length === 0 ? '<div class="alert alert-info">No payments recorded.</div>' : `
                 <table class="admin-table"><thead><tr><th>Date</th><th>Amount</th><th>Method</th><th>Reference</th><th>Notes</th></tr></thead><tbody>
                 ${payments.map(p => `<tr><td>${p.paymentDate.split('T')[0]}</td><td>${p.amount.toFixed(2)}</td><td>${p.method}</td><td>${p.reference || '-'}</td><td>${p.notes || '-'}</td></tr>`).join('')}
-                </tbody>}</table>
+                </tbody></table>
             `}
         </section>
     `;
