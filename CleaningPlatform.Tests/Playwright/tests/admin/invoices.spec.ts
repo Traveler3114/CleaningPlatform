@@ -8,7 +8,7 @@ test.describe('Admin Invoices', () => {
 
   test('invoices page loads and shows invoice list', async ({ page }) => {
     await page.goto('/admin/invoices.html');
-    await expect(page.locator('h1')).toContainText('Invoices');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Invoices');
     await expect(page.locator('#invoices-list')).toBeVisible();
   });
 

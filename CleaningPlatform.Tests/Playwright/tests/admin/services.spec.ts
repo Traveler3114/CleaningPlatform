@@ -8,7 +8,7 @@ test.describe('Admin Services', () => {
 
   test('services page loads and shows service list', async ({ page }) => {
     await page.goto('/admin/services.html');
-    await expect(page.locator('h1')).toContainText('Services');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Services');
     await expect(page.locator('#services-list')).toBeVisible();
   });
 

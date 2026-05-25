@@ -8,7 +8,7 @@ test.describe('Admin Bookings', () => {
 
   test('bookings page loads and shows booking list', async ({ page }) => {
     await page.goto('/admin/bookings.html');
-    await expect(page.locator('h1')).toContainText('Bookings');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Bookings');
     const bookingsList = page.locator('#bookings-list');
     await expect(bookingsList).toBeVisible();
   });

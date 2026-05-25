@@ -8,7 +8,7 @@ test.describe('Admin Roles', () => {
 
   test('roles page loads and shows role list', async ({ page }) => {
     await page.goto('/admin/roles.html');
-    await expect(page.locator('h1')).toContainText('Roles');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Roles');
     await expect(page.locator('#roles-list')).toBeVisible();
   });
 

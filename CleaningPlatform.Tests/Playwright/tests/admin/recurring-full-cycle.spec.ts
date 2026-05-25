@@ -9,7 +9,7 @@ test.describe('Admin Recurring Schedule Full Cycle', () => {
   test('recurring page loads with schedule list', async ({ page }) => {
     await page.goto('/admin/recurring.html');
     await expect(page.locator('#recurring-list')).toBeVisible();
-    await expect(page.locator('h1')).toContainText('Recurring');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Recurring');
   });
 
   test('create recurring modal opens from booking detail', async ({ page }) => {

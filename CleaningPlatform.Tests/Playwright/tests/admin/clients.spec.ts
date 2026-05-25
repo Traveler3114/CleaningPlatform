@@ -8,7 +8,7 @@ test.describe('Admin Clients', () => {
 
   test('clients page loads and shows client list', async ({ page }) => {
     await page.goto('/admin/clients.html');
-    await expect(page.locator('h1')).toContainText('Clients');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Clients');
     await expect(page.locator('#clients-list')).toBeVisible();
   });
 

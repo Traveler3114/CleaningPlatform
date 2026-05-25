@@ -31,7 +31,7 @@ test.describe('Admin Dashboard (Daily View)', () => {
   });
 
   test('navigation menu is visible with all groups', async ({ page }) => {
-    const navGroups = page.locator('.nav-group__label');
+    const navGroups = page.locator('.nav-section-title');
     const labels = await navGroups.allTextContents();
     expect(labels.map(l => l.trim())).toEqual(
       expect.arrayContaining(['Operations', 'Bookings', 'Clients', 'Config', 'Admin'])

@@ -8,7 +8,7 @@ test.describe('Admin Schedule', () => {
 
   test('schedule page loads', async ({ page }) => {
     await page.goto('/admin/schedule.html');
-    await expect(page.locator('h1')).toContainText('Schedule');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Schedule');
     await expect(page.locator('#schedule-list')).toBeVisible();
   });
 

@@ -9,7 +9,7 @@ test.describe('Admin SOP Checklist Management', () => {
 
   test('SOPs page loads with template list', async ({ page }) => {
     await page.goto('/admin/sops.html');
-    await expect(page.locator('h1')).toContainText('SOP Library');
+    await expect(page.locator('.breadcrumb strong')).toContainText('SOP Library');
     await expect(page.locator('#sops-list')).toBeVisible();
   });
 

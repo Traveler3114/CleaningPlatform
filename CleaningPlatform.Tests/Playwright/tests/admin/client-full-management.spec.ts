@@ -9,7 +9,7 @@ test.describe('Admin Client Full Management', () => {
 
   test('clients page loads with KPI cards', async ({ page }) => {
     await page.goto('/admin/clients.html');
-    await expect(page.locator('h1')).toContainText('Clients');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Clients');
     await expect(page.locator('#kpi-grid')).toBeVisible();
   });
 

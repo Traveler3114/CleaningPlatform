@@ -4,7 +4,7 @@ import { loginAsAdmin, logoutAdmin } from '../../helpers/admin-auth';
 test.describe('Admin Auth', () => {
   test('login with valid credentials redirects to dashboard', async ({ page }) => {
     await loginAsAdmin(page);
-    await expect(page.locator('h1')).toContainText('Daily View');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Daily View');
   });
 
   test('login shows username in user pill', async ({ page }) => {

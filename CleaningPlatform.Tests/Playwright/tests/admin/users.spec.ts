@@ -8,7 +8,7 @@ test.describe('Admin Users', () => {
 
   test('users page loads and shows user list', async ({ page }) => {
     await page.goto('/admin/users.html');
-    await expect(page.locator('h1')).toContainText('Users');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Users');
     await expect(page.locator('#users-list')).toBeVisible();
   });
 

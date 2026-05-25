@@ -8,7 +8,7 @@ test.describe('Admin Reports', () => {
 
   test('reports page loads', async ({ page }) => {
     await page.goto('/admin/reports.html');
-    await expect(page.locator('h1')).toContainText('Reports');
+    await expect(page.locator('.breadcrumb strong')).toContainText('Reports');
   });
 
   test('dashboard stats section is visible', async ({ page }) => {
