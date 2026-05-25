@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="CleaningPlatformAPI/CleaningPlatformAPI.csproj" />
+  <Project Path="CleaningPlatform.Tests/Integration/CleaningPlatform.Tests.Integration.csproj" />
+  <Project Path="CleaningPlatform.Tests/Unit/CleaningPlatform.Tests.Unit.csproj" />
 </Solution>
