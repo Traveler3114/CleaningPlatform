@@ -50,7 +50,13 @@ public class RecurringJobService : IHostedService, IDisposable
                 var nextRun = now.Date.AddHours(runHour);
 
                 if (nextRun <= now)
-                    nextRun = nextRun.AddDays(1);
+                {
+                    _logger.LogInformation("RecurringJobService starting catch-up run (restarted after RunHour={RunHour}).", runHour);
+                    using var catchupScope = _scopeFactory.CreateScope();
+                    var catchupManager = catchupScope.ServiceProvider.GetRequiredService<RecurringScheduleManager>();
+                    await catchupManager.RunAutoGenerateAsync(ct);
+                    nextRun = now.Date.AddDays(1).AddHours(runHour);
+                }
 
                 var delay = nextRun - now;
                 if (delay > TimeSpan.Zero)

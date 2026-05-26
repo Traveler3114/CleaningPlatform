@@ -237,7 +237,8 @@ public class RecurringScheduleManager
             return new GenerateResult();
 
         var source = schedule.SourceBooking;
-        var occurrenceDates = GetOccurrenceDates(schedule, rangeStart, rangeEnd);
+        var anchorDate = DateOnly.FromDateTime(source.ScheduledDate);
+        var occurrenceDates = GetOccurrenceDates(schedule, rangeStart, rangeEnd, anchorDate);
 
         var effectiveEnd = schedule.EndsOn;
         if (effectiveEnd.HasValue)
@@ -321,7 +322,7 @@ public class RecurringScheduleManager
         return new GenerateResult { Generated = generated, Skipped = skipped };
     }
 
-    private static List<DateOnly> GetOccurrenceDates(RecurringSchedule schedule, DateOnly rangeStart, DateOnly rangeEnd)
+    private static List<DateOnly> GetOccurrenceDates(RecurringSchedule schedule, DateOnly rangeStart, DateOnly rangeEnd, DateOnly anchorDate)
     {
         var dates = new List<DateOnly>();
         var current = rangeStart;
@@ -331,7 +332,9 @@ public class RecurringScheduleManager
             var matches = schedule.Frequency switch
             {
                 "Weekly" => schedule.DayOfWeek.HasValue && (int)current.DayOfWeek == schedule.DayOfWeek.Value,
-                "Biweekly" => schedule.DayOfWeek.HasValue && (int)current.DayOfWeek == schedule.DayOfWeek.Value && GetWeekParity(current) == GetWeekParity(rangeStart),
+                "Biweekly" => schedule.DayOfWeek.HasValue
+                    && (int)current.DayOfWeek == schedule.DayOfWeek.Value
+                    && IsBiweeklyMatch(current, anchorDate),
                 "Monthly" => schedule.DayOfMonth.HasValue && current.Day == schedule.DayOfMonth.Value,
                 _ => false
             };
@@ -345,14 +348,10 @@ public class RecurringScheduleManager
         return dates;
     }
 
-    private static int GetWeekParity(DateOnly date)
+    private static bool IsBiweeklyMatch(DateOnly current, DateOnly anchor)
     {
-        var culture = System.Globalization.CultureInfo.CurrentCulture;
-        var calendar = culture.Calendar;
-        var weekRule = culture.DateTimeFormat.CalendarWeekRule;
-        var firstDayOfWeek = culture.DateTimeFormat.FirstDayOfWeek;
-        var weekOfYear = calendar.GetWeekOfYear(date.ToDateTime(TimeOnly.MinValue), weekRule, firstDayOfWeek);
-        return weekOfYear % 2;
+        var diff = current.DayNumber - anchor.DayNumber;
+        return diff >= 0 && (diff / 7) % 2 == 0;
     }
 
     private static string? ValidateFrequency(string frequency, int? dayOfWeek, int? dayOfMonth, int autoGenerateWeeksAhead)

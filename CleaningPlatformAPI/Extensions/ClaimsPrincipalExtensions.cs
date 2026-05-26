@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using CleaningPlatformAPI.Common;
 
@@ -14,9 +13,7 @@ public static class ClaimsPrincipalExtensions
 
     public static int? GetEmployeeId(this ClaimsPrincipal user)
     {
-        var raw = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                  ?? user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-
+        var raw = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(raw, out var id) ? id : null;
     }
 }

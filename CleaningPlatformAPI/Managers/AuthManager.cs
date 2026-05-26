@@ -132,6 +132,12 @@ public class AuthManager
         return OperationResult<LoginContext>.Ok(new LoginContext(user, permissions));
     }
 
+    public async Task<bool> ValidateSecurityStampAsync(int userId, string stamp, CancellationToken ct = default)
+    {
+        var user = await _db.Employees.FindAsync([userId], ct);
+        return user is not null && user.SecurityStamp == stamp;
+    }
+
     public async Task<OperationResult<string>> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.NewPassword))

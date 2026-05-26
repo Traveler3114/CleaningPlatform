@@ -26,6 +26,9 @@ public class AvailabilityManager
         var endHour = dateOverride?.EndHour ?? schedule.EndHour;
         var defaultCapacity = dateOverride?.Capacity ?? schedule.Capacity;
 
+        if (startHour == endHour)
+            return [ScheduleMapper.ToAvailabilityResponse(startHour, 0, 0, true)];
+
         var bookedCounts = await _db.Bookings
             .Where(b => b.ScheduledDate.Date == date.Date && b.Status != BookingStatus.Cancelled && b.ScheduledTimeSlot != null)
             .GroupBy(b => b.ScheduledTimeSlot!.Value.Hours)

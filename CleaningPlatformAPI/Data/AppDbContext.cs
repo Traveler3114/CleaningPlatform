@@ -346,6 +346,7 @@ public class AppDbContext : DbContext
         // Global DateTime precision
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
+            if (entityType.IsKeyless) continue;
             foreach (var property in entityType.GetProperties())
             {
                 if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))

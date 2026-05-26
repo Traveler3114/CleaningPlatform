@@ -1,3 +1,5 @@
+using System.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
@@ -10,6 +12,8 @@ namespace CleaningPlatformAPI.Managers;
 
 public class BookingManager
 {
+    private const int MaxRetryAttempts = 3;
+
     private readonly AppDbContext _db;
     private readonly AvailabilityManager _availability;
     private readonly SopManager _sopManager;
@@ -104,132 +108,141 @@ public class BookingManager
             return OperationResult<BookingResponse>.Fail("Phone number is required.");
 
         var now = DateTime.UtcNow;
-        await using var transaction = await _db.Database.BeginTransactionAsync(ct);
-        try
+
+        for (var attempt = 1; ; attempt++)
         {
-            // Re-check availability inside the transaction to prevent overbooking under concurrency
-            var actualBooked = await _db.Bookings
-                .CountAsync(b => b.ScheduledDate.Date == dto.Date.Date
-                    && b.ScheduledTimeSlot == TimeSpan.FromHours(dto.Hour)
-                    && b.Status != BookingStatus.Cancelled, ct);
-            if (slot.Capacity - actualBooked <= 0)
-                return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is fully booked ({actualBooked}/{slot.Capacity} spots taken).");
-
-            // 2. Client deduplication – search by phone or email in Contacts table
-            Client? client = null;
-
-            // First, try to find client by phone number
-            client = await _db.Clients
-                .Include(c => c.Contacts)
-                .FirstOrDefaultAsync(c => c.Contacts.Any(ct => ct.Phone == phone && ct.IsActive), ct);
-
-            // If not found, try by email
-            if (client is null && !string.IsNullOrWhiteSpace(email))
+            await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            try
             {
+                // Re-check availability inside the transaction to prevent overbooking under concurrency
+                var actualBooked = await _db.Bookings
+                    .CountAsync(b => b.ScheduledDate.Date == dto.Date.Date
+                        && b.ScheduledTimeSlot == TimeSpan.FromHours(dto.Hour)
+                        && b.Status != BookingStatus.Cancelled, ct);
+                if (slot.Capacity - actualBooked <= 0)
+                    return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is fully booked ({actualBooked}/{slot.Capacity} spots taken).");
+
+                // 2. Client deduplication – search by phone or email in Contacts table
+                Client? client = null;
+
+                // First, try to find client by phone number
                 client = await _db.Clients
                     .Include(c => c.Contacts)
-                    .FirstOrDefaultAsync(c => c.Contacts.Any(ct => ct.Email == email && ct.IsActive), ct);
-            }
+                    .FirstOrDefaultAsync(c => c.Contacts.Any(ct => ct.Phone == phone && ct.IsActive), ct);
 
-            if (client is not null)
-            {
-                // Update existing client info (name may have changed)
-                client.ClientName = customerName;
-                client.UpdatedAt = now;
-
-                // Update the primary contact (or add if missing)
-                var primaryContact = client.Contacts.FirstOrDefault(c => c.IsPrimary);
-                if (primaryContact is not null)
+                // If not found, try by email
+                if (client is null && !string.IsNullOrWhiteSpace(email))
                 {
-                    primaryContact.ContactName = customerName;
-                    primaryContact.Phone = phone;
-                    if (!string.IsNullOrWhiteSpace(email))
-                        primaryContact.Email = email;
-                    primaryContact.UpdatedAt = now;
+                    client = await _db.Clients
+                        .Include(c => c.Contacts)
+                        .FirstOrDefaultAsync(c => c.Contacts.Any(ct => ct.Email == email && ct.IsActive), ct);
+                }
+
+                if (client is not null)
+                {
+                    // Update existing client info (name may have changed)
+                    client.ClientName = customerName;
+                    client.UpdatedAt = now;
+
+                    // Update the primary contact (or add if missing)
+                    var primaryContact = client.Contacts.FirstOrDefault(c => c.IsPrimary);
+                    if (primaryContact is not null)
+                    {
+                        primaryContact.ContactName = customerName;
+                        primaryContact.Phone = phone;
+                        if (!string.IsNullOrWhiteSpace(email))
+                            primaryContact.Email = email;
+                        primaryContact.UpdatedAt = now;
+                    }
+                    else
+                    {
+                        // Should not happen, but fallback: add a primary contact
+                        client.Contacts.Add(new Contact
+                        {
+                            ContactName = customerName,
+                            Phone = phone,
+                            Email = email,
+                            IsPrimary = true,
+                            IsActive = true,
+                            CreatedAt = now,
+                            UpdatedAt = now
+                        });
+                    }
                 }
                 else
                 {
-                    // Should not happen, but fallback: add a primary contact
-                    client.Contacts.Add(new Contact
+                    // Create a new client – type is "Person", not "OneTime"
+                    client = new Client
                     {
-                        ContactName = customerName,
-                        Phone = phone,
-                        Email = email,
-                        IsPrimary = true,
+                        ClientName = customerName,
+                        Type = "Person",
                         IsActive = true,
                         CreatedAt = now,
-                        UpdatedAt = now
-                    });
-                }
-            }
-            else
-            {
-                // Create a new client – type is "Person", not "OneTime"
-                client = new Client
-                {
-                    ClientName = customerName,
-                    Type = "Person",
-                    IsActive = true,
-                    CreatedAt = now,
-                    UpdatedAt = now,
-                    Contacts = new List<Contact>
-                {
-                    new Contact
+                        UpdatedAt = now,
+                        Contacts = new List<Contact>
                     {
-                        ContactName = customerName,
-                        Phone = phone,
-                        Email = email,
-                        IsPrimary = true,
-                        IsActive = true,
-                        CreatedAt = now,
-                        UpdatedAt = now
+                        new Contact
+                        {
+                            ContactName = customerName,
+                            Phone = phone,
+                            Email = email,
+                            IsPrimary = true,
+                            IsActive = true,
+                            CreatedAt = now,
+                            UpdatedAt = now
+                        }
                     }
+                    };
+                    _db.Clients.Add(client);
+                    // Save to get the client ID before creating the booking
+                    await _db.SaveChangesAsync(ct);
                 }
+
+                // 3. Load the selected service catalog entry
+                var catalogEntry = await _db.ServiceCatalog
+                    .FirstOrDefaultAsync(s => s.Id == dto.ServiceCatalogId && s.IsActive, ct);
+                if (catalogEntry is null)
+                    return OperationResult<BookingResponse>.Fail("Selected service was not found or is no longer available.");
+
+                if (!Enum.TryParse<BookingServiceType>(catalogEntry.ServiceType, true, out var serviceType))
+                    return OperationResult<BookingResponse>.Fail($"Invalid service type '{catalogEntry.ServiceType}'.");
+
+                // 4. Create the booking
+                var booking = new Booking
+                {
+                    ClientId = client.Id,
+                    ServiceType = serviceType,
+                    ScheduledDate = dto.Date.Date,
+                    ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
+                    Status = BookingStatus.Pending,
+                    CreatedAt = now,
+                    UpdatedAt = now
                 };
-                _db.Clients.Add(client);
-                // Save to get the client ID before creating the booking
+
+                booking.BookingServices.Add(new BookingService
+                {
+                    ServiceCatalogId = catalogEntry.Id,
+                    EstimatedPrice = catalogEntry.PriceAvg,
+                    Quantity = 1
+                });
+
+                _db.Bookings.Add(booking);
                 await _db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+
+                // 5. Return the response using your mapper
+                return OperationResult<BookingResponse>.Ok(BookingMapper.ToResponse(booking));
             }
-
-            // 3. Load the selected service catalog entry
-            var catalogEntry = await _db.ServiceCatalog
-                .FirstOrDefaultAsync(s => s.Id == dto.ServiceCatalogId && s.IsActive, ct);
-            if (catalogEntry is null)
-                return OperationResult<BookingResponse>.Fail("Selected service was not found or is no longer available.");
-
-            if (!Enum.TryParse<BookingServiceType>(catalogEntry.ServiceType, true, out var serviceType))
-                return OperationResult<BookingResponse>.Fail($"Invalid service type '{catalogEntry.ServiceType}'.");
-
-            // 4. Create the booking
-            var booking = new Booking
+            catch (Exception ex) when (attempt < MaxRetryAttempts && IsDeadlock(ex))
             {
-                ClientId = client.Id,
-                ServiceType = serviceType,
-                ScheduledDate = dto.Date.Date,
-                ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
-                Status = BookingStatus.Pending,
-                CreatedAt = now,
-                UpdatedAt = now
-            };
-
-            booking.BookingServices.Add(new BookingService
+                await transaction.RollbackAsync(ct);
+                continue;
+            }
+            catch
             {
-                ServiceCatalogId = catalogEntry.Id,
-                EstimatedPrice = catalogEntry.PriceAvg,
-                Quantity = 1
-            });
-
-            _db.Bookings.Add(booking);
-            await _db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
-
-            // 5. Return the response using your mapper
-            return OperationResult<BookingResponse>.Ok(BookingMapper.ToResponse(booking));
-        }
-        catch
-        {
-            await transaction.RollbackAsync(ct);
-            throw;
+                await transaction.RollbackAsync(ct);
+                throw;
+            }
         }
     }
 
@@ -255,41 +268,68 @@ public class BookingManager
         if (slot.Available <= 0)
             return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is fully booked ({slot.Booked}/{slot.Capacity} spots taken).");
 
-        var now     = DateTime.UtcNow;
-        var booking = new Booking
-        {
-            ClientId          = dto.ClientId,
-            SiteId            = dto.SiteId,
-            ServiceType       = dto.ServiceType,
-            ScheduledDate     = dto.Date.Date,
-            ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
-            Status            = BookingStatus.Pending,
-            Notes             = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
-            CreatedAt         = now,
-            UpdatedAt         = now
-        };
+        var now = DateTime.UtcNow;
 
-        foreach (var service in dto.Services.Where(s => s.ServiceCatalogId > 0))
+        for (var attempt = 1; ; attempt++)
         {
-            booking.BookingServices.Add(new BookingService
+            await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            try
             {
-                ServiceCatalogId = service.ServiceCatalogId,
-                EstimatedPrice   = service.EstimatedPrice,
-                FinalPrice       = service.FinalPrice,
-                Quantity         = service.Quantity <= 0 ? 1 : service.Quantity,
-                Notes            = string.IsNullOrWhiteSpace(service.Notes) ? null : service.Notes.Trim()
-            });
+                // Re-check availability inside the transaction
+                var actualBooked = await _db.Bookings
+                    .CountAsync(b => b.ScheduledDate.Date == dto.Date.Date
+                        && b.ScheduledTimeSlot == TimeSpan.FromHours(dto.Hour)
+                        && b.Status != BookingStatus.Cancelled, ct);
+                if (slot.Capacity - actualBooked <= 0)
+                    return OperationResult<BookingResponse>.Fail($"The {dto.Hour}:00 slot on {dateStr} is fully booked ({actualBooked}/{slot.Capacity} spots taken).");
+
+                var booking = new Booking
+                {
+                    ClientId          = dto.ClientId,
+                    SiteId            = dto.SiteId,
+                    ServiceType       = dto.ServiceType,
+                    ScheduledDate     = dto.Date.Date,
+                    ScheduledTimeSlot = TimeSpan.FromHours(dto.Hour),
+                    Status            = BookingStatus.Pending,
+                    Notes             = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
+                    CreatedAt         = now,
+                    UpdatedAt         = now
+                };
+
+                foreach (var service in dto.Services.Where(s => s.ServiceCatalogId > 0))
+                {
+                    booking.BookingServices.Add(new BookingService
+                    {
+                        ServiceCatalogId = service.ServiceCatalogId,
+                        EstimatedPrice   = service.EstimatedPrice,
+                        FinalPrice       = service.FinalPrice,
+                        Quantity         = service.Quantity <= 0 ? 1 : service.Quantity,
+                        Notes            = string.IsNullOrWhiteSpace(service.Notes) ? null : service.Notes.Trim()
+                    });
+                }
+
+                _db.Bookings.Add(booking);
+                await _db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+
+                var templates = await _sopManager.GetDefaultTemplatesForServiceTypeAsync(dto.ServiceType.ToString(), ct);
+                foreach (var template in templates)
+                    await _sopManager.AssignSopToBookingAsync(booking.Id, new AssignSopRequest { SopTemplateId = template.Id }, ct);
+
+                var detail = await GetBookingDetailByIdAsync(booking.Id, ct);
+                return detail.Success ? detail : OperationResult<BookingResponse>.Fail("Booking was created but could not be loaded. Please refresh.");
+            }
+            catch (Exception ex) when (attempt < MaxRetryAttempts && IsDeadlock(ex))
+            {
+                await transaction.RollbackAsync(ct);
+                continue;
+            }
+            catch
+            {
+                await transaction.RollbackAsync(ct);
+                throw;
+            }
         }
-
-        _db.Bookings.Add(booking);
-        await _db.SaveChangesAsync(ct);
-
-        var templates = await _sopManager.GetDefaultTemplatesForServiceTypeAsync(dto.ServiceType.ToString(), ct);
-        foreach (var template in templates)
-            await _sopManager.AssignSopToBookingAsync(booking.Id, new AssignSopRequest { SopTemplateId = template.Id }, ct);
-
-        var detail = await GetBookingDetailByIdAsync(booking.Id, ct);
-        return detail.Success ? detail : OperationResult<BookingResponse>.Fail("Booking was created but could not be loaded. Please refresh.");
     }
 
     public async Task<OperationResult<BookingResponse>> UpdateStatusAsync(int id, string status, CancellationToken ct = default)
@@ -431,5 +471,15 @@ public class BookingManager
 
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
         return detail;
+    }
+
+    private static bool IsDeadlock(Exception ex)
+    {
+        for (var current = ex; current is not null; current = current.InnerException)
+        {
+            if (current is SqlException sqlEx && sqlEx.Number == 1205)
+                return true;
+        }
+        return false;
     }
 }
