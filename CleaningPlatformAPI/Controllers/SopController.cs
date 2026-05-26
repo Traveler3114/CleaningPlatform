@@ -46,11 +46,11 @@ public class SopController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpDelete("{id:int}")]
+    [HttpPut("{id:int}/active")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
-    public async Task<ActionResult<OperationResult<string>>> Delete(int id, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<SopTemplateResponse>>> ToggleActive(int id, [FromBody] ToggleSopActiveRequest request, CancellationToken ct)
     {
-        var result = await _sopManager.DeleteTemplateAsync(id, ct);
+        var result = await _sopManager.ToggleActiveAsync(id, request.IsActive, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 

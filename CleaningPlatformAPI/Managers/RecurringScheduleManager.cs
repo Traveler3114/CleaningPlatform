@@ -162,7 +162,12 @@ public class RecurringScheduleManager
                 && b.ScheduledDate > now.Date)
             .ToListAsync(ct);
 
-        _db.Bookings.RemoveRange(futurePending);
+        foreach (var booking in futurePending)
+        {
+            booking.Status = BookingStatus.Cancelled;
+            booking.UpdatedAt = now;
+        }
+
         await _db.SaveChangesAsync(ct);
 
         var today = DateOnly.FromDateTime(now);
@@ -358,8 +363,14 @@ public class RecurringScheduleManager
         if ((frequency == "Weekly" || frequency == "Biweekly") && !dayOfWeek.HasValue)
             return "DayOfWeek is required for Weekly and Biweekly frequencies.";
 
+        if (dayOfWeek.HasValue && (dayOfWeek.Value < 0 || dayOfWeek.Value > 6))
+            return "DayOfWeek must be between 0 (Sunday) and 6 (Saturday).";
+
         if (frequency == "Monthly" && !dayOfMonth.HasValue)
             return "DayOfMonth is required for Monthly frequency.";
+
+        if (dayOfMonth.HasValue && (dayOfMonth.Value < 1 || dayOfMonth.Value > 28))
+            return "DayOfMonth must be between 1 and 28. Values above 28 are not used because not all months have more than 28 days.";
 
         if (autoGenerateWeeksAhead < 1 || autoGenerateWeeksAhead > 52)
             return "AutoGenerateWeeksAhead must be between 1 and 52.";

@@ -29,7 +29,7 @@ public class InvoiceManagerTests : TestBase
         var manager = new InvoiceManager(db);
         var all = await manager.GetAllAsync(new PaginationParams());
 
-        if (all.Items.Count == 0) return;
+        all.Items.Should().NotBeEmpty("seed data must exist for this test to be meaningful");
 
         var result = await manager.GetByIdAsync(all.Items[0].Id);
 
@@ -55,7 +55,7 @@ public class InvoiceManagerTests : TestBase
         var manager = new InvoiceManager(db);
         var all = await manager.GetAllAsync(new PaginationParams());
 
-        if (all.Items.Count == 0) return;
+        all.Items.Should().NotBeEmpty("seed data must exist for this test to be meaningful");
 
         var invoiceId = all.Items[0].Id;
         var employee = await db.Employees.FirstAsync();
@@ -76,7 +76,7 @@ public class InvoiceManagerTests : TestBase
         var manager = new InvoiceManager(db);
         var all = await manager.GetAllAsync(new PaginationParams());
 
-        if (all.Items.Count == 0) return;
+        all.Items.Should().NotBeEmpty("seed data must exist for this test to be meaningful");
 
         var result = await manager.UpdateStatusAsync(all.Items[0].Id, "Sent");
 

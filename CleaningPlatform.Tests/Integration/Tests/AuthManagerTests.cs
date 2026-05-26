@@ -87,20 +87,32 @@ public class AuthManagerTests : TestBase
         using var db = CreateDbContext();
         var tokenManager = CreateTokenManager();
         var manager = new AuthManager(tokenManager, db, CreateConfiguration());
+
         await manager.RegisterAsync(new CreateUserRequest
         {
             Password = "TestPass123!",
-            FirstName = "First",
-            LastName = "User",
-            Role = "Owner"
+            FirstName = "Duplicate",
+            LastName = "Test",
+            Role = "Employee"
         });
+
+        for (var i = 0; i < 20; i++)
+        {
+            await manager.RegisterAsync(new CreateUserRequest
+            {
+                Password = "TestPass123!",
+                FirstName = "Duplicate",
+                LastName = "Test",
+                Role = "Employee"
+            });
+        }
 
         var result = await manager.RegisterAsync(new CreateUserRequest
         {
-            Password = "OtherPass456!",
-            FirstName = "Second",
-            LastName = "User",
-            Role = "Owner"
+            Password = "TestPass123!",
+            FirstName = "Duplicate",
+            LastName = "Test",
+            Role = "Employee"
         });
 
         result.Success.Should().BeFalse();

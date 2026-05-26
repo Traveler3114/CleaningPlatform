@@ -55,6 +55,40 @@ public class EmployeeManager
         return employees.Select(UserMapper.ToSimpleResponse).ToList();
     }
 
+    public async Task<OperationResult<UserResponse>> UpdateEmployeeAsync(int id, UpdateEmployeeRequest request, int requestingUserId, CancellationToken ct = default)
+    {
+        var user = await _db.Employees
+            .Include(e => e.Role)
+            .FirstOrDefaultAsync(u => u.Id == id, ct);
+        if (user is null)
+            return OperationResult<UserResponse>.Fail($"Employee #{id} was not found.");
+
+        var roleName = request.Role?.Trim();
+        if (string.IsNullOrWhiteSpace(roleName))
+            return OperationResult<UserResponse>.Fail("Role is required.");
+
+        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName, ct);
+        if (role is null)
+            return OperationResult<UserResponse>.Fail($"Role '{roleName}' was not found.");
+
+        if (id == requestingUserId && role.Id != user.RoleId)
+            return OperationResult<UserResponse>.Fail("You cannot change your own role.");
+
+        user.RoleId = role.Id;
+        user.HourlyRate = request.HourlyRate;
+        user.MaxJobsPerDay = request.MaxJobsPerDay;
+        user.EmployeeCode = request.EmployeeCode?.Trim();
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+
+        var permissions = await _db.RolePermissions
+            .Where(rp => rp.RoleId == role.Id)
+            .Select(rp => rp.PermissionKey)
+            .ToListAsync(ct);
+
+        return OperationResult<UserResponse>.Ok(UserMapper.ToResponse(user, permissions));
+    }
+
     public async Task<OperationResult<UserResponse>> ToggleActiveAsync(int id, int requestingUserId, CancellationToken ct = default)
     {
         if (id == requestingUserId)

@@ -289,7 +289,7 @@ CREATE TABLE DateOverride (
     Capacity        INT             NULL,
     IsFullyClosed   BIT             NOT NULL DEFAULT 0,
     CONSTRAINT CHK_DateOverride_Start CHECK (StartHour IS NULL OR (StartHour >= 0 AND StartHour <= 23)),
-    CONSTRAINT CHK_DateOverride_End   CHECK (EndHour   IS NULL OR (EndHour   >= 0 AND EndHour   <= 23))
+    CONSTRAINT CHK_DateOverride_End   CHECK (EndHour   IS NULL OR (EndHour   >= 0 AND EndHour   <= 24))
 );
 GO
 CREATE UNIQUE INDEX IX_DateOverride_Date ON DateOverride(Date);

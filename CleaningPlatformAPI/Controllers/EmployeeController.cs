@@ -42,6 +42,18 @@ public class EmployeeController : ControllerBase
         return Ok(OperationResult<List<UserResponse>>.Ok(users));
     }
 
+    [HttpPut("{id:int}")]
+    [Authorize(Policy = PermissionKeys.UsersEdit)]
+    public async Task<ActionResult<OperationResult<UserResponse>>> Update(int id, [FromBody] UpdateEmployeeRequest request, CancellationToken ct)
+    {
+        var requestingUserId = User.GetEmployeeId();
+        if (requestingUserId == null)
+            return Unauthorized(OperationResult<UserResponse>.Fail("Invalid token."));
+
+        var result = await _userManager.UpdateEmployeeAsync(id, request, requestingUserId.Value, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
+
     [HttpPut("{id}/toggle")]
     [Authorize(Policy = PermissionKeys.UsersEdit)]
     public async Task<ActionResult<OperationResult<UserResponse>>> Toggle(int id, CancellationToken ct)

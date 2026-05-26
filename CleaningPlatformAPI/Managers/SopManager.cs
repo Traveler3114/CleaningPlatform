@@ -39,6 +39,10 @@ public class SopManager
         if (string.IsNullOrWhiteSpace(dto.Name))
             return OperationResult<SopTemplateResponse>.Fail("SOP name is required.");
 
+        var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat", "Generic" };
+        if (!validServiceTypes.Contains(dto.ServiceType?.Trim()))
+            return OperationResult<SopTemplateResponse>.Fail("ServiceType must be one of: Vehicle, SiteBased, Boat, Generic.");
+
         var now = DateTime.UtcNow;
         var template = new SopTemplate
         {
@@ -61,6 +65,10 @@ public class SopManager
         if (template is null)
             return OperationResult<SopTemplateResponse>.Fail($"SOP template #{id} was not found.");
 
+        var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat", "Generic" };
+        if (!validServiceTypes.Contains(dto.ServiceType?.Trim()))
+            return OperationResult<SopTemplateResponse>.Fail("ServiceType must be one of: Vehicle, SiteBased, Boat, Generic.");
+
         template.ServiceCatalogId = dto.ServiceCatalogId;
         template.Name = dto.Name.Trim();
         template.ServiceType = string.IsNullOrWhiteSpace(dto.ServiceType) ? "Generic" : dto.ServiceType.Trim();
@@ -71,39 +79,16 @@ public class SopManager
         return OperationResult<SopTemplateResponse>.Ok((await GetTemplateByIdAsync(id, ct)).Data!);
     }
 
-    public async Task<OperationResult<string>> DeleteTemplateAsync(int id, CancellationToken ct = default)
+    public async Task<OperationResult<SopTemplateResponse>> ToggleActiveAsync(int id, bool isActive, CancellationToken ct = default)
     {
-        var template = await _db.SopTemplates
-            .Include(t => t.ChecklistItems)
-            .FirstOrDefaultAsync(t => t.Id == id, ct);
-
+        var template = await _db.SopTemplates.FindAsync([id], ct);
         if (template is null)
-            return OperationResult<string>.Fail($"SOP template #{id} was not found.");
+            return OperationResult<SopTemplateResponse>.Fail($"SOP template #{id} was not found.");
 
-        var hasAssignments = await _db.BookingSopAssignments.AnyAsync(a => a.SopTemplateId == id, ct);
-
-        if (hasAssignments)
-        {
-            template.IsActive = false;
-            template.UpdatedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync(ct);
-            return OperationResult<string>.Ok("SOP template deactivated — it is linked to existing bookings and cannot be fully removed.");
-        }
-
-        var itemIds = template.ChecklistItems.Select(i => i.Id).ToList();
-        if (itemIds.Count > 0)
-        {
-            var responses = await _db.ChecklistResponses
-                .Where(r => itemIds.Contains(r.ChecklistItemId))
-                .ToListAsync(ct);
-            _db.ChecklistResponses.RemoveRange(responses);
-        }
-
-        _db.ChecklistItems.RemoveRange(template.ChecklistItems);
-        _db.SopTemplates.Remove(template);
+        template.IsActive = isActive;
+        template.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
-
-        return OperationResult<string>.Ok("SOP template deleted successfully.");
+        return OperationResult<SopTemplateResponse>.Ok((await GetTemplateByIdAsync(id, ct)).Data!);
     }
 
     public async Task<OperationResult<ChecklistItemResponse>> AddChecklistItemAsync(int templateId, UpsertChecklistItemRequest dto, CancellationToken ct = default)

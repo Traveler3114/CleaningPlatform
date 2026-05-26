@@ -48,11 +48,12 @@ public class EmployeeManagerTests : TestBase
         using var db = CreateDbContext();
         var manager = new EmployeeManager(db);
         var all = await manager.GetAllUsersAsync();
-        var target = all[0];
+        all.Should().HaveCountGreaterThan(1, "need at least two users to test actor/target separation");
 
-        var actor = all.Count > 1 ? all[1] : all[0];
-        var actorId = actor.Id == target.Id ? all[^1].Id : actor.Id;
-        var result = await manager.ToggleActiveAsync(target.Id, actorId);
+        var target = all[0];
+        var actor = all.First(u => u.Id != target.Id);
+
+        var result = await manager.ToggleActiveAsync(target.Id, actor.Id);
 
         result.Success.Should().BeTrue();
     }

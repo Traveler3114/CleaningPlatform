@@ -15,17 +15,20 @@ public class PortalDataController : ControllerBase
 
     public PortalDataController(PortalDataManager portalManager) { _portalManager = portalManager; }
 
-    private int GetClientId()
+    private int? GetClientId()
     {
         var claim = User.FindFirst("client_id")?.Value;
-        return claim != null && int.TryParse(claim, out var id) ? id : 0;
+        return claim != null && int.TryParse(claim, out var id) ? id : null;
     }
 
     [HttpGet("dashboard")]
     [Authorize(Policy = "PortalOnly")]
     public async Task<ActionResult<OperationResult<PortalDashboardResponse>>> GetDashboard(CancellationToken ct)
     {
-        var result = await _portalManager.GetDashboardAsync(GetClientId(), ct);
+        var clientId = GetClientId();
+        if (clientId is null)
+            return Unauthorized(OperationResult<PortalDashboardResponse>.Fail("Invalid token."));
+        var result = await _portalManager.GetDashboardAsync(clientId.Value, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
 
@@ -34,7 +37,10 @@ public class PortalDataController : ControllerBase
     public async Task<ActionResult<OperationResult<List<BookingResponse>>>> GetBookings(
         [FromQuery] string? status, CancellationToken ct)
     {
-        var result = await _portalManager.GetBookingsAsync(GetClientId(), status, ct);
+        var clientId = GetClientId();
+        if (clientId is null)
+            return Unauthorized(OperationResult<List<BookingResponse>>.Fail("Invalid token."));
+        var result = await _portalManager.GetBookingsAsync(clientId.Value, status, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
 
@@ -43,7 +49,10 @@ public class PortalDataController : ControllerBase
     public async Task<ActionResult<OperationResult<BookingResponse>>> GetBookingDetail(
         int id, CancellationToken ct)
     {
-        var result = await _portalManager.GetBookingDetailAsync(GetClientId(), id, ct);
+        var clientId = GetClientId();
+        if (clientId is null)
+            return Unauthorized(OperationResult<BookingResponse>.Fail("Invalid token."));
+        var result = await _portalManager.GetBookingDetailAsync(clientId.Value, id, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
 
@@ -51,7 +60,10 @@ public class PortalDataController : ControllerBase
     [Authorize(Policy = "PortalOnly")]
     public async Task<ActionResult<OperationResult<List<InvoiceResponse>>>> GetInvoices(CancellationToken ct)
     {
-        var result = await _portalManager.GetInvoicesAsync(GetClientId(), ct);
+        var clientId = GetClientId();
+        if (clientId is null)
+            return Unauthorized(OperationResult<List<InvoiceResponse>>.Fail("Invalid token."));
+        var result = await _portalManager.GetInvoicesAsync(clientId.Value, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
 
@@ -60,7 +72,10 @@ public class PortalDataController : ControllerBase
     public async Task<ActionResult<OperationResult<InvoiceResponse>>> GetInvoiceDetail(
         int id, CancellationToken ct)
     {
-        var result = await _portalManager.GetInvoiceDetailAsync(GetClientId(), id, ct);
+        var clientId = GetClientId();
+        if (clientId is null)
+            return Unauthorized(OperationResult<InvoiceResponse>.Fail("Invalid token."));
+        var result = await _portalManager.GetInvoiceDetailAsync(clientId.Value, id, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
 
@@ -68,7 +83,10 @@ public class PortalDataController : ControllerBase
     [Authorize(Policy = "PortalOnly")]
     public async Task<ActionResult<OperationResult<PortalProfileResponse>>> GetProfile(CancellationToken ct)
     {
-        var result = await _portalManager.GetProfileAsync(GetClientId(), ct);
+        var clientId = GetClientId();
+        if (clientId is null)
+            return Unauthorized(OperationResult<PortalProfileResponse>.Fail("Invalid token."));
+        var result = await _portalManager.GetProfileAsync(clientId.Value, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
 }

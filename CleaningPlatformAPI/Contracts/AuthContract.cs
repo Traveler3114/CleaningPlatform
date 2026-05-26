@@ -46,3 +46,11 @@ public record ResetPasswordRequest
     public int UserId { get; set; }
     public string NewPassword { get; set; } = string.Empty;
 }
+
+public record UpdateEmployeeRequest
+{
+    public string Role { get; set; } = string.Empty;
+    public decimal? HourlyRate { get; set; }
+    public int? MaxJobsPerDay { get; set; }
+    public string? EmployeeCode { get; set; }
+}

@@ -20,7 +20,7 @@ public class SopManagerTests : TestBase
     }
 
     [Fact]
-    public async Task CreateAndDeleteTemplate_Workflow()
+    public async Task CreateAndToggleTemplate_Workflow()
     {
         using var db = CreateDbContext();
         var manager = new SopManager(db);
@@ -36,9 +36,10 @@ public class SopManagerTests : TestBase
         createResult.Success.Should().BeTrue();
         createResult.Data.Should().NotBeNull();
 
-        var deleteResult = await manager.DeleteTemplateAsync(createResult.Data.Id);
+        var toggleResult = await manager.ToggleActiveAsync(createResult.Data.Id, false);
 
-        deleteResult.Success.Should().BeTrue();
+        toggleResult.Success.Should().BeTrue();
+        toggleResult.Data!.IsActive.Should().BeFalse();
     }
 
     [Fact]
@@ -77,7 +78,7 @@ public class SopManagerTests : TestBase
         var manager = new SopManager(db);
         var templates = await manager.GetAllTemplatesAsync();
 
-        if (templates.Count == 0) return;
+        templates.Should().NotBeEmpty("seed data must exist for this test to be meaningful");
 
         var first = templates[0];
 

@@ -31,3 +31,8 @@ public record CompleteChecklistItemRequest
     public bool IsCompleted { get; set; }
     public string? Notes { get; set; }
 }
+
+public record ToggleSopActiveRequest
+{
+    public bool IsActive { get; set; }
+}

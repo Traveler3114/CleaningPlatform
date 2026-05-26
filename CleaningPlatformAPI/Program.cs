@@ -168,8 +168,18 @@ app.MapGet("/admin", () => Results.Redirect("/admin/index.html"));
 // API controllers
 app.MapControllers();
 
-// Fallback - if no route matches, serve public index.html
-app.MapFallbackToFile("public/index.html");
+// Fallback - API routes return 404 JSON, other routes redirect to public index
+app.MapFallback(async context =>
+{
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        context.Response.StatusCode = 404;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("Endpoint not found."));
+        return;
+    }
+    context.Response.Redirect("/public/index.html");
+});
 
 using (var scope = app.Services.CreateScope())
 {

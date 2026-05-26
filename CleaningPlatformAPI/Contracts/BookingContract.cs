@@ -21,6 +21,11 @@ public class BookingResponse
     public string? ClientPhone { get; set; }
     public string? ClientEmail { get; set; }
     public List<BookingServiceResponse>? Services { get; set; }
+
+    public string? LicensePlate { get; set; }
+    public string? CarModel { get; set; }
+    public string? BoatType { get; set; }
+    public decimal? LengthMeters { get; set; }
 }
 
 public class AssignedEmployeeResponse

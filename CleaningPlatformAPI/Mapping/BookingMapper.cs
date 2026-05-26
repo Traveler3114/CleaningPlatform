@@ -34,11 +34,16 @@ public static class BookingMapper
         ClientName = view.ClientName,
         Date = view.ScheduledDate,
         Hour = view.ScheduledTimeSlot?.Hours ?? 0,
-        ServiceType = string.Empty,
+        ServiceType = view.ServiceType,
         Status = view.Status,
         ServicesCount = view.ServiceCount,
+        SiteName = view.SiteName,
         AssignedEmployees = SplitAssignedEmployees(view.AssignedEmployee),
-        CreatedAt = view.CreatedAt
+        CreatedAt = view.CreatedAt,
+        LicensePlate = view.LicensePlate,
+        CarModel = view.CarModel,
+        BoatType = view.BoatType,
+        LengthMeters = view.LengthMeters
     };
 
     private static List<AssignedEmployeeResponse> SplitAssignedEmployees(string? assignedEmployee)
