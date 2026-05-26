@@ -21,6 +21,7 @@ public class AssignmentController : ControllerBase
         return Ok(OperationResult<List<ChecklistResponseResponse>>.Ok(checklist));
     }
 
+    [Authorize(Policy = PermissionKeys.BookingsProgress)]
     [HttpPost("{assignmentId:int}/checklist/{itemId:int}")]
     public async Task<ActionResult<OperationResult<ChecklistResponseResponse>>> CompleteItem(int assignmentId, int itemId, [FromBody] CompleteChecklistItemRequest request, CancellationToken ct)
     {
