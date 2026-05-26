@@ -34,6 +34,22 @@ CleaningPlatformAPI/
 
 ---
 
+## ⛔ Off-Limits — Do Not Touch Without Explicit Human Instruction
+
+These areas must not be modified under any circumstances without a human explicitly requesting it.
+They require careful reasoning across the full system and are easy to break silently.
+
+| Area | Why |
+|---|---|
+| Security stamp validation | Touches the JWT auth pipeline — easy to lock all users out |
+| Overbooking isolation level in `BookingManager` | Touches transaction behavior — requires load testing to validate |
+| Biweekly parity anchor logic in `RecurringScheduleManager` | Subtle stateful time-based logic — could silently shift existing schedules |
+| Any schema change beyond the `DateOverride` `EndHour` constraint | Schema changes need human review and coordinated migration |
+| Invoice payment status logic | No correction endpoint is an intentional design decision |
+| `Client.IsActive` | Clients are permanent once created — do not add a deactivation endpoint |
+
+---
+
 ## Conventions — Code Style
 
 ### Namespaces
@@ -160,33 +176,15 @@ If a field has a restricted set of allowed values, validate it explicitly in the
 ```csharp
 // Good
 var validTypes = new[] { "Vehicle", "SiteBased", "Boat", "Generic" };
-if (!validTypes.Contains(dto.ServiceType))
+if (!validTypes.Contains(dto.ServiceType?.Trim()))
     return OperationResult<T>.Fail("ServiceType must be one of: Vehicle, SiteBased, Boat, Generic.");
 
 // Bad — lets the SQL constraint throw a generic error
-entity.ServiceType = dto.ServiceType; // invalid value passes through
+entity.ServiceType = dto.ServiceType;
 await _db.SaveChangesAsync(ct);
 ```
 
 This applies consistently across all managers. If `ServiceCatalogManager` validates a field, `SopManager` working with the same field must also validate it.
-
-### Status transitions must be explicitly allowed
-Any entity with a status field requires an allowed-transitions map. `UpdateStatusAsync` must check the current status against allowed next states before applying the change. Free transitions between any status values are not permitted.
-
-```csharp
-// Good
-private static readonly Dictionary<BookingStatus, BookingStatus[]> AllowedTransitions = new()
-{
-    [BookingStatus.Pending]    = [BookingStatus.Confirmed, BookingStatus.Cancelled],
-    [BookingStatus.Confirmed]  = [BookingStatus.InProgress, BookingStatus.Cancelled],
-    [BookingStatus.InProgress] = [BookingStatus.Completed, BookingStatus.Cancelled],
-    [BookingStatus.Completed]  = [],
-    [BookingStatus.Cancelled]  = [],
-};
-
-if (!AllowedTransitions[booking.Status].Contains(newStatus))
-    return OperationResult<BookingResponse>.Fail($"Cannot transition from '{booking.Status}' to '{newStatus}'.");
-```
 
 ---
 
@@ -197,10 +195,18 @@ Bookings, assignments, invoices, and their related records are **cancelled or de
 
 - **Bookings**: set `Status = Cancelled`
 - **Assignments**: remove only if booking is still Pending or Confirmed
-- **Clients / Sites / SOPs**: set `IsActive = false`
-- **Hard delete is only permitted** for configuration records that have never been used (e.g., an SOP template with no booking assignments, a role with no users)
+- **Clients**: permanent — no deactivation endpoint exists and none should be added
+- **Sites / SOPs**: set `IsActive = false`
+- **Hard delete is only permitted** for configuration records that have never been used (e.g., a role with no users assigned)
 
-When cancelling a series of records (e.g., future recurring bookings), always cancel — never `RemoveRange`.
+When cancelling a series of records (e.g., future recurring bookings on schedule update), always cancel — never `RemoveRange`.
+
+### SOP templates are never deleted
+SOP templates use activate/deactivate only. There is no delete endpoint and none should be added. This is intentional — templates may be referenced by historical bookings and must be preserved.
+
+- `IsActive = true` → template is available to assign to new bookings
+- `IsActive = false` → template is hidden from assignment but preserved for history
+- To manage SOPs: create new, edit existing, or toggle active status via `PUT /api/sops/{id}/active`
 
 ### Duplicate-safe inserts on junction tables
 Always check for an existing record before inserting into a junction table. Never rely on the unique constraint to catch duplicates at the database level — that produces an unhandled exception rather than a clean result.
@@ -219,12 +225,13 @@ await _db.SaveChangesAsync(ct);
 
 This applies to: `BookingSopAssignments`, `BookingAssignments`, `InvoiceBookings`, and any other junction table with a unique constraint.
 
-### Security stamp — known gap
-The `security_stamp` claim is included in admin JWTs and is rotated correctly on password change and password reset. However, incoming requests do not currently validate the stamp against the database. This means existing tokens remain valid for up to 8 hours after a password change.
+### Security stamp — known gap, do not remove
+The `security_stamp` claim is included in admin JWTs and is rotated correctly on password change and password reset. Incoming requests do not currently validate the stamp against the database — this is a known gap documented for future work.
 
-**TODO**: add a stamp validation step in the JWT pipeline or via a middleware check, so that rotating the stamp on password change actually invalidates existing sessions.
+Do not remove the stamp from token creation. Do not add stamp validation without explicit human instruction — it touches the auth pipeline and requires careful implementation.
 
-Do not remove the stamp from token creation — it is the foundation for implementing this correctly when the validation step is added.
+### DateOverride and WeeklySchedule both use 24 as maximum EndHour
+Both `WeeklySchedule` and `DateOverride` use `EndHour = 24` to represent end of day. The `AvailabilityManager` loop treats `EndHour` as an exclusive upper bound — `EndHour = 24` means the last bookable slot is `23:00`. Do not change either cap back to 23.
 
 ---
 
@@ -233,14 +240,12 @@ Do not remove the stamp from token creation — it is the foundation for impleme
 ### Every field on the source must be explicitly accounted for
 When writing a mapper method or adding a new overload, go through every field on the source type and either map it to the response or leave an explicit comment explaining why it is intentionally excluded.
 
-Silent omissions — where a field exists on the source, is populated by the query, but is simply absent from the mapper — are not acceptable. They produce invisible data loss that is hard to detect and confusing to debug.
+Silent omissions — where a field exists on the source, is populated by the query, but is simply absent from the mapper — are not acceptable.
 
 ```csharp
 // Good
 public static BookingResponse ToResponse(BookingView view) => new()
 {
-    Id           = view.BookingId,
-    ClientName   = view.ClientName,
     ServiceType  = view.ServiceType,   // must map — not string.Empty
     LicensePlate = view.LicensePlate,  // must map even for non-vehicle bookings (nullable)
     // SiteCity intentionally excluded from list response — available in detail endpoint only
@@ -249,14 +254,29 @@ public static BookingResponse ToResponse(BookingView view) => new()
 // Bad
 public static BookingResponse ToResponse(BookingView view) => new()
 {
-    Id           = view.BookingId,
-    ClientName   = view.ClientName,
     ServiceType  = string.Empty,       // silently drops the field
     // LicensePlate, CarModel, BoatType, LengthMeters — silently omitted
 };
 ```
 
-When a mapper has multiple overloads (e.g., one accepting `Booking`, one accepting `BookingView`), they must return consistent field coverage for fields that both sources populate.
+When a mapper has multiple overloads, they must return consistent field coverage for fields that both sources populate.
+
+---
+
+## Conventions — Employees
+
+### What is updatable on an employee
+The following fields are updatable via `PUT /api/employees/{id}` with `UsersEdit` permission:
+- `Role` (by role name string)
+- `HourlyRate`
+- `MaxJobsPerDay`
+- `EmployeeCode`
+
+The following are managed by separate dedicated endpoints and must not be included in the general update:
+- `IsActive` → `PUT /api/employees/{id}/toggle`
+- `PasswordHash` → `POST /api/auth/reset-password` or `POST /api/auth/change-password`
+
+An employee must not be able to change their own role. The manager must check that the requesting user id differs from the target id before applying a role change.
 
 ---
 
@@ -285,7 +305,7 @@ When a mapper has multiple overloads (e.g., one accepting `Booking`, one accepti
 Use camelCase with type constraints: `{bookingId:int}`, `{id:int}`.
 
 ### Fallback route scope
-`MapFallbackToFile` serves static HTML only for non-API routes. Any unmatched route under `/api/` must return a proper 404 JSON response, not an HTML page. Serving HTML for mistyped API paths hides bugs from API clients and monitoring tools that check status codes.
+`MapFallbackToFile` and any fallback handler must only apply to non-API routes. Any request path starting with `/api/` that does not match a controller action must return `404` with a JSON `OperationResult` body — never an HTML page. Serving HTML for unmatched API paths hides bugs from API clients and monitoring tools.
 
 ---
 
@@ -369,7 +389,6 @@ If a test requires data to exist, assert that it exists. Never use an early `ret
 // Good
 var all = await manager.GetAllAsync(new PaginationParams());
 all.Items.Should().NotBeEmpty("seed data must exist for this test to be meaningful");
-var target = all.Items[0];
 
 // Bad
 var all = await manager.GetAllAsync(new PaginationParams());
@@ -379,20 +398,15 @@ if (all.Items.Count == 0) return; // silently passes, tests nothing
 If the data genuinely may not exist in all environments, mark the test with `Skip` and a reason instead.
 
 ### Integration test actor/target must be different users
-Any test that calls a method rejecting self-action (e.g., toggling your own account) must use two distinct users. Always verify that at least two users exist in the seed before relying on index-based selection.
+Any test that calls a method rejecting self-action (e.g., toggling your own account) must use two distinct users. Always assert that at least two users exist before relying on index-based selection.
 
 ```csharp
 // Good
 var all = await manager.GetAllUsersAsync();
 all.Should().HaveCountGreaterThan(1, "need at least two users to test actor/target separation");
 var target = all[0];
-var actorId = all[1].Id;
+var actor = all.First(u => u.Id != target.Id);
 ```
-
-### General
-- All DB access and business logic is fully async
-- `CancellationToken ct = default` as the **last** parameter on all async methods
-- Always pass `ct` to EF Core methods
 
 ---
 
@@ -408,8 +422,10 @@ var actorId = all[1].Id;
 - Avoid EF Migrations (use SQL scripts)
 - Avoid relying on SQL constraint violations as the user-facing validation error
 - Avoid hard deleting operational records (cancel or deactivate instead)
+- Avoid deleting SOP templates — use activate/deactivate only
 - Avoid early `return` in tests when data is missing (assert or skip)
 - Avoid seeding permission keys that no controller policy actually checks
+- Avoid serving HTML for unmatched `/api/` routes
 
 ### What to always do
 - Always use `CancellationToken` as last parameter on async methods
@@ -420,10 +436,10 @@ var actorId = all[1].Id;
 - Always use `is null` / `is not null` for null checks
 - Always throw if PermissionKeys.All and Meta are out of sync
 - Always validate restricted-value fields explicitly in the manager before saving
-- Always define allowed status transitions explicitly when a status field exists
 - Always account for every source field in every mapper method (map it or comment why not)
 - Always check for existing records before inserting into junction tables
 - Always keep `cleaning_platform.sql` and `cleaning_platform_seed.sql` in sync when schema changes
+- Always check the off-limits list before modifying any sensitive area
 
 ### Naming summary
 | Element | Convention | Example |
