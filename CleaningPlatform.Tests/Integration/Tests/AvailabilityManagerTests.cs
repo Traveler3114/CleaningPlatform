@@ -40,13 +40,15 @@ public class AvailabilityManagerTests : TestBase
     }
 
     [Fact]
-    public async Task GetSlotsAsync_ReturnsEmpty_WhenNoScheduleForDay()
+    public async Task GetSlotsAsync_ReturnsClosedSlot_WhenDayIsClosed()
     {
         using var db = CreateDbContext();
         var manager = new AvailabilityManager(db);
 
         var slots = await manager.GetSlotsAsync(new DateTime(2026, 5, 31));
 
-        slots.Should().BeEmpty();
+        slots.Should().HaveCount(1);
+        slots[0].IsClosed.Should().BeTrue();
+        slots[0].Hour.Should().Be(0);
     }
 }
