@@ -24,6 +24,7 @@ public class EmailService
         if (string.IsNullOrWhiteSpace(_apiKey))
         {
             _logger.LogWarning("SendGrid API key is not configured. Email to {To} was not sent.", to);
+            _logger.LogInformation("--- MOCK EMAIL ---\nTo: {To}\nSubject: {Subject}\n\n{Body}\n--- END MOCK EMAIL ---", to, subject, body);
             return;
         }
 
