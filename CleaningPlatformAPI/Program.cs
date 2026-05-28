@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using System.Text;
+using System.Security.Claims;
 using System.Text.Json.Serialization;
-using CleaningPlatformAPI.Authorization;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Middleware;
 using CleaningPlatformAPI.Data;
@@ -50,8 +50,6 @@ builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddHostedService<RecurringJobService>();
 
-builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
-
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -79,7 +77,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(options =>
 {
     foreach (var key in PermissionKeys.All)
-        options.AddPolicy(key, policy => policy.AddRequirements(new PermissionRequirement(key)));
+        options.AddPolicy(key, policy => policy.RequireAssertion(ctx =>
+            ctx.User.FindFirst(ClaimTypes.Role)?.Value == RoleNames.Owner ||
+            ctx.User.HasClaim("permission", key)));
 
     options.AddPolicy("PortalOnly", policy =>
         policy.RequireAssertion(ctx => ctx.User.HasClaim("auth_type", "portal")));

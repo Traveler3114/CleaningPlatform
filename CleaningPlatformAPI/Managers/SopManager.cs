@@ -3,7 +3,6 @@ using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Mapping;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace CleaningPlatformAPI.Managers;
@@ -209,13 +208,13 @@ public class SopManager
             .GroupBy(r => r.ChecklistItem.SopTemplateId)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        var primaryAssignmentId = bookingAssignmentIds.OrderBy(id => id).FirstOrDefault();
-        var responsesByItem = primaryAssignmentId == 0
-            ? []
-            : responses
-                .Where(r => r.BookingAssignmentId == primaryAssignmentId)
-                .GroupBy(r => r.ChecklistItemId)
-                .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.CompletedAt).First());
+        var responsesByItem = responses
+            .GroupBy(r => r.ChecklistItemId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(r => r.IsCompleted)
+                       .ThenByDescending(r => r.CompletedAt)
+                       .First());
 
         return assignments.Select(a =>
         {
@@ -325,14 +324,7 @@ public class SopManager
             });
         }
 
-        try
-        {
-            await _db.SaveChangesAsync(ct);
-        }
-        catch (DbUpdateException ex) when (SqlHelper.IsUniqueConstraintViolation(ex))
-        {
-            // Another concurrent call already assigned these SOPs — safe to ignore
-        }
+        await _db.SaveChangesAsync(ct);
     }
 
 }

@@ -250,7 +250,8 @@ public class RecurringScheduleManager
         var existingDates = await _db.Bookings
             .Where(b => b.RecurringScheduleId == scheduleId
                 && b.ScheduledDate >= rangeStart.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)
-                && b.ScheduledDate <= rangeEnd.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc))
+                && b.ScheduledDate <= rangeEnd.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)
+                && b.Status != BookingStatus.Cancelled)
             .Select(b => DateOnly.FromDateTime(b.ScheduledDate))
             .ToListAsync(ct);
 
@@ -350,8 +351,8 @@ public class RecurringScheduleManager
 
     private static bool IsBiweeklyMatch(DateOnly current, DateOnly anchor)
     {
-        var diff = current.DayNumber - anchor.DayNumber;
-        return diff >= 0 && (diff / 7) % 2 == 0;
+        var diff = Math.Abs(current.DayNumber - anchor.DayNumber);
+        return (diff / 7) % 2 == 0;
     }
 
     private static string? ValidateFrequency(string frequency, int? dayOfWeek, int? dayOfMonth, int autoGenerateWeeksAhead)
