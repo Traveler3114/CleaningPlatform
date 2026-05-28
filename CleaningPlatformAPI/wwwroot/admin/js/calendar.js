@@ -23,6 +23,12 @@ async function loadCalendar() {
     const role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
     isEmployeeView = role === 'Employee';
 
+    const perms = payload['permission'] || [];
+    const permsArr = Array.isArray(perms) ? perms : [perms];
+    const hasCreateBooking = permsArr.includes('*') || permsArr.includes('bookings.create');
+    const newBookingBtn = document.getElementById('new-booking-btn');
+    if (newBookingBtn) newBookingBtn.style.display = hasCreateBooking ? '' : 'none';
+
     if (isEmployeeView) {
         await loadEmployeeWeek();
     } else {

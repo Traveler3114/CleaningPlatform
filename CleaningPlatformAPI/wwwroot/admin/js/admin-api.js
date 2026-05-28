@@ -32,21 +32,37 @@ async function apiFetch(endpoint, options = {}) {
         ...options,
         headers
     });
-    
+
     // Handle 401 Unauthorized
     if (response.status === 401) {
         logout();
         throw new Error('Session expired. Please login again.');
     }
-    
+
+    // Handle 403 Forbidden
+    if (response.status === 403) {
+        throw new Error('Access denied. You do not have permission for this action.');
+    }
+
     // For file downloads, return raw response
     if (options.download) return response;
-    
-    const data = await response.json();
+
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+    } else {
+        const text = await response.text();
+        if (!response.ok) throw new Error(`Request failed (HTTP ${response.status})`);
+        throw new Error('Invalid server response.');
+    }
+
     if (!response.ok) {
-        // If the response is an OperationResult, use its message
-        const errorMsg = data.message || `HTTP ${response.status}`;
+        const errorMsg = data.message || `Request failed (HTTP ${response.status})`;
         throw new Error(errorMsg);
+    }
+    if (data && data.success === false) {
+        throw new Error(data.message || 'Request failed');
     }
     return data; // OperationResult<T> shape: { success, message, data }
 }

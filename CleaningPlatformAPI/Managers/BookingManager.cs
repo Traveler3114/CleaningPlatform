@@ -72,6 +72,18 @@ public class BookingManager
         return bookings.Select(BookingMapper.ToResponse).ToList();
     }
 
+    public async Task<List<BookingResponse>> GetAssignedBookingsForEmployeeByDateAsync(int employeeId, DateTime date, CancellationToken ct = default)
+    {
+        var bookings = await _db.Bookings
+            .Include(b => b.Client).ThenInclude(c => c.Contacts)
+            .Include(b => b.BookingServices)
+            .Include(b => b.Assignments).ThenInclude(a => a.Employee).ThenInclude(e => e.Role)
+            .Where(b => b.Assignments.Any(a => a.EmployeeId == employeeId) && b.ScheduledDate.Date == date.Date)
+            .OrderBy(b => b.ScheduledTimeSlot)
+            .ToListAsync(ct);
+        return bookings.Select(BookingMapper.ToResponse).ToList();
+    }
+
     public async Task<OperationResult<BookingResponse>> GetBookingDetailByIdAsync(int id, CancellationToken ct = default)
     {
         var booking = await _db.Bookings

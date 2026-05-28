@@ -134,21 +134,26 @@ public class BookingController : ControllerBase
     }
 
     [HttpGet("employee/assigned")]
-    [Authorize] // or [Authorize(Policy = PermissionKeys.BookingsView)] – any authenticated user can see their own assigned bookings
+    [Authorize]
     public async Task<ActionResult<OperationResult<List<BookingResponse>>>> GetAssignedForEmployee(
         [FromQuery] int? employeeId,
+        [FromQuery] DateTime? date,
         CancellationToken ct)
     {
         var targetId = employeeId ?? User.GetEmployeeId();
         if (targetId == null)
             return Unauthorized(OperationResult<List<BookingResponse>>.Fail("Invalid token."));
 
-        // Optional: Check that the requesting user is allowed to see this employee's assignments
         var currentUserId = User.GetEmployeeId();
         if (currentUserId != targetId && !User.IsInRole(RoleNames.Owner) && !User.IsInRole(RoleNames.Admin))
             return Forbid();
 
-        var result = await _bookingManager.GetAssignedBookingsForEmployeeAsync(targetId.Value, ct);
+        List<BookingResponse> result;
+        if (date.HasValue)
+            result = await _bookingManager.GetAssignedBookingsForEmployeeByDateAsync(targetId.Value, date.Value, ct);
+        else
+            result = await _bookingManager.GetAssignedBookingsForEmployeeAsync(targetId.Value, ct);
+
         return Ok(OperationResult<List<BookingResponse>>.Ok(result));
     }
 }

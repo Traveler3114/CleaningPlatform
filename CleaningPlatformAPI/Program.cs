@@ -72,6 +72,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
             ClockSkew = TimeSpan.Zero
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnForbidden = context =>
+            {
+                context.Response.StatusCode = 403;
+                context.Response.ContentType = "application/json";
+                var result = OperationResult<string>.Fail("Access denied. You do not have permission.");
+                return context.Response.WriteAsJsonAsync(result);
+            },
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = 401;
+                context.Response.ContentType = "application/json";
+                var result = OperationResult<string>.Fail("Authentication required.");
+                return context.Response.WriteAsJsonAsync(result);
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>

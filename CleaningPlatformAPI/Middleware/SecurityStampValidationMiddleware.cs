@@ -17,17 +17,23 @@ public class SecurityStampValidationMiddleware
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var stampClaim = context.User.FindFirst("security_stamp")?.Value;
+            var authType = context.User.FindFirst("auth_type")?.Value;
 
-            if (userIdClaim is null || stampClaim is null ||
-                !int.TryParse(userIdClaim, out var userId) ||
-                !await authManager.ValidateSecurityStampAsync(userId, stampClaim))
+            // Portal tokens are validated via magic-link exchange — no security stamp to check
+            if (authType != "portal")
             {
-                context.Response.StatusCode = 401;
-                context.Response.ContentType = "application/json";
-                await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("Session is no longer valid."));
-                return;
+                var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var stampClaim = context.User.FindFirst("security_stamp")?.Value;
+
+                if (userIdClaim is null || stampClaim is null ||
+                    !int.TryParse(userIdClaim, out var userId) ||
+                    !await authManager.ValidateSecurityStampAsync(userId, stampClaim))
+                {
+                    context.Response.StatusCode = 401;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("Session is no longer valid."));
+                    return;
+                }
             }
         }
 

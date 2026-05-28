@@ -2,9 +2,17 @@
 let currentDate = new Date().toISOString().split('T')[0];
 let dashboardData = null;
 
+function getUserRole() {
+    const token = getToken();
+    if (!token) return null;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+    } catch { return null; }
+}
+
 async function loadDashboard() {
     try {
-        // Fetch dashboard summary
         const summaryRes = await apiFetch('/reports/dashboard');
         if (summaryRes.success) dashboardData = summaryRes.data;
         else console.error(summaryRes.message);
@@ -17,7 +25,11 @@ async function loadDashboard() {
 
 async function loadBookings() {
     try {
-        const res = await apiFetch(`/bookings?date=${currentDate}`);
+        const isEmployee = getUserRole() === 'Employee';
+        const endpoint = isEmployee
+            ? `/bookings/employee/assigned?date=${currentDate}`
+            : `/bookings?date=${currentDate}`;
+        const res = await apiFetch(endpoint);
         if (res.success) {
             const bookings = res.data || [];
             renderBookings(bookings);
