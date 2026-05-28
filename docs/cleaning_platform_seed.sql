@@ -982,7 +982,7 @@ CREATE VIEW vw_EmployeeUtilization AS
 SELECT
     e.Id           AS EmployeeId,
     e.FirstName + ' ' + e.LastName AS EmployeeName,
-    COUNT(DISTINCT ba.BookingId) AS JobsAssigned,
+    COUNT(DISTINCT CASE WHEN b.Id IS NOT NULL THEN ba.BookingId END) AS JobsAssigned,
     COUNT(DISTINCT CASE WHEN b.Status = 'Completed' THEN b.Id END) AS JobsCompleted,
     COUNT(DISTINCT b.ScheduledDate) AS DaysActive
 FROM Employees e

@@ -1,9 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Mapping;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -324,6 +325,14 @@ public class SopManager
             });
         }
 
-        await _db.SaveChangesAsync(ct);
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (SqlHelper.IsUniqueConstraintViolation(ex))
+        {
+            // Another concurrent call already assigned these SOPs — safe to ignore
+        }
     }
+
 }

@@ -233,7 +233,7 @@ public class BookingManager
                 // 5. Return the response using your mapper
                 return OperationResult<BookingResponse>.Ok(BookingMapper.ToResponse(booking));
             }
-            catch (Exception ex) when (attempt < MaxRetryAttempts && IsDeadlock(ex))
+            catch (Exception ex) when (attempt < MaxRetryAttempts && SqlHelper.IsDeadlock(ex))
             {
                 await transaction.RollbackAsync(ct);
                 continue;
@@ -319,7 +319,7 @@ public class BookingManager
                 var detail = await GetBookingDetailByIdAsync(booking.Id, ct);
                 return detail.Success ? detail : OperationResult<BookingResponse>.Fail("Booking was created but could not be loaded. Please refresh.");
             }
-            catch (Exception ex) when (attempt < MaxRetryAttempts && IsDeadlock(ex))
+            catch (Exception ex) when (attempt < MaxRetryAttempts && SqlHelper.IsDeadlock(ex))
             {
                 await transaction.RollbackAsync(ct);
                 continue;
@@ -471,15 +471,5 @@ public class BookingManager
 
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
         return detail;
-    }
-
-    private static bool IsDeadlock(Exception ex)
-    {
-        for (var current = ex; current is not null; current = current.InnerException)
-        {
-            if (current is SqlException sqlEx && sqlEx.Number == 1205)
-                return true;
-        }
-        return false;
     }
 }
