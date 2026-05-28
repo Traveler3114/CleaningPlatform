@@ -1,7 +1,25 @@
 // shared.js – common functions for all pages
 
+const publicNav = [
+    { label: 'Services', href: '/public/services.html' },
+    { label: 'Book Now', href: '/public/book.html', cta: true },
+    { label: 'Sign In', href: '/portal/login.html' },
+];
+
+function renderPublicNav() {
+    const nav = document.getElementById('site-nav');
+    if (!nav) return;
+    let html = '';
+    publicNav.forEach(item => {
+        const cls = item.cta ? 'nav-link nav-cta' : 'nav-link';
+        html += `<a href="${item.href}" class="${cls}">${item.label}</a>`;
+    });
+    nav.innerHTML = html;
+}
+
 // ===== Mobile nav toggle =====
 document.addEventListener('DOMContentLoaded', () => {
+    renderPublicNav();
     const toggle = document.getElementById('menu-toggle');
     const nav = document.getElementById('site-nav');
     if (toggle && nav) {

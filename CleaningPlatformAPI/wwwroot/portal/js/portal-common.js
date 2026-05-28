@@ -1,5 +1,25 @@
 // portal-common.js — shared portal UI helpers, nav, real JWT auth
 
+const portalNav = [
+    { label: 'Dashboard', href: 'index.html' },
+    { label: 'Bookings', href: 'bookings.html' },
+    { label: 'Invoices', href: 'invoices.html' },
+    { label: 'Profile', href: 'profile.html' },
+];
+
+function renderPortalNav() {
+    const nav = document.getElementById('portal-nav');
+    if (!nav) return;
+    const currentPage = window.location.pathname.split('/').pop();
+    let html = '<div class="nav-inner">';
+    portalNav.forEach(item => {
+        const active = location.pathname.endsWith(item.href) ? ' active' : '';
+        html += `<a href="${item.href}" class="nav-tab${active}">${item.label}</a>`;
+    });
+    html += '</div>';
+    nav.innerHTML = html;
+}
+
 const SESSION_KEY = 'portalSession';
 
 function getSessionToken() {
@@ -84,6 +104,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
+    renderPortalNav();
+
     var payload = decodeToken(getSessionToken());
     if (!payload) return;
 
@@ -94,12 +116,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
-
-    var currentPage = window.location.pathname.split('/').pop();
-    document.querySelectorAll('.nav-tab').forEach(function (tab) {
-        var href = tab.getAttribute('href');
-        if (href && href === currentPage) tab.classList.add('active');
-    });
 });
 
 function showError(message, containerId) {
