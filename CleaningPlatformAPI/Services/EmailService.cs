@@ -15,7 +15,7 @@ public class EmailService
         var section = config.GetSection("SendGrid");
         _apiKey = section["ApiKey"];
         _fromEmail = section["FromEmail"] ?? "noreply@cleaningplatform.com";
-        _fromName = section["FromName"] ?? "CleanPro";
+        _fromName = section["FromName"] ?? "Chistify";
         _logger = logger;
     }
 

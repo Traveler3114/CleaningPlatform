@@ -103,7 +103,7 @@ public class BookingRequestManager
         await _email.SendAsync(
             request.Email,
             "We received your service request",
-            $"Dear {request.ContactName},\n\nThank you for submitting your service request. We have received it and will be in touch shortly to discuss the details and provide a quote.\n\nBest regards,\nCleanPro Team"
+            $"Dear {request.ContactName},\n\nThank you for submitting your service request. We have received it and will be in touch shortly to discuss the details and provide a quote.\n\nBest regards,\nChistify Team"
         );
 
         return OperationResult<BookingRequestResponse>.Ok(BookingRequestMapper.ToResponse(request));
@@ -185,7 +185,7 @@ public class BookingRequestManager
         await _email.SendAsync(
             request.Email,
             "Please confirm your service request",
-            $"Dear {request.ContactName},\n\nPlease review your service request details and confirm by clicking the link below:\n\n{confirmUrl}\n\nRequest details:\n  Contact: {request.ContactName}\n  Phone: {request.Phone}\n  Email: {request.Email}\n  Estimated price: {request.EstimatedPrice?.ToString("C") ?? "TBD"}\n  Notes: {request.Notes ?? "None"}\n\nServices:\n{servicesList}\n\nIf you have any questions, please contact us.\n\nBest regards,\nCleanPro Team"
+            $"Dear {request.ContactName},\n\nPlease review your service request details and confirm by clicking the link below:\n\n{confirmUrl}\n\nRequest details:\n  Contact: {request.ContactName}\n  Phone: {request.Phone}\n  Email: {request.Email}\n  Estimated price: {request.EstimatedPrice?.ToString("C") ?? "TBD"}\n  Notes: {request.Notes ?? "None"}\n\nServices:\n{servicesList}\n\nIf you have any questions, please contact us.\n\nBest regards,\nChistify Team"
         );
 
         Console.WriteLine("");

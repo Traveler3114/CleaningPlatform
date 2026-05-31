@@ -33,7 +33,7 @@ function renderSidebar() {
     const perms = window._userPermissions || [];
     const currentPage = window.location.pathname.split('/').pop();
 
-    let html = '<div class="sidebar-brand">Clean<span>Pro</span></div><nav class="sidebar-nav">';
+    let html = '<div class="sidebar-brand">Chistify</div><nav class="sidebar-nav">';
 
     adminNav.forEach(section => {
         const visibleItems = section.items.filter(item =>
@@ -124,3 +124,4 @@ function formatDateTime(date) {
     const d = new Date(date);
     return d.toLocaleString();
 }
+

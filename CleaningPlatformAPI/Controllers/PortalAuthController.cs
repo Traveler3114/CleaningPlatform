@@ -41,10 +41,10 @@ public class PortalAuthController : ControllerBase
 
             var clientName = contact.Client.ClientName;
             var body = $"Hi {clientName},\n\n" +
-                       $"Click this link to sign in to your CleanPro account:\n\n{link}\n\n" +
-                       $"This link expires in 15 minutes.\n\n\u2014 CleanPro Team";
+                       $"Click this link to sign in to your Chistify account:\n\n{link}\n\n" +
+                       $"This link expires in 15 minutes.\n\n\u2014 Chistify Team";
 
-            await _emailService.SendAsync(email, "Sign in to CleanPro", body);
+            await _emailService.SendAsync(email, "Sign in to Chistify", body);
         }
 
         return Ok(OperationResult<string>.Ok("If the email exists, a sign-in link has been sent."));
