@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Request Detail — Cleaning Platform</title>
+    <link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body>
+<aside class="sidebar" id="sidebar"></aside>
+<div class="main-wrapper">
+    <header class="top-header">
+        <div class="header-left">
+            <button class="mobile-toggle" id="mobile-toggle">☰</button>
+            <div class="breadcrumb"><strong>Request Detail</strong></div>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <div class="user-avatar">U</div>
+                <div class="user-details">
+                    <a href="/admin/profile.html" class="user-name">Loading...</a>
+                    <span class="user-role"></span>
+                </div>
+            </div>
+            <button id="logout-btn" class="logout-btn">Sign out</button>
+        </div>
+    </header>
+    <main class="admin-main">
+        <div id="error-container"></div>
+        <div id="request-detail"></div>
+        <a href="/admin/requests.html" class="btn btn-sm">← Back to Requests</a>
+    </main>
+    <footer class="admin-footer"><p>&copy; 2025 Cleaning Platform</p></footer>
+    <script src="/admin/js/admin-api.js"></script>
+    <script src="/admin/js/admin-common.js"></script>
+    <script src="/admin/js/request-detail.js"></script>
+</div>
+</body>
+</html>

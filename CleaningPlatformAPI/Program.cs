@@ -46,6 +46,7 @@ builder.Services.AddScoped<KanbanManager>();
 builder.Services.AddScoped<SopManager>();
 builder.Services.AddScoped<RecurringScheduleManager>();
 builder.Services.AddScoped<PortalDataManager>();
+builder.Services.AddScoped<BookingRequestManager>();
 builder.Services.AddScoped<EmailService>();
 
 builder.Services.AddHostedService<RecurringJobService>();

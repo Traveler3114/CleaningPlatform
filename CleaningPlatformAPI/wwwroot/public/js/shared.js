@@ -2,7 +2,7 @@
 
 const publicNav = [
     { label: 'Services', href: '/public/services.html' },
-    { label: 'Book Now', href: '/public/book.html', cta: true },
+    { label: 'Get a Quote', href: '/public/book.html', cta: true },
     { label: 'Sign In', href: '/portal/login.html' },
 ];
 

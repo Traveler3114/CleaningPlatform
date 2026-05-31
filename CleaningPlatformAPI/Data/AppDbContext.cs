@@ -30,6 +30,8 @@ public class AppDbContext : DbContext
     public DbSet<BookingSopAssignment> BookingSopAssignments { get; set; }
     public DbSet<ChecklistResponse> ChecklistResponses { get; set; }
     public DbSet<RecurringSchedule> RecurringSchedules { get; set; }
+    public DbSet<BookingRequest> BookingRequests { get; set; }
+    public DbSet<BookingRequestService> BookingRequestServices { get; set; }
     public DbSet<InvoiceSummaryView> InvoiceSummaryViews { get; set; }
     public DbSet<MonthlyRevenueView> MonthlyRevenueViews { get; set; }
     public DbSet<TopClientView> TopClientViews { get; set; }
@@ -231,6 +233,34 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Booking>()
             .HasIndex(b => b.RecurringScheduleId);
+
+        // BookingRequest
+        modelBuilder.Entity<BookingRequest>()
+            .Property(r => r.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<BookingRequest>()
+            .Property(r => r.EstimatedPrice)
+            .HasPrecision(10, 2);
+
+        // BookingRequest → BookingRequestServices
+        modelBuilder.Entity<BookingRequestService>()
+            .HasOne(brs => brs.BookingRequest)
+            .WithMany(br => br.RequestServices)
+            .HasForeignKey(brs => brs.BookingRequestId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // BookingRequestService → ServiceCatalog
+        modelBuilder.Entity<BookingRequestService>()
+            .HasOne(brs => brs.ServiceCatalog)
+            .WithMany()
+            .HasForeignKey(brs => brs.ServiceCatalogId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<BookingRequestService>()
+            .HasIndex(brs => new { brs.BookingRequestId, brs.ServiceCatalogId })
+            .IsUnique();
 
         modelBuilder.Entity<RecurringSchedule>()
             .Property(rs => rs.Frequency)

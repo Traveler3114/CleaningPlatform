@@ -295,6 +295,34 @@ GO
 CREATE UNIQUE INDEX IX_DateOverride_Date ON DateOverride(Date);
 GO
 
+CREATE TABLE BookingRequests (
+    Id              INT             PRIMARY KEY IDENTITY(1,1),
+    ContactName     NVARCHAR(200)   NOT NULL,
+    Phone           NVARCHAR(50)    NOT NULL,
+    Email           NVARCHAR(255)   NOT NULL,
+    Notes           NVARCHAR(MAX)   NULL,
+    EstimatedPrice  DECIMAL(10,2)   NULL,
+    AdminNotes      NVARCHAR(MAX)   NULL,
+    Status          NVARCHAR(50)    NOT NULL DEFAULT 'New',
+    CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT CHK_BookingRequest_Status CHECK (Status IN ('New', 'AdminReviewed', 'SentToCustomer', 'CustomerConfirmed', 'Cancelled', 'Converted'))
+);
+GO
+
+CREATE TABLE BookingRequestServices (
+    Id              INT             PRIMARY KEY IDENTITY(1,1),
+    BookingRequestId INT            NOT NULL,
+    ServiceCatalogId INT            NOT NULL,
+    CONSTRAINT FK_BookingRequestService_Request FOREIGN KEY (BookingRequestId)
+        REFERENCES BookingRequests(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_BookingRequestService_Catalog FOREIGN KEY (ServiceCatalogId)
+        REFERENCES ServiceCatalog(Id)
+);
+GO
+CREATE INDEX IX_BookingRequestServices_RequestId ON BookingRequestServices(BookingRequestId);
+GO
+
 CREATE TABLE Bookings (
     Id                  INT             PRIMARY KEY IDENTITY(1,1),
     ClientId            INT             NOT NULL,

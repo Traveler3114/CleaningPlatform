@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Requests — Cleaning Platform</title>
+    <link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body>
+<aside class="sidebar" id="sidebar"></aside>
+<div class="main-wrapper">
+    <header class="top-header">
+        <div class="header-left">
+            <button class="mobile-toggle" id="mobile-toggle">☰</button>
+            <div class="breadcrumb"><strong>Booking Requests</strong></div>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <div class="user-avatar">U</div>
+                <div class="user-details">
+                    <a href="/admin/profile.html" class="user-name">Loading...</a>
+                    <span class="user-role"></span>
+                </div>
+            </div>
+            <button id="logout-btn" class="logout-btn">Sign out</button>
+        </div>
+    </header>
+    <main class="admin-main">
+        <div class="page-header">
+            <div class="date-form">
+                <label for="status-filter">Status:</label>
+                <select id="status-filter" class="status-select">
+                    <option value="">All</option>
+                    <option value="New">New</option>
+                    <option value="AdminReviewed">Admin Reviewed</option>
+                    <option value="SentToCustomer">Sent to Customer</option>
+                    <option value="CustomerConfirmed">Customer Confirmed</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Converted">Converted</option>
+                </select>
+                <button id="filter-btn" class="btn btn-sm">Filter</button>
+            </div>
+        </div>
+        <div id="error-container"></div>
+        <div id="requests-list"></div>
+    </main>
+    <footer class="admin-footer"><p>&copy; 2025 Cleaning Platform</p></footer>
+    <script src="/admin/js/admin-api.js"></script>
+    <script src="/admin/js/admin-common.js"></script>
+    <script src="/admin/js/requests.js"></script>
+</div>
+</body>
+</html>

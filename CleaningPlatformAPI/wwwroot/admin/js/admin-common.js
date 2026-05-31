@@ -7,6 +7,7 @@ const adminNav = [
     ]},
     { section: 'Bookings', items: [
         { label: 'Bookings', href: 'bookings.html', perm: 'pages.bookings' },
+        { label: 'Requests', href: 'requests.html', perm: 'bookings.view' },
         { label: 'Recurring', href: 'recurring.html', perm: 'bookings.view' },
         { label: 'Invoices', href: 'invoices.html', perm: 'invoices.view' },
     ]},

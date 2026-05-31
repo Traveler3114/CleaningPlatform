@@ -80,6 +80,46 @@ public class TokenManager
         return CreateToken(claims, expiry, issuer, creds);
     }
 
+    public string CreateBookingRequestToken(int bookingRequestId, string email)
+    {
+        var (key, creds, issuer) = GetSigningConfig();
+        var claims = new List<Claim>
+        {
+            new Claim("booking_request_id", bookingRequestId.ToString()),
+            new Claim("email", email),
+            new Claim("purpose", "booking_request_confirmation"),
+            new Claim("auth_type", "public"),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        return CreateToken(claims, DateTime.UtcNow.AddHours(48), issuer, creds);
+    }
+
+    public ClaimsIdentity? ValidateBookingRequestToken(string token)
+    {
+        try
+        {
+            var (key, _, issuer) = GetSigningConfig();
+            var handler = new JsonWebTokenHandler();
+            var result = handler.ValidateTokenAsync(token, new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = issuer,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ClockSkew = TimeSpan.Zero
+            }).GetAwaiter().GetResult();
+
+            return result.IsValid ? result.ClaimsIdentity : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static string CreateToken(List<Claim> claims, DateTime expires, string issuer, SigningCredentials creds)
     {
         var descriptor = new SecurityTokenDescriptor
