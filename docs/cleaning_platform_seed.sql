@@ -339,7 +339,7 @@ CREATE TABLE Bookings (
     CONSTRAINT FK_Booking_Client    FOREIGN KEY (ClientId)           REFERENCES Clients(Id),
     CONSTRAINT FK_Booking_Site      FOREIGN KEY (SiteId)             REFERENCES Sites(Id),
     CONSTRAINT CHK_Booking_ServiceType CHECK (ServiceType IN ('Vehicle', 'SiteBased', 'Boat')),
-    CONSTRAINT CHK_Booking_Status      CHECK (Status IN ('Pending', 'Confirmed', 'InProgress', 'Completed', 'Cancelled')),
+    CONSTRAINT CHK_Booking_Status      CHECK (Status IN ('Pending', 'InProgress', 'Completed', 'Cancelled')),
     CONSTRAINT CHK_Booking_CompletedAt CHECK (Status != 'Completed' OR CompletedAt IS NOT NULL)
 );
 GO
@@ -675,7 +675,7 @@ SELECT
     CASE WHEN s.Status = 'Completed' THEN DATEADD(DAY, -1, GETUTCDATE()) ELSE NULL END,
     NULL
 FROM N
-CROSS APPLY (SELECT CHOOSE((n % 5) + 1, 'Pending', 'Confirmed', 'InProgress', 'Completed', 'Cancelled') AS Status) s;
+CROSS APPLY (SELECT CHOOSE((n % 4) + 1, 'Pending', 'InProgress', 'Completed', 'Cancelled') AS Status) s;
 GO
 
 INSERT INTO BookingAssignments (BookingId, EmployeeId, AssignedAt)

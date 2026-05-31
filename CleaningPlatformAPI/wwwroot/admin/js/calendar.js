@@ -69,7 +69,7 @@ function renderEmployeeWeek(board) {
                     ${card.hasSop ? `<div>SOP: ${card.sopCompletionPct}% complete<div class="cal-sop-bar"><div class="cal-sop-bar__fill" style="width:${card.sopCompletionPct}%"></div></div></div>` : ''}
                 </div>
                 <div class="emp-task-card__actions">
-                    ${card.status === 'Confirmed' ? `<button onclick="updateBookingStatus(${card.bookingId}, 'InProgress')" class="btn btn-sm">Start job</button>` : ''}
+                    ${card.status === 'Pending' ? `<button onclick="updateBookingStatus(${card.bookingId}, 'InProgress')" class="btn btn-sm">Start job</button>` : ''}
                     ${card.status === 'InProgress' ? `<button onclick="updateBookingStatus(${card.bookingId}, 'Completed')" class="btn btn-sm">Mark complete</button>` : ''}
                     <a href="booking-detail.html?id=${card.bookingId}" class="btn btn-sm">Details</a>
                 </div>

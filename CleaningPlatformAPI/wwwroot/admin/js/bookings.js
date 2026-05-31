@@ -40,7 +40,6 @@ function renderBookingsFlat(bookings) {
             <td>
                 <select class="status-select" data-id="${b.id}" onchange="updateBookingStatus(${b.id}, this.value)">
                     <option ${b.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                    <option ${b.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                     <option ${b.status === 'InProgress' ? 'selected' : ''}>InProgress</option>
                     <option ${b.status === 'Completed' ? 'selected' : ''}>Completed</option>
                     <option ${b.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
@@ -71,7 +70,6 @@ function renderBookingsPaginated(pagedResult) {
             <td>
                 <select class="status-select" data-id="${b.id}" onchange="updateBookingStatus(${b.id}, this.value)">
                     <option ${b.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                    <option ${b.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                     <option ${b.status === 'InProgress' ? 'selected' : ''}>InProgress</option>
                     <option ${b.status === 'Completed' ? 'selected' : ''}>Completed</option>
                     <option ${b.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>

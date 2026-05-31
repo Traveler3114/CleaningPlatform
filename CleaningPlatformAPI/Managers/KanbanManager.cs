@@ -8,7 +8,7 @@ namespace CleaningPlatformAPI.Managers;
 public class KanbanManager
 {
     private readonly AppDbContext _db;
-    private static readonly string[] Statuses = ["Pending", "Confirmed", "InProgress", "Completed", "Cancelled"];
+    private static readonly string[] Statuses = ["Pending", "InProgress", "Completed", "Cancelled"];
 
     public KanbanManager(AppDbContext db) { _db = db; }
 
@@ -27,7 +27,7 @@ public class KanbanManager
     public async Task<KanbanBoardResponse> GetPipelineAsync(CancellationToken ct = default)
     {
         var bookings = await BaseBookingQuery()
-            .Where(b => b.Status == BookingStatus.Pending || b.Status == BookingStatus.Confirmed || b.Status == BookingStatus.InProgress)
+            .Where(b => b.Status == BookingStatus.Pending || b.Status == BookingStatus.InProgress)
             .OrderBy(b => b.ScheduledDate).ThenBy(b => b.ScheduledTimeSlot)
             .ToListAsync(ct);
         return new KanbanBoardResponse(DateTime.UtcNow.Date, BuildColumns(bookings), await GetEmployeesForDateAsync(DateTime.UtcNow.Date, ct));

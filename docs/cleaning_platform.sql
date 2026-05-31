@@ -338,7 +338,7 @@ CREATE TABLE Bookings (
     CONSTRAINT FK_Booking_Client    FOREIGN KEY (ClientId)           REFERENCES Clients(Id),
     CONSTRAINT FK_Booking_Site      FOREIGN KEY (SiteId)             REFERENCES Sites(Id),
     CONSTRAINT CHK_Booking_ServiceType CHECK (ServiceType IN ('Vehicle', 'SiteBased', 'Boat')),
-    CONSTRAINT CHK_Booking_Status      CHECK (Status IN ('Pending', 'Confirmed', 'InProgress', 'Completed', 'Cancelled')),
+    CONSTRAINT CHK_Booking_Status      CHECK (Status IN ('Pending', 'InProgress', 'Completed', 'Cancelled')),
     CONSTRAINT CHK_Booking_CompletedAt CHECK (Status != 'Completed' OR CompletedAt IS NOT NULL)
 );
 GO

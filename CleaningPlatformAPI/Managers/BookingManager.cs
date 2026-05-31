@@ -347,7 +347,7 @@ public class BookingManager
     public async Task<OperationResult<BookingResponse>> UpdateStatusAsync(int id, string status, CancellationToken ct = default)
     {
         if (!Enum.TryParse<BookingStatus>(status, true, out var bookingStatus))
-            return OperationResult<BookingResponse>.Fail($"'{status}' is not a valid booking status. Valid values: Pending, Confirmed, InProgress, Completed, Cancelled.");
+            return OperationResult<BookingResponse>.Fail($"'{status}' is not a valid booking status. Valid values: Pending, InProgress, Completed, Cancelled.");
 
         var booking = await _db.Bookings
             .Include(b => b.Client)
@@ -374,7 +374,7 @@ public class BookingManager
             return OperationResult<BookingResponse>.Fail($"Booking #{bookingId} was not found.");
 
         if (booking.Status == BookingStatus.Completed || booking.Status == BookingStatus.Cancelled)
-            return OperationResult<BookingResponse>.Fail($"Cannot assign employees to a booking with status '{booking.Status}'. Only Pending, Confirmed, or InProgress bookings can be assigned.");
+            return OperationResult<BookingResponse>.Fail($"Cannot assign employees to a booking with status '{booking.Status}'. Only Pending or InProgress bookings can be assigned.");
 
         var employee = await _db.Employees.FirstOrDefaultAsync(e => e.Id == employeeId && e.IsActive, ct);
         if (employee is null)

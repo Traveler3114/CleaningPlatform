@@ -30,7 +30,6 @@ function renderBookingDetail() {
             <div class="inline-form" style="margin-top:0.7rem;">
                 <select id="status-select" class="status-select">
                     <option ${booking.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                    <option ${booking.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                     <option ${booking.status === 'InProgress' ? 'selected' : ''}>InProgress</option>
                     <option ${booking.status === 'Completed' ? 'selected' : ''}>Completed</option>
                     <option ${booking.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
@@ -294,7 +293,7 @@ function renderRecurringButtons() {
             <button id="end-series-here-btn" class="btn btn-sm" style="margin-left:0.5rem; background:#c62828; color:#fff;">End series from here</button>
         </span>`;
     }
-    if (booking.status === 'Confirmed' || booking.status === 'Completed') {
+    if (booking.status === 'Completed') {
         return '<button id="make-recurring-btn" class="btn btn-sm" style="margin-left:0.5rem;">Make Recurring</button>';
     }
     return '';

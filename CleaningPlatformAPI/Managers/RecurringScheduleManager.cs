@@ -105,9 +105,9 @@ public class RecurringScheduleManager
         if (booking is null)
             return OperationResult<RecurringScheduleResponse>.Fail($"Booking #{bookingId} was not found.");
 
-        if (booking.Status != BookingStatus.Confirmed && booking.Status != BookingStatus.Completed)
+        if (booking.Status != BookingStatus.Completed)
             return OperationResult<RecurringScheduleResponse>.Fail(
-                $"Booking #{bookingId} has status '{booking.Status}'. Only Confirmed or Completed bookings can be used as a recurring source.");
+                $"Booking #{bookingId} has status '{booking.Status}'. Only Completed bookings can be used as a recurring source.");
 
         var now = DateTime.UtcNow;
         var schedule = new RecurringSchedule

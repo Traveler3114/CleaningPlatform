@@ -102,14 +102,13 @@ function renderKPIs() {
     // Also we need pending/confirmed counts from current bookings? We can compute from loaded bookings.
     // For simplicity, we'll compute from bookings table.
     const bookingsTable = document.querySelector('#bookings-table table');
-    let pending = 0, confirmed = 0;
+    let pending = 0;
     if (bookingsTable) {
         const rows = bookingsTable.querySelectorAll('tbody tr');
         rows.forEach(row => {
             const statusCell = row.cells[3];
             const status = statusCell.innerText.trim();
             if (status === 'Pending') pending++;
-            if (status === 'Confirmed') confirmed++;
         });
     }
     const kpiHtml = `
@@ -118,7 +117,6 @@ function renderKPIs() {
         <div class="kpi-card"><span>Completion rate</span><strong>${completion ? completion.completionRatePct.toFixed(1) : '0'}%</strong></div>
         <div class="kpi-card"><span>Top client</span><strong>${topClient ? topClient.clientName : '—'}</strong></div>
         <div class="kpi-card"><span>Pending today</span><strong>${pending}</strong></div>
-        <div class="kpi-card"><span>Confirmed today</span><strong>${confirmed}</strong></div>
     `;
     document.getElementById('kpi-grid').innerHTML = kpiHtml;
 }
