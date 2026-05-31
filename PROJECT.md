@@ -420,6 +420,7 @@ var actor = all.First(u => u.Id != target.Id);
 - Avoid putting logic in controllers (use managers)
 - Avoid silent exception swallowing (log or rethrow)
 - Avoid EF Migrations (use SQL scripts)
+- Avoid magic string status/type fields — use enums with `HasConversion<string>()` instead
 - Avoid relying on SQL constraint violations as the user-facing validation error
 - Avoid hard deleting operational records (cancel or deactivate instead)
 - Avoid deleting SOP templates — use activate/deactivate only
@@ -435,6 +436,7 @@ var actor = all.First(u => u.Id != target.Id);
 - Always use `string.Empty` for string defaults
 - Always use `is null` / `is not null` for null checks
 - Always throw if PermissionKeys.All and Meta are out of sync
+- Always use enums for status and type fields with `HasConversion<string>()` in the DbContext — never use raw magic strings. Define the enum in `Enums/` and reference it by name in the entity and manager.
 - Always validate restricted-value fields explicitly in the manager before saving
 - Always account for every source field in every mapper method (map it or comment why not)
 - Always check for existing records before inserting into junction tables

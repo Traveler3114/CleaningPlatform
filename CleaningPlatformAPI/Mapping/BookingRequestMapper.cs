@@ -14,7 +14,7 @@ public static class BookingRequestMapper
         Notes = r.Notes,
         EstimatedPrice = r.EstimatedPrice,
         AdminNotes = r.AdminNotes,
-        Status = r.Status,
+        Status = r.Status.ToString(),
         CreatedAt = r.CreatedAt,
         UpdatedAt = r.UpdatedAt,
         Services = r.RequestServices?.Select(s => new BookingRequestServiceResponse
@@ -34,7 +34,7 @@ public static class BookingRequestMapper
         Notes = r.Notes,
         EstimatedPrice = r.EstimatedPrice,
         AdminNotes = r.AdminNotes,
-        Status = r.Status,
+        Status = r.Status.ToString(),
         Services = r.RequestServices?.Select(s => new BookingRequestServiceResponse
         {
             Id = s.Id,

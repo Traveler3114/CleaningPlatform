@@ -34,8 +34,8 @@ public class BookingRequestManager
             .AsNoTracking()
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(statusFilter))
-            query = query.Where(r => r.Status == statusFilter);
+        if (!string.IsNullOrWhiteSpace(statusFilter) && Enum.TryParse<BookingRequestStatus>(statusFilter, true, out var status))
+            query = query.Where(r => r.Status == status);
 
         var totalCount = await query.CountAsync(ct);
 
@@ -88,7 +88,7 @@ public class BookingRequestManager
             Phone = dto.Phone.Trim(),
             Email = dto.Email.Trim(),
             Notes = string.IsNullOrWhiteSpace(dto.Notes) ? null : dto.Notes.Trim(),
-            Status = "New",
+            Status = BookingRequestStatus.New,
             CreatedAt = now,
             UpdatedAt = now,
             RequestServices = validServiceIds.Select(id => new BookingRequestService
@@ -118,7 +118,7 @@ public class BookingRequestManager
         if (request is null)
             return OperationResult<BookingRequestResponse>.Fail($"Booking request #{id} was not found.");
 
-        if (request.Status is "Cancelled" or "Converted")
+        if (request.Status is BookingRequestStatus.Cancelled or BookingRequestStatus.Converted)
             return OperationResult<BookingRequestResponse>.Fail($"Cannot edit a request with status '{request.Status}'.");
 
         if (dto.ServiceCatalogIds is not null && dto.ServiceCatalogIds.Count > 0)
@@ -145,8 +145,8 @@ public class BookingRequestManager
         request.AdminNotes = string.IsNullOrWhiteSpace(dto.AdminNotes) ? null : dto.AdminNotes.Trim();
         request.UpdatedAt = DateTime.UtcNow;
 
-        if (request.Status == "New")
-            request.Status = "AdminReviewed";
+        if (request.Status == BookingRequestStatus.New)
+            request.Status = BookingRequestStatus.AdminReviewed;
 
         await _db.SaveChangesAsync(ct);
 
@@ -167,7 +167,7 @@ public class BookingRequestManager
         if (request is null)
             return OperationResult<BookingRequestResponse>.Fail($"Booking request #{id} was not found.");
 
-        if (request.Status is not ("New" or "AdminReviewed"))
+        if (request.Status is not (BookingRequestStatus.New or BookingRequestStatus.AdminReviewed))
             return OperationResult<BookingRequestResponse>.Fail($"Cannot send to customer. Current status is '{request.Status}'. Expected 'New' or 'AdminReviewed'.");
 
         var token = _tokenManager.CreateBookingRequestToken(request.Id, request.Email);
@@ -178,7 +178,7 @@ public class BookingRequestManager
         var servicesList = string.Join("\n", request.RequestServices
             .Select(s => $"  - {s.ServiceCatalog?.Name ?? "Unknown service"}"));
 
-        request.Status = "SentToCustomer";
+        request.Status = BookingRequestStatus.SentToCustomer;
         request.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
 
@@ -215,7 +215,7 @@ public class BookingRequestManager
         if (request is null)
             return OperationResult<CustomerPreviewResponse>.Fail("Request was not found.");
 
-        if (request.Status is not ("SentToCustomer" or "CustomerConfirmed" or "Cancelled"))
+        if (request.Status is not (BookingRequestStatus.SentToCustomer or BookingRequestStatus.CustomerConfirmed or BookingRequestStatus.Cancelled))
             return OperationResult<CustomerPreviewResponse>.Fail("This request is not available for action.");
 
         return OperationResult<CustomerPreviewResponse>.Ok(BookingRequestMapper.ToPreviewResponse(request));
@@ -238,13 +238,13 @@ public class BookingRequestManager
         if (request is null)
             return OperationResult<string>.Fail("Request was not found.");
 
-        if (request.Status is "Cancelled" or "Converted" or "CustomerConfirmed")
+        if (request.Status is BookingRequestStatus.Cancelled or BookingRequestStatus.Converted or BookingRequestStatus.CustomerConfirmed)
             return OperationResult<string>.Fail($"Request already has status '{request.Status}'.");
 
-        if (request.Status != "SentToCustomer")
+        if (request.Status != BookingRequestStatus.SentToCustomer)
             return OperationResult<string>.Fail($"Cannot confirm a request with status '{request.Status}'. Expected 'SentToCustomer'.");
 
-        request.Status = "CustomerConfirmed";
+        request.Status = BookingRequestStatus.CustomerConfirmed;
         request.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
 
@@ -266,10 +266,10 @@ public class BookingRequestManager
         if (request is null)
             return OperationResult<string>.Fail("Request was not found.");
 
-        if (request.Status is "Cancelled" or "Converted")
+        if (request.Status is BookingRequestStatus.Cancelled or BookingRequestStatus.Converted)
             return OperationResult<string>.Fail($"Request already has status '{request.Status}'.");
 
-        request.Status = "Cancelled";
+        request.Status = BookingRequestStatus.Cancelled;
         request.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
 
@@ -285,7 +285,7 @@ public class BookingRequestManager
         if (request is null)
             return OperationResult<BookingResponse>.Fail($"Booking request #{id} was not found.");
 
-        if (request.Status != "CustomerConfirmed")
+        if (request.Status != BookingRequestStatus.CustomerConfirmed)
             return OperationResult<BookingResponse>.Fail($"Cannot convert a request with status '{request.Status}'. Expected 'CustomerConfirmed'.");
 
         if (request.RequestServices is null || request.RequestServices.Count == 0)
@@ -346,7 +346,7 @@ public class BookingRequestManager
         }
 
         _db.Bookings.Add(booking);
-        request.Status = "Converted";
+        request.Status = BookingRequestStatus.Converted;
         request.UpdatedAt = now;
         await _db.SaveChangesAsync(ct);
 

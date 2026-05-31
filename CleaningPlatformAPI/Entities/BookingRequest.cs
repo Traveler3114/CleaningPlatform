@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using CleaningPlatformAPI.Enums;
 
 namespace CleaningPlatformAPI.Entities;
 
@@ -25,7 +26,7 @@ public class BookingRequest
     public string? AdminNotes { get; set; }
 
     [Required, MaxLength(50)]
-    public string Status { get; set; } = "New";
+    public BookingRequestStatus Status { get; set; } = BookingRequestStatus.New;
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
