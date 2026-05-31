@@ -55,7 +55,6 @@ function renderDetails() {
             <div class="summary-row"><span>Estimated Price</span><span>${price}</span></div>
             ${r.adminNotes ? `<div class="summary-row"><span>Notes from us</span><span>${escHtml(r.adminNotes)}</span></div>` : ''}
             ${r.notes ? `<div class="summary-row"><span>Your Notes</span><span>${escHtml(r.notes)}</span></div>` : ''}
-            <div class="summary-row"><span>Status</span><span>${r.status}</span></div>
         </div>
         <div id="action-area">${actionsHtml}</div>
     `;

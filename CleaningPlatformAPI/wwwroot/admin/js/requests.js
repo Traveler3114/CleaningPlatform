@@ -2,6 +2,20 @@
 let currentPage = 1;
 let currentStatus = '';
 
+const statusMap = {
+    New: { label: 'New', cls: 'new' },
+    AdminReviewed: { label: 'Admin Reviewed', cls: 'adminreviewed' },
+    SentToCustomer: { label: 'Sent to Customer', cls: 'senttocustomer' },
+    CustomerConfirmed: { label: 'Customer Confirmed', cls: 'customerconfirmed' },
+    Cancelled: { label: 'Cancelled', cls: 'cancelled' },
+    Converted: { label: 'Converted', cls: 'converted' }
+};
+
+function fmtStatus(status) {
+    const s = statusMap[status] || { label: status, cls: 'info' };
+    return `<span class="badge badge-${s.cls}">${s.label}</span>`;
+}
+
 async function loadRequests() {
     try {
         let url = `/booking-requests?page=${currentPage}&pageSize=50`;
@@ -31,7 +45,7 @@ function renderRequests(pagedResult) {
             <td>${escHtml(r.email)}</td>
             <td>${services}</td>
             <td>${price}</td>
-            <td><span class="badge badge-${r.status.toLowerCase()}">${r.status}</span></td>
+            <td>${fmtStatus(r.status)}</td>
             <td>${created}</td>
         </tr>`;
     });

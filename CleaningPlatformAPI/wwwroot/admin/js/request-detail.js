@@ -3,6 +3,20 @@ const urlParams = new URLSearchParams(window.location.search);
 const requestId = urlParams.get('id');
 let requestData = null;
 
+const statusMap = {
+    New: { label: 'New', cls: 'new' },
+    AdminReviewed: { label: 'Admin Reviewed', cls: 'adminreviewed' },
+    SentToCustomer: { label: 'Sent to Customer', cls: 'senttocustomer' },
+    CustomerConfirmed: { label: 'Customer Confirmed', cls: 'customerconfirmed' },
+    Cancelled: { label: 'Cancelled', cls: 'cancelled' },
+    Converted: { label: 'Converted', cls: 'converted' }
+};
+
+function fmtStatus(status) {
+    const s = statusMap[status] || { label: status, cls: 'info' };
+    return `<span class="badge badge-${s.cls}">${s.label}</span>`;
+}
+
 async function loadRequestDetail() {
     if (!requestId) {
         document.getElementById('request-detail').innerHTML = '<div class="alert alert-info">No request ID provided.</div>';
@@ -46,7 +60,7 @@ function renderRequestDetail() {
         <section class="detail-section">
             <div class="page-header">
                 <div><strong>Request #${r.id}</strong></div>
-                <span class="badge badge-${r.status.toLowerCase()}">${r.status}</span>
+                ${fmtStatus(r.status)}
             </div>
             <p><strong>Created:</strong> ${formatDateTime(r.createdAt)}</p>
             <p><strong>Updated:</strong> ${formatDateTime(r.updatedAt)}</p>

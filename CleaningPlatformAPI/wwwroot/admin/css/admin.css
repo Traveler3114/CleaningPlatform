@@ -606,6 +606,11 @@ body {
 .badge-repeatbusiness { background: #ede9fe; color: #7c3aed; }
 .badge-protected { background: #ede9fe; color: #7c3aed; }
 .badge-info { background: var(--info-light); color: #2563eb; }
+.badge-new { background: var(--info-light); color: #2563eb; }
+.badge-adminreviewed { background: var(--warning-light); color: #d97706; }
+.badge-senttocustomer { background: #ede9fe; color: #7c3aed; }
+.badge-customerconfirmed { background: var(--success-light); color: #16a34a; }
+.badge-converted { background: #f1f5f9; color: #64748b; }
 
 /* MODALS */
 .modal-backdrop {
