@@ -465,4 +465,145 @@
   <!-- Language -->
   <data name="lang_en" xml:space="preserve"><value>EN</value></data>
   <data name="lang_hr" xml:space="preserve"><value>HR</value></data>
+
+  <!-- Missing Buttons -->
+  <data name="btn_add_contact" xml:space="preserve"><value>Add Contact</value></data>
+  <data name="btn_add_item" xml:space="preserve"><value>Add Item</value></data>
+  <data name="btn_change_password" xml:space="preserve"><value>Change Password</value></data>
+  <data name="btn_confirm_create_booking" xml:space="preserve"><value>Confirm Create Booking</value></data>
+  <data name="btn_create_recurring_schedule" xml:space="preserve"><value>Create Recurring Schedule</value></data>
+  <data name="btn_deactivate" xml:space="preserve"><value>Deactivate</value></data>
+  <data name="btn_end_series" xml:space="preserve"><value>End Series</value></data>
+  <data name="btn_end_series_from_here" xml:space="preserve"><value>End Series from Here</value></data>
+  <data name="btn_generate" xml:space="preserve"><value>Generate</value></data>
+  <data name="btn_make_recurring" xml:space="preserve"><value>Make Recurring</value></data>
+  <data name="btn_open" xml:space="preserve"><value>Open</value></data>
+  <data name="btn_remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="btn_run_auto_generate" xml:space="preserve"><value>Run Auto-Generate</value></data>
+  <data name="btn_save_changes" xml:space="preserve"><value>Save Changes</value></data>
+  <data name="btn_send_to_customer" xml:space="preserve"><value>Send to Customer</value></data>
+  <data name="btn_show_all" xml:space="preserve"><value>Show All</value></data>
+  <data name="btn_sign_in" xml:space="preserve"><value>Sign In</value></data>
+  <data name="btn_view" xml:space="preserve"><value>View</value></data>
+
+  <!-- Breadcrumbs -->
+  <data name="content_breadcrumb_invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="content_breadcrumb_recurring" xml:space="preserve"><value>Recurring</value></data>
+
+  <!-- Empty States (variants) -->
+  <data name="empty_no_bookings_date" xml:space="preserve"><value>No bookings for this date.</value></data>
+  <data name="empty_no_data_available" xml:space="preserve"><value>No data available.</value></data>
+  <data name="empty_no_overrides_found" xml:space="preserve"><value>No overrides found.</value></data>
+  <data name="empty_no_schedule_entries" xml:space="preserve"><value>No schedule entries found.</value></data>
+  <data name="empty_no_slots_date" xml:space="preserve"><value>No slots available for this date.</value></data>
+  <data name="empty_no_templates_found" xml:space="preserve"><value>No templates found.</value></data>
+
+  <!-- Frequencies -->
+  <data name="freq_biweekly" xml:space="preserve"><value>Biweekly</value></data>
+  <data name="freq_monthly" xml:space="preserve"><value>Monthly</value></data>
+  <data name="freq_weekly" xml:space="preserve"><value>Weekly</value></data>
+
+  <!-- KPIs -->
+  <data name="kpi_completion_rate" xml:space="preserve"><value>Completion Rate</value></data>
+  <data name="kpi_overdue_invoices" xml:space="preserve"><value>Overdue Invoices</value></data>
+  <data name="kpi_pending_today" xml:space="preserve"><value>Pending Today</value></data>
+  <data name="kpi_revenue_mtd" xml:space="preserve"><value>Revenue MTD</value></data>
+  <data name="kpi_top_client" xml:space="preserve"><value>Top Client</value></data>
+
+  <!-- Labels -->
+  <data name="label_access_notes" xml:space="preserve"><value>Access Notes</value></data>
+  <data name="label_account_info" xml:space="preserve"><value>Account Info</value></data>
+  <data name="label_admin_notes" xml:space="preserve"><value>Admin Notes</value></data>
+  <data name="label_assigned_employees" xml:space="preserve"><value>Assigned Employees</value></data>
+  <data name="label_available" xml:space="preserve"><value>Available</value></data>
+  <data name="label_booked" xml:space="preserve"><value>Booked</value></data>
+  <data name="label_booking_history" xml:space="preserve"><value>Booking History</value></data>
+  <data name="label_capacity" xml:space="preserve"><value>Capacity</value></data>
+  <data name="label_change_password" xml:space="preserve"><value>Change Password</value></data>
+  <data name="label_client_name" xml:space="preserve"><value>Client Name</value></data>
+  <data name="label_current_password" xml:space="preserve"><value>Current Password</value></data>
+  <data name="label_day_of_month" xml:space="preserve"><value>Day of Month</value></data>
+  <data name="label_day_of_week" xml:space="preserve"><value>Day of Week</value></data>
+  <data name="label_end_date_optional" xml:space="preserve"><value>End Date (optional)</value></data>
+  <data name="label_end_from_date" xml:space="preserve"><value>End from Date</value></data>
+  <data name="label_est_price" xml:space="preserve"><value>Est. Price</value></data>
+  <data name="label_floor_area" xml:space="preserve"><value>Floor Area</value></data>
+  <data name="label_frequency" xml:space="preserve"><value>Frequency</value></data>
+  <data name="label_hour" xml:space="preserve"><value>Hour</value></data>
+  <data name="label_my_assigned_bookings" xml:space="preserve"><value>My Assigned Bookings</value></data>
+  <data name="label_new_password" xml:space="preserve"><value>New Password</value></data>
+  <data name="label_no_booking_id" xml:space="preserve"><value>No booking ID</value></data>
+  <data name="label_no_initial_service" xml:space="preserve"><value>No initial service</value></data>
+  <data name="label_no_request_id" xml:space="preserve"><value>No request ID</value></data>
+  <data name="label_notes_client" xml:space="preserve"><value>Notes (Client)</value></data>
+  <data name="label_oib" xml:space="preserve"><value>OIB</value></data>
+  <data name="label_payment_terms" xml:space="preserve"><value>Payment Terms</value></data>
+  <data name="label_postal_code" xml:space="preserve"><value>Postal Code</value></data>
+  <data name="label_primary_contact_name" xml:space="preserve"><value>Primary Contact Name</value></data>
+  <data name="label_select_client" xml:space="preserve"><value>Select Client</value></data>
+  <data name="label_select_employee" xml:space="preserve"><value>Select Employee</value></data>
+  <data name="label_state" xml:space="preserve"><value>State</value></data>
+  <data name="label_weeks_ahead" xml:space="preserve"><value>Weeks Ahead</value></data>
+
+  <!-- Modals -->
+  <data name="modal_edit_recurring" xml:space="preserve"><value>Edit Recurring Schedule</value></data>
+  <data name="modal_end_series_title" xml:space="preserve"><value>End Series</value></data>
+  <data name="modal_end_series_warning" xml:space="preserve"><value>Are you sure you want to end this series?</value></data>
+  <data name="modal_make_recurring" xml:space="preserve"><value>Make Recurring</value></data>
+  <data name="modal_make_recurring_desc" xml:space="preserve"><value>Configure the recurring schedule for this booking.</value></data>
+
+  <!-- Messages -->
+  <data name="msg_auto_generate_complete" xml:space="preserve"><value>Auto-generate complete.</value></data>
+  <data name="msg_confirm_create_booking" xml:space="preserve"><value>Create this booking?</value></data>
+  <data name="msg_confirm_deactivate_template" xml:space="preserve"><value>Deactivate this template?</value></data>
+  <data name="msg_confirm_end_series" xml:space="preserve"><value>End this series?</value></data>
+  <data name="msg_failed_load_bookings" xml:space="preserve"><value>Failed to load bookings.</value></data>
+  <data name="msg_failed_load_slots" xml:space="preserve"><value>Failed to load slots.</value></data>
+  <data name="msg_no_bookings" xml:space="preserve"><value>No bookings.</value></data>
+  <data name="msg_password_changed" xml:space="preserve"><value>Password changed.</value></data>
+  <data name="msg_running" xml:space="preserve"><value>Running...</value></data>
+  <data name="msg_select_date" xml:space="preserve"><value>Please select a date.</value></data>
+
+  <!-- Placeholders -->
+  <data name="placeholder_booking_id" xml:space="preserve"><value>Booking ID</value></data>
+
+  <!-- Statuses -->
+  <data name="status_ended" xml:space="preserve"><value>Ended</value></data>
+
+  <!-- Table Headers -->
+  <data name="th_active" xml:space="preserve"><value>Active</value></data>
+  <data name="th_address" xml:space="preserve"><value>Address</value></data>
+  <data name="th_base_price" xml:space="preserve"><value>Base Price</value></data>
+  <data name="th_billed" xml:space="preserve"><value>Billed</value></data>
+  <data name="th_capacity" xml:space="preserve"><value>Capacity</value></data>
+  <data name="th_checklist" xml:space="preserve"><value>Checklist</value></data>
+  <data name="th_city" xml:space="preserve"><value>City</value></data>
+  <data name="th_closed" xml:space="preserve"><value>Closed</value></data>
+  <data name="th_code" xml:space="preserve"><value>Code</value></data>
+  <data name="th_completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="th_day" xml:space="preserve"><value>Day</value></data>
+  <data name="th_days_active" xml:space="preserve"><value>Days Active</value></data>
+  <data name="th_discount" xml:space="preserve"><value>Discount</value></data>
+  <data name="th_employee" xml:space="preserve"><value>Employee</value></data>
+  <data name="th_end" xml:space="preserve"><value>End</value></data>
+  <data name="th_ends_on" xml:space="preserve"><value>Ends On</value></data>
+  <data name="th_est_price" xml:space="preserve"><value>Est. Price</value></data>
+  <data name="th_frequency" xml:space="preserve"><value>Frequency</value></data>
+  <data name="th_invoice_number" xml:space="preserve"><value>Invoice #</value></data>
+  <data name="th_invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="th_linked_service" xml:space="preserve"><value>Linked Service</value></data>
+  <data name="th_month" xml:space="preserve"><value>Month</value></data>
+  <data name="th_paid" xml:space="preserve"><value>Paid</value></data>
+  <data name="th_primary" xml:space="preserve"><value>Primary</value></data>
+  <data name="th_primary_contact" xml:space="preserve"><value>Primary Contact</value></data>
+  <data name="th_rate" xml:space="preserve"><value>Rate</value></data>
+  <data name="th_revenue" xml:space="preserve"><value>Revenue</value></data>
+  <data name="th_service_type" xml:space="preserve"><value>Service Type</value></data>
+  <data name="th_site" xml:space="preserve"><value>Site</value></data>
+  <data name="th_start" xml:space="preserve"><value>Start</value></data>
+  <data name="th_total_bookings" xml:space="preserve"><value>Total Bookings</value></data>
+  <data name="th_unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="th_upcoming" xml:space="preserve"><value>Upcoming</value></data>
+  <data name="th_vat" xml:space="preserve"><value>VAT</value></data>
+  <data name="th_weeks_ahead" xml:space="preserve"><value>Weeks Ahead</value></data>
 </root>

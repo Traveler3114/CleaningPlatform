@@ -28,6 +28,10 @@ async function apiFetch(endpoint, options = {}) {
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
+    var lang = localStorage.getItem('lang');
+    if (lang && lang !== 'en') {
+        endpoint += (endpoint.indexOf('?') >= 0 ? '&' : '?') + 'culture=' + encodeURIComponent(lang);
+    }
     const response = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
         headers

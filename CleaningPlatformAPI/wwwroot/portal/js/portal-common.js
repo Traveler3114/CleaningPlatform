@@ -62,6 +62,10 @@ function apiFetch(path, options) {
         logout();
         return Promise.reject('No token');
     }
+    var lang = localStorage.getItem('lang');
+    if (lang && lang !== 'en') {
+        path += (path.indexOf('?') >= 0 ? '&' : '?') + 'culture=' + encodeURIComponent(lang);
+    }
     return fetch(path, {
         method: 'GET',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
