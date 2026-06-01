@@ -17,10 +17,12 @@ function renderServices() {
         document.getElementById('services-list').innerHTML = '<div class="alert alert-info">No services found.</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Active</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Base Price</th><th>Active</th></tr></thead><tbody>';
     services.forEach(s => {
-        html += `<tr class="service-row ${!s.isActive ? 'row-inactive' : ''}" data-service-id="${s.id}" data-service-code="${s.catalogCode}" data-service-name="${s.name}" data-service-category="${s.category || ''}" data-service-unit="${s.unit || ''}" data-service-price-min="${s.priceMin || ''}" data-service-price-max="${s.priceMax || ''}" data-service-price-avg="${s.priceAvg || ''}" data-service-active="${s.isActive}" style="cursor:pointer;">
+        html += `<tr class="service-row ${!s.isActive ? 'row-inactive' : ''}" data-service-id="${s.id}" data-service-code="${s.catalogCode}" data-service-name="${s.name}" data-service-category="${s.category || ''}" data-service-unit="${s.unit || ''}" data-service-base-price="${s.basePrice || ''}" data-service-service-type="${s.serviceType}" data-service-active="${s.isActive}" style="cursor:pointer;">
             <td>${s.id}</td><td>${s.catalogCode}</td><td>${s.name}</td>
+            <td>${s.category || '-'}</td><td>${s.unit || '-'}</td>
+            <td>${s.basePrice ? s.basePrice.toFixed(2) : '-'}</td>
             <td><span class="badge ${s.isActive ? 'badge-active' : 'badge-inactive'}">${s.isActive ? 'Active' : 'Inactive'}</span></td>
         </tr>`;
     });
@@ -40,9 +42,8 @@ function openEditService(data) {
     document.getElementById('service-name').value = data.serviceName;
     document.getElementById('service-category').value = data.serviceCategory;
     document.getElementById('service-unit').value = data.serviceUnit;
-    document.getElementById('service-price-min').value = data.servicePriceMin;
-    document.getElementById('service-price-max').value = data.servicePriceMax;
-    document.getElementById('service-price-avg').value = data.servicePriceAvg;
+    document.getElementById('service-base-price').value = data.serviceBasePrice;
+    document.getElementById('service-service-type').value = data.serviceServiceType || 'Vehicle';
     document.getElementById('service-active').checked = data.serviceActive === 'true';
     document.getElementById('service-delete-form').style.display = 'block';
     document.getElementById('service-modal').style.display = 'flex';
@@ -56,9 +57,8 @@ function openCreateService() {
     document.getElementById('service-name').value = '';
     document.getElementById('service-category').value = '';
     document.getElementById('service-unit').value = '';
-    document.getElementById('service-price-min').value = '';
-    document.getElementById('service-price-max').value = '';
-    document.getElementById('service-price-avg').value = '';
+    document.getElementById('service-base-price').value = '';
+    document.getElementById('service-service-type').value = 'SiteBased';
     document.getElementById('service-active').checked = true;
     document.getElementById('service-delete-form').style.display = 'none';
     document.getElementById('service-modal').style.display = 'flex';
@@ -70,9 +70,8 @@ async function saveService() {
         name: document.getElementById('service-name').value,
         category: document.getElementById('service-category').value || null,
         unit: document.getElementById('service-unit').value || null,
-        priceMin: parseFloat(document.getElementById('service-price-min').value) || null,
-        priceMax: parseFloat(document.getElementById('service-price-max').value) || null,
-        priceAvg: parseFloat(document.getElementById('service-price-avg').value) || null,
+        basePrice: parseFloat(document.getElementById('service-base-price').value) || null,
+        serviceType: document.getElementById('service-service-type').value,
         isActive: document.getElementById('service-active').checked
     };
     try {

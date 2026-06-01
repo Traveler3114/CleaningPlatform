@@ -29,12 +29,10 @@ public class ServiceCatalogManagerTests : TestBase
         {
             CatalogCode = $"T-{unique}",
             Name = $"Test Service {unique}",
-            Category = "Cleaning",
+            Category = "Office",
             Unit = "hour",
             ServiceType = "SiteBased",
-            PriceMin = 10,
-            PriceMax = 50,
-            PriceAvg = 30
+            BasePrice = 30
         });
 
         createResult.Success.Should().BeTrue();

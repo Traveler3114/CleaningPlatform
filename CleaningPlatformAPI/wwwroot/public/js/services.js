@@ -43,9 +43,9 @@ function renderServiceCards(cat) {
         return;
     }
     grid.innerHTML = filtered.map(s => {
-        let priceHtml = '';
-        if (s.priceMin && s.priceMax) priceHtml = `<strong>${s.priceMin}–${s.priceMax} €</strong> / ${s.unit || 'service'}`;
-        else if (s.priceAvg) priceHtml = `<strong>from ${s.priceAvg} €</strong> / ${s.unit || 'service'}`;
+        let priceHtml = s.basePrice
+            ? `<strong>from ${s.basePrice} €</strong> / ${s.unit || 'service'}`
+            : s.unit ? `<strong>Price on request</strong> / ${s.unit}` : '';
         return `
             <div class="service-card" data-id="${s.id}" onclick="selectService(${s.id})">
                 ${s.category ? `<div class="service-category-badge">${s.category}</div>` : ''}

@@ -35,6 +35,11 @@ public class ServiceCatalogManager
         if (string.IsNullOrWhiteSpace(serviceType) || !validServiceTypes.Contains(serviceType))
             return OperationResult<ServiceCatalogResponse>.Fail("Service type must be one of: Vehicle, SiteBased, Boat.");
 
+        var validCategories = new[] { "Stairs", "Office", "Private", "Special", "Carpet", "Furniture", "Exterior", "Laundry", "Vehicle", "Boat" };
+        var category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim();
+        if (category is not null && !validCategories.Contains(category))
+            return OperationResult<ServiceCatalogResponse>.Fail("Category must be one of: Stairs, Office, Private, Special, Carpet, Furniture, Exterior, Laundry, Vehicle, Boat.");
+
         var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code, ct);
         if (exists)
             return OperationResult<ServiceCatalogResponse>.Fail("Catalog code already exists.");
@@ -44,12 +49,9 @@ public class ServiceCatalogManager
         {
             CatalogCode = code,
             Name = name,
-            Category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim(),
+            Category = category,
             Unit = string.IsNullOrWhiteSpace(dto.Unit) ? null : dto.Unit.Trim(),
-            PriceMin = dto.PriceMin,
-            PriceMax = dto.PriceMax,
-            PriceAvg = dto.PriceAvg,
-            DefaultMarginPct = dto.DefaultMarginPct,
+            BasePrice = dto.BasePrice,
             ServiceType = serviceType,
             IsActive = dto.IsActive,
             CreatedAt = now,
@@ -78,6 +80,11 @@ public class ServiceCatalogManager
         if (string.IsNullOrWhiteSpace(serviceType) || !validServiceTypes.Contains(serviceType))
             return OperationResult<ServiceCatalogResponse>.Fail("Service type must be one of: Vehicle, SiteBased, Boat.");
 
+        var validCategories = new[] { "Stairs", "Office", "Private", "Special", "Carpet", "Furniture", "Exterior", "Laundry", "Vehicle", "Boat" };
+        var category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim();
+        if (category is not null && !validCategories.Contains(category))
+            return OperationResult<ServiceCatalogResponse>.Fail("Category must be one of: Stairs, Office, Private, Special, Carpet, Furniture, Exterior, Laundry, Vehicle, Boat.");
+
         if (!string.Equals(entity.CatalogCode, code, StringComparison.OrdinalIgnoreCase))
         {
             var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code && s.Id != id, ct);
@@ -87,12 +94,9 @@ public class ServiceCatalogManager
 
         entity.CatalogCode = code;
         entity.Name = name;
-        entity.Category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim();
+        entity.Category = category;
         entity.Unit = string.IsNullOrWhiteSpace(dto.Unit) ? null : dto.Unit.Trim();
-        entity.PriceMin = dto.PriceMin;
-        entity.PriceMax = dto.PriceMax;
-        entity.PriceAvg = dto.PriceAvg;
-        entity.DefaultMarginPct = dto.DefaultMarginPct;
+        entity.BasePrice = dto.BasePrice;
         entity.ServiceType = serviceType;
         entity.IsActive = dto.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;

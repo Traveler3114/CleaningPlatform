@@ -55,13 +55,7 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<ServiceCatalog>()
-            .Property(s => s.PriceMin).HasPrecision(10, 2);
-        modelBuilder.Entity<ServiceCatalog>()
-            .Property(s => s.PriceMax).HasPrecision(10, 2);
-        modelBuilder.Entity<ServiceCatalog>()
-            .Property(s => s.PriceAvg).HasPrecision(10, 2);
-        modelBuilder.Entity<ServiceCatalog>()
-            .Property(s => s.DefaultMarginPct).HasPrecision(5, 2);
+            .Property(s => s.BasePrice).HasPrecision(10, 2);
 
         modelBuilder.Entity<BookingService>()
             .Property(bs => bs.EstimatedPrice).HasPrecision(10, 2);

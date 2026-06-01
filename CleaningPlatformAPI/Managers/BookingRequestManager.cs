@@ -340,7 +340,7 @@ public class BookingRequestManager
             booking.BookingServices.Add(new BookingService
             {
                 ServiceCatalogId = rs.ServiceCatalogId,
-                EstimatedPrice = rs.ServiceCatalog?.PriceAvg,
+                EstimatedPrice = rs.ServiceCatalog?.BasePrice,
                 Quantity = 1
             });
         }

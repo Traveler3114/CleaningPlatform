@@ -41,11 +41,30 @@
                     <input type="hidden" id="service-id" />
                     <label>Code <input type="text" id="service-code" class="small-input" required /></label>
                     <label>Name <input type="text" id="service-name" class="text-input" required /></label>
-                    <label>Category <input type="text" id="service-category" class="text-input" /></label>
+                    <label>Category
+                        <select id="service-category" class="text-input">
+                            <option value="">-- Select --</option>
+                            <option value="Stairs">Stairs</option>
+                            <option value="Office">Office</option>
+                            <option value="Private">Private</option>
+                            <option value="Special">Special</option>
+                            <option value="Carpet">Carpet</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Exterior">Exterior</option>
+                            <option value="Laundry">Laundry</option>
+                            <option value="Vehicle">Vehicle</option>
+                            <option value="Boat">Boat</option>
+                        </select>
+                    </label>
                     <label>Unit <input type="text" id="service-unit" class="text-input" /></label>
-                    <label>Price Min <input type="number" id="service-price-min" step="0.01" class="small-input" /></label>
-                    <label>Price Max <input type="number" id="service-price-max" step="0.01" class="small-input" /></label>
-                    <label>Price Avg <input type="number" id="service-price-avg" step="0.01" class="small-input" /></label>
+                    <label>Base Price <input type="number" id="service-base-price" step="0.01" class="small-input" /></label>
+                    <label>Service Type
+                        <select id="service-service-type" class="text-input">
+                            <option value="SiteBased">SiteBased</option>
+                            <option value="Vehicle">Vehicle</option>
+                            <option value="Boat">Boat</option>
+                        </select>
+                    </label>
                     <label class="checkbox-label"><input type="checkbox" id="service-active" checked /> Active</label>
                     <div class="modal-actions full-span">
                         <button type="submit" class="btn btn-sm">Save</button>

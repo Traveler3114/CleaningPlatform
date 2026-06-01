@@ -11,7 +11,7 @@ async function loadServices() {
         if (!result.success || !result.data) return;
         services = result.data.filter(s => s.isActive);
         select.innerHTML = '<option value="">Select a service…</option>' +
-            services.map(s => `<option value="${s.id}">${s.name}${s.priceAvg ? ` (from ${s.priceAvg} €)` : ''}</option>`).join('');
+            services.map(s => `<option value="${s.id}">${s.name}${s.basePrice ? ` (from ${s.basePrice} €)` : s.unit ? ` (${s.unit})` : ''}</option>`).join('');
     } catch (e) {}
 }
 

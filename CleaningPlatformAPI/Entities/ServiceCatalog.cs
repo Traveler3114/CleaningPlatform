@@ -21,10 +21,7 @@ public class ServiceCatalog
     [MaxLength(50)]
     public string? Unit { get; set; }
 
-    public decimal? PriceMin { get; set; }
-    public decimal? PriceMax { get; set; }
-    public decimal? PriceAvg { get; set; }
-    public decimal? DefaultMarginPct { get; set; }
+    public decimal? BasePrice { get; set; }
 
     [Required, MaxLength(50)]
     public string ServiceType { get; set; } = "Vehicle";

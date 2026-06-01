@@ -7,10 +7,7 @@ public class ServiceCatalogResponse
     public string Name { get; set; } = string.Empty;
     public string? Category { get; set; }
     public string? Unit { get; set; }
-    public decimal? PriceMin { get; set; }
-    public decimal? PriceMax { get; set; }
-    public decimal? PriceAvg { get; set; }
-    public decimal? DefaultMarginPct { get; set; }
+    public decimal? BasePrice { get; set; }
     public string ServiceType { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -23,10 +20,7 @@ public record ServiceCatalogUpsertRequest
     public string Name { get; set; } = string.Empty;
     public string? Category { get; set; }
     public string? Unit { get; set; }
-    public decimal? PriceMin { get; set; }
-    public decimal? PriceMax { get; set; }
-    public decimal? PriceAvg { get; set; }
-    public decimal? DefaultMarginPct { get; set; }
+    public decimal? BasePrice { get; set; }
     public string ServiceType { get; set; } = "Vehicle";
     public bool IsActive { get; set; } = true;
 }

@@ -105,7 +105,7 @@ public class InvoiceManager
         {
             Description = bs.ServiceCatalog?.Name ?? $"Booking #{booking.Id} service",
             Quantity    = bs.Quantity <= 0 ? 1 : bs.Quantity,
-            UnitPrice   = bs.FinalPrice ?? bs.EstimatedPrice ?? bs.ServiceCatalog?.PriceAvg ?? 0,
+            UnitPrice   = bs.FinalPrice ?? bs.EstimatedPrice ?? bs.ServiceCatalog?.BasePrice ?? 0,
             DiscountPct = 0,
             VatPct      = 0,
             SourceType  = "Booking",

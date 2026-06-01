@@ -234,7 +234,7 @@ public class BookingManager
                 booking.BookingServices.Add(new BookingService
                 {
                     ServiceCatalogId = catalogEntry.Id,
-                    EstimatedPrice = catalogEntry.PriceAvg,
+                    EstimatedPrice = catalogEntry.BasePrice,
                     Quantity = 1
                 });
 
