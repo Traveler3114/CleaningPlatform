@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Enums;
@@ -8,9 +9,10 @@ namespace CleaningPlatformAPI.Managers;
 public class KanbanManager
 {
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
     private static readonly string[] Statuses = ["Pending", "InProgress", "Completed", "Cancelled"];
 
-    public KanbanManager(AppDbContext db) { _db = db; }
+    public KanbanManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; _localizer = localizer; }
 
     // ── Existing methods (kept for API compat and employee view) ───────────
 

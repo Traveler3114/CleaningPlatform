@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
@@ -10,8 +12,10 @@ namespace CleaningPlatformAPI.Managers;
 public class ServiceCatalogManager
 {
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public ServiceCatalogManager(AppDbContext db) { _db = db; }
+    public ServiceCatalogManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
+            _localizer = localizer;}
 
     public async Task<List<ServiceCatalogResponse>> GetAllAsync(CancellationToken ct = default)
     {
@@ -28,7 +32,7 @@ public class ServiceCatalogManager
         var name = dto.Name.Trim();
 
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
-            return OperationResult<ServiceCatalogResponse>.Fail("Catalog code and name are required.");
+            return OperationResult<ServiceCatalogResponse>.Fail(_localizer["err_catalog_required"]);
 
         var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat" };
         var serviceType = dto.ServiceType?.Trim();
@@ -42,7 +46,7 @@ public class ServiceCatalogManager
 
         var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code, ct);
         if (exists)
-            return OperationResult<ServiceCatalogResponse>.Fail("Catalog code already exists.");
+            return OperationResult<ServiceCatalogResponse>.Fail(_localizer["err_catalog_code_exists"]);
 
         var now = DateTime.UtcNow;
         var entity = new ServiceCatalog
@@ -73,7 +77,7 @@ public class ServiceCatalogManager
         var code = dto.CatalogCode.Trim();
         var name = dto.Name.Trim();
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
-            return OperationResult<ServiceCatalogResponse>.Fail("Catalog code and name are required.");
+            return OperationResult<ServiceCatalogResponse>.Fail(_localizer["err_catalog_required"]);
 
         var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat" };
         var serviceType = dto.ServiceType?.Trim();
@@ -89,7 +93,7 @@ public class ServiceCatalogManager
         {
             var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code && s.Id != id, ct);
             if (exists)
-                return OperationResult<ServiceCatalogResponse>.Fail("Catalog code already exists.");
+                return OperationResult<ServiceCatalogResponse>.Fail(_localizer["err_catalog_code_exists"]);
         }
 
         entity.CatalogCode = code;

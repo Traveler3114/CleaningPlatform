@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter</value></resheader>
+
+  <!-- Nav / Pages -->
+  <data name="nav_daily_view" xml:space="preserve"><value>Daily View</value></data>
+  <data name="nav_calendar" xml:space="preserve"><value>Calendar</value></data>
+  <data name="nav_bookings" xml:space="preserve"><value>Bookings</value></data>
+  <data name="nav_requests" xml:space="preserve"><value>Requests</value></data>
+  <data name="nav_recurring" xml:space="preserve"><value>Recurring</value></data>
+  <data name="nav_invoices" xml:space="preserve"><value>Invoices</value></data>
+  <data name="nav_clients" xml:space="preserve"><value>Clients</value></data>
+  <data name="nav_client_list" xml:space="preserve"><value>Client List</value></data>
+  <data name="nav_schedule" xml:space="preserve"><value>Schedule</value></data>
+  <data name="nav_services" xml:space="preserve"><value>Services</value></data>
+  <data name="nav_sops" xml:space="preserve"><value>SOPs</value></data>
+  <data name="nav_users" xml:space="preserve"><value>Users</value></data>
+  <data name="nav_roles" xml:space="preserve"><value>Roles</value></data>
+  <data name="nav_reports" xml:space="preserve"><value>Reports</value></data>
+  <data name="nav_dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="nav_profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="nav_sign_out" xml:space="preserve"><value>Sign out</value></data>
+  <data name="nav_get_quote" xml:space="preserve"><value>Get a Quote</value></data>
+  <data name="nav_sign_in" xml:space="preserve"><value>Sign In</value></data>
+  <data name="nav_back_to_website" xml:space="preserve"><value>&amp;larr; Back to website</value></data>
+  <data name="nav_staff_login" xml:space="preserve"><value>Staff Login</value></data>
+
+  <!-- Nav Sections -->
+  <data name="nav_section_operations" xml:space="preserve"><value>Operations</value></data>
+  <data name="nav_section_bookings" xml:space="preserve"><value>Bookings</value></data>
+  <data name="nav_section_clients" xml:space="preserve"><value>Clients</value></data>
+  <data name="nav_section_config" xml:space="preserve"><value>Config</value></data>
+  <data name="nav_section_admin" xml:space="preserve"><value>Admin</value></data>
+
+  <!-- Page Titles -->
+  <data name="page_admin_daily" xml:space="preserve"><value>Daily View — Cleaning Platform</value></data>
+  <data name="page_admin_calendar" xml:space="preserve"><value>Calendar — Cleaning Platform</value></data>
+  <data name="page_admin_bookings" xml:space="preserve"><value>Bookings — Cleaning Platform</value></data>
+  <data name="page_admin_booking_detail" xml:space="preserve"><value>Booking Detail — Cleaning Platform</value></data>
+  <data name="page_admin_clients" xml:space="preserve"><value>Clients — Cleaning Platform</value></data>
+  <data name="page_admin_client_detail" xml:space="preserve"><value>Client Detail — Cleaning Platform</value></data>
+  <data name="page_admin_invoices" xml:space="preserve"><value>Invoices — Cleaning Platform</value></data>
+  <data name="page_admin_invoice_detail" xml:space="preserve"><value>Invoice Detail — Cleaning Platform</value></data>
+  <data name="page_admin_recurring" xml:space="preserve"><value>Recurring — Cleaning Platform</value></data>
+  <data name="page_admin_reports" xml:space="preserve"><value>Reports — Cleaning Platform</value></data>
+  <data name="page_admin_requests" xml:space="preserve"><value>Requests — Cleaning Platform</value></data>
+  <data name="page_admin_request_detail" xml:space="preserve"><value>Request Detail — Cleaning Platform</value></data>
+  <data name="page_admin_roles" xml:space="preserve"><value>Roles — Cleaning Platform</value></data>
+  <data name="page_admin_schedule" xml:space="preserve"><value>Schedule — Cleaning Platform</value></data>
+  <data name="page_admin_services" xml:space="preserve"><value>Services — Cleaning Platform</value></data>
+  <data name="page_admin_sops" xml:space="preserve"><value>SOPs — Cleaning Platform</value></data>
+  <data name="page_admin_users" xml:space="preserve"><value>Users — Cleaning Platform</value></data>
+  <data name="page_admin_profile" xml:space="preserve"><value>Profile — Cleaning Platform</value></data>
+  <data name="page_admin_login" xml:space="preserve"><value>Admin Login — Cleaning Platform</value></data>
+  <data name="page_public_home" xml:space="preserve"><value>Chistify — Professional Cleaning Services</value></data>
+  <data name="page_public_services" xml:space="preserve"><value>Our Services — Chistify</value></data>
+  <data name="page_public_book" xml:space="preserve"><value>Book a Cleaning — Chistify</value></data>
+  <data name="page_public_confirm" xml:space="preserve"><value>Requests — Chistify</value></data>
+  <data name="page_portal_dashboard" xml:space="preserve"><value>Dashboard — Client Portal</value></data>
+  <data name="page_portal_bookings" xml:space="preserve"><value>My Bookings — Client Portal</value></data>
+  <data name="page_portal_booking_detail" xml:space="preserve"><value>Booking Details — Client Portal</value></data>
+  <data name="page_portal_invoices" xml:space="preserve"><value>My Invoices — Client Portal</value></data>
+  <data name="page_portal_invoice_detail" xml:space="preserve"><value>Invoice Details — Client Portal</value></data>
+  <data name="page_portal_profile" xml:space="preserve"><value>My Profile — Client Portal</value></data>
+  <data name="page_portal_login" xml:space="preserve"><value>Client Login — Chistify</value></data>
+
+  <!-- Sections / Headings -->
+  <data name="section_bookings" xml:space="preserve"><value>Bookings</value></data>
+  <data name="section_slots" xml:space="preserve"><value>Slots</value></data>
+  <data name="section_my_bookings" xml:space="preserve"><value>My Bookings</value></data>
+  <data name="section_my_invoices" xml:space="preserve"><value>My Invoices</value></data>
+  <data name="section_upcoming_bookings" xml:space="preserve"><value>Upcoming Bookings</value></data>
+  <data name="section_recent_invoices" xml:space="preserve"><value>Recent Invoices</value></data>
+  <data name="section_generate_invoice" xml:space="preserve"><value>Generate from booking</value></data>
+  <data name="section_welcome_back" xml:space="preserve"><value>Welcome back</value></data>
+  <data name="section_tell_us" xml:space="preserve"><value>Tell us what you need</value></data>
+  <data name="section_booking_detail" xml:space="preserve"><value>Booking Details</value></data>
+  <data name="section_invoice_detail" xml:space="preserve"><value>Invoice Details</value></data>
+  <data name="section_request_detail" xml:space="preserve"><value>Request Details</value></data>
+  <data name="section_client_detail" xml:space="preserve"><value>Client Details</value></data>
+  <data name="section_services" xml:space="preserve"><value>Services</value></data>
+  <data name="section_employee_schedule" xml:space="preserve"><value>Employee Schedule</value></data>
+  <data name="section_notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="section_sop_checklist" xml:space="preserve"><value>SOP Checklist</value></data>
+  <data name="section_assigned_employees" xml:space="preserve"><value>Assigned Employees</value></data>
+  <data name="section_payments" xml:space="preserve"><value>Payments</value></data>
+  <data name="section_services_included" xml:space="preserve"><value>Services Included</value></data>
+  <data name="section_permissions" xml:space="preserve"><value>Permissions</value></data>
+
+  <!-- Public hero / features -->
+  <data name="hero_badge" xml:space="preserve"><value>Professional Cleaning Services</value></data>
+  <data name="hero_title" xml:space="preserve"><value>Spotless Results,&lt;br&gt;Every Time</value></data>
+  <data name="hero_subtitle" xml:space="preserve"><value>Book your cleaning appointment online in minutes. We handle vehicles, offices, stairwells, boats, and more — done right, done professionally.</value></data>
+  <data name="hero_stat_clients" xml:space="preserve"><value>Happy Clients</value></data>
+  <data name="hero_stat_rating" xml:space="preserve"><value>Rated Service</value></data>
+  <data name="hero_stat_availability" xml:space="preserve"><value>Availability</value></data>
+  <data name="hero_stat_experience" xml:space="preserve"><value>Experience</value></data>
+  <data name="hero_stat_sameday" xml:space="preserve"><value>Same Day</value></data>
+  <data name="section_why_us" xml:space="preserve"><value>Why Us</value></data>
+  <data name="section_why_title" xml:space="preserve"><value>Cleaning Done Right</value></data>
+  <data name="section_why_subtitle" xml:space="preserve"><value>We combine professional-grade equipment, trained staff, and a streamlined booking system to deliver results you can count on.</value></data>
+
+  <!-- Feature cards -->
+  <data name="feature_equipment_title" xml:space="preserve"><value>Professional Equipment</value></data>
+  <data name="feature_equipment_desc" xml:space="preserve"><value>We use industry-grade tools and eco-friendly products for a deep, lasting clean on every job.</value></data>
+  <data name="feature_ontime_title" xml:space="preserve"><value>On Time, Every Time</value></data>
+  <data name="feature_ontime_desc" xml:space="preserve"><value>Your time is valuable. We show up when scheduled and complete jobs efficiently without cutting corners.</value></data>
+  <data name="feature_easybook_title" xml:space="preserve"><value>Easy Online Booking</value></data>
+  <data name="feature_easybook_desc" xml:space="preserve"><value>Book your slot in minutes, pick your service, choose a time — no phone calls required.</value></data>
+  <data name="feature_guarantee_title" xml:space="preserve"><value>Satisfaction Guaranteed</value></data>
+  <data name="feature_guarantee_desc" xml:space="preserve"><value>Not happy with the result? We'll come back and make it right. Your satisfaction is our priority.</value></data>
+
+  <!-- Footer -->
+  <data name="footer_description" xml:space="preserve"><value>Professional cleaning services for individuals. Vehicle washing, office and stairwell cleaning, boats, and more — done right, every time.</value></data>
+  <data name="footer_services" xml:space="preserve"><value>Services</value></data>
+  <data name="footer_contact" xml:space="preserve"><value>Contact</value></data>
+  <data name="footer_all_services" xml:space="preserve"><value>All Services</value></data>
+  <data name="footer_copyright" xml:space="preserve"><value>&amp;copy; 2025 Chistify. All rights reserved.</value></data>
+  <data name="footer_portal_copyright" xml:space="preserve"><value>&amp;copy; 2026 Chistify. All rights reserved.</value></data>
+
+  <!-- Buttons -->
+  <data name="btn_save" xml:space="preserve"><value>Save</value></data>
+  <data name="btn_cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="btn_create" xml:space="preserve"><value>Create</value></data>
+  <data name="btn_edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="btn_delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="btn_add" xml:space="preserve"><value>Add</value></data>
+  <data name="btn_assign" xml:space="preserve"><value>Assign</value></data>
+  <data name="btn_generate_invoice" xml:space="preserve"><value>Generate Invoice</value></data>
+  <data name="btn_mark_paid" xml:space="preserve"><value>Mark as Paid</value></data>
+  <data name="btn_export" xml:space="preserve"><value>Export</value></data>
+  <data name="btn_filter" xml:space="preserve"><value>Filter</value></data>
+  <data name="btn_search" xml:space="preserve"><value>Search</value></data>
+  <data name="btn_refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="btn_create_booking" xml:space="preserve"><value>Create Booking</value></data>
+  <data name="btn_create_client" xml:space="preserve"><value>Create Client</value></data>
+  <data name="btn_create_invoice" xml:space="preserve"><value>Create Invoice</value></data>
+  <data name="btn_create_service" xml:space="preserve"><value>Create Service</value></data>
+  <data name="btn_create_sop" xml:space="preserve"><value>Create SOP</value></data>
+  <data name="btn_create_user" xml:space="preserve"><value>Create User</value></data>
+  <data name="btn_create_role" xml:space="preserve"><value>Create Role</value></data>
+  <data name="btn_add_site" xml:space="preserve"><value>Add Site</value></data>
+  <data name="btn_add_override" xml:space="preserve"><value>Add Override</value></data>
+  <data name="btn_add_template" xml:space="preserve"><value>Add Template</value></data>
+  <data name="btn_add_service" xml:space="preserve"><value>Add Service</value></data>
+  <data name="btn_select_service" xml:space="preserve"><value>Select Service</value></data>
+  <data name="btn_send_request" xml:space="preserve"><value>Send Request</value></data>
+  <data name="btn_send_magic_link" xml:space="preserve"><value>Send Magic Link</value></data>
+  <data name="btn_confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="btn_cancel_request" xml:space="preserve"><value>Cancel Request</value></data>
+  <data name="btn_login" xml:space="preserve"><value>Sign In</value></data>
+  <data name="btn_reset_password" xml:space="preserve"><value>Reset Password</value></data>
+  <data name="btn_next" xml:space="preserve"><value>Next</value></data>
+  <data name="btn_back" xml:space="preserve"><value>Back</value></data>
+  <data name="btn_loading" xml:space="preserve"><value>Loading...</value></data>
+
+  <!-- Table Headers -->
+  <data name="th_id" xml:space="preserve"><value>ID</value></data>
+  <data name="th_customer" xml:space="preserve"><value>Customer</value></data>
+  <data name="th_client" xml:space="preserve"><value>Client</value></data>
+  <data name="th_date" xml:space="preserve"><value>Date</value></data>
+  <data name="th_time" xml:space="preserve"><value>Time</value></data>
+  <data name="th_status" xml:space="preserve"><value>Status</value></data>
+  <data name="th_total" xml:space="preserve"><value>Total</value></data>
+  <data name="th_amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="th_services" xml:space="preserve"><value>Services</value></data>
+  <data name="th_employees" xml:space="preserve"><value>Employees</value></data>
+  <data name="th_assigned" xml:space="preserve"><value>Assigned</value></data>
+  <data name="th_name" xml:space="preserve"><value>Name</value></data>
+  <data name="th_email" xml:space="preserve"><value>Email</value></data>
+  <data name="th_phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="th_role" xml:space="preserve"><value>Role</value></data>
+  <data name="th_created" xml:space="preserve"><value>Created</value></data>
+  <data name="th_actions" xml:space="preserve"><value>Actions</value></data>
+  <data name="th_type" xml:space="preserve"><value>Type</value></data>
+  <data name="th_category" xml:space="preserve"><value>Category</value></data>
+  <data name="th_price" xml:space="preserve"><value>Price</value></data>
+  <data name="th_items" xml:space="preserve"><value>Items</value></data>
+  <data name="th_hours" xml:space="preserve"><value>Hours</value></data>
+  <data name="th_payment" xml:space="preserve"><value>Payment</value></data>
+  <data name="th_due" xml:space="preserve"><value>Due Date</value></data>
+  <data name="th_notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="th_username" xml:space="preserve"><value>Username</value></data>
+  <data name="th_permissions" xml:space="preserve"><value>Permissions</value></data>
+
+  <!-- KPI Labels -->
+  <data name="kpi_today_bookings" xml:space="preserve"><value>Today's Bookings</value></data>
+  <data name="kpi_today_revenue" xml:space="preserve"><value>Today's Revenue</value></data>
+  <data name="kpi_active_clients" xml:space="preserve"><value>Active Clients</value></data>
+  <data name="kpi_pending_requests" xml:space="preserve"><value>Pending Requests</value></data>
+  <data name="kpi_slots_available" xml:space="preserve"><value>Slots Available</value></data>
+  <data name="kpi_employees_working" xml:space="preserve"><value>Employees Working</value></data>
+  <data name="kpi_total_revenue" xml:space="preserve"><value>Total Revenue</value></data>
+  <data name="kpi_outstanding" xml:space="preserve"><value>Outstanding</value></data>
+  <data name="kpi_utilization" xml:space="preserve"><value>Utilization</value></data>
+  <data name="kpi_satisfaction" xml:space="preserve"><value>Satisfaction</value></data>
+
+  <!-- Status Labels -->
+  <data name="status_pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="status_confirmed" xml:space="preserve"><value>Confirmed</value></data>
+  <data name="status_in_progress" xml:space="preserve"><value>In Progress</value></data>
+  <data name="status_completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="status_cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="status_draft" xml:space="preserve"><value>Draft</value></data>
+  <data name="status_sent" xml:space="preserve"><value>Sent</value></data>
+  <data name="status_partially_paid" xml:space="preserve"><value>Partially Paid</value></data>
+  <data name="status_paid" xml:space="preserve"><value>Paid</value></data>
+  <data name="status_overdue" xml:space="preserve"><value>Overdue</value></data>
+  <data name="status_written_off" xml:space="preserve"><value>Written Off</value></data>
+  <data name="status_active" xml:space="preserve"><value>Active</value></data>
+  <data name="status_inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="status_open" xml:space="preserve"><value>Open</value></data>
+  <data name="status_closed" xml:space="preserve"><value>Closed</value></data>
+  <data name="status_full" xml:space="preserve"><value>Full</value></data>
+  <data name="status_reserved" xml:space="preserve"><value>Reserved</value></data>
+  <data name="status_new" xml:space="preserve"><value>New</value></data>
+  <data name="status_admin_reviewed" xml:space="preserve"><value>Admin Reviewed</value></data>
+  <data name="status_sent_to_customer" xml:space="preserve"><value>Sent to Customer</value></data>
+  <data name="status_customer_confirmed" xml:space="preserve"><value>Customer Confirmed</value></data>
+  <data name="status_converted" xml:space="preserve"><value>Converted</value></data>
+
+  <!-- Empty States -->
+  <data name="empty_no_bookings_all" xml:space="preserve"><value>No bookings found.</value></data>
+  <data name="empty_no_services" xml:space="preserve"><value>No services found.</value></data>
+  <data name="empty_no_clients" xml:space="preserve"><value>No clients found.</value></data>
+  <data name="empty_no_requests" xml:space="preserve"><value>No requests found.</value></data>
+  <data name="empty_no_invoices" xml:space="preserve"><value>No invoices found.</value></data>
+  <data name="empty_no_schedule" xml:space="preserve"><value>No schedule entries found.</value></data>
+  <data name="empty_no_overrides" xml:space="preserve"><value>No date overrides defined.</value></data>
+  <data name="empty_no_roles" xml:space="preserve"><value>No roles found.</value></data>
+  <data name="empty_no_users" xml:space="preserve"><value>No users found.</value></data>
+  <data name="empty_no_data" xml:space="preserve"><value>No data available.</value></data>
+  <data name="empty_no_payments" xml:space="preserve"><value>No payments recorded.</value></data>
+  <data name="empty_no_recurring" xml:space="preserve"><value>No recurring schedules found.</value></data>
+  <data name="empty_no_templates" xml:space="preserve"><value>No templates found.</value></data>
+  <data name="empty_no_bookings_assigned" xml:space="preserve"><value>No bookings assigned.</value></data>
+  <data name="empty_no_sites" xml:space="preserve"><value>No sites found.</value></data>
+  <data name="empty_no_upcoming" xml:space="preserve"><value>No upcoming bookings.</value></data>
+  <data name="empty_no_invoices_yet" xml:space="preserve"><value>No invoices yet.</value></data>
+  <data name="empty_no_public_services" xml:space="preserve"><value>No services available at the moment.</value></data>
+  <data name="empty_no_category" xml:space="preserve"><value>No services in this category.</value></data>
+  <data name="empty_loading" xml:space="preserve"><value>Loading...</value></data>
+  <data name="empty_no_sops_assigned" xml:space="preserve"><value>No SOPs assigned.</value></data>
+  <data name="empty_no_services_assigned" xml:space="preserve"><value>No services assigned.</value></data>
+  <data name="empty_no_contacts" xml:space="preserve"><value>No contacts found.</value></data>
+  <data name="empty_no_sites_saved" xml:space="preserve"><value>No sites saved.</value></data>
+
+  <!-- Success Messages -->
+  <data name="msg_status_updated" xml:space="preserve"><value>Status updated</value></data>
+  <data name="msg_booking_created" xml:space="preserve"><value>Booking created</value></data>
+  <data name="msg_changes_saved" xml:space="preserve"><value>Changes saved.</value></data>
+  <data name="msg_service_updated" xml:space="preserve"><value>Service updated</value></data>
+  <data name="msg_service_created" xml:space="preserve"><value>Service created</value></data>
+  <data name="msg_service_deleted" xml:space="preserve"><value>Service deleted</value></data>
+  <data name="msg_client_updated" xml:space="preserve"><value>Client updated</value></data>
+  <data name="msg_site_added" xml:space="preserve"><value>Site added</value></data>
+  <data name="msg_site_deactivated" xml:space="preserve"><value>Site deactivated</value></data>
+  <data name="msg_user_created" xml:space="preserve"><value>User created</value></data>
+  <data name="msg_password_reset" xml:space="preserve"><value>Password reset</value></data>
+  <data name="msg_template_created" xml:space="preserve"><value>Template created</value></data>
+  <data name="msg_template_updated" xml:space="preserve"><value>Template updated</value></data>
+  <data name="msg_template_deactivated" xml:space="preserve"><value>Template deactivated</value></data>
+  <data name="msg_item_added" xml:space="preserve"><value>Item added</value></data>
+  <data name="msg_item_removed" xml:space="preserve"><value>Item removed</value></data>
+  <data name="msg_schedule_updated" xml:space="preserve"><value>Schedule updated</value></data>
+  <data name="msg_schedule_added" xml:space="preserve"><value>Schedule added</value></data>
+  <data name="msg_schedule_deleted" xml:space="preserve"><value>Schedule deleted</value></data>
+  <data name="msg_override_saved" xml:space="preserve"><value>Override saved</value></data>
+  <data name="msg_override_deleted" xml:space="preserve"><value>Override deleted</value></data>
+  <data name="msg_role_updated" xml:space="preserve"><value>Role updated</value></data>
+  <data name="msg_role_created" xml:space="preserve"><value>Role created</value></data>
+  <data name="msg_role_deleted" xml:space="preserve"><value>Role deleted</value></data>
+  <data name="msg_assignment_added" xml:space="preserve"><value>Assignment added</value></data>
+  <data name="msg_assignment_removed" xml:space="preserve"><value>Assignment removed</value></data>
+  <data name="msg_service_added_booking" xml:space="preserve"><value>Service added</value></data>
+  <data name="msg_service_removed_booking" xml:space="preserve"><value>Service removed</value></data>
+  <data name="msg_price_updated" xml:space="preserve"><value>Price updated</value></data>
+  <data name="msg_recurring_created" xml:space="preserve"><value>Recurring schedule created</value></data>
+  <data name="msg_series_ended" xml:space="preserve"><value>Series ended</value></data>
+  <data name="msg_export_started" xml:space="preserve"><value>Export started</value></data>
+  <data name="msg_email_sent" xml:space="preserve"><value>Email sent to customer.</value></data>
+  <data name="msg_request_cancelled" xml:space="preserve"><value>Request cancelled.</value></data>
+  <data name="msg_status_updated_user" xml:space="preserve"><value>User status updated</value></data>
+
+  <!-- Error / Validation Messages -->
+  <data name="msg_select_client" xml:space="preserve"><value>Please select a client</value></data>
+  <data name="msg_select_employee" xml:space="preserve"><value>Select an employee</value></data>
+  <data name="msg_select_service" xml:space="preserve"><value>Select a service</value></data>
+  <data name="msg_enter_booking_id" xml:space="preserve"><value>Please enter a booking ID</value></data>
+  <data name="msg_enter_valid_amount" xml:space="preserve"><value>Please enter a valid amount</value></data>
+  <data name="msg_role_name_required" xml:space="preserve"><value>Role name is required</value></data>
+  <data name="msg_item_text_required" xml:space="preserve"><value>Item text required</value></data>
+  <data name="msg_failed_bookings" xml:space="preserve"><value>Failed to load bookings.</value></data>
+  <data name="msg_failed_slots" xml:space="preserve"><value>Failed to load slots.</value></data>
+  <data name="msg_failed_dashboard" xml:space="preserve"><value>Failed to load dashboard</value></data>
+  <data name="msg_failed_bookings_load" xml:space="preserve"><value>Failed to load bookings. Please try again.</value></data>
+  <data name="msg_failed_invoices_load" xml:space="preserve"><value>Failed to load invoices.</value></data>
+  <data name="msg_failed_profile" xml:space="preserve"><value>Failed to load profile</value></data>
+  <data name="msg_enter_email" xml:space="preserve"><value>Please enter your email address.</value></data>
+  <data name="msg_something_wrong" xml:space="preserve"><value>Something went wrong.</value></data>
+  <data name="msg_could_not_connect" xml:space="preserve"><value>Could not connect to server. Please try again.</value></data>
+  <data name="msg_invalid_booking_id" xml:space="preserve"><value>Invalid booking ID.</value></data>
+  <data name="msg_invalid_invoice_id" xml:space="preserve"><value>Invalid invoice ID.</value></data>
+  <data name="msg_network_error" xml:space="preserve"><value>Network error. Please try again.</value></data>
+  <data name="msg_add_service_first" xml:space="preserve"><value>Please add at least one service.</value></data>
+  <data name="msg_enter_name" xml:space="preserve"><value>Please enter your full name.</value></data>
+  <data name="msg_enter_phone" xml:space="preserve"><value>Please enter your phone number.</value></data>
+  <data name="msg_request_failed" xml:space="preserve"><value>Request failed. Please try again.</value></data>
+  <data name="msg_sending" xml:space="preserve"><value>Sending...</value></data>
+
+  <!-- Confirmation dialogs -->
+  <data name="msg_confirm_delete_service" xml:space="preserve"><value>Delete this service?</value></data>
+  <data name="msg_confirm_deactivate_sop" xml:space="preserve"><value>Deactivate this SOP?</value></data>
+  <data name="msg_confirm_delete_schedule" xml:space="preserve"><value>Delete this day?</value></data>
+  <data name="msg_confirm_delete_override" xml:space="preserve"><value>Delete this override?</value></data>
+  <data name="msg_confirm_deactivate_site" xml:space="preserve"><value>Deactivate this site?</value></data>
+  <data name="msg_confirm_remove_assignment" xml:space="preserve"><value>Remove this assignment?</value></data>
+  <data name="msg_confirm_remove_service" xml:space="preserve"><value>Remove this service?</value></data>
+  <data name="msg_confirm_remove_item" xml:space="preserve"><value>Remove this checklist item?</value></data>
+  <data name="msg_confirm_delete_role" xml:space="preserve"><value>Delete this role?</value></data>
+  <data name="msg_confirm_cancel_request_title" xml:space="preserve"><value>Cancel this request?</value></data>
+
+  <!-- Labels -->
+  <data name="label_date" xml:space="preserve"><value>Date</value></data>
+  <data name="label_employee" xml:space="preserve"><value>Employee</value></data>
+  <data name="label_service" xml:space="preserve"><value>Service</value></data>
+  <data name="label_client" xml:space="preserve"><value>Client</value></data>
+  <data name="label_status" xml:space="preserve"><value>Status</value></data>
+  <data name="label_notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="label_email_address" xml:space="preserve"><value>Email address</value></data>
+  <data name="label_password" xml:space="preserve"><value>Password</value></data>
+  <data name="label_role" xml:space="preserve"><value>Role</value></data>
+  <data name="label_username" xml:space="preserve"><value>Username</value></data>
+  <data name="label_phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="label_address" xml:space="preserve"><value>Address</value></data>
+  <data name="label_city" xml:space="preserve"><value>City</value></data>
+  <data name="label_contact_person" xml:space="preserve"><value>Contact Person</value></data>
+  <data name="label_site_name" xml:space="preserve"><value>Site Name</value></data>
+  <data name="label_full_name" xml:space="preserve"><value>Full Name</value></data>
+  <data name="label_booking_id" xml:space="preserve"><value>Booking ID</value></data>
+  <data name="label_invoice_id" xml:space="preserve"><value>Invoice ID</value></data>
+  <data name="label_payment_method" xml:space="preserve"><value>Payment Method</value></data>
+  <data name="label_amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="label_paid_amount" xml:space="preserve"><value>Paid Amount</value></data>
+  <data name="label_balance" xml:space="preserve"><value>Balance</value></data>
+
+  <!-- Placeholders -->
+  <data name="ph_booking_id" xml:space="preserve"><value>Booking ID</value></data>
+  <data name="ph_search_name_phone" xml:space="preserve"><value>Search by name or phone</value></data>
+
+  <!-- Content / descriptions -->
+  <data name="content_book_form_desc" xml:space="preserve"><value>Fill in the form and we'll get back to you with a quote.</value></data>
+  <data name="content_book_pick_services" xml:space="preserve"><value>Pick services from the dropdown — they'll appear above</value></data>
+  <data name="content_portal_login_desc" xml:space="preserve"><value>Enter your email and we'll send you a magic link to sign in.</value></data>
+  <data name="content_portal_testing_note" xml:space="preserve"><value>For testing, the magic link will appear in the server console.</value></data>
+  <data name="content_admin_login_title" xml:space="preserve"><value>Admin Dashboard</value></data>
+  <data name="content_admin_login_subtitle" xml:space="preserve"><value>Enter your credentials to access the admin panel.</value></data>
+  <data name="content_filter_by_status" xml:space="preserve"><value>Filter by status</value></data>
+  <data name="content_select_all" xml:space="preserve"><value>Select All</value></data>
+  <data name="content_no_services_selected" xml:space="preserve"><value>No services selected yet. Pick from the dropdown.</value></data>
+
+  <!-- Login page -->
+  <data name="admin_login_title" xml:space="preserve"><value>Admin Login</value></data>
+  <data name="admin_login_subtitle" xml:space="preserve"><value>Enter your credentials to access the admin panel.</value></data>
+  <data name="admin_login_btn" xml:space="preserve"><value>Sign In</value></data>
+
+  <!-- Auth error messages (backend) -->
+  <data name="error_invalid_token" xml:space="preserve"><value>Invalid token.</value></data>
+  <data name="error_authentication_required" xml:space="preserve"><value>Authentication required.</value></data>
+  <data name="error_access_denied" xml:space="preserve"><value>Access denied. You do not have permission.</value></data>
+  <data name="error_endpoint_not_found" xml:space="preserve"><value>Endpoint not found.</value></data>
+  <data name="error_unexpected" xml:space="preserve"><value>An unexpected error occurred. Please try again or contact support.</value></data>
+  <data name="error_db_error" xml:space="preserve"><value>A database error occurred. Please try again.</value></data>
+  <data name="error_invalid_operation" xml:space="preserve"><value>An invalid operation was attempted.</value></data>
+  <data name="error_no_permission" xml:space="preserve"><value>You do not have permission to perform this action.</value></data>
+  <data name="error_token_required" xml:space="preserve"><value>Token is required.</value></data>
+  <data name="error_expired_token" xml:space="preserve"><value>This link has expired or is invalid. Please request a new one.</value></data>
+
+  <!-- Manager error messages (backend) -->
+  <data name="err_catalog_required" xml:space="preserve"><value>Catalog code and name are required.</value></data>
+  <data name="err_invalid_service_type" xml:space="preserve"><value>Service type must be one of: Standard, PerHour, PerItem.</value></data>
+  <data name="err_catalog_code_exists" xml:space="preserve"><value>Catalog code already exists.</value></data>
+  <data name="err_booking_not_found" xml:space="preserve"><value>Booking #{0} was not found.</value></data>
+  <data name="err_payment_amount_zero" xml:space="preserve"><value>Payment amount must be greater than zero.</value></data>
+  <data name="err_invalid_payment_method" xml:space="preserve"><value>Invalid payment method.</value></data>
+  <data name="err_slot_full" xml:space="preserve"><value>The {0}:00 slot on {1} is fully booked.</value></data>
+  <data name="err_customer_name_required" xml:space="preserve"><value>Customer name is required.</value></data>
+  <data name="err_quantity_required" xml:space="preserve"><value>Quantity must be greater than zero.</value></data>
+  <data name="err_role_required" xml:space="preserve"><value>Role is required.</value></data>
+  <data name="err_password_length" xml:space="preserve"><value>Password must be at least 8 characters.</value></data>
+  <data name="err_invalid_credentials" xml:space="preserve"><value>Invalid credentials.</value></data>
+  <data name="err_contact_name_required" xml:space="preserve"><value>Contact name is required.</value></data>
+  <data name="err_invalid_expired_token" xml:space="preserve"><value>Invalid or expired token.</value></data>
+  <data name="err_cannot_edit_request" xml:space="preserve"><value>Cannot edit a request with status '{0}'.</value></data>
+  <data name="err_sop_name_required" xml:space="preserve"><value>SOP name is required.</value></data>
+  <data name="err_checklist_text_required" xml:space="preserve"><value>Checklist item text is required.</value></data>
+  <data name="err_sop_already_assigned" xml:space="preserve"><value>This SOP template is already assigned.</value></data>
+  <data name="err_booking_id_required" xml:space="preserve"><value>Booking ID is required.</value></data>
+
+  <!-- Role names -->
+  <data name="role_owner" xml:space="preserve"><value>Owner</value></data>
+  <data name="role_dispatcher" xml:space="preserve"><value>Dispatcher</value></data>
+  <data name="role_cleaner" xml:space="preserve"><value>Cleaner</value></data>
+  <data name="role_finance" xml:space="preserve"><value>Finance</value></data>
+  <data name="role_client_portal" xml:space="preserve"><value>Client</value></data>
+
+  <!-- Client types -->
+  <data name="client_person" xml:space="preserve"><value>Person</value></data>
+  <data name="client_business" xml:space="preserve"><value>Business</value></data>
+  <data name="client_employee" xml:space="preserve"><value>Employee</value></data>
+
+  <!-- Booking types -->
+  <data name="booking_onetime" xml:space="preserve"><value>One Time</value></data>
+  <data name="booking_repeat_individual" xml:space="preserve"><value>Repeat Individual</value></data>
+  <data name="booking_repeat_business" xml:space="preserve"><value>Repeat Business</value></data>
+
+  <!-- Misc UI -->
+  <data name="ui_loading" xml:space="preserve"><value>Loading...</value></data>
+  <data name="ui_previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="ui_next" xml:space="preserve"><value>Next</value></data>
+  <data name="ui_page" xml:space="preserve"><value>Page</value></data>
+  <data name="ui_of" xml:space="preserve"><value>of</value></data>
+  <data name="ui_total" xml:space="preserve"><value>Total</value></data>
+  <data name="ui_currency" xml:space="preserve"><value>EUR</value></data>
+  <data name="ui_all" xml:space="preserve"><value>All</value></data>
+  <data name="ui_none" xml:space="preserve"><value>None</value></data>
+  <data name="ui_yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="ui_no" xml:space="preserve"><value>No</value></data>
+  <data name="ui_back" xml:space="preserve"><value>Back</value></data>
+
+  <!-- Days -->
+  <data name="day_monday" xml:space="preserve"><value>Monday</value></data>
+  <data name="day_tuesday" xml:space="preserve"><value>Tuesday</value></data>
+  <data name="day_wednesday" xml:space="preserve"><value>Wednesday</value></data>
+  <data name="day_thursday" xml:space="preserve"><value>Thursday</value></data>
+  <data name="day_friday" xml:space="preserve"><value>Friday</value></data>
+  <data name="day_saturday" xml:space="preserve"><value>Saturday</value></data>
+  <data name="day_sunday" xml:space="preserve"><value>Sunday</value></data>
+
+  <!-- Date override reasons -->
+  <data name="override_closed" xml:space="preserve"><value>Closed</value></data>
+  <data name="override_holiday" xml:space="preserve"><value>Holiday</value></data>
+  <data name="override_special_hours" xml:space="preserve"><value>Special Hours</value></data>
+
+  <!-- Month filter options -->
+  <data name="month_current" xml:space="preserve"><value>Current Month</value></data>
+  <data name="month_next" xml:space="preserve"><value>Next Month</value></data>
+  <data name="month_custom" xml:space="preserve"><value>Custom Range</value></data>
+
+  <!-- Service types -->
+  <data name="svc_standard" xml:space="preserve"><value>Standard</value></data>
+  <data name="svc_per_hour" xml:space="preserve"><value>Per Hour</value></data>
+  <data name="svc_per_item" xml:space="preserve"><value>Per Item</value></data>
+
+  <!-- SOP areas -->
+  <data name="sop_vehicle" xml:space="preserve"><value>Vehicle</value></data>
+  <data name="sop_office" xml:space="preserve"><value>Office</value></data>
+  <data name="sop_stairwell" xml:space="preserve"><value>Stairwell</value></data>
+  <data name="sop_boat" xml:space="preserve"><value>Boat</value></data>
+  <data name="sop_other" xml:space="preserve"><value>Other</value></data>
+
+  <!-- Language -->
+  <data name="lang_en" xml:space="preserve"><value>EN</value></data>
+  <data name="lang_hr" xml:space="preserve"><value>HR</value></data>
+</root>

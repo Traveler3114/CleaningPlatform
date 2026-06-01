@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using FluentAssertions;
@@ -22,7 +23,7 @@ public class AuthManagerTests : TestBase
 
     private static TokenManager CreateTokenManager()
     {
-        return new TokenManager(CreateConfiguration());
+        return new TokenManager(CreateConfiguration(), NullStringLocalizer<SharedResources>.Instance);
     }
 
     [Fact]
@@ -30,7 +31,7 @@ public class AuthManagerTests : TestBase
     {
         using var db = CreateDbContext();
         var tokenManager = CreateTokenManager();
-        var manager = new AuthManager(tokenManager, db, CreateConfiguration());
+        var manager = new AuthManager(tokenManager, db, CreateConfiguration(), NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.LoginAsync(new LoginRequest { Username = "owner", Password = "ChangeMe123!" });
 
@@ -43,7 +44,7 @@ public class AuthManagerTests : TestBase
     {
         using var db = CreateDbContext();
         var tokenManager = CreateTokenManager();
-        var manager = new AuthManager(tokenManager, db, CreateConfiguration());
+        var manager = new AuthManager(tokenManager, db, CreateConfiguration(), NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.LoginAsync(new LoginRequest { Username = "owner", Password = "wrongpassword" });
 
@@ -55,7 +56,7 @@ public class AuthManagerTests : TestBase
     {
         using var db = CreateDbContext();
         var tokenManager = CreateTokenManager();
-        var manager = new AuthManager(tokenManager, db, CreateConfiguration());
+        var manager = new AuthManager(tokenManager, db, CreateConfiguration(), NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.LoginAsync(new LoginRequest { Username = "nobody", Password = "password" });
 
@@ -67,7 +68,7 @@ public class AuthManagerTests : TestBase
     {
         using var db = CreateDbContext();
         var tokenManager = CreateTokenManager();
-        var manager = new AuthManager(tokenManager, db, CreateConfiguration());
+        var manager = new AuthManager(tokenManager, db, CreateConfiguration(), NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.RegisterAsync(new CreateUserRequest
         {
@@ -86,7 +87,7 @@ public class AuthManagerTests : TestBase
     {
         using var db = CreateDbContext();
         var tokenManager = CreateTokenManager();
-        var manager = new AuthManager(tokenManager, db, CreateConfiguration());
+        var manager = new AuthManager(tokenManager, db, CreateConfiguration(), NullStringLocalizer<SharedResources>.Instance);
 
         await manager.RegisterAsync(new CreateUserRequest
         {

@@ -60,7 +60,7 @@ function renderEmployeeWeek(board) {
             html += `<div class="emp-task-card emp-task-card--${cssStatus}">
                 <div class="emp-task-card__header">
                     <span class="emp-task-card__title">${recIcon}${card.hour}:00 — ${card.clientName}</span>
-                    <span class="badge badge-${cssStatus}">${card.status}</span>
+                    ${statusBadge(card.status)}
                 </div>
                 <div class="emp-task-card__meta">
                     ${card.siteName ? `<div>📍 ${card.siteName} — ${card.siteAddress || ''}</div>` : ''}
@@ -86,8 +86,9 @@ async function updateBookingStatus(id, status) {
             body: JSON.stringify({ status })
         });
         if (res.success) {
-            showSuccess('Status updated');
-            loadCalendar();
+            showSuccess(__('msg_status_updated'));
+loadCalendar();
+window.addEventListener('i18nReady', function () { loadCalendar(); });
         } else showError(res.message);
     } catch (e) { showError(e.message); }
 }

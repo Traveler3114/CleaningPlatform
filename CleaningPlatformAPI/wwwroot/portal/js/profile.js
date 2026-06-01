@@ -49,5 +49,5 @@ function render(client) {
 apiFetch('/api/portal/profile').then(function (data) {
     render(data);
 }).catch(function (err) {
-    showError(err.message || 'Failed to load profile');
+    showError(err.message || __('msg_failed_profile'));
 });

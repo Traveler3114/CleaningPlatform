@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using FluentAssertions;
@@ -11,7 +12,7 @@ public class ServiceCatalogManagerTests : TestBase
     public async Task GetAllAsync_ReturnsServices()
     {
         using var db = CreateDbContext();
-        var manager = new ServiceCatalogManager(db);
+        var manager = new ServiceCatalogManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetAllAsync();
 
@@ -22,7 +23,7 @@ public class ServiceCatalogManagerTests : TestBase
     public async Task CreateUpdateDelete_Workflow()
     {
         using var db = CreateDbContext();
-        var manager = new ServiceCatalogManager(db);
+        var manager = new ServiceCatalogManager(db, NullStringLocalizer<SharedResources>.Instance);
         var unique = Guid.NewGuid().ToString("N")[..8];
 
         var createResult = await manager.CreateAsync(new ServiceCatalogUpsertRequest

@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
@@ -13,8 +14,8 @@ public class RecurringScheduleManagerTests : TestBase
     public async Task GetAllAsync_ReturnsSchedules()
     {
         using var db = CreateDbContext();
-        var sop = new SopManager(db);
-        var manager = new RecurringScheduleManager(db, sop, NullLogger<RecurringScheduleManager>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new RecurringScheduleManager(db, sop, NullLogger<RecurringScheduleManager>.Instance, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetAllAsync();
 
@@ -25,8 +26,8 @@ public class RecurringScheduleManagerTests : TestBase
     public async Task RunAutoGenerateAsync_CompletesSuccessfully()
     {
         using var db = CreateDbContext();
-        var sop = new SopManager(db);
-        var manager = new RecurringScheduleManager(db, sop, NullLogger<RecurringScheduleManager>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new RecurringScheduleManager(db, sop, NullLogger<RecurringScheduleManager>.Instance, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.RunAutoGenerateAsync();
 

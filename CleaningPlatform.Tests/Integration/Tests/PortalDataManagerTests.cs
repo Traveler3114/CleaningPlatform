@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using FluentAssertions;
 using Xunit;
@@ -10,7 +11,7 @@ public class PortalDataManagerTests : TestBase
     public async Task GetDashboardAsync_ReturnsStats()
     {
         using var db = CreateDbContext();
-        var manager = new PortalDataManager(db);
+        var manager = new PortalDataManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetDashboardAsync(1);
 
@@ -21,7 +22,7 @@ public class PortalDataManagerTests : TestBase
     public async Task GetBookingsAsync_ReturnsClientBookings()
     {
         using var db = CreateDbContext();
-        var manager = new PortalDataManager(db);
+        var manager = new PortalDataManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetBookingsAsync(1, null);
 
@@ -32,7 +33,7 @@ public class PortalDataManagerTests : TestBase
     public async Task GetInvoicesAsync_ReturnsClientInvoices()
     {
         using var db = CreateDbContext();
-        var manager = new PortalDataManager(db);
+        var manager = new PortalDataManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetInvoicesAsync(1);
 

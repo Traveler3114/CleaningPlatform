@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Profile — Cleaning Platform</title>
+    <title data-i18n="page_admin_profile">My Profile — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,9 +12,9 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong>My Profile</strong></div>
+            <div class="breadcrumb"><strong data-i18n="page_admin_profile">My Profile</strong></div>
         </div>
-        <div class="header-right">
+        <div class="header-right"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <div class="user-info">
                 <div class="user-avatar">U</div>
                 <div class="user-details">
@@ -22,7 +22,7 @@
                     <span class="user-role"></span>
                 </div>
             </div>
-            <button id="logout-btn" class="logout-btn">Sign out</button>
+            <button id="logout-btn" class="logout-btn" data-i18n="nav_sign_out">Sign out</button>
         </div>
     </header>
     <main class="admin-main">
@@ -35,5 +35,6 @@
     <script src="/admin/js/admin-common.js"></script>
     <script src="/admin/js/profile.js"></script>
 </div>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

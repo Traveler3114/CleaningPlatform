@@ -2,6 +2,8 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Managers;
@@ -16,10 +18,12 @@ public class PortalAuthController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly TokenManager _tokenManager;
+    private readonly IStringLocalizer<SharedResources> _localizer;
     private readonly EmailService _emailService;
     private readonly IConfiguration _config;
 
-    public PortalAuthController(AppDbContext db, TokenManager tokenManager, EmailService emailService, IConfiguration config) { _db = db; _tokenManager = tokenManager; _emailService = emailService; _config = config; }
+    public PortalAuthController(AppDbContext db, TokenManager tokenManager, EmailService emailService, IConfiguration config, IStringLocalizer<SharedResources> localizer) { _db = db; _tokenManager = tokenManager; _emailService = emailService; _config = config; 
+            _localizer = localizer;}
 
     [HttpPost("send-link")]
     public async Task<ActionResult<OperationResult<string>>> SendLink([FromBody] SendMagicLinkRequest request)
@@ -54,7 +58,7 @@ public class PortalAuthController : ControllerBase
     public async Task<ActionResult<OperationResult<string>>> ValidateToken([FromBody] ValidateTokenRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Token))
-            return UnprocessableEntity(OperationResult<string>.Fail("Token is required."));
+            return UnprocessableEntity(OperationResult<string>.Fail(_localizer["error_token_required"]));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
 

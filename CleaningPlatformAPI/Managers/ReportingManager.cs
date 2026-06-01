@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Entities;
@@ -8,8 +9,9 @@ namespace CleaningPlatformAPI.Managers;
 public class ReportingManager
 {
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public ReportingManager(AppDbContext db) { _db = db; }
+    public ReportingManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; _localizer = localizer; }
 
     public async Task<List<MonthlyRevenueView>> GetMonthlyRevenueAsync(CancellationToken ct = default)
     {

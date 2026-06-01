@@ -26,10 +26,10 @@ async function loadRolesForSelect() {
 
 function renderUsers() {
     if (!users.length) {
-        document.getElementById('users-list').innerHTML = '<div class="alert alert-info">No users found.</div>';
+        document.getElementById('users-list').innerHTML = '<div class="alert alert-info">' + __('empty_no_users') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Active</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_name') + '</th><th>' + __('th_username') + '</th><th>' + __('th_role') + '</th><th>' + __('th_active') + '</th></tr></thead><tbody>';
     users.forEach(u => {
         html += `<tr class="${!u.isActive ? 'row-inactive' : ''} user-row" data-user-id="${u.id}" data-username="${u.username}" data-fullname="${u.firstName} ${u.lastName}" data-role="${u.role}" data-active="${u.isActive}" style="cursor:pointer;">
             <td>${u.firstName} ${u.lastName}</td>
@@ -38,7 +38,7 @@ function renderUsers() {
             <td>
                 <label class="checkbox-label">
                     <input type="checkbox" class="checkbox" ${u.isActive ? 'checked' : ''} onchange="toggleUserStatus(${u.id}, this.checked)" />
-                    Active
+                    ' + __('status_active') + '
                 </label>
             </td>
         </tr>`;
@@ -58,7 +58,7 @@ async function toggleUserStatus(id, isActive) {
     try {
         const res = await apiFetch(`/employees/${id}/toggle`, { method: 'PUT' });
         if (res.success) {
-            showSuccess('User status updated');
+            showSuccess(__('msg_status_updated_user'));
             loadUsers();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -75,7 +75,7 @@ async function createUser(e) {
     try {
         const res = await apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(payload) });
         if (res.success) {
-            showSuccess('User created');
+            showSuccess(__('msg_user_created'));
             closeUserModal();
             loadUsers();
         } else showError(res.message);
@@ -89,7 +89,7 @@ async function resetPassword(userId, newPassword) {
             body: JSON.stringify({ userId, newPassword })
         });
         if (res.success) {
-            showSuccess('Password reset');
+            showSuccess(__('msg_password_reset'));
             closeDetailUserModal();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -99,7 +99,7 @@ function openUserDetail(data) {
     document.getElementById('modal-username').value = data.username;
     document.getElementById('modal-fullname').value = data.fullname;
     document.getElementById('modal-role').value = data.role;
-    document.getElementById('modal-active').value = data.active === 'true' ? 'Yes' : 'No';
+    document.getElementById('modal-active').value = data.active === 'true' ? __('ui_yes') : __('ui_no');
     document.getElementById('reset-user-id').value = data.userId;
     document.getElementById('user-modal').style.display = 'flex';
 }
@@ -130,3 +130,4 @@ document.querySelectorAll('.modal-backdrop').forEach(modal => {
 
 loadRolesForSelect();
 loadUsers();
+window.addEventListener('i18nReady', function () { loadUsers(); });

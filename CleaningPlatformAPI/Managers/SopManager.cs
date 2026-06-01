@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
@@ -10,8 +12,10 @@ namespace CleaningPlatformAPI.Managers;
 public class SopManager
 {
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public SopManager(AppDbContext db) { _db = db; }
+    public SopManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
+            _localizer = localizer;}
 
     public async Task<List<SopTemplateResponse>> GetAllTemplatesAsync(CancellationToken ct = default)
     {
@@ -37,7 +41,7 @@ public class SopManager
     public async Task<OperationResult<SopTemplateResponse>> CreateTemplateAsync(CreateSopTemplateRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
-            return OperationResult<SopTemplateResponse>.Fail("SOP name is required.");
+            return OperationResult<SopTemplateResponse>.Fail(_localizer["err_sop_name_required"]);
 
         var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat", "Generic" };
         if (!validServiceTypes.Contains(dto.ServiceType?.Trim()))
@@ -94,7 +98,7 @@ public class SopManager
     public async Task<OperationResult<ChecklistItemResponse>> AddChecklistItemAsync(int templateId, UpsertChecklistItemRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ItemText))
-            return OperationResult<ChecklistItemResponse>.Fail("Checklist item text is required.");
+            return OperationResult<ChecklistItemResponse>.Fail(_localizer["err_checklist_text_required"]);
 
         var templateExists = await _db.SopTemplates.AnyAsync(t => t.Id == templateId, ct);
         if (!templateExists)
@@ -115,7 +119,7 @@ public class SopManager
     public async Task<OperationResult<ChecklistItemResponse>> UpdateChecklistItemAsync(int itemId, UpsertChecklistItemRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ItemText))
-            return OperationResult<ChecklistItemResponse>.Fail("Checklist item text is required.");
+            return OperationResult<ChecklistItemResponse>.Fail(_localizer["err_checklist_text_required"]);
 
         var item = await _db.ChecklistItems.FindAsync([itemId], ct);
         if (item is null)

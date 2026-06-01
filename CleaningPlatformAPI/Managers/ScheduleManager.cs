@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Mapping;
 
@@ -10,7 +12,9 @@ namespace CleaningPlatformAPI.Managers;
 public class ScheduleManager
 {
     private readonly AppDbContext _db;
-    public ScheduleManager(AppDbContext db) { _db = db; }
+    private readonly IStringLocalizer<SharedResources> _localizer;
+    public ScheduleManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
+            _localizer = localizer;}
 
     public async Task<List<WeeklyScheduleResponse>> GetScheduleAsync(CancellationToken ct = default)
     {

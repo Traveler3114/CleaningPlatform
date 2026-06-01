@@ -1,30 +1,32 @@
 // admin-common.js – shared UI helpers, sidebar nav, logout
 
 const adminNav = [
-    { section: 'Operations', items: [
-        { label: 'Daily View', href: 'index.html', perm: 'pages.daily' },
-        { label: 'Calendar', href: 'calendar.html', perm: 'pages.kanban' },
+    { sectionKey: 'nav_section_operations', section: 'Operations', items: [
+        { labelKey: 'nav_daily_view', label: 'Daily View', href: 'index.html', perm: 'pages.daily' },
+        { labelKey: 'nav_calendar', label: 'Calendar', href: 'calendar.html', perm: 'pages.kanban' },
     ]},
-    { section: 'Bookings', items: [
-        { label: 'Bookings', href: 'bookings.html', perm: 'pages.bookings' },
-        { label: 'Requests', href: 'requests.html', perm: 'bookings.view' },
-        { label: 'Recurring', href: 'recurring.html', perm: 'bookings.view' },
-        { label: 'Invoices', href: 'invoices.html', perm: 'invoices.view' },
+    { sectionKey: 'nav_section_bookings', section: 'Bookings', items: [
+        { labelKey: 'nav_bookings', label: 'Bookings', href: 'bookings.html', perm: 'pages.bookings' },
+        { labelKey: 'nav_requests', label: 'Requests', href: 'requests.html', perm: 'bookings.view' },
+        { labelKey: 'nav_recurring', label: 'Recurring', href: 'recurring.html', perm: 'bookings.view' },
+        { labelKey: 'nav_invoices', label: 'Invoices', href: 'invoices.html', perm: 'invoices.view' },
     ]},
-    { section: 'Clients', items: [
-        { label: 'Client List', href: 'clients.html', perm: 'pages.clients' },
+    { sectionKey: 'nav_section_clients', section: 'Clients', items: [
+        { labelKey: 'nav_client_list', label: 'Client List', href: 'clients.html', perm: 'pages.clients' },
     ]},
-    { section: 'Config', items: [
-        { label: 'Schedule', href: 'schedule.html', perm: 'schedule.view' },
-        { label: 'Services', href: 'services.html', perm: 'services.view' },
-        { label: 'SOPs', href: 'sops.html', perm: 'pages.sop' },
+    { sectionKey: 'nav_section_config', section: 'Config', items: [
+        { labelKey: 'nav_schedule', label: 'Schedule', href: 'schedule.html', perm: 'schedule.view' },
+        { labelKey: 'nav_services', label: 'Services', href: 'services.html', perm: 'services.view' },
+        { labelKey: 'nav_sops', label: 'SOPs', href: 'sops.html', perm: 'pages.sop' },
     ]},
-    { section: 'Admin', items: [
-        { label: 'Users', href: 'users.html', perm: 'pages.users' },
-        { label: 'Roles', href: 'roles.html', perm: 'pages.roles' },
-        { label: 'Reports', href: 'reports.html', perm: 'pages.reports' },
+    { sectionKey: 'nav_section_admin', section: 'Admin', items: [
+        { labelKey: 'nav_users', label: 'Users', href: 'users.html', perm: 'pages.users' },
+        { labelKey: 'nav_roles', label: 'Roles', href: 'roles.html', perm: 'pages.roles' },
+        { labelKey: 'nav_reports', label: 'Reports', href: 'reports.html', perm: 'pages.reports' },
     ]},
 ];
+
+var _sidebarToggleSetup = false;
 
 function renderSidebar() {
     const sidebar = document.getElementById('sidebar');
@@ -41,10 +43,10 @@ function renderSidebar() {
         );
         if (visibleItems.length === 0) return;
 
-        html += `<div class="nav-section"><span class="nav-section-title">${section.section}</span>`;
+        html += `<div class="nav-section"><span class="nav-section-title">${window.__(section.sectionKey) || section.section}</span>`;
         visibleItems.forEach(item => {
             const active = location.pathname.endsWith(item.href) ? ' active' : '';
-            html += `<a href="${item.href}" class="nav-item${active}">${item.label}</a>`;
+            html += `<a href="${item.href}" class="nav-item${active}">${window.__(item.labelKey) || item.label}</a>`;
         });
         html += '</div>';
     });
@@ -52,12 +54,17 @@ function renderSidebar() {
     html += '</nav>';
     sidebar.innerHTML = html;
 
-    const toggle = document.getElementById('mobile-toggle');
-    if (toggle && sidebar) {
-        toggle.addEventListener('click', () => sidebar.classList.toggle('open'));
-        sidebar.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => sidebar.classList.remove('open'));
-        });
+    if (!_sidebarToggleSetup) {
+        const toggle = document.getElementById('mobile-toggle');
+        if (toggle) {
+            toggle.addEventListener('click', function () {
+                sidebar.classList.toggle('open');
+            });
+            sidebar.addEventListener('click', function (e) {
+                if (e.target.classList.contains('nav-item')) sidebar.classList.remove('open');
+            });
+        }
+        _sidebarToggleSetup = true;
     }
 }
 
@@ -92,6 +99,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
 });
+
+window.addEventListener('i18nReady', function () {
+    var sidebar = document.getElementById('sidebar');
+    if (sidebar) renderSidebar();
+});
+
+function statusBadge(status) {
+    var cls = status.toLowerCase();
+    return '<span class="badge badge-' + cls + '">' + window.__status(status) + '</span>';
+}
 
 function showError(message, containerId = 'error-container') {
     let container = document.getElementById(containerId);

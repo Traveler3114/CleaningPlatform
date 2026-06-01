@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Requests — Cleaning Platform</title>
+    <title data-i18n="page_admin_requests">Requests — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,9 +12,9 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong>Booking Requests</strong></div>
+            <div class="breadcrumb"><strong data-i18n="content_breadcrumb_requests">Booking Requests</strong></div>
         </div>
-        <div class="header-right">
+        <div class="header-right"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <div class="user-info">
                 <div class="user-avatar">U</div>
                 <div class="user-details">
@@ -28,17 +28,17 @@
     <main class="admin-main">
         <div class="page-header">
             <div class="date-form">
-                <label for="status-filter">Status:</label>
+                <label for="status-filter" data-i18n="label_status">Status:</label>
                 <select id="status-filter" class="status-select">
-                    <option value="">All</option>
-                    <option value="New">New</option>
-                    <option value="AdminReviewed">Admin Reviewed</option>
-                    <option value="SentToCustomer">Sent to Customer</option>
-                    <option value="CustomerConfirmed">Customer Confirmed</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="Converted">Converted</option>
+                    <option value="" data-i18n="ui_all">All</option>
+                    <option value="New" data-i18n="status_new">New</option>
+                    <option value="AdminReviewed" data-i18n="status_admin_reviewed">Admin Reviewed</option>
+                    <option value="SentToCustomer" data-i18n="status_sent_to_customer">Sent to Customer</option>
+                    <option value="CustomerConfirmed" data-i18n="status_customer_confirmed">Customer Confirmed</option>
+                    <option value="Cancelled" data-i18n="status_cancelled">Cancelled</option>
+                    <option value="Converted" data-i18n="status_converted">Converted</option>
                 </select>
-                <button id="filter-btn" class="btn btn-sm">Filter</button>
+                <button id="filter-btn" class="btn btn-sm" data-i18n="btn_filter">Filter</button>
             </div>
         </div>
         <div id="error-container"></div>
@@ -49,5 +49,6 @@
     <script src="/admin/js/admin-common.js"></script>
     <script src="/admin/js/requests.js"></script>
 </div>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
@@ -12,7 +13,7 @@ public class SopManagerTests : TestBase
     public async Task GetAllTemplatesAsync_ReturnsTemplates()
     {
         using var db = CreateDbContext();
-        var manager = new SopManager(db);
+        var manager = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetAllTemplatesAsync();
 
@@ -23,7 +24,7 @@ public class SopManagerTests : TestBase
     public async Task CreateAndToggleTemplate_Workflow()
     {
         using var db = CreateDbContext();
-        var manager = new SopManager(db);
+        var manager = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
         var unique = Guid.NewGuid().ToString("N")[..8];
 
         var createResult = await manager.CreateTemplateAsync(new CreateSopTemplateRequest
@@ -46,7 +47,7 @@ public class SopManagerTests : TestBase
     public async Task AddAndDeleteChecklistItem_Workflow()
     {
         using var db = CreateDbContext();
-        var manager = new SopManager(db);
+        var manager = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
         var unique = Guid.NewGuid().ToString("N")[..8];
 
         var createResult = await manager.CreateTemplateAsync(new CreateSopTemplateRequest
@@ -75,7 +76,7 @@ public class SopManagerTests : TestBase
     public async Task UpdateTemplateAsync_UpdatesFields()
     {
         using var db = CreateDbContext();
-        var manager = new SopManager(db);
+        var manager = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
         var templates = await manager.GetAllTemplatesAsync();
 
         templates.Should().NotBeEmpty("seed data must exist for this test to be meaningful");

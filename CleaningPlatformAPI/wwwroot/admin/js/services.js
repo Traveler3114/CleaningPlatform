@@ -14,16 +14,16 @@ async function loadServices() {
 
 function renderServices() {
     if (!services.length) {
-        document.getElementById('services-list').innerHTML = '<div class="alert alert-info">No services found.</div>';
+        document.getElementById('services-list').innerHTML = '<div class="alert alert-info">' + __('empty_no_services') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Code</th><th>Name</th><th>Category</th><th>Unit</th><th>Base Price</th><th>Active</th></tr></thead><tbody>';
+    let html = `<table class="admin-table"><thead><tr><th>${__('th_id')}</th><th>${__('th_code')}</th><th>${__('th_name')}</th><th>${__('th_category')}</th><th>${__('th_unit')}</th><th>${__('th_base_price')}</th><th>${__('th_active')}</th></tr></thead><tbody>`;
     services.forEach(s => {
         html += `<tr class="service-row ${!s.isActive ? 'row-inactive' : ''}" data-service-id="${s.id}" data-service-code="${s.catalogCode}" data-service-name="${s.name}" data-service-category="${s.category || ''}" data-service-unit="${s.unit || ''}" data-service-base-price="${s.basePrice || ''}" data-service-service-type="${s.serviceType}" data-service-active="${s.isActive}" style="cursor:pointer;">
             <td>${s.id}</td><td>${s.catalogCode}</td><td>${s.name}</td>
             <td>${s.category || '-'}</td><td>${s.unit || '-'}</td>
             <td>${s.basePrice ? s.basePrice.toFixed(2) : '-'}</td>
-            <td><span class="badge ${s.isActive ? 'badge-active' : 'badge-inactive'}">${s.isActive ? 'Active' : 'Inactive'}</span></td>
+            <td><span class="badge ${s.isActive ? 'badge-active' : 'badge-inactive'}">${s.isActive ? __('status_active') : __('status_inactive')}</span></td>
         </tr>`;
     });
     html += '</tbody></table>';
@@ -36,7 +36,7 @@ function renderServices() {
 
 function openEditService(data) {
     editingServiceId = parseInt(data.serviceId);
-    document.getElementById('service-modal-title').textContent = `Edit Service: ${data.serviceName}`;
+    document.getElementById('service-modal-title').textContent = `${__('btn_edit')}: ${data.serviceName}`;
     document.getElementById('service-id').value = data.serviceId;
     document.getElementById('service-code').value = data.serviceCode;
     document.getElementById('service-name').value = data.serviceName;
@@ -51,7 +51,7 @@ function openEditService(data) {
 
 function openCreateService() {
     editingServiceId = null;
-    document.getElementById('service-modal-title').textContent = 'Create Service';
+    document.getElementById('service-modal-title').textContent = __('btn_create');
     document.getElementById('service-id').value = '';
     document.getElementById('service-code').value = '';
     document.getElementById('service-name').value = '';
@@ -82,7 +82,7 @@ async function saveService() {
             res = await apiFetch('/services', { method: 'POST', body: JSON.stringify(payload) });
         }
         if (res.success) {
-            showSuccess(editingServiceId ? 'Service updated' : 'Service created');
+            showSuccess(editingServiceId ? __('msg_service_updated') : __('msg_service_created'));
             closeServiceModal();
             loadServices();
         } else showError(res.message);
@@ -90,11 +90,11 @@ async function saveService() {
 }
 
 async function deleteService() {
-    if (!confirm('Delete this service?')) return;
+    if (!confirm(__('msg_confirm_delete_service'))) return;
     try {
         const res = await apiFetch(`/services/${editingServiceId}`, { method: 'DELETE' });
         if (res.success) {
-            showSuccess('Service deleted');
+            showSuccess(__('msg_service_deleted'));
             closeServiceModal();
             loadServices();
         } else showError(res.message);
@@ -108,3 +108,4 @@ document.getElementById('service-form').addEventListener('submit', (e) => { e.pr
 document.getElementById('service-delete-form').addEventListener('submit', (e) => { e.preventDefault(); deleteService(); });
 
 loadServices();
+window.addEventListener('i18nReady', function () { loadServices(); });

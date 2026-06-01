@@ -3,6 +3,8 @@ using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Entities;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Mapping;
 
@@ -12,9 +14,11 @@ public class RecurringScheduleManager
 {
     private readonly AppDbContext _db;
     private readonly SopManager _sopManager;
+    private readonly IStringLocalizer<SharedResources> _localizer;
     private readonly ILogger<RecurringScheduleManager> _logger;
 
-    public RecurringScheduleManager(AppDbContext db, SopManager sopManager, ILogger<RecurringScheduleManager> logger) { _db = db; _sopManager = sopManager; _logger = logger; }
+    public RecurringScheduleManager(AppDbContext db, SopManager sopManager, ILogger<RecurringScheduleManager> logger, IStringLocalizer<SharedResources> localizer) { _db = db; _sopManager = sopManager; _logger = logger; 
+            _localizer = localizer;}
 
     public async Task<List<RecurringScheduleResponse>> GetAllAsync(int? clientId = null, CancellationToken ct = default)
     {

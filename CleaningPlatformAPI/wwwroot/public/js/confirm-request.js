@@ -17,7 +17,7 @@ async function loadRequest() {
             showMessage(result.message || 'Could not load request details. The link may be expired.', 'error');
         }
     } catch (e) {
-        showMessage('Network error. Please try again.', 'error');
+        showMessage(__('msg_network_error'), 'error');
     }
 }
 
@@ -42,7 +42,7 @@ function renderDetails() {
     } else if (r.status === 'Cancelled') {
         actionsHtml = `<div class="alert alert-danger" style="margin-top:1rem;">This request has been cancelled.</div>`;
     } else {
-        actionsHtml = `<div class="alert alert-info" style="margin-top:1rem;">Status: ${r.status}</div>`;
+        actionsHtml = `<div class="alert alert-info" style="margin-top:1rem;">Status: ${window.__status(r.status)}</div>`;
     }
 
     container.innerHTML = `
@@ -84,7 +84,7 @@ async function confirmRequest() {
             showResult('error', result.message || 'Could not confirm request.');
         }
     } catch (e) {
-        showResult('error', 'Network error. Please try again.');
+        showResult('error', __('msg_network_error'));
     }
 }
 
@@ -106,7 +106,7 @@ async function cancelRequest() {
             showResult('error', result.message || 'Could not cancel request.');
         }
     } catch (e) {
-        showResult('error', 'Network error. Please try again.');
+        showResult('error', __('msg_network_error'));
     }
 }
 

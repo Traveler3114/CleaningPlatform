@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Invoices — Cleaning Platform</title>
+    <title data-i18n="page_admin_invoices">Invoices — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,9 +12,9 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong>Invoices</strong></div>
+            <div class="breadcrumb"><strong data-i18n="content_breadcrumb_invoices">Invoices</strong></div>
         </div>
-        <div class="header-right">
+        <div class="header-right"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <div class="user-info">
                 <div class="user-avatar">U</div>
                 <div class="user-details">
@@ -22,7 +22,7 @@
                     <span class="user-role"></span>
                 </div>
             </div>
-            <button id="logout-btn" class="logout-btn">Sign out</button>
+            <button id="logout-btn" class="logout-btn" data-i18n="nav_sign_out">Sign out</button>
         </div>
     </header>
 <main class="admin-main">
@@ -30,10 +30,10 @@
         
     </div>
     <div class="card-lite">
-        <h2 class="section-title">Generate from booking</h2>
+        <h2 class="section-title" data-i18n="section_generate_invoice">Generate from booking</h2>
         <div class="inline-form wrap">
-            <input type="number" id="generate-booking-id" placeholder="Booking ID" class="small-input" />
-            <button id="generate-invoice-btn" class="btn btn-sm">Generate</button>
+            <input type="number" id="generate-booking-id" placeholder="Booking ID" class="small-input" data-i18n-attr="placeholder" data-i18n="placeholder_booking_id" />
+            <button id="generate-invoice-btn" class="btn btn-sm" data-i18n="btn_generate">Generate</button>
         </div>
     </div>
     <div id="error-container"></div>
@@ -44,5 +44,6 @@
 <script src="/admin/js/admin-common.js"></script>
 <script src="/admin/js/invoices.js"></script>
 </div>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

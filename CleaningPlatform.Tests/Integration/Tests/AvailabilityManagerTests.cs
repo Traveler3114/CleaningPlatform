@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Entities;
 using FluentAssertions;
@@ -11,7 +12,7 @@ public class AvailabilityManagerTests : TestBase
     public async Task GetSlotsAsync_ReturnsSlots_WhenScheduleExists()
     {
         using var db = CreateDbContext();
-        var manager = new AvailabilityManager(db);
+        var manager = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var slots = await manager.GetSlotsAsync(new DateTime(2026, 5, 26));
 
@@ -32,7 +33,7 @@ public class AvailabilityManagerTests : TestBase
             Capacity = 0
         });
         await db.SaveChangesAsync();
-        var manager = new AvailabilityManager(db);
+        var manager = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var slots = await manager.GetSlotsAsync(closedDate);
 
@@ -43,7 +44,7 @@ public class AvailabilityManagerTests : TestBase
     public async Task GetSlotsAsync_ReturnsClosedSlot_WhenDayIsClosed()
     {
         using var db = CreateDbContext();
-        var manager = new AvailabilityManager(db);
+        var manager = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var slots = await manager.GetSlotsAsync(new DateTime(2026, 5, 31));
 

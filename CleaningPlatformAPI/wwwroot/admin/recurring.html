@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Recurring Schedules — Cleaning Platform</title>
+    <title data-i18n="page_admin_recurring">Recurring Schedules — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,9 +12,9 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong>Recurring Schedules</strong></div>
+            <div class="breadcrumb"><strong data-i18n="content_breadcrumb_recurring">Recurring Schedules</strong></div>
         </div>
-        <div class="header-right">
+        <div class="header-right"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <div class="user-info">
                 <div class="user-avatar">U</div>
                 <div class="user-details">
@@ -29,7 +29,7 @@
         <div class="page-header">
             
             <div style="display:flex; gap:0.5rem;">
-                <button id="run-auto-btn" class="btn btn-sm">Run Auto-Generate</button>
+                <button id="run-auto-btn" class="btn btn-sm" data-i18n="btn_run_auto_generate">Run Auto-Generate</button>
             </div>
         </div>
         <div id="error-container"></div>
@@ -39,39 +39,39 @@
     <!-- Edit Modal -->
     <div id="edit-modal" class="modal-overlay" style="display:none;">
         <div class="modal-content" style="max-width:500px;">
-            <h2>Edit Recurring Schedule</h2>
+            <h2 data-i18n="modal_edit_recurring">Edit Recurring Schedule</h2>
             <form id="edit-form" class="form-grid two-col">
-                <label>Frequency
+                <label data-i18n="label_frequency">Frequency
                     <select id="edit-frequency" class="text-input">
-                        <option value="Weekly">Weekly</option>
-                        <option value="Biweekly">Biweekly</option>
-                        <option value="Monthly">Monthly</option>
+                        <option value="Weekly" data-i18n="freq_weekly">Weekly</option>
+                        <option value="Biweekly" data-i18n="freq_biweekly">Biweekly</option>
+                        <option value="Monthly" data-i18n="freq_monthly">Monthly</option>
                     </select>
                 </label>
-                <label id="edit-dayofweek-group">Day of Week
+                <label id="edit-dayofweek-group" data-i18n="label_day_of_week">Day of Week
                     <select id="edit-dayofweek" class="text-input">
                         <option value="">--</option>
-                        <option value="0">Sunday</option>
-                        <option value="1">Monday</option>
-                        <option value="2">Tuesday</option>
-                        <option value="3">Wednesday</option>
-                        <option value="4">Thursday</option>
-                        <option value="5">Friday</option>
-                        <option value="6">Saturday</option>
+                        <option value="0" data-i18n="day_sunday">Sunday</option>
+                        <option value="1" data-i18n="day_monday">Monday</option>
+                        <option value="2" data-i18n="day_tuesday">Tuesday</option>
+                        <option value="3" data-i18n="day_wednesday">Wednesday</option>
+                        <option value="4" data-i18n="day_thursday">Thursday</option>
+                        <option value="5" data-i18n="day_friday">Friday</option>
+                        <option value="6" data-i18n="day_saturday">Saturday</option>
                     </select>
                 </label>
-                <label id="edit-dayofmonth-group">Day of Month (1-28)
+                <label id="edit-dayofmonth-group" data-i18n="label_day_of_month">Day of Month (1-28)
                     <input type="number" id="edit-dayofmonth" class="text-input" min="1" max="28" />
                 </label>
-                <label>Weeks Ahead (1-52)
+                <label data-i18n="label_weeks_ahead">Weeks Ahead (1-52)
                     <input type="number" id="edit-weeksahead" class="text-input" min="1" max="52" />
                 </label>
-                <label class="full-span">End Date (optional)
+                <label class="full-span" data-i18n="label_end_date_optional">End Date (optional)
                     <input type="date" id="edit-endson" class="text-input" />
                 </label>
                 <div class="full-span" style="display:flex; gap:0.5rem;">
-                    <button type="submit" class="btn btn-sm">Save</button>
-                    <button type="button" id="edit-cancel-btn" class="btn btn-sm">Cancel</button>
+                    <button type="submit" class="btn btn-sm" data-i18n="btn_save">Save</button>
+                    <button type="button" id="edit-cancel-btn" class="btn btn-sm" data-i18n="btn_cancel">Cancel</button>
                 </div>
             </form>
         </div>
@@ -80,15 +80,15 @@
     <!-- End Series Modal -->
     <div id="end-modal" class="modal-overlay" style="display:none;">
         <div class="modal-content" style="max-width:400px;">
-            <h2>End Series</h2>
-            <p style="color:#c62828; font-weight:600;">All pending bookings from this date will be cancelled.</p>
+            <h2 data-i18n="modal_end_series_title">End Series</h2>
+            <p style="color:#c62828; font-weight:600;" data-i18n="modal_end_series_warning">All pending bookings from this date will be cancelled.</p>
             <form id="end-form" class="form-grid">
-                <label>End From Date
+                <label data-i18n="label_end_from_date">End From Date
                     <input type="date" id="end-date" class="text-input" />
                 </label>
                 <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                    <button type="submit" class="btn btn-sm" style="background:#c62828;color:#fff;">End Series</button>
-                    <button type="button" id="end-cancel-btn" class="btn btn-sm">Cancel</button>
+                    <button type="submit" class="btn btn-sm" style="background:#c62828;color:#fff;" data-i18n="btn_end_series">End Series</button>
+                    <button type="button" id="end-cancel-btn" class="btn btn-sm" data-i18n="btn_cancel">Cancel</button>
                 </div>
             </form>
         </div>
@@ -99,5 +99,6 @@
     <script src="/admin/js/admin-common.js"></script>
     <script src="/admin/js/recurring.js"></script>
 </div>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

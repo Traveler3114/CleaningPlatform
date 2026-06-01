@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
@@ -13,7 +15,9 @@ namespace CleaningPlatformAPI.Controllers;
 public class InvoiceController : ControllerBase
 {
     private readonly InvoiceManager _invoiceManager;
-    public InvoiceController(InvoiceManager invoiceManager) { _invoiceManager = invoiceManager; }
+    private readonly IStringLocalizer<SharedResources> _localizer;
+    public InvoiceController(InvoiceManager invoiceManager, IStringLocalizer<SharedResources> localizer) { _invoiceManager = invoiceManager; 
+            _localizer = localizer;}
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.InvoicesView)]
@@ -46,7 +50,7 @@ public class InvoiceController : ControllerBase
     public async Task<ActionResult<OperationResult<InvoiceResponse>>> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingRequest request, CancellationToken ct)
     {
         if (request.BookingId <= 0)
-            return BadRequest(OperationResult<InvoiceResponse>.Fail("Booking ID is required."));
+            return BadRequest(OperationResult<InvoiceResponse>.Fail(_localizer["err_booking_id_required"]));
         var result = await _invoiceManager.CreateFromBookingAsync(request.BookingId, User.GetEmployeeId(), ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }

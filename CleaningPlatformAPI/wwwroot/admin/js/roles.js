@@ -44,12 +44,12 @@ function renderPermissionsGrid() {
 
 function renderRoles() {
     if (!roles.length) {
-        document.getElementById('roles-list').innerHTML = '<div class="alert alert-info">No roles found.</div>';
+        document.getElementById('roles-list').innerHTML = `<div class="alert alert-info">${__('empty_no_roles')}</div>`;
         return;
     }
     const permissionNames = {};
     permissions.forEach(p => { permissionNames[p.key] = p.displayName; });
-    let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Name</th><th>Permissions</th></tr></thead><tbody>';
+    let html = `<table class="admin-table"><thead><tr><th>${__('th_id')}</th><th>${__('th_name')}</th><th>${__('th_permissions')}</th></tr></thead><tbody>`;
     roles.forEach(r => {
         const permNames = r.permissions.map(p => permissionNames[p] || p).join(', ');
         html += `<tr class="role-row ${r.isProtected ? 'role-protected' : ''}" data-role-id="${r.id}" data-role-name="${r.name}" data-role-protected="${r.isProtected}" data-role-permissions="${r.permissions.join('|')}" style="cursor:pointer;">
@@ -72,7 +72,7 @@ function renderRoles() {
 function openEditRole(data) {
     isEditMode = true;
     editingRoleId = parseInt(data.roleId);
-    document.getElementById('role-modal-title').textContent = `Edit Role: ${data.roleName}`;
+    document.getElementById('role-modal-title').textContent = `${__('btn_edit') + ' ' + __('th_role')}: ${data.roleName}`;
     document.getElementById('role-name').value = data.roleName;
     const permissionsList = data.rolePermissions ? data.rolePermissions.split('|') : [];
     document.querySelectorAll('input[name="permission"]').forEach(cb => {
@@ -85,7 +85,7 @@ function openEditRole(data) {
 function openCreateRole() {
     isEditMode = false;
     editingRoleId = null;
-    document.getElementById('role-modal-title').textContent = 'Create Role';
+    document.getElementById('role-modal-title').textContent = __('btn_create') + ' ' + __('th_role');
     document.getElementById('role-name').value = '';
     document.querySelectorAll('input[name="permission"]').forEach(cb => cb.checked = false);
     document.getElementById('role-delete-form').style.display = 'none';
@@ -94,7 +94,7 @@ function openCreateRole() {
 
 async function saveRole() {
     const name = document.getElementById('role-name').value.trim();
-    if (!name) { showError('Role name is required'); return; }
+    if (!name) { showError(__('msg_role_name_required')); return; }
     const selectedPermissions = Array.from(document.querySelectorAll('input[name="permission"]:checked')).map(cb => cb.value);
     if (isEditMode) {
         try {
@@ -103,7 +103,7 @@ async function saveRole() {
                 body: JSON.stringify({ name, permissions: selectedPermissions })
             });
             if (res.success) {
-                showSuccess('Role updated');
+                showSuccess(__('msg_role_updated'));
                 closeRoleModal();
                 loadRoles();
             } else showError(res.message);
@@ -115,7 +115,7 @@ async function saveRole() {
                 body: JSON.stringify({ name, permissions: selectedPermissions })
             });
             if (res.success) {
-                showSuccess('Role created');
+                showSuccess(__('msg_role_created'));
                 closeRoleModal();
                 loadRoles();
             } else showError(res.message);
@@ -124,11 +124,11 @@ async function saveRole() {
 }
 
 async function deleteRole() {
-    if (!confirm('Delete this role?')) return;
+    if (!confirm(__('msg_confirm_delete_role'))) return;
     try {
         const res = await apiFetch(`/roles/${editingRoleId}`, { method: 'DELETE' });
         if (res.success) {
-            showSuccess('Role deleted');
+            showSuccess(__('msg_role_deleted'));
             closeRoleModal();
             loadRoles();
         } else showError(res.message);
@@ -146,3 +146,4 @@ document.getElementById('role-modal').addEventListener('click', (e) => { if (e.t
 
 loadPermissions();
 loadRoles();
+window.addEventListener('i18nReady', function () { loadRoles(); });

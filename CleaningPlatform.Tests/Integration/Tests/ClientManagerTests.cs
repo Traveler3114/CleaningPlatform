@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
@@ -13,7 +14,7 @@ public class ClientManagerTests : TestBase
     public async Task GetAllAsync_ReturnsPagedResults()
     {
         using var db = CreateDbContext();
-        var manager = new ClientManager(db);
+        var manager = new ClientManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetAllAsync(new PaginationParams { Page = 1, PageSize = 10 });
 
@@ -25,7 +26,7 @@ public class ClientManagerTests : TestBase
     public async Task GetByIdAsync_ExistingClient_ReturnsClient()
     {
         using var db = CreateDbContext();
-        var manager = new ClientManager(db);
+        var manager = new ClientManager(db, NullStringLocalizer<SharedResources>.Instance);
         var first = await manager.GetAllAsync(new PaginationParams());
 
         var result = await manager.GetByIdAsync(first.Items[0].Id);
@@ -38,7 +39,7 @@ public class ClientManagerTests : TestBase
     public async Task GetByIdAsync_MissingClient_ReturnsFail()
     {
         using var db = CreateDbContext();
-        var manager = new ClientManager(db);
+        var manager = new ClientManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetByIdAsync(-1);
 
@@ -49,7 +50,7 @@ public class ClientManagerTests : TestBase
     public async Task CreateAsync_PersonClient_Succeeds()
     {
         using var db = CreateDbContext();
-        var manager = new ClientManager(db);
+        var manager = new ClientManager(db, NullStringLocalizer<SharedResources>.Instance);
         var unique = Guid.NewGuid().ToString("N")[..8];
 
         var result = await manager.CreateAsync(new CreateClientRequest
@@ -69,7 +70,7 @@ public class ClientManagerTests : TestBase
     public async Task CreateAsync_BusinessClient_Succeeds()
     {
         using var db = CreateDbContext();
-        var manager = new ClientManager(db);
+        var manager = new ClientManager(db, NullStringLocalizer<SharedResources>.Instance);
         var unique = Guid.NewGuid().ToString("N")[..8];
 
         var result = await manager.CreateAsync(new CreateClientRequest
@@ -89,7 +90,7 @@ public class ClientManagerTests : TestBase
     public async Task CreateSiteAsync_AddsSiteToClient()
     {
         using var db = CreateDbContext();
-        var manager = new ClientManager(db);
+        var manager = new ClientManager(db, NullStringLocalizer<SharedResources>.Instance);
         var all = await manager.GetAllAsync(new PaginationParams());
         var clientId = all.Items[0].Id;
 
@@ -107,7 +108,7 @@ public class ClientManagerTests : TestBase
     public async Task GetSitesAsync_ReturnsSites()
     {
         using var db = CreateDbContext();
-        var manager = new ClientManager(db);
+        var manager = new ClientManager(db, NullStringLocalizer<SharedResources>.Instance);
         var all = await manager.GetAllAsync(new PaginationParams());
         var clientId = all.Items[0].Id;
 

@@ -5,6 +5,8 @@ using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Entities;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Mapping;
 
@@ -17,8 +19,10 @@ public class BookingManager
     private readonly AppDbContext _db;
     private readonly AvailabilityManager _availability;
     private readonly SopManager _sopManager;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public BookingManager(AppDbContext db, AvailabilityManager availability, SopManager sopManager) { _db = db; _availability = availability; _sopManager = sopManager; }
+    public BookingManager(AppDbContext db, AvailabilityManager availability, SopManager sopManager, IStringLocalizer<SharedResources> localizer) { _db = db; _availability = availability; _sopManager = sopManager; 
+            _localizer = localizer;}
 
     public async Task<List<BookingResponse>> GetBookingsAsync(DateTime date, CancellationToken ct = default)
     {
@@ -115,7 +119,7 @@ public class BookingManager
         var email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();
 
         if (string.IsNullOrWhiteSpace(customerName))
-            return OperationResult<BookingResponse>.Fail("Customer name is required.");
+            return OperationResult<BookingResponse>.Fail(_localizer["err_customer_name_required"]);
         if (string.IsNullOrWhiteSpace(phone))
             return OperationResult<BookingResponse>.Fail("Phone number is required.");
 
@@ -421,7 +425,7 @@ public class BookingManager
     public async Task<OperationResult<BookingResponse>> AddServiceAsync(int bookingId, int serviceCatalogId, decimal? estimatedPrice, decimal quantity, decimal? finalPrice = null, string? notes = null, CancellationToken ct = default)
     {
         if (quantity <= 0)
-            return OperationResult<BookingResponse>.Fail("Quantity must be greater than zero.");
+            return OperationResult<BookingResponse>.Fail(_localizer["err_quantity_required"]);
 
         var booking = await _db.Bookings.FindAsync([bookingId], ct);
         if (booking is null)

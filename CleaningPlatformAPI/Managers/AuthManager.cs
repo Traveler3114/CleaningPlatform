@@ -2,6 +2,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
@@ -14,16 +16,18 @@ public class AuthManager
     private const int MaxUsernameGenerationAttempts = 20;
 
     private readonly TokenManager _tokenManager;
+    private readonly IStringLocalizer<SharedResources> _localizer;
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
 
-    public AuthManager(TokenManager tokenManager, AppDbContext db, IConfiguration config) { _tokenManager = tokenManager; _db = db; _config = config; }
+    public AuthManager(TokenManager tokenManager, AppDbContext db, IConfiguration config, IStringLocalizer<SharedResources> localizer) { _tokenManager = tokenManager; _db = db; _config = config; 
+            _localizer = localizer;}
 
     public async Task<OperationResult<string>> RegisterAsync(CreateUserRequest request, CancellationToken ct = default)
     {
         var roleName = request.Role.Trim();
         if (string.IsNullOrWhiteSpace(roleName))
-            return OperationResult<string>.Fail("Role is required.");
+            return OperationResult<string>.Fail(_localizer["err_role_required"]);
 
         var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName, ct);
         if (role is null)
@@ -119,10 +123,10 @@ public class AuthManager
             .FirstOrDefaultAsync(u => u.Username == username, ct);
 
         if (user is null || !user.IsActive)
-            return OperationResult<LoginContext>.Fail("Invalid credentials.");
+            return OperationResult<LoginContext>.Fail(_localizer["err_invalid_credentials"]);
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            return OperationResult<LoginContext>.Fail("Invalid credentials.");
+            return OperationResult<LoginContext>.Fail(_localizer["err_invalid_credentials"]);
 
         var permissions = await _db.RolePermissions
             .Where(rp => rp.RoleId == user.RoleId)

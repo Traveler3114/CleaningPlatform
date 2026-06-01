@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
@@ -14,8 +16,10 @@ public class InvoiceManager
     private static readonly string[] AllowedPaymentMethods = ["BankTransfer", "Cash", "Card", "Other"];
 
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public InvoiceManager(AppDbContext db) { _db = db; }
+    public InvoiceManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
+            _localizer = localizer;}
 
     public async Task<PagedResult<InvoiceResponse>> GetAllAsync(
         PaginationParams pagination,
@@ -144,7 +148,7 @@ public class InvoiceManager
     public async Task<OperationResult<InvoiceResponse>> RecordPaymentAsync(int invoiceId, RecordPaymentRequest request, int? recordedBy, CancellationToken ct = default)
     {
         if (request.Amount <= 0)
-            return OperationResult<InvoiceResponse>.Fail("Payment amount must be greater than zero.");
+            return OperationResult<InvoiceResponse>.Fail(_localizer["err_payment_amount_zero"]);
 
         var method = string.IsNullOrWhiteSpace(request.Method) ? "BankTransfer" : request.Method.Trim();
         if (!AllowedPaymentMethods.Contains(method))

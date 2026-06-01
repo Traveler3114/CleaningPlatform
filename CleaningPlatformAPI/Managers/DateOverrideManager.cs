@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Mapping;
 
@@ -10,7 +12,9 @@ namespace CleaningPlatformAPI.Managers;
 public class DateOverrideManager
 {
     private readonly AppDbContext _db;
-    public DateOverrideManager(AppDbContext db) { _db = db; }
+    private readonly IStringLocalizer<SharedResources> _localizer;
+    public DateOverrideManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
+            _localizer = localizer;}
 
     public async Task<List<DateOverrideResponse>> GetOverridesAsync(CancellationToken ct = default)
     {

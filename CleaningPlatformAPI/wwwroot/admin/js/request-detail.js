@@ -13,13 +13,13 @@ const statusMap = {
 };
 
 function fmtStatus(status) {
-    const s = statusMap[status] || { label: status, cls: 'info' };
-    return `<span class="badge badge-${s.cls}">${s.label}</span>`;
+    const s = statusMap[status] || { label: status, cls: status.toLowerCase() };
+    return `<span class="badge badge-${s.cls}">${window.__status(status)}</span>`;
 }
 
 async function loadRequestDetail() {
     if (!requestId) {
-        document.getElementById('request-detail').innerHTML = '<div class="alert alert-info">No request ID provided.</div>';
+        document.getElementById('request-detail').innerHTML = `<div class="alert alert-info">${__('label_no_request_id')}</div>`;
         return;
     }
     try {
@@ -62,39 +62,39 @@ function renderRequestDetail() {
                 <div><strong>Request #${r.id}</strong></div>
                 ${fmtStatus(r.status)}
             </div>
-            <p><strong>Created:</strong> ${formatDateTime(r.createdAt)}</p>
+            <p><strong>${__('th_created')}:</strong> ${formatDateTime(r.createdAt)}</p>
             <p><strong>Updated:</strong> ${formatDateTime(r.updatedAt)}</p>
         </section>
         <section class="detail-section">
             <h2 class="section-title">Contact Info</h2>
-            <p><strong>Name:</strong> ${escHtml(r.contactName)}</p>
-            <p><strong>Phone:</strong> ${escHtml(r.phone)}</p>
-            <p><strong>Email:</strong> ${escHtml(r.email)}</p>
-            <p><strong>Notes:</strong> ${escHtml(r.notes) || '-'}</p>
+            <p><strong>${__('th_name')}:</strong> ${escHtml(r.contactName)}</p>
+            <p><strong>${__('th_phone')}:</strong> ${escHtml(r.phone)}</p>
+            <p><strong>${__('th_email')}:</strong> ${escHtml(r.email)}</p>
+            <p><strong>${__('th_notes')}:</strong> ${escHtml(r.notes) || '-'}</p>
         </section>
         <section class="detail-section">
-            <h2 class="section-title">Services</h2>
+            <h2 class="section-title">${__('section_services')}</h2>
             <p><strong>Selected:</strong> ${services}</p>
-            <p><strong>Estimated Price:</strong> ${price}</p>
+            <p><strong>${__('label_est_price')}:</strong> ${price}</p>
         </section>
         <section class="detail-section">
-            <h2 class="section-title">Admin</h2>
+            <h2 class="section-title">${__('nav_section_admin')}</h2>
             <div class="form-grid two-col">
-                <label>Estimated Price
+                <label>${__('label_est_price')}
                     <input type="number" id="edit-estimated" step="0.01" class="text-input" value="${r.estimatedPrice || ''}" placeholder="0.00" />
                 </label>
-                <label>Admin Notes
+                <label>${__('label_admin_notes')}
                     <textarea id="edit-admin-notes" class="text-input" rows="3">${r.adminNotes || ''}</textarea>
                 </label>
-                <label class="full-span">Services
+                <label class="full-span">${__('th_services')}
                     <select id="edit-services" class="text-input" multiple style="min-height:120px;"></select>
                     <small>Ctrl+click to select multiple</small>
                 </label>
                 <div class="full-span" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                    <button id="save-btn" class="btn btn-sm">Save Changes</button>
-                    ${canSend ? '<button id="send-btn" class="btn btn-sm" style="background:#1565c0;color:#fff;">Send to Customer</button>' : ''}
-                    ${canConvert ? '<button id="convert-btn" class="btn btn-sm" style="background:#2e7d32;color:#fff;">Confirm & Create Booking</button>' : ''}
-                    ${canCancel ? '<button id="cancel-btn" class="btn btn-sm" style="background:#c62828;color:#fff;">Cancel Request</button>' : ''}
+                    <button id="save-btn" class="btn btn-sm">${__('btn_save_changes')}</button>
+                    ${canSend ? `<button id="send-btn" class="btn btn-sm" style="background:#1565c0;color:#fff;">${__('btn_send_to_customer')}</button>` : ''}
+                    ${canConvert ? `<button id="convert-btn" class="btn btn-sm" style="background:#2e7d32;color:#fff;">${__('btn_confirm_create_booking')}</button>` : ''}
+                    ${canCancel ? `<button id="cancel-btn" class="btn btn-sm" style="background:#c62828;color:#fff;">${__('btn_cancel_request')}</button>` : ''}
                 </div>
             </div>
             <div id="action-message" style="margin-top:1rem;"></div>
@@ -139,7 +139,7 @@ async function saveChanges() {
             body: JSON.stringify({ estimatedPrice, adminNotes, serviceCatalogIds })
         });
         if (res.success) {
-            showSuccess('Changes saved.', 'action-message');
+            showSuccess(__('msg_changes_saved'), 'action-message');
             loadRequestDetail();
         } else showError(res.message, 'action-message');
     } catch (e) { showError(e.message, 'action-message'); }
@@ -149,26 +149,26 @@ async function sendToCustomer() {
     try {
         const res = await apiFetch(`/booking-requests/${requestId}/send`, { method: 'POST' });
         if (res.success) {
-            showSuccess('Email sent to customer.', 'action-message');
+            showSuccess(__('msg_email_sent'), 'action-message');
             loadRequestDetail();
         } else showError(res.message, 'action-message');
     } catch (e) { showError(e.message, 'action-message'); }
 }
 
 async function adminConfirm() {
-    if (!confirm('Create a booking from this request? This will create a client and booking.')) return;
+    if (!confirm(__('msg_confirm_create_booking'))) return;
     try {
         const res = await apiFetch(`/booking-requests/${requestId}/confirm`, { method: 'POST' });
         if (res.success && res.data) {
             const booking = res.data;
-            showSuccess(`Booking #${booking.id} created. <a href="booking-detail.html?id=${booking.id}" style="color:#fff;text-decoration:underline;">View booking</a>`, 'action-message');
+            showSuccess(`${__('msg_booking_created')} <a href="booking-detail.html?id=${booking.id}" style="color:#fff;text-decoration:underline;">${__('btn_view')}</a>`, 'action-message');
             loadRequestDetail();
         } else showError(res.message, 'action-message');
     } catch (e) { showError(e.message, 'action-message'); }
 }
 
 async function adminCancel() {
-    if (!confirm('Cancel this request?')) return;
+    if (!confirm(__('msg_confirm_cancel_request_title'))) return;
     try {
         const res = await apiFetch(`/booking-requests/${requestId}/status`, {
             method: 'PUT',
@@ -176,7 +176,7 @@ async function adminCancel() {
         });
         // Fallback: the API might not have a direct cancel endpoint; use generic update
         if (res.success) {
-            showSuccess('Request cancelled.', 'action-message');
+            showSuccess(__('msg_request_cancelled'), 'action-message');
             loadRequestDetail();
         } else {
             // Try direct status update via update endpoint
@@ -189,8 +189,9 @@ async function adminCancel() {
                 })
             });
             if (res2.success) {
-                showSuccess('Request cancelled.', 'action-message');
-                loadRequestDetail();
+                showSuccess(__('msg_request_cancelled'), 'action-message');
+loadRequestDetail();
+window.addEventListener('i18nReady', function () { loadRequestDetail(); });
             } else showError(res2.message, 'action-message');
         }
     } catch (e) { showError(e.message, 'action-message'); }

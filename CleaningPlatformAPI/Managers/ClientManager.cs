@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Mapping;
 
@@ -12,8 +14,10 @@ public class ClientManager
     private static readonly string[] AllowedSiteTypes = ["Office", "Stairwell", "Garage", "Facility", "Boat", "Vehicle", "Other"];
 
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public ClientManager(AppDbContext db) { _db = db; }
+    public ClientManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
+            _localizer = localizer;}
 
     public async Task<PagedResult<ClientResponse>> GetAllAsync(
         PaginationParams pagination,

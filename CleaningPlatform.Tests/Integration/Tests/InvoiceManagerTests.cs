@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
@@ -15,7 +16,7 @@ public class InvoiceManagerTests : TestBase
     public async Task GetAllAsync_ReturnsPagedResults()
     {
         using var db = CreateDbContext();
-        var manager = new InvoiceManager(db);
+        var manager = new InvoiceManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetAllAsync(new PaginationParams());
 
@@ -26,7 +27,7 @@ public class InvoiceManagerTests : TestBase
     public async Task GetByIdAsync_ExistingInvoice_ReturnsDetail()
     {
         using var db = CreateDbContext();
-        var manager = new InvoiceManager(db);
+        var manager = new InvoiceManager(db, NullStringLocalizer<SharedResources>.Instance);
         var all = await manager.GetAllAsync(new PaginationParams());
 
         all.Items.Should().NotBeEmpty("seed data must exist for this test to be meaningful");
@@ -41,7 +42,7 @@ public class InvoiceManagerTests : TestBase
     public async Task GetByIdAsync_MissingInvoice_ReturnsFail()
     {
         using var db = CreateDbContext();
-        var manager = new InvoiceManager(db);
+        var manager = new InvoiceManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetByIdAsync(-1);
 
@@ -52,7 +53,7 @@ public class InvoiceManagerTests : TestBase
     public async Task RecordPaymentAsync_AddsPayment()
     {
         using var db = CreateDbContext();
-        var manager = new InvoiceManager(db);
+        var manager = new InvoiceManager(db, NullStringLocalizer<SharedResources>.Instance);
         var all = await manager.GetAllAsync(new PaginationParams());
 
         all.Items.Should().NotBeEmpty("seed data must exist for this test to be meaningful");
@@ -73,7 +74,7 @@ public class InvoiceManagerTests : TestBase
     public async Task UpdateStatusAsync_ValidTransition_Succeeds()
     {
         using var db = CreateDbContext();
-        var manager = new InvoiceManager(db);
+        var manager = new InvoiceManager(db, NullStringLocalizer<SharedResources>.Instance);
         var all = await manager.GetAllAsync(new PaginationParams());
 
         all.Items.Should().NotBeEmpty("seed data must exist for this test to be meaningful");

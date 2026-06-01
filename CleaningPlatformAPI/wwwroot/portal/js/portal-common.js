@@ -1,10 +1,10 @@
 // portal-common.js — shared portal UI helpers, nav, real JWT auth
 
 const portalNav = [
-    { label: 'Dashboard', href: 'index.html' },
-    { label: 'Bookings', href: 'bookings.html' },
-    { label: 'Invoices', href: 'invoices.html' },
-    { label: 'Profile', href: 'profile.html' },
+    { labelKey: 'nav_dashboard', label: 'Dashboard', href: 'index.html' },
+    { labelKey: 'nav_bookings', label: 'Bookings', href: 'bookings.html' },
+    { labelKey: 'nav_invoices', label: 'Invoices', href: 'invoices.html' },
+    { labelKey: 'nav_profile', label: 'Profile', href: 'profile.html' },
 ];
 
 function renderPortalNav() {
@@ -14,7 +14,7 @@ function renderPortalNav() {
     let html = '<div class="nav-inner">';
     portalNav.forEach(item => {
         const active = location.pathname.endsWith(item.href) ? ' active' : '';
-        html += `<a href="${item.href}" class="nav-tab${active}">${item.label}</a>`;
+        html += `<a href="${item.href}" class="nav-tab${active}">${window.__(item.labelKey) || item.label}</a>`;
     });
     html += '</div>';
     nav.innerHTML = html;
@@ -83,7 +83,7 @@ function formatDate(dateStr) {
 
 function statusBadge(status) {
     var cls = status.toLowerCase();
-    return '<span class="badge badge-' + cls + '">' + status + '</span>';
+    return '<span class="badge badge-' + cls + '">' + window.__status(status) + '</span>';
 }
 
 function formatTime(hour) {
@@ -116,6 +116,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.addEventListener('click', logout);
+});
+
+window.addEventListener('i18nReady', function () {
+    var nav = document.getElementById('portal-nav');
+    if (nav) renderPortalNav();
 });
 
 function showError(message, containerId) {

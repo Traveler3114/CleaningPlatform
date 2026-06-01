@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Daily View — Cleaning Platform</title>
+    <title data-i18n="page_admin_daily">Daily View — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,9 +12,9 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong>Daily View</strong></div>
+            <div class="breadcrumb"><strong data-i18n="nav_daily_view">Daily View</strong></div>
         </div>
-        <div class="header-right">
+        <div class="header-right"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <div class="user-info">
                 <div class="user-avatar">U</div>
                 <div class="user-details">
@@ -22,25 +22,25 @@
                     <span class="user-role"></span>
                 </div>
             </div>
-            <button id="logout-btn" class="logout-btn">Sign out</button>
+            <button id="logout-btn" class="logout-btn" data-i18n="nav_sign_out">Sign out</button>
         </div>
     </header>
 <main class="admin-main">
     <div class="page-header">
         
         <div class="date-form">
-            <label for="selected-date">Date</label>
+            <label for="selected-date" data-i18n="label_date">Date</label>
             <input type="date" id="selected-date" class="date-input" />
         </div>
     </div>
     <div id="error-container"></div>
     <section class="kpi-grid" id="kpi-grid"></section>
     <section class="detail-section">
-        <h2 class="section-title">Bookings</h2>
+        <h2 class="section-title" data-i18n="section_bookings">Bookings</h2>
         <div id="bookings-table"></div>
     </section>
     <section class="detail-section">
-        <h2 class="section-title">Slots</h2>
+        <h2 class="section-title" data-i18n="section_slots">Slots</h2>
         <div id="slots-table"></div>
     </section>
 </main>
@@ -49,5 +49,6 @@
 <script src="/admin/js/admin-common.js"></script>
 <script src="/admin/js/dashboard.js"></script>
 </div>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

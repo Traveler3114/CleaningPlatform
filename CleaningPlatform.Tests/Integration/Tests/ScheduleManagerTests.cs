@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using FluentAssertions;
@@ -11,7 +12,7 @@ public class ScheduleManagerTests : TestBase
     public async Task GetScheduleAsync_ReturnsSchedule()
     {
         using var db = CreateDbContext();
-        var manager = new ScheduleManager(db);
+        var manager = new ScheduleManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetScheduleAsync();
 
@@ -22,7 +23,7 @@ public class ScheduleManagerTests : TestBase
     public async Task UpdateDay_Workflow()
     {
         using var db = CreateDbContext();
-        var manager = new ScheduleManager(db);
+        var manager = new ScheduleManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var updateResult = await manager.UpdateDayAsync(5, new UpdateWeeklyScheduleRequest
         {

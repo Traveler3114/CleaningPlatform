@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chistify — Professional Cleaning Services</title>
+    <title data-i18n="page_public_home">Chistify — Professional Cleaning Services</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
@@ -12,7 +12,7 @@
 <body>
 
 <header class="site-header">
-    <div class="header-inner">
+    <div class="header-inner"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>>
         <a href="/public/index.html" class="site-logo">Chistify</a>
 <nav class="site-nav" id="site-nav"></nav>
         <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">☰</button>
@@ -21,14 +21,14 @@
 
 <section class="hero">
     <div class="hero-inner">
-        <div class="hero-badge">Professional Cleaning Services</div>
-        <h1 class="serif">Spotless Results,<br>Every Time</h1>
+        <div class="hero-badge" data-i18n="hero_badge">Professional Cleaning Services</div>
+        <h1 class="serif" data-i18n="hero_title">Spotless Results,<br>Every Time</h1>
         <p>Book your cleaning appointment online in minutes. We handle vehicles, offices, stairwells, boats, and more — done right, done professionally.</p>
         <div class="hero-stats">
-            <div class="hero-stat"><strong>500+</strong><span>Happy Clients</span></div>
-            <div class="hero-stat"><strong>5★</strong><span>Rated Service</span></div>
-            <div class="hero-stat"><strong>Same Day</strong><span>Availability</span></div>
-            <div class="hero-stat"><strong>10+ yrs</strong><span>Experience</span></div>
+            <div class="hero-stat"><strong>500+</strong><span data-i18n="hero_stat_clients">Happy Clients</span></div>
+            <div class="hero-stat"><strong>5★</strong><span data-i18n="hero_stat_rating">Rated Service</span></div>
+            <div class="hero-stat"><strong data-i18n="hero_stat_sameday">Same Day</strong><span data-i18n="hero_stat_availability">Availability</span></div>
+            <div class="hero-stat"><strong>10+ yrs</strong><span data-i18n="hero_stat_experience">Experience</span></div>
         </div>
     </div>
 </section>
@@ -36,15 +36,15 @@
 <section>
     <div class="section">
         <div class="section-header">
-            <div class="section-label">Why Us</div>
-            <h2 class="serif">Cleaning Done Right</h2>
+            <div class="section-label" data-i18n="section_why_us">Why Us</div>
+            <h2 class="serif" data-i18n="section_why_title">Cleaning Done Right</h2>
             <p>We combine professional-grade equipment, trained staff, and a streamlined booking system to deliver results you can count on.</p>
         </div>
         <div class="features-grid">
-            <div class="feature-card"><span class="feature-icon">🧹</span><h3>Professional Equipment</h3><p>We use industry-grade tools and eco-friendly products for a deep, lasting clean on every job.</p></div>
-            <div class="feature-card"><span class="feature-icon">⏱️</span><h3>On Time, Every Time</h3><p>Your time is valuable. We show up when scheduled and complete jobs efficiently without cutting corners.</p></div>
-            <div class="feature-card"><span class="feature-icon">📱</span><h3>Easy Online Booking</h3><p>Book your slot in minutes, pick your service, choose a time — no phone calls required.</p></div>
-            <div class="feature-card"><span class="feature-icon">✅</span><h3>Satisfaction Guaranteed</h3><p>Not happy with the result? We'll come back and make it right. Your satisfaction is our priority.</p></div>
+            <div class="feature-card"><span class="feature-icon">🧹</span><h3 data-i18n="feature_equipment_title">Professional Equipment</h3><p data-i18n="feature_equipment_desc">We use industry-grade tools and eco-friendly products for a deep, lasting clean on every job.</p></div>
+            <div class="feature-card"><span class="feature-icon">⏱️</span><h3 data-i18n="feature_ontime_title">On Time, Every Time</h3><p data-i18n="feature_ontime_desc">Your time is valuable. We show up when scheduled and complete jobs efficiently without cutting corners.</p></div>
+            <div class="feature-card"><span class="feature-icon">📱</span><h3 data-i18n="feature_easybook_title">Easy Online Booking</h3><p data-i18n="feature_easybook_desc">Book your slot in minutes, pick your service, choose a time — no phone calls required.</p></div>
+            <div class="feature-card"><span class="feature-icon">✅</span><h3 data-i18n="feature_guarantee_title">Satisfaction Guaranteed</h3><p data-i18n="feature_guarantee_desc">Not happy with the result? We'll come back and make it right. Your satisfaction is our priority.</p></div>
         </div>
     </div>
 </section>
@@ -56,7 +56,7 @@
             <p>Professional cleaning services for individuals. Vehicle washing, office and stairwell cleaning, boats, and more — done right, every time.</p>
         </div>
         <div class="footer-col">
-            <h4>Services</h4>
+            <h4 data-i18n="footer_services">Services</h4>
             <a href="/public/services.html">Vehicle Washing</a>
             <a href="/public/services.html">Office Cleaning</a>
             <a href="/public/services.html">Stairwell Cleaning</a>
@@ -64,19 +64,20 @@
             <a href="/public/services.html">All Services</a>
         </div>
         <div class="footer-col">
-            <h4>Contact</h4>
+            <h4 data-i18n="footer_contact">Contact</h4>
             <p>📞 +385 XX XXX XXXX</p>
             <p>✉️ info@Chistify.hr</p>
             <p>📍 Zagreb, Croatia</p>
             <p>Mon–Fri: 08:00–17:00</p>
             <p>Sat: 09:00–14:00</p>
-            <a href="/admin/login.html" style="display:inline-block;margin-top:0.5rem;color:inherit;text-decoration:underline;font-size:0.8rem;opacity:0.6;">Staff Login</a>
+            <a href="/admin/login.html" style="display:inline-block;margin-top:0.5rem;color:inherit;text-decoration:underline;font-size:0.8rem;opacity:0.6;"><span data-i18n="nav_staff_login">Staff Login</span></a>
         </div>
     </div>
-    <div class="footer-bottom"><p>&copy; 2025 Chistify. All rights reserved.</p></div>
+    <div class="footer-bottom"><p data-i18n="footer_copyright">&copy; 2025 Chistify. All rights reserved.</p></div>
 </footer>
 
 <script src="/public/js/shared.js"></script>
+<script src="/js/i18n.js"></script>
 </body>
 </html>
 

@@ -37,21 +37,21 @@ async function loadTemplates() {
 
 function renderTemplates() {
     if (!templates.length) {
-        document.getElementById('sops-list').innerHTML = '<div class="alert alert-info">No SOP templates found.</div>';
+        document.getElementById('sops-list').innerHTML = '<div class="alert alert-info">' + __('empty_no_templates_found') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>Name</th><th>Service Type</th><th>Linked Service</th><th>Active</th><th>Checklist</th><th>Actions</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_name') + '</th><th>' + __('th_service_type') + '</th><th>' + __('th_linked_service') + '</th><th>' + __('th_active') + '</th><th>' + __('th_checklist') + '</th><th>' + __('th_actions') + '</th></tr></thead><tbody>';
     templates.forEach(t => {
         html += `<tr class="sop-row" data-id="${t.id}" data-name="${t.name}" data-description="${t.description || ''}" data-active="${t.isActive}" data-service-type="${t.serviceType}" data-service-catalog-id="${t.serviceCatalogId || ''}" style="cursor:pointer;">
             <td>${t.name}</td>
             <td>${t.serviceType}</td>
             <td>${t.serviceCatalogName || '-'}</td>
-            <td>${t.isActive ? 'Yes' : 'No'}</td>
+            <td>${t.isActive ? __('ui_yes') : __('ui_no')}</td>
             <td>${t.checklistItems?.length || 0}</td>
-            <td><button onclick="deleteTemplate(${t.id})" class="btn btn-sm">Deactivate</button></td>
+            <td><button onclick="deleteTemplate(${t.id})" class="btn btn-sm">${__('btn_deactivate')}</button></td>
         </tr>`;
         // Checklist items row
-        html += `<tr><td colspan="6"><strong>Checklist items</strong>`;
+        html += `<tr><td colspan="6"><strong>${__('th_checklist') + ' items'}</strong>`;
         if (t.checklistItems && t.checklistItems.length) {
             html += `<div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin:0.5rem 0;">`;
             t.checklistItems.forEach(item => {
@@ -66,7 +66,7 @@ function renderTemplates() {
                     <input type="text" name="itemText" class="text-input" placeholder="New checklist item" />
                     <input type="number" name="sortOrder" class="small-input" placeholder="Order" />
                     <label><input type="checkbox" name="isRequired" /> Required</label>
-                    <button type="submit" class="btn btn-sm">Add item</button>
+                    <button type="submit" class="btn btn-sm">${__('btn_add_item')}</button>
                 </form>`;
         html += `</td></tr>`;
     });
@@ -93,7 +93,7 @@ async function createTemplate(e) {
     try {
         const res = await apiFetch('/sops', { method: 'POST', body: JSON.stringify(payload) });
         if (res.success) {
-            showSuccess('Template created');
+            showSuccess(__('msg_template_created'));
             document.getElementById('create-template-form').reset();
             loadTemplates();
         } else showError(res.message);
@@ -123,7 +123,7 @@ async function updateTemplate(e) {
     try {
         const res = await apiFetch(`/sops/${editingTemplateId}`, { method: 'PUT', body: JSON.stringify(payload) });
         if (res.success) {
-            showSuccess('Template updated');
+            showSuccess(__('msg_template_updated'));
             closeSopModal();
             loadTemplates();
         } else showError(res.message);
@@ -131,11 +131,11 @@ async function updateTemplate(e) {
 }
 
 async function deleteTemplate(id) {
-    if (!confirm('Deactivate this SOP template? It will no longer be usable for new bookings.')) return;
+    if (!confirm(__('msg_confirm_deactivate_template'))) return;
     try {
         const res = await apiFetch(`/sops/${id}`, { method: 'DELETE' });
         if (res.success) {
-            showSuccess('Template deactivated');
+            showSuccess(__('msg_template_deactivated'));
             loadTemplates();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -143,7 +143,7 @@ async function deleteTemplate(id) {
 
 async function addChecklistItem(templateId, form) {
     const itemText = form.itemText.value;
-    if (!itemText) { showError('Item text required'); return; }
+    if (!itemText) { showError(__('msg_item_text_required')); return; }
     const payload = {
         itemText: itemText,
         sortOrder: parseInt(form.sortOrder.value) || 0,
@@ -152,18 +152,18 @@ async function addChecklistItem(templateId, form) {
     try {
         const res = await apiFetch(`/sops/${templateId}/items`, { method: 'POST', body: JSON.stringify(payload) });
         if (res.success) {
-            showSuccess('Item added');
+            showSuccess(__('msg_item_added'));
             loadTemplates();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
 }
 
 async function deleteChecklistItem(itemId) {
-    if (!confirm('Remove this checklist item?')) return;
+    if (!confirm(__('msg_confirm_remove_item'))) return;
     try {
         const res = await apiFetch(`/sops/items/${itemId}`, { method: 'DELETE' });
         if (res.success) {
-            showSuccess('Item removed');
+            showSuccess(__('msg_item_removed'));
             loadTemplates();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -177,3 +177,4 @@ document.getElementById('sop-delete-form').addEventListener('submit', (e) => { e
 
 loadServicesForSelect();
 loadTemplates();
+window.addEventListener('i18nReady', function () { loadTemplates(); });

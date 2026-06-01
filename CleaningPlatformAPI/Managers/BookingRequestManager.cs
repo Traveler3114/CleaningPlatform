@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
@@ -14,14 +16,16 @@ public class BookingRequestManager
     private readonly AppDbContext _db;
     private readonly EmailService _email;
     private readonly TokenManager _tokenManager;
+    private readonly IStringLocalizer<SharedResources> _localizer;
     private readonly IConfiguration _config;
 
-    public BookingRequestManager(AppDbContext db, EmailService email, TokenManager tokenManager, IConfiguration config)
+    public BookingRequestManager(AppDbContext db, EmailService email, TokenManager tokenManager, IConfiguration config, IStringLocalizer<SharedResources> localizer)
     {
         _db = db;
         _email = email;
         _tokenManager = tokenManager;
         _config = config;
+            _localizer = localizer;
     }
 
     public async Task<PagedResult<BookingRequestResponse>> GetAllAsync(
@@ -63,7 +67,7 @@ public class BookingRequestManager
     public async Task<OperationResult<BookingRequestResponse>> CreateAsync(CreateBookingRequestRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ContactName))
-            return OperationResult<BookingRequestResponse>.Fail("Contact name is required.");
+            return OperationResult<BookingRequestResponse>.Fail(_localizer["err_contact_name_required"]);
         if (string.IsNullOrWhiteSpace(dto.Phone))
             return OperationResult<BookingRequestResponse>.Fail("Phone number is required.");
         if (string.IsNullOrWhiteSpace(dto.Email))
@@ -202,7 +206,7 @@ public class BookingRequestManager
     {
         var principal = _tokenManager.ValidateBookingRequestToken(token);
         if (principal is null)
-            return OperationResult<CustomerPreviewResponse>.Fail("Invalid or expired token.");
+            return OperationResult<CustomerPreviewResponse>.Fail(_localizer["err_invalid_expired_token"]);
 
         var requestIdClaim = principal.FindFirst("booking_request_id")?.Value;
         if (requestIdClaim is null || !int.TryParse(requestIdClaim, out var requestId))
@@ -225,7 +229,7 @@ public class BookingRequestManager
     {
         var principal = _tokenManager.ValidateBookingRequestToken(token);
         if (principal is null)
-            return OperationResult<string>.Fail("Invalid or expired token.");
+            return OperationResult<string>.Fail(_localizer["err_invalid_expired_token"]);
 
         var requestIdClaim = principal.FindFirst("booking_request_id")?.Value;
         if (requestIdClaim is null || !int.TryParse(requestIdClaim, out var requestId))
@@ -255,7 +259,7 @@ public class BookingRequestManager
     {
         var principal = _tokenManager.ValidateBookingRequestToken(token);
         if (principal is null)
-            return OperationResult<string>.Fail("Invalid or expired token.");
+            return OperationResult<string>.Fail(_localizer["err_invalid_expired_token"]);
 
         var requestIdClaim = principal.FindFirst("booking_request_id")?.Value;
         if (requestIdClaim is null || !int.TryParse(requestIdClaim, out var requestId))

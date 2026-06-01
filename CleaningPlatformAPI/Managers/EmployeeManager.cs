@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
@@ -9,8 +11,10 @@ namespace CleaningPlatformAPI.Managers;
 public class EmployeeManager
 {
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public EmployeeManager(AppDbContext db) { _db = db; }
+    public EmployeeManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
+            _localizer = localizer;}
 
     public async Task<List<UserResponse>> GetAllUsersAsync(CancellationToken ct = default)
     {

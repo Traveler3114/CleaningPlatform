@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Contracts;
@@ -9,8 +10,9 @@ namespace CleaningPlatformAPI.Managers;
 public class AvailabilityManager
 {
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public AvailabilityManager(AppDbContext db) { _db = db; }
+    public AvailabilityManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; _localizer = localizer; }
 
     public async Task<List<AvailabilityResponse>> GetSlotsAsync(DateTime date, CancellationToken ct = default)
     {

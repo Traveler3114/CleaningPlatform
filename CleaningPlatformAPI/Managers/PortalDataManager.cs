@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
@@ -11,8 +13,10 @@ namespace CleaningPlatformAPI.Managers;
 public class PortalDataManager
 {
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public PortalDataManager(AppDbContext db) { _db = db; }
+    public PortalDataManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
+            _localizer = localizer;}
 
     public async Task<OperationResult<PortalDashboardResponse>> GetDashboardAsync(int clientId, CancellationToken ct = default)
     {

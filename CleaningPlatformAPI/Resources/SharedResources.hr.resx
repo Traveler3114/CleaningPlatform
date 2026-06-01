@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter</value></resheader>
+
+  <data name="nav_daily_view" xml:space="preserve"><value>Dnevni pregled</value></data>
+  <data name="nav_calendar" xml:space="preserve"><value>Kalendar</value></data>
+  <data name="nav_bookings" xml:space="preserve"><value>Rezervacije</value></data>
+  <data name="nav_requests" xml:space="preserve"><value>Zahtjevi</value></data>
+  <data name="nav_recurring" xml:space="preserve"><value>Ponavljajuće</value></data>
+  <data name="nav_invoices" xml:space="preserve"><value>Računi</value></data>
+  <data name="nav_clients" xml:space="preserve"><value>Klijenti</value></data>
+  <data name="nav_client_list" xml:space="preserve"><value>Popis klijenata</value></data>
+  <data name="nav_schedule" xml:space="preserve"><value>Raspored</value></data>
+  <data name="nav_services" xml:space="preserve"><value>Usluge</value></data>
+  <data name="nav_sops" xml:space="preserve"><value>SOP-ovi</value></data>
+  <data name="nav_users" xml:space="preserve"><value>Korisnici</value></data>
+  <data name="nav_roles" xml:space="preserve"><value>Uloge</value></data>
+  <data name="nav_reports" xml:space="preserve"><value>Izvještaji</value></data>
+  <data name="nav_dashboard" xml:space="preserve"><value>Nadzorna ploča</value></data>
+  <data name="nav_profile" xml:space="preserve"><value>Profil</value></data>
+  <data name="nav_sign_out" xml:space="preserve"><value>Odjava</value></data>
+  <data name="nav_get_quote" xml:space="preserve"><value>Zatraži ponudu</value></data>
+  <data name="nav_sign_in" xml:space="preserve"><value>Prijava</value></data>
+  <data name="nav_back_to_website" xml:space="preserve"><value>&amp;larr; Povratak na web</value></data>
+  <data name="nav_staff_login" xml:space="preserve"><value>Prijava za osoblje</value></data>
+
+  <data name="nav_section_operations" xml:space="preserve"><value>Operacije</value></data>
+  <data name="nav_section_bookings" xml:space="preserve"><value>Rezervacije</value></data>
+  <data name="nav_section_clients" xml:space="preserve"><value>Klijenti</value></data>
+  <data name="nav_section_config" xml:space="preserve"><value>Konfiguracija</value></data>
+  <data name="nav_section_admin" xml:space="preserve"><value>Admin</value></data>
+
+  <data name="page_admin_daily" xml:space="preserve"><value>Dnevni pregled — Cleaning Platform</value></data>
+  <data name="page_admin_calendar" xml:space="preserve"><value>Kalendar — Cleaning Platform</value></data>
+  <data name="page_admin_bookings" xml:space="preserve"><value>Rezervacije — Cleaning Platform</value></data>
+  <data name="page_admin_booking_detail" xml:space="preserve"><value>Detalji rezervacije — Cleaning Platform</value></data>
+  <data name="page_admin_clients" xml:space="preserve"><value>Klijenti — Cleaning Platform</value></data>
+  <data name="page_admin_client_detail" xml:space="preserve"><value>Detalji klijenta — Cleaning Platform</value></data>
+  <data name="page_admin_invoices" xml:space="preserve"><value>Računi — Cleaning Platform</value></data>
+  <data name="page_admin_invoice_detail" xml:space="preserve"><value>Detalji računa — Cleaning Platform</value></data>
+  <data name="page_admin_recurring" xml:space="preserve"><value>Ponavljajuće — Cleaning Platform</value></data>
+  <data name="page_admin_reports" xml:space="preserve"><value>Izvještaji — Cleaning Platform</value></data>
+  <data name="page_admin_requests" xml:space="preserve"><value>Zahtjevi — Cleaning Platform</value></data>
+  <data name="page_admin_request_detail" xml:space="preserve"><value>Detalji zahtjeva — Cleaning Platform</value></data>
+  <data name="page_admin_roles" xml:space="preserve"><value>Uloge — Cleaning Platform</value></data>
+  <data name="page_admin_schedule" xml:space="preserve"><value>Raspored — Cleaning Platform</value></data>
+  <data name="page_admin_services" xml:space="preserve"><value>Usluge — Cleaning Platform</value></data>
+  <data name="page_admin_sops" xml:space="preserve"><value>SOP-ovi — Cleaning Platform</value></data>
+  <data name="page_admin_users" xml:space="preserve"><value>Korisnici — Cleaning Platform</value></data>
+  <data name="page_admin_profile" xml:space="preserve"><value>Profil — Cleaning Platform</value></data>
+  <data name="page_admin_login" xml:space="preserve"><value>Admin prijava — Cleaning Platform</value></data>
+  <data name="page_public_home" xml:space="preserve"><value>Chistify — Profesionalne usluge čišćenja</value></data>
+  <data name="page_public_services" xml:space="preserve"><value>Naše usluge — Chistify</value></data>
+  <data name="page_public_book" xml:space="preserve"><value>Rezerviraj čišćenje — Chistify</value></data>
+  <data name="page_public_confirm" xml:space="preserve"><value>Zahtjevi — Chistify</value></data>
+  <data name="page_portal_dashboard" xml:space="preserve"><value>Nadzorna ploča — Klijentski portal</value></data>
+  <data name="page_portal_bookings" xml:space="preserve"><value>Moje rezervacije — Klijentski portal</value></data>
+  <data name="page_portal_booking_detail" xml:space="preserve"><value>Detalji rezervacije — Klijentski portal</value></data>
+  <data name="page_portal_invoices" xml:space="preserve"><value>Moji računi — Klijentski portal</value></data>
+  <data name="page_portal_invoice_detail" xml:space="preserve"><value>Detalji računa — Klijentski portal</value></data>
+  <data name="page_portal_profile" xml:space="preserve"><value>Moj profil — Klijentski portal</value></data>
+  <data name="page_portal_login" xml:space="preserve"><value>Prijava klijenta — Chistify</value></data>
+
+  <data name="section_bookings" xml:space="preserve"><value>Rezervacije</value></data>
+  <data name="section_slots" xml:space="preserve"><value>Termini</value></data>
+  <data name="section_my_bookings" xml:space="preserve"><value>Moje rezervacije</value></data>
+  <data name="section_my_invoices" xml:space="preserve"><value>Moji računi</value></data>
+  <data name="section_upcoming_bookings" xml:space="preserve"><value>Nadolazeće rezervacije</value></data>
+  <data name="section_recent_invoices" xml:space="preserve"><value>Nedavni računi</value></data>
+  <data name="section_generate_invoice" xml:space="preserve"><value>Generiraj iz rezervacije</value></data>
+  <data name="section_welcome_back" xml:space="preserve"><value>Dobrodošli natrag</value></data>
+  <data name="section_tell_us" xml:space="preserve"><value>Recite nam što trebate</value></data>
+  <data name="section_booking_detail" xml:space="preserve"><value>Detalji rezervacije</value></data>
+  <data name="section_invoice_detail" xml:space="preserve"><value>Detalji računa</value></data>
+  <data name="section_request_detail" xml:space="preserve"><value>Detalji zahtjeva</value></data>
+  <data name="section_client_detail" xml:space="preserve"><value>Detalji klijenta</value></data>
+  <data name="section_services" xml:space="preserve"><value>Usluge</value></data>
+  <data name="section_employee_schedule" xml:space="preserve"><value>Raspored zaposlenika</value></data>
+  <data name="section_notes" xml:space="preserve"><value>Bilješke</value></data>
+  <data name="section_sop_checklist" xml:space="preserve"><value>SOP kontrolna lista</value></data>
+  <data name="section_assigned_employees" xml:space="preserve"><value>Dodijeljeni zaposlenici</value></data>
+  <data name="section_payments" xml:space="preserve"><value>Plaćanja</value></data>
+  <data name="section_services_included" xml:space="preserve"><value>Uključene usluge</value></data>
+  <data name="section_permissions" xml:space="preserve"><value>Dozvole</value></data>
+
+  <data name="hero_badge" xml:space="preserve"><value>Profesionalne usluge čišćenja</value></data>
+  <data name="hero_title" xml:space="preserve"><value>Besprijekorni rezultati,&lt;br&gt;Svaki put</value></data>
+  <data name="hero_subtitle" xml:space="preserve"><value>Rezervirajte termin za čišćenje online u nekoliko minuta. Čistimo vozila, urede, stubišta, brodove i više — kvalitetno i profesionalno.</value></data>
+  <data name="hero_stat_clients" xml:space="preserve"><value>Zadovoljnih klijenata</value></data>
+  <data name="hero_stat_rating" xml:space="preserve"><value>Ocijenjena usluga</value></data>
+  <data name="hero_stat_availability" xml:space="preserve"><value>Dostupnost</value></data>
+  <data name="hero_stat_experience" xml:space="preserve"><value>Iskustvo</value></data>
+  <data name="hero_stat_sameday" xml:space="preserve"><value>Isti dan</value></data>
+  <data name="section_why_us" xml:space="preserve"><value>Zašto mi</value></data>
+  <data name="section_why_title" xml:space="preserve"><value>Čišćenje kako treba</value></data>
+  <data name="section_why_subtitle" xml:space="preserve"><value>Kombiniramo profesionalnu opremu, obučeno osoblje i jednostavan sustav rezervacija za rezultate na koje se možete osloniti.</value></data>
+
+  <data name="feature_equipment_title" xml:space="preserve"><value>Profesionalna oprema</value></data>
+  <data name="feature_equipment_desc" xml:space="preserve"><value>Koristimo vrhunske alate i ekološki prihvatljive proizvode za dubinsko i trajno čišćenje.</value></data>
+  <data name="feature_ontime_title" xml:space="preserve"><value>Na vrijeme, svaki put</value></data>
+  <data name="feature_ontime_desc" xml:space="preserve"><value>Vaše vrijeme je dragocjeno. Dolazimo prema dogovoru i završavamo posao učinkovito.</value></data>
+  <data name="feature_easybook_title" xml:space="preserve"><value>Jednostavna online rezervacija</value></data>
+  <data name="feature_easybook_desc" xml:space="preserve"><value>Rezervirajte termin u minutama, odaberite uslugu i vrijeme — bez potrebe za pozivom.</value></data>
+  <data name="feature_guarantee_title" xml:space="preserve"><value>Zajamčeno zadovoljstvo</value></data>
+  <data name="feature_guarantee_desc" xml:space="preserve"><value>Niste zadovoljni? Vratit ćemo se i popraviti. Vaše zadovoljstvo nam je prioritet.</value></data>
+
+  <data name="footer_description" xml:space="preserve"><value>Profesionalne usluge čišćenja za pojedince. Pranje vozila, čišćenje ureda i stubišta, brodova i više — kvalitetno i pouzdano.</value></data>
+  <data name="footer_services" xml:space="preserve"><value>Usluge</value></data>
+  <data name="footer_contact" xml:space="preserve"><value>Kontakt</value></data>
+  <data name="footer_all_services" xml:space="preserve"><value>Sve usluge</value></data>
+  <data name="footer_copyright" xml:space="preserve"><value>&amp;copy; 2025 Chistify. Sva prava pridržana.</value></data>
+  <data name="footer_portal_copyright" xml:space="preserve"><value>&amp;copy; 2026 Chistify. Sva prava pridržana.</value></data>
+
+  <data name="btn_save" xml:space="preserve"><value>Spremi</value></data>
+  <data name="btn_cancel" xml:space="preserve"><value>Odustani</value></data>
+  <data name="btn_create" xml:space="preserve"><value>Kreiraj</value></data>
+  <data name="btn_edit" xml:space="preserve"><value>Uredi</value></data>
+  <data name="btn_delete" xml:space="preserve"><value>Izbriši</value></data>
+  <data name="btn_add" xml:space="preserve"><value>Dodaj</value></data>
+  <data name="btn_assign" xml:space="preserve"><value>Dodijeli</value></data>
+  <data name="btn_generate_invoice" xml:space="preserve"><value>Generiraj račun</value></data>
+  <data name="btn_mark_paid" xml:space="preserve"><value>Označi plaćeno</value></data>
+  <data name="btn_export" xml:space="preserve"><value>Izvoz</value></data>
+  <data name="btn_filter" xml:space="preserve"><value>Filtriraj</value></data>
+  <data name="btn_search" xml:space="preserve"><value>Pretraži</value></data>
+  <data name="btn_refresh" xml:space="preserve"><value>Osvježi</value></data>
+  <data name="btn_create_booking" xml:space="preserve"><value>Kreiraj rezervaciju</value></data>
+  <data name="btn_create_client" xml:space="preserve"><value>Kreiraj klijenta</value></data>
+  <data name="btn_create_invoice" xml:space="preserve"><value>Kreiraj račun</value></data>
+  <data name="btn_create_service" xml:space="preserve"><value>Kreiraj uslugu</value></data>
+  <data name="btn_create_sop" xml:space="preserve"><value>Kreiraj SOP</value></data>
+  <data name="btn_create_user" xml:space="preserve"><value>Kreiraj korisnika</value></data>
+  <data name="btn_create_role" xml:space="preserve"><value>Kreiraj ulogu</value></data>
+  <data name="btn_add_site" xml:space="preserve"><value>Dodaj lokaciju</value></data>
+  <data name="btn_add_override" xml:space="preserve"><value>Dodaj iznimku</value></data>
+  <data name="btn_add_template" xml:space="preserve"><value>Dodaj predložak</value></data>
+  <data name="btn_add_service" xml:space="preserve"><value>Dodaj uslugu</value></data>
+  <data name="btn_select_service" xml:space="preserve"><value>Odaberi uslugu</value></data>
+  <data name="btn_send_request" xml:space="preserve"><value>Pošalji zahtjev</value></data>
+  <data name="btn_send_magic_link" xml:space="preserve"><value>Pošalji magičnu poveznicu</value></data>
+  <data name="btn_confirm" xml:space="preserve"><value>Potvrdi</value></data>
+  <data name="btn_cancel_request" xml:space="preserve"><value>Otkaži zahtjev</value></data>
+  <data name="btn_login" xml:space="preserve"><value>Prijava</value></data>
+  <data name="btn_reset_password" xml:space="preserve"><value>Resetiraj lozinku</value></data>
+  <data name="btn_next" xml:space="preserve"><value>Dalje</value></data>
+  <data name="btn_back" xml:space="preserve"><value>Natrag</value></data>
+  <data name="btn_loading" xml:space="preserve"><value>Učitavanje...</value></data>
+
+  <data name="th_id" xml:space="preserve"><value>ID</value></data>
+  <data name="th_customer" xml:space="preserve"><value>Klijent</value></data>
+  <data name="th_client" xml:space="preserve"><value>Klijent</value></data>
+  <data name="th_date" xml:space="preserve"><value>Datum</value></data>
+  <data name="th_time" xml:space="preserve"><value>Vrijeme</value></data>
+  <data name="th_status" xml:space="preserve"><value>Status</value></data>
+  <data name="th_total" xml:space="preserve"><value>Ukupno</value></data>
+  <data name="th_amount" xml:space="preserve"><value>Iznos</value></data>
+  <data name="th_services" xml:space="preserve"><value>Usluge</value></data>
+  <data name="th_employees" xml:space="preserve"><value>Zaposlenici</value></data>
+  <data name="th_assigned" xml:space="preserve"><value>Dodijeljeno</value></data>
+  <data name="th_name" xml:space="preserve"><value>Ime</value></data>
+  <data name="th_email" xml:space="preserve"><value>Email</value></data>
+  <data name="th_phone" xml:space="preserve"><value>Telefon</value></data>
+  <data name="th_role" xml:space="preserve"><value>Uloga</value></data>
+  <data name="th_created" xml:space="preserve"><value>Kreirano</value></data>
+  <data name="th_actions" xml:space="preserve"><value>Akcije</value></data>
+  <data name="th_type" xml:space="preserve"><value>Tip</value></data>
+  <data name="th_category" xml:space="preserve"><value>Kategorija</value></data>
+  <data name="th_price" xml:space="preserve"><value>Cijena</value></data>
+  <data name="th_items" xml:space="preserve"><value>Stavke</value></data>
+  <data name="th_hours" xml:space="preserve"><value>Sati</value></data>
+  <data name="th_payment" xml:space="preserve"><value>Plaćanje</value></data>
+  <data name="th_due" xml:space="preserve"><value>Dospijeće</value></data>
+  <data name="th_notes" xml:space="preserve"><value>Bilješke</value></data>
+  <data name="th_username" xml:space="preserve"><value>Korisničko ime</value></data>
+  <data name="th_permissions" xml:space="preserve"><value>Dozvole</value></data>
+
+  <data name="kpi_today_bookings" xml:space="preserve"><value>Današnje rezervacije</value></data>
+  <data name="kpi_today_revenue" xml:space="preserve"><value>Današnji prihod</value></data>
+  <data name="kpi_active_clients" xml:space="preserve"><value>Aktivni klijenti</value></data>
+  <data name="kpi_pending_requests" xml:space="preserve"><value>Zahtjevi na čekanju</value></data>
+  <data name="kpi_slots_available" xml:space="preserve"><value>Dostupni termini</value></data>
+  <data name="kpi_employees_working" xml:space="preserve"><value>Zaposlenici na poslu</value></data>
+  <data name="kpi_total_revenue" xml:space="preserve"><value>Ukupni prihod</value></data>
+  <data name="kpi_outstanding" xml:space="preserve"><value>Nenaplaćeno</value></data>
+  <data name="kpi_utilization" xml:space="preserve"><value>Iskorištenost</value></data>
+  <data name="kpi_satisfaction" xml:space="preserve"><value>Zadovoljstvo</value></data>
+
+  <data name="status_pending" xml:space="preserve"><value>Na čekanju</value></data>
+  <data name="status_confirmed" xml:space="preserve"><value>Potvrđeno</value></data>
+  <data name="status_in_progress" xml:space="preserve"><value>U tijeku</value></data>
+  <data name="status_completed" xml:space="preserve"><value>Završeno</value></data>
+  <data name="status_cancelled" xml:space="preserve"><value>Otkazano</value></data>
+  <data name="status_draft" xml:space="preserve"><value>Skica</value></data>
+  <data name="status_sent" xml:space="preserve"><value>Poslano</value></data>
+  <data name="status_partially_paid" xml:space="preserve"><value>Djelomično plaćeno</value></data>
+  <data name="status_paid" xml:space="preserve"><value>Plaćeno</value></data>
+  <data name="status_overdue" xml:space="preserve"><value>Prekoračeno</value></data>
+  <data name="status_written_off" xml:space="preserve"><value>Otpisano</value></data>
+  <data name="status_active" xml:space="preserve"><value>Aktivno</value></data>
+  <data name="status_inactive" xml:space="preserve"><value>Neaktivno</value></data>
+  <data name="status_open" xml:space="preserve"><value>Otvoreno</value></data>
+  <data name="status_closed" xml:space="preserve"><value>Zatvoreno</value></data>
+  <data name="status_full" xml:space="preserve"><value>Puno</value></data>
+  <data name="status_reserved" xml:space="preserve"><value>Rezervirano</value></data>
+  <data name="status_new" xml:space="preserve"><value>Novo</value></data>
+  <data name="status_admin_reviewed" xml:space="preserve"><value>Admin pregledao</value></data>
+  <data name="status_sent_to_customer" xml:space="preserve"><value>Poslano klijentu</value></data>
+  <data name="status_customer_confirmed" xml:space="preserve"><value>Klijent potvrdio</value></data>
+  <data name="status_converted" xml:space="preserve"><value>Pretvoreno</value></data>
+
+  <data name="empty_no_bookings_all" xml:space="preserve"><value>Nema pronađenih rezervacija.</value></data>
+  <data name="empty_no_services" xml:space="preserve"><value>Nema pronađenih usluga.</value></data>
+  <data name="empty_no_clients" xml:space="preserve"><value>Nema pronađenih klijenata.</value></data>
+  <data name="empty_no_requests" xml:space="preserve"><value>Nema pronađenih zahtjeva.</value></data>
+  <data name="empty_no_invoices" xml:space="preserve"><value>Nema pronađenih računa.</value></data>
+  <data name="empty_no_schedule" xml:space="preserve"><value>Nema unosa u rasporedu.</value></data>
+  <data name="empty_no_overrides" xml:space="preserve"><value>Nema definiranih iznimki.</value></data>
+  <data name="empty_no_roles" xml:space="preserve"><value>Nema pronađenih uloga.</value></data>
+  <data name="empty_no_users" xml:space="preserve"><value>Nema pronađenih korisnika.</value></data>
+  <data name="empty_no_data" xml:space="preserve"><value>Nema dostupnih podataka.</value></data>
+  <data name="empty_no_payments" xml:space="preserve"><value>Nema evidentiranih plaćanja.</value></data>
+  <data name="empty_no_recurring" xml:space="preserve"><value>Nema pronađenih ponavljajućih rasporeda.</value></data>
+  <data name="empty_no_templates" xml:space="preserve"><value>Nema pronađenih predložaka.</value></data>
+  <data name="empty_no_bookings_assigned" xml:space="preserve"><value>Nema dodijeljenih rezervacija.</value></data>
+  <data name="empty_no_sites" xml:space="preserve"><value>Nema pronađenih lokacija.</value></data>
+  <data name="empty_no_upcoming" xml:space="preserve"><value>Nema nadolazećih rezervacija.</value></data>
+  <data name="empty_no_invoices_yet" xml:space="preserve"><value>Još nema računa.</value></data>
+  <data name="empty_no_public_services" xml:space="preserve"><value>Trenutno nema dostupnih usluga.</value></data>
+  <data name="empty_no_category" xml:space="preserve"><value>Nema usluga u ovoj kategoriji.</value></data>
+  <data name="empty_loading" xml:space="preserve"><value>Učitavanje...</value></data>
+  <data name="empty_no_sops_assigned" xml:space="preserve"><value>Nema dodijeljenih SOP-ova.</value></data>
+  <data name="empty_no_services_assigned" xml:space="preserve"><value>Nema dodijeljenih usluga.</value></data>
+  <data name="empty_no_contacts" xml:space="preserve"><value>Nema pronađenih kontakata.</value></data>
+  <data name="empty_no_sites_saved" xml:space="preserve"><value>Nema spremljenih lokacija.</value></data>
+
+  <data name="msg_status_updated" xml:space="preserve"><value>Status ažuriran</value></data>
+  <data name="msg_booking_created" xml:space="preserve"><value>Rezervacija kreirana</value></data>
+  <data name="msg_changes_saved" xml:space="preserve"><value>Promjene spremljene.</value></data>
+  <data name="msg_service_updated" xml:space="preserve"><value>Usluga ažurirana</value></data>
+  <data name="msg_service_created" xml:space="preserve"><value>Usluga kreirana</value></data>
+  <data name="msg_service_deleted" xml:space="preserve"><value>Usluga izbrisana</value></data>
+  <data name="msg_client_updated" xml:space="preserve"><value>Klijent ažuriran</value></data>
+  <data name="msg_site_added" xml:space="preserve"><value>Lokacija dodana</value></data>
+  <data name="msg_site_deactivated" xml:space="preserve"><value>Lokacija deaktivirana</value></data>
+  <data name="msg_user_created" xml:space="preserve"><value>Korisnik kreiran</value></data>
+  <data name="msg_password_reset" xml:space="preserve"><value>Lozinka resetirana</value></data>
+  <data name="msg_template_created" xml:space="preserve"><value>Predložak kreiran</value></data>
+  <data name="msg_template_updated" xml:space="preserve"><value>Predložak ažuriran</value></data>
+  <data name="msg_template_deactivated" xml:space="preserve"><value>Predložak deaktiviran</value></data>
+  <data name="msg_item_added" xml:space="preserve"><value>Stavka dodana</value></data>
+  <data name="msg_item_removed" xml:space="preserve"><value>Stavka uklonjena</value></data>
+  <data name="msg_schedule_updated" xml:space="preserve"><value>Raspored ažuriran</value></data>
+  <data name="msg_schedule_added" xml:space="preserve"><value>Raspored dodan</value></data>
+  <data name="msg_schedule_deleted" xml:space="preserve"><value>Raspored izbrisan</value></data>
+  <data name="msg_override_saved" xml:space="preserve"><value>Iznimka spremljena</value></data>
+  <data name="msg_override_deleted" xml:space="preserve"><value>Iznimka izbrisana</value></data>
+  <data name="msg_role_updated" xml:space="preserve"><value>Uloga ažurirana</value></data>
+  <data name="msg_role_created" xml:space="preserve"><value>Uloga kreirana</value></data>
+  <data name="msg_role_deleted" xml:space="preserve"><value>Uloga izbrisana</value></data>
+  <data name="msg_assignment_added" xml:space="preserve"><value>Dodjela dodana</value></data>
+  <data name="msg_assignment_removed" xml:space="preserve"><value>Dodjela uklonjena</value></data>
+  <data name="msg_service_added_booking" xml:space="preserve"><value>Usluga dodana</value></data>
+  <data name="msg_service_removed_booking" xml:space="preserve"><value>Usluga uklonjena</value></data>
+  <data name="msg_price_updated" xml:space="preserve"><value>Cijena ažurirana</value></data>
+  <data name="msg_recurring_created" xml:space="preserve"><value>Ponavljajući raspored kreiran</value></data>
+  <data name="msg_series_ended" xml:space="preserve"><value>Serija završena</value></data>
+  <data name="msg_export_started" xml:space="preserve"><value>Izvoz započet</value></data>
+  <data name="msg_email_sent" xml:space="preserve"><value>Email poslan klijentu.</value></data>
+  <data name="msg_request_cancelled" xml:space="preserve"><value>Zahtjev otkazan.</value></data>
+  <data name="msg_status_updated_user" xml:space="preserve"><value>Status korisnika ažuriran</value></data>
+
+  <data name="msg_select_client" xml:space="preserve"><value>Odaberite klijenta</value></data>
+  <data name="msg_select_employee" xml:space="preserve"><value>Odaberite zaposlenika</value></data>
+  <data name="msg_select_service" xml:space="preserve"><value>Odaberite uslugu</value></data>
+  <data name="msg_enter_booking_id" xml:space="preserve"><value>Unesite ID rezervacije</value></data>
+  <data name="msg_enter_valid_amount" xml:space="preserve"><value>Unesite važeći iznos</value></data>
+  <data name="msg_role_name_required" xml:space="preserve"><value>Naziv uloge je obavezan</value></data>
+  <data name="msg_item_text_required" xml:space="preserve"><value>Tekst stavke je obavezan</value></data>
+  <data name="msg_failed_bookings" xml:space="preserve"><value>Neuspjelo učitavanje rezervacija.</value></data>
+  <data name="msg_failed_slots" xml:space="preserve"><value>Neuspjelo učitavanje termina.</value></data>
+  <data name="msg_failed_dashboard" xml:space="preserve"><value>Neuspjelo učitavanje nadzorne ploče</value></data>
+  <data name="msg_failed_bookings_load" xml:space="preserve"><value>Neuspjelo učitavanje rezervacija. Pokušajte ponovno.</value></data>
+  <data name="msg_failed_invoices_load" xml:space="preserve"><value>Neuspjelo učitavanje računa.</value></data>
+  <data name="msg_failed_profile" xml:space="preserve"><value>Neuspjelo učitavanje profila</value></data>
+  <data name="msg_enter_email" xml:space="preserve"><value>Unesite vašu email adresu.</value></data>
+  <data name="msg_something_wrong" xml:space="preserve"><value>Nešto je pošlo po krivu.</value></data>
+  <data name="msg_could_not_connect" xml:space="preserve"><value>Ne mogu se spojiti na poslužitelj. Pokušajte ponovno.</value></data>
+  <data name="msg_invalid_booking_id" xml:space="preserve"><value>Nevažeći ID rezervacije.</value></data>
+  <data name="msg_invalid_invoice_id" xml:space="preserve"><value>Nevažeći ID računa.</value></data>
+  <data name="msg_network_error" xml:space="preserve"><value>Greška u mreži. Pokušajte ponovno.</value></data>
+  <data name="msg_add_service_first" xml:space="preserve"><value>Dodajte barem jednu uslugu.</value></data>
+  <data name="msg_enter_name" xml:space="preserve"><value>Unesite vaše puno ime.</value></data>
+  <data name="msg_enter_phone" xml:space="preserve"><value>Unesite vaš broj telefona.</value></data>
+  <data name="msg_request_failed" xml:space="preserve"><value>Zahtjev nije uspio. Pokušajte ponovno.</value></data>
+  <data name="msg_sending" xml:space="preserve"><value>Slanje...</value></data>
+
+  <data name="msg_confirm_delete_service" xml:space="preserve"><value>Izbrisati ovu uslugu?</value></data>
+  <data name="msg_confirm_deactivate_sop" xml:space="preserve"><value>Deaktivirati ovaj SOP?</value></data>
+  <data name="msg_confirm_delete_schedule" xml:space="preserve"><value>Izbrisati ovaj dan?</value></data>
+  <data name="msg_confirm_delete_override" xml:space="preserve"><value>Izbrisati ovu iznimku?</value></data>
+  <data name="msg_confirm_deactivate_site" xml:space="preserve"><value>Deaktivirati ovu lokaciju?</value></data>
+  <data name="msg_confirm_remove_assignment" xml:space="preserve"><value>Ukloniti ovu dodjelu?</value></data>
+  <data name="msg_confirm_remove_service" xml:space="preserve"><value>Ukloniti ovu uslugu?</value></data>
+  <data name="msg_confirm_remove_item" xml:space="preserve"><value>Ukloniti ovu stavku s popisa?</value></data>
+  <data name="msg_confirm_delete_role" xml:space="preserve"><value>Izbrisati ovu ulogu?</value></data>
+  <data name="msg_confirm_cancel_request_title" xml:space="preserve"><value>Otkazati ovaj zahtjev?</value></data>
+
+  <data name="label_date" xml:space="preserve"><value>Datum</value></data>
+  <data name="label_employee" xml:space="preserve"><value>Zaposlenik</value></data>
+  <data name="label_service" xml:space="preserve"><value>Usluga</value></data>
+  <data name="label_client" xml:space="preserve"><value>Klijent</value></data>
+  <data name="label_status" xml:space="preserve"><value>Status</value></data>
+  <data name="label_notes" xml:space="preserve"><value>Bilješke</value></data>
+  <data name="label_email_address" xml:space="preserve"><value>Email adresa</value></data>
+  <data name="label_password" xml:space="preserve"><value>Lozinka</value></data>
+  <data name="label_role" xml:space="preserve"><value>Uloga</value></data>
+  <data name="label_username" xml:space="preserve"><value>Korisničko ime</value></data>
+  <data name="label_phone" xml:space="preserve"><value>Telefon</value></data>
+  <data name="label_address" xml:space="preserve"><value>Adresa</value></data>
+  <data name="label_city" xml:space="preserve"><value>Grad</value></data>
+  <data name="label_contact_person" xml:space="preserve"><value>Kontakt osoba</value></data>
+  <data name="label_site_name" xml:space="preserve"><value>Naziv lokacije</value></data>
+  <data name="label_full_name" xml:space="preserve"><value>Puno ime</value></data>
+  <data name="label_booking_id" xml:space="preserve"><value>ID rezervacije</value></data>
+  <data name="label_invoice_id" xml:space="preserve"><value>ID računa</value></data>
+  <data name="label_payment_method" xml:space="preserve"><value>Način plaćanja</value></data>
+  <data name="label_amount" xml:space="preserve"><value>Iznos</value></data>
+  <data name="label_paid_amount" xml:space="preserve"><value>Plaćeni iznos</value></data>
+  <data name="label_balance" xml:space="preserve"><value>Saldo</value></data>
+
+  <data name="ph_booking_id" xml:space="preserve"><value>ID rezervacije</value></data>
+  <data name="ph_search_name_phone" xml:space="preserve"><value>Pretraži po imenu ili telefonu</value></data>
+
+  <data name="content_book_form_desc" xml:space="preserve"><value>Ispunite obrazac i javit ćemo vam se s ponudom.</value></data>
+  <data name="content_book_pick_services" xml:space="preserve"><value>Odaberite usluge s padajućeg popisa — pojavit će se iznad</value></data>
+  <data name="content_portal_login_desc" xml:space="preserve"><value>Unesite vaš email i poslat ćemo vam magičnu poveznicu za prijavu.</value></data>
+  <data name="content_portal_testing_note" xml:space="preserve"><value>Za testiranje, magična poveznica će se pojaviti u konzoli poslužitelja.</value></data>
+  <data name="content_admin_login_title" xml:space="preserve"><value>Admin nadzorna ploča</value></data>
+  <data name="content_admin_login_subtitle" xml:space="preserve"><value>Unesite svoje vjerodajnice za pristup admin panelu.</value></data>
+  <data name="content_filter_by_status" xml:space="preserve"><value>Filtriraj po statusu</value></data>
+  <data name="content_select_all" xml:space="preserve"><value>Odaberi sve</value></data>
+  <data name="content_no_services_selected" xml:space="preserve"><value>Još niste odabrali usluge. Odaberite s padajućeg popisa.</value></data>
+
+  <data name="admin_login_title" xml:space="preserve"><value>Admin prijava</value></data>
+  <data name="admin_login_subtitle" xml:space="preserve"><value>Unesite svoje vjerodajnice za pristup admin panelu.</value></data>
+  <data name="admin_login_btn" xml:space="preserve"><value>Prijava</value></data>
+
+  <data name="error_invalid_token" xml:space="preserve"><value>Nevažeći token.</value></data>
+  <data name="error_authentication_required" xml:space="preserve"><value>Potrebna je autentifikacija.</value></data>
+  <data name="error_access_denied" xml:space="preserve"><value>Pristup odbijen. Nemate dozvolu.</value></data>
+  <data name="error_endpoint_not_found" xml:space="preserve"><value>End point nije pronađen.</value></data>
+  <data name="error_unexpected" xml:space="preserve"><value>Došlo je do neočekivane pogreške. Pokušajte ponovno ili kontaktirajte podršku.</value></data>
+  <data name="error_db_error" xml:space="preserve"><value>Došlo je do greške u bazi podataka. Pokušajte ponovno.</value></data>
+  <data name="error_invalid_operation" xml:space="preserve"><code>INVALID_OPERATION</code><value>Pokušana je nevažeća operacija.</value></data>
+  <data name="error_no_permission" xml:space="preserve"><value>Nemate dozvolu za izvođenje ove radnje.</value></data>
+  <data name="error_token_required" xml:space="preserve"><value>Token je obavezan.</value></data>
+  <data name="error_expired_token" xml:space="preserve"><value>Ova poveznica je istekla ili je nevažeća. Zatražite novu.</value></data>
+
+  <data name="err_catalog_required" xml:space="preserve"><value>Kataloški kod i naziv su obavezni.</value></data>
+  <data name="err_invalid_service_type" xml:space="preserve"><value>Tip usluge mora biti: Standard, PerHour ili PerItem.</value></data>
+  <data name="err_catalog_code_exists" xml:space="preserve"><value>Kataloški kod već postoji.</value></data>
+  <data name="err_booking_not_found" xml:space="preserve"><value>Rezervacija #{0} nije pronađena.</value></data>
+  <data name="err_payment_amount_zero" xml:space="preserve"><value>Iznos plaćanja mora biti veći od nule.</value></data>
+  <data name="err_invalid_payment_method" xml:space="preserve"><code>INVALID_PAYMENT_METHOD</code><value>Nevažeći način plaćanja.</value></data>
+  <data name="err_slot_full" xml:space="preserve"><value>Termin u {0}:00 na {1} je popunjen.</value></data>
+  <data name="err_customer_name_required" xml:space="preserve"><value>Ime klijenta je obavezno.</value></data>
+  <data name="err_quantity_required" xml:space="preserve"><value>Količina mora biti veća od nule.</value></data>
+  <data name="err_role_required" xml:space="preserve"><value>Uloga je obavezna.</value></data>
+  <data name="err_password_length" xml:space="preserve"><value>Lozinka mora imati najmanje 8 znakova.</value></data>
+  <data name="err_invalid_credentials" xml:space="preserve"><value>Nevažeće vjerodajnice.</value></data>
+  <data name="err_contact_name_required" xml:space="preserve"><value>Kontakt ime je obavezno.</value></data>
+  <data name="err_invalid_expired_token" xml:space="preserve"><value>Nevažeći ili istekli token.</value></data>
+  <data name="err_cannot_edit_request" xml:space="preserve"><value>Ne može se uređivati zahtjev sa statusom '{0}'.</value></data>
+  <data name="err_sop_name_required" xml:space="preserve"><value>Naziv SOP-a je obavezan.</value></data>
+  <data name="err_checklist_text_required" xml:space="preserve"><value>Tekst stavke kontrolne liste je obavezan.</value></data>
+  <data name="err_sop_already_assigned" xml:space="preserve"><value>Ovaj SOP predložak je već dodijeljen.</value></data>
+  <data name="err_booking_id_required" xml:space="preserve"><value>ID rezervacije je obavezan.</value></data>
+
+  <data name="role_owner" xml:space="preserve"><value>Vlasnik</value></data>
+  <data name="role_dispatcher" xml:space="preserve"><value>Dispečer</value></data>
+  <data name="role_cleaner" xml:space="preserve"><value>Čistač</value></data>
+  <data name="role_finance" xml:space="preserve"><value>Financije</value></data>
+  <data name="role_client_portal" xml:space="preserve"><value>Klijent</value></data>
+
+  <data name="client_person" xml:space="preserve"><value>Fizička osoba</value></data>
+  <data name="client_business" xml:space="preserve"><value>Pravna osoba</value></data>
+  <data name="client_employee" xml:space="preserve"><value>Zaposlenik</value></data>
+
+  <data name="booking_onetime" xml:space="preserve"><value>Jednokratno</value></data>
+  <data name="booking_repeat_individual" xml:space="preserve"><value>Ponavljajuće pojedinačno</value></data>
+  <data name="booking_repeat_business" xml:space="preserve"><value>Ponavljajuće poslovno</value></data>
+
+  <data name="ui_loading" xml:space="preserve"><value>Učitavanje...</value></data>
+  <data name="ui_previous" xml:space="preserve"><value>Prethodno</value></data>
+  <data name="ui_next" xml:space="preserve"><value>Sljedeće</value></data>
+  <data name="ui_page" xml:space="preserve"><value>Stranica</value></data>
+  <data name="ui_of" xml:space="preserve"><value>od</value></data>
+  <data name="ui_total" xml:space="preserve"><value>Ukupno</value></data>
+  <data name="ui_currency" xml:space="preserve"><code>EUR</code><value>EUR</value></data>
+  <data name="ui_all" xml:space="preserve"><value>Sve</value></data>
+  <data name="ui_none" xml:space="preserve"><value>Nema</value></data>
+  <data name="ui_yes" xml:space="preserve"><code>DA</code><value>Da</value></data>
+  <data name="ui_no" xml:space="preserve"><code>NE</code><value>Ne</value></data>
+  <data name="ui_back" xml:space="preserve"><value>Natrag</value></data>
+
+  <data name="day_monday" xml:space="preserve"><value>Ponedjeljak</value></data>
+  <data name="day_tuesday" xml:space="preserve"><value>Utorak</value></data>
+  <data name="day_wednesday" xml:space="preserve"><value>Srijeda</value></data>
+  <data name="day_thursday" xml:space="preserve"><value>Četvrtak</value></data>
+  <data name="day_friday" xml:space="preserve"><value>Petak</value></data>
+  <data name="day_saturday" xml:space="preserve"><value>Subota</value></data>
+  <data name="day_sunday" xml:space="preserve"><value>Nedjelja</value></data>
+
+  <data name="override_closed" xml:space="preserve"><value>Zatvoreno</value></data>
+  <data name="override_holiday" xml:space="preserve"><value>Blagdan</value></data>
+  <data name="override_special_hours" xml:space="preserve"><value>Posebno radno vrijeme</value></data>
+
+  <data name="month_current" xml:space="preserve"><value>Trenutni mjesec</value></data>
+  <data name="month_next" xml:space="preserve"><value>Sljedeći mjesec</value></data>
+  <data name="month_custom" xml:space="preserve"><value>Prilagođeni raspon</value></data>
+
+  <data name="svc_standard" xml:space="preserve"><value>Standardno</value></data>
+  <data name="svc_per_hour" xml:space="preserve"><value>Po satu</value></data>
+  <data name="svc_per_item" xml:space="preserve"><value>Po stavci</value></data>
+
+  <data name="sop_vehicle" xml:space="preserve"><value>Vozilo</value></data>
+  <data name="sop_office" xml:space="preserve"><value>Ured</value></data>
+  <data name="sop_stairwell" xml:space="preserve"><value>Stubište</value></data>
+  <data name="sop_boat" xml:space="preserve"><value>Brod</value></data>
+  <data name="sop_other" xml:space="preserve"><value>Ostalo</value></data>
+
+  <data name="lang_en" xml:space="preserve"><value>EN</value></data>
+  <data name="lang_hr" xml:space="preserve"><value>HR</value></data>
+</root>

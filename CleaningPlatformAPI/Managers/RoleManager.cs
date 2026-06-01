@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
@@ -10,8 +12,10 @@ namespace CleaningPlatformAPI.Managers;
 public class RoleManager
 {
     private readonly AppDbContext _db;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public RoleManager(AppDbContext db) { _db = db; }
+    public RoleManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
+            _localizer = localizer;}
 
     public async Task<List<RoleResponse>> GetAllRolesAsync(CancellationToken ct = default)
     {
@@ -46,7 +50,7 @@ public class RoleManager
     {
         var trimmedName = dto.Name.Trim();
         if (string.IsNullOrEmpty(trimmedName))
-            return OperationResult<RoleResponse>.Fail("Role name is required.");
+            return OperationResult<RoleResponse>.Fail(_localizer["msg_role_name_required"]);
 
         if (await _db.Roles.AnyAsync(r => r.Name == trimmedName, ct))
             return OperationResult<RoleResponse>.Fail("A role with this name already exists.");
@@ -83,7 +87,7 @@ public class RoleManager
 
         var trimmedName = dto.Name.Trim();
         if (string.IsNullOrEmpty(trimmedName))
-            return OperationResult<RoleResponse>.Fail("Role name is required.");
+            return OperationResult<RoleResponse>.Fail(_localizer["msg_role_name_required"]);
 
         if (await _db.Roles.AnyAsync(r => r.Name == trimmedName && r.Id != id, ct))
             return OperationResult<RoleResponse>.Fail("A role with this name already exists.");

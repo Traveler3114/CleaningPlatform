@@ -19,6 +19,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+      <PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.8" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\CleaningPlatformAPI\CleaningPlatformAPI.csproj" />

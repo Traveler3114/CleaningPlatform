@@ -12,8 +12,8 @@ const statusMap = {
 };
 
 function fmtStatus(status) {
-    const s = statusMap[status] || { label: status, cls: 'info' };
-    return `<span class="badge badge-${s.cls}">${s.label}</span>`;
+    const s = statusMap[status] || { label: status, cls: status.toLowerCase() };
+    return `<span class="badge badge-${s.cls}">${window.__status(status)}</span>`;
 }
 
 async function loadRequests() {
@@ -30,10 +30,10 @@ async function loadRequests() {
 function renderRequests(pagedResult) {
     const items = pagedResult.items || [];
     if (!items.length) {
-        document.getElementById('requests-list').innerHTML = '<div class="alert alert-info">No requests found.</div>';
+        document.getElementById('requests-list').innerHTML = '<div class="alert alert-info">' + __('empty_no_requests') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Email</th><th>Services</th><th>Est. Price</th><th>Status</th><th>Created</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_id') + '</th><th>' + __('th_name') + '</th><th>' + __('th_phone') + '</th><th>' + __('th_email') + '</th><th>' + __('th_services') + '</th><th>' + __('th_est_price') + '</th><th>' + __('th_status') + '</th><th>' + __('th_created') + '</th></tr></thead><tbody>';
     items.forEach(r => {
         const services = (r.services || []).map(s => s.serviceName).join(', ') || '-';
         const price = r.estimatedPrice ? r.estimatedPrice.toFixed(2) : '-';
@@ -52,9 +52,9 @@ function renderRequests(pagedResult) {
     html += '</tbody></table>';
     if (pagedResult.totalPages > 1) {
         html += '<div class="pagination">';
-        if (pagedResult.hasPreviousPage) html += `<button onclick="goToPage(${pagedResult.page - 1})" class="btn btn-sm">Previous</button>`;
-        html += `<span>Page ${pagedResult.page} of ${pagedResult.totalPages}</span>`;
-        if (pagedResult.hasNextPage) html += `<button onclick="goToPage(${pagedResult.page + 1})" class="btn btn-sm">Next</button>`;
+        if (pagedResult.hasPreviousPage) html += `<button onclick="goToPage(${pagedResult.page - 1})" class="btn btn-sm">${__('ui_previous')}</button>`;
+        html += `<span>${__('ui_page')} ${pagedResult.page} ${__('ui_of')} ${pagedResult.totalPages}</span>`;
+        if (pagedResult.hasNextPage) html += `<button onclick="goToPage(${pagedResult.page + 1})" class="btn btn-sm">${__('ui_next')}</button>`;
         html += '</div>';
     }
     document.getElementById('requests-list').innerHTML = html;
@@ -79,3 +79,4 @@ document.getElementById('filter-btn').addEventListener('click', () => {
 });
 
 loadRequests();
+window.addEventListener('i18nReady', function () { loadRequests(); });

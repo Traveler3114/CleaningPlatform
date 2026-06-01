@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Services — Cleaning Platform</title>
+    <title data-i18n="page_admin_services">Services — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,9 +12,9 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong>Services</strong></div>
+            <div class="breadcrumb"><strong data-i18n="page_admin_services">Services</strong></div>
         </div>
-        <div class="header-right">
+        <div class="header-right"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <div class="user-info">
                 <div class="user-avatar">U</div>
                 <div class="user-details">
@@ -22,7 +22,7 @@
                     <span class="user-role"></span>
                 </div>
             </div>
-            <button id="logout-btn" class="logout-btn">Sign out</button>
+            <button id="logout-btn" class="logout-btn" data-i18n="nav_sign_out">Sign out</button>
         </div>
     </header>
     <main class="admin-main">
@@ -39,9 +39,9 @@
                 <h2 class="section-title" id="service-modal-title">Create Service</h2>
                 <form id="service-form" class="form-grid two-col">
                     <input type="hidden" id="service-id" />
-                    <label>Code <input type="text" id="service-code" class="small-input" required /></label>
-                    <label>Name <input type="text" id="service-name" class="text-input" required /></label>
-                    <label>Category
+                    <label><span data-i18n="th_code">Code</span> <input type="text" id="service-code" class="small-input" required /></label>
+                    <label><span data-i18n="th_name">Name</span> <input type="text" id="service-name" class="text-input" required /></label>
+                    <label><span data-i18n="th_category">Category</span>
                         <select id="service-category" class="text-input">
                             <option value="">-- Select --</option>
                             <option value="Stairs">Stairs</option>
@@ -56,9 +56,9 @@
                             <option value="Boat">Boat</option>
                         </select>
                     </label>
-                    <label>Unit <input type="text" id="service-unit" class="text-input" /></label>
-                    <label>Base Price <input type="number" id="service-base-price" step="0.01" class="small-input" /></label>
-                    <label>Service Type
+                    <label><span data-i18n="th_unit">Unit</span> <input type="text" id="service-unit" class="text-input" /></label>
+                    <label><span data-i18n="th_base_price">Base Price</span> <input type="number" id="service-base-price" step="0.01" class="small-input" /></label>
+                    <label><span data-i18n="th_type">Service Type</span>
                         <select id="service-service-type" class="text-input">
                             <option value="SiteBased">SiteBased</option>
                             <option value="Vehicle">Vehicle</option>
@@ -82,5 +82,6 @@
     <script src="/admin/js/admin-common.js"></script>
     <script src="/admin/js/services.js"></script>
 </div>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

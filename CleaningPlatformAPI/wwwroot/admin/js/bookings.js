@@ -25,10 +25,10 @@ async function loadBookings() {
 
 function renderBookingsFlat(bookings) {
     if (!bookings.length) {
-        document.getElementById('bookings-list').innerHTML = '<div class="alert alert-info">No bookings found.</div>';
+        document.getElementById('bookings-list').innerHTML = '<div class="alert alert-info">' + __('msg_no_bookings') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Client</th><th>Date</th><th>Hour</th><th>Status</th><th>Update Status</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_id') + '</th><th>' + __('th_client') + '</th><th>' + __('th_date') + '</th><th>' + __('th_time') + '</th><th>' + __('th_status') + '</th><th>' + __('th_status') + '</th></tr></thead><tbody>';
     bookings.forEach(b => {
         const recurringBadge = b.recurringScheduleId ? '<span class="badge badge-info" title="Part of recurring schedule">↻</span> ' : '';
         html += `<tr class="booking-row" data-id="${b.id}" style="cursor:pointer;">
@@ -36,15 +36,15 @@ function renderBookingsFlat(bookings) {
             <td><a href="client-detail.html?id=${b.clientId}" class="link">${recurringBadge}${b.clientName}</a></td>
             <td>${b.date.split('T')[0]}</td>
             <td>${b.hour}:00</td>
-            <td><span class="badge badge-${b.status.toLowerCase()}">${b.status}</span></td>
+            <td>${statusBadge(b.status)}</td>
             <td>
                 <select class="status-select" data-id="${b.id}" onchange="updateBookingStatus(${b.id}, this.value)">
-                    <option ${b.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                    <option ${b.status === 'InProgress' ? 'selected' : ''}>InProgress</option>
-                    <option ${b.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                    <option ${b.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                    <option ${b.status === 'Pending' ? 'selected' : ''}>${window.__status('Pending')}</option>
+                    <option ${b.status === 'InProgress' ? 'selected' : ''}>${window.__status('InProgress')}</option>
+                    <option ${b.status === 'Completed' ? 'selected' : ''}>${window.__status('Completed')}</option>
+                    <option ${b.status === 'Cancelled' ? 'selected' : ''}>${window.__status('Cancelled')}</option>
                 </select>
-                <button class="btn btn-sm" onclick="updateBookingStatus(${b.id}, this.previousElementSibling.value)">Save</button>
+                <button class="btn btn-sm" onclick="updateBookingStatus(${b.id}, this.previousElementSibling.value)">${__('btn_save')}</button>
             </td>
         </tr>`;
     });
@@ -55,10 +55,10 @@ function renderBookingsFlat(bookings) {
 function renderBookingsPaginated(pagedResult) {
     const bookings = pagedResult.items || [];
     if (!bookings.length) {
-        document.getElementById('bookings-list').innerHTML = '<div class="alert alert-info">No bookings found.</div>';
+        document.getElementById('bookings-list').innerHTML = '<div class="alert alert-info">' + __('msg_no_bookings') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Client</th><th>Date</th><th>Hour</th><th>Status</th><th>Update Status</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_id') + '</th><th>' + __('th_client') + '</th><th>' + __('th_date') + '</th><th>' + __('th_time') + '</th><th>' + __('th_status') + '</th><th>' + __('th_status') + '</th></tr></thead><tbody>';
     bookings.forEach(b => {
         const recurringBadge = b.recurringScheduleId ? '<span class="badge badge-info" title="Part of recurring schedule">↻</span> ' : '';
         html += `<tr class="booking-row" data-id="${b.id}" style="cursor:pointer;">
@@ -66,24 +66,24 @@ function renderBookingsPaginated(pagedResult) {
             <td><a href="client-detail.html?id=${b.clientId}" class="link">${recurringBadge}${b.clientName}</a></td>
             <td>${b.date.split('T')[0]}</td>
             <td>${b.hour}:00</td>
-            <td><span class="badge badge-${b.status.toLowerCase()}">${b.status}</span></td>
+            <td>${statusBadge(b.status)}</td>
             <td>
                 <select class="status-select" data-id="${b.id}" onchange="updateBookingStatus(${b.id}, this.value)">
-                    <option ${b.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                    <option ${b.status === 'InProgress' ? 'selected' : ''}>InProgress</option>
-                    <option ${b.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                    <option ${b.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                    <option ${b.status === 'Pending' ? 'selected' : ''}>${window.__status('Pending')}</option>
+                    <option ${b.status === 'InProgress' ? 'selected' : ''}>${window.__status('InProgress')}</option>
+                    <option ${b.status === 'Completed' ? 'selected' : ''}>${window.__status('Completed')}</option>
+                    <option ${b.status === 'Cancelled' ? 'selected' : ''}>${window.__status('Cancelled')}</option>
                 </select>
-                <button class="btn btn-sm" onclick="updateBookingStatus(${b.id}, this.previousElementSibling.value)">Save</button>
+                <button class="btn btn-sm" onclick="updateBookingStatus(${b.id}, this.previousElementSibling.value)">${__('btn_save')}</button>
             </td>
         </tr>`;
     });
     html += '</tbody></table>';
     if (pagedResult.totalPages > 1) {
         html += '<div class="pagination">';
-        if (pagedResult.hasPreviousPage) html += `<button onclick="goToPage(${pagedResult.page - 1})" class="btn btn-sm">Previous</button>`;
-        html += `<span>Page ${pagedResult.page} of ${pagedResult.totalPages}</span>`;
-        if (pagedResult.hasNextPage) html += `<button onclick="goToPage(${pagedResult.page + 1})" class="btn btn-sm">Next</button>`;
+        if (pagedResult.hasPreviousPage) html += `<button onclick="goToPage(${pagedResult.page - 1})" class="btn btn-sm">${__('ui_previous')}</button>`;
+        html += `<span>${__('ui_page')} ${pagedResult.page} ${__('ui_of')} ${pagedResult.totalPages}</span>`;
+        if (pagedResult.hasNextPage) html += `<button onclick="goToPage(${pagedResult.page + 1})" class="btn btn-sm">${__('ui_next')}</button>`;
         html += '</div>';
     }
     document.getElementById('bookings-list').innerHTML = html;
@@ -101,7 +101,7 @@ async function updateBookingStatus(id, status) {
             body: JSON.stringify({ status })
         });
         if (res.success) {
-            showSuccess('Status updated');
+            showSuccess(__('msg_status_updated'));
             loadBookings();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -110,7 +110,7 @@ async function updateBookingStatus(id, status) {
 async function createAdminBooking(e) {
     e.preventDefault();
     const clientId = parseInt(document.getElementById('client-id').value);
-    if (!clientId) { showError('Please select a client'); return; }
+    if (!clientId) { showError(__('msg_select_client')); return; }
     const payload = {
         clientId,
         siteId: parseInt(document.getElementById('site-id').value) || null,
@@ -127,7 +127,7 @@ async function createAdminBooking(e) {
     try {
         const res = await apiFetch('/bookings/admin', { method: 'POST', body: JSON.stringify(payload) });
         if (res.success) {
-            showSuccess('Booking created');
+            showSuccess(__('msg_booking_created'));
             document.getElementById('new-booking-panel').style.display = 'none';
             loadBookings();
         } else showError(res.message);
@@ -139,7 +139,7 @@ async function loadClientsForSelect() {
         const res = await apiFetch('/clients?page=1&pageSize=200');
         if (res.success && res.data.items) {
             const select = document.getElementById('client-id');
-            select.innerHTML = '<option value="">Select client</option>';
+            select.innerHTML = '<option value="">' + __('label_select_client') + '</option>';
             res.data.items.forEach(c => {
                 select.innerHTML += `<option value="${c.id}">${c.clientName}</option>`;
             });
@@ -152,7 +152,7 @@ async function loadServicesForSelect() {
         const res = await apiFetch('/services');
         if (res.success && res.data) {
             const select = document.getElementById('initial-service');
-            select.innerHTML = '<option value="">No initial service</option>';
+            select.innerHTML = '<option value="">' + __('label_no_initial_service') + '</option>';
             res.data.forEach(s => {
                 if (s.isActive) select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
             });
@@ -201,3 +201,4 @@ document.getElementById('show-all-btn').addEventListener('click', () => {
 loadClientsForSelect();
 loadServicesForSelect();
 loadBookings();
+window.addEventListener('i18nReady', function () { loadBookings(); });

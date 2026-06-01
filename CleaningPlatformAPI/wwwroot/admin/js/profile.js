@@ -25,24 +25,24 @@ function renderProfile() {
     const container = document.getElementById('profile-content');
     container.innerHTML = `
         <section class="detail-section">
-            <h2 class="section-title">Account Info</h2>
+            <h2 class="section-title">${__('label_account_info')}</h2>
             <div class="form-grid two-col">
-                <label>Username <input class="text-input" value="${currentUser.username}" readonly /></label>
-                <label>Full Name <input class="text-input" value="${currentUser.firstName} ${currentUser.lastName}" readonly /></label>
-                <label>Role <input class="text-input" value="${currentUser.role}" readonly /></label>
+                <label>${__('label_username')} <input class="text-input" value="${currentUser.username}" readonly /></label>
+                <label>${__('label_full_name')} <input class="text-input" value="${currentUser.firstName} ${currentUser.lastName}" readonly /></label>
+                <label>${__('label_role')} <input class="text-input" value="${currentUser.role}" readonly /></label>
             </div>
         </section>
         <section class="detail-section" style="margin-top:1rem;">
-            <h2 class="section-title">Change Password</h2>
+            <h2 class="section-title">${__('label_change_password')}</h2>
             <form id="change-password-form" class="form-grid">
-                <label>Current Password <input type="password" id="current-password" class="text-input" required /></label>
-                <label>New Password <input type="password" id="new-password" class="text-input" required minlength="8" /></label>
+                <label>${__('label_current_password')} <input type="password" id="current-password" class="text-input" required /></label>
+                <label>${__('label_new_password')} <input type="password" id="new-password" class="text-input" required minlength="8" /></label>
                 <small>At least 8 characters, including uppercase, lowercase, and a number.</small>
-                <div><button type="submit" class="btn btn-sm">Change Password</button></div>
+                <div><button type="submit" class="btn btn-sm">${__('btn_change_password')}</button></div>
             </form>
         </section>
         <section class="detail-section" style="margin-top:1rem;">
-            <h2 class="section-title">My Assigned Bookings</h2>
+            <h2 class="section-title">${__('label_my_assigned_bookings')}</h2>
             <div id="assigned-bookings"></div>
         </section>
     `;
@@ -52,18 +52,18 @@ function renderProfile() {
 function renderBookings(bookings) {
     const container = document.getElementById('assigned-bookings');
     if (!bookings.length) {
-        container.innerHTML = '<p>No bookings assigned.</p>';
+        container.innerHTML = '<p>' + __('empty_no_bookings_assigned') + '</p>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Client</th><th>Date</th><th>Hour</th><th>Status</th><th></th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_id') + '</th><th>' + __('th_client') + '</th><th>' + __('th_date') + '</th><th>' + __('label_hour') + '</th><th>' + __('th_status') + '</th><th></th></tr></thead><tbody>';
     bookings.forEach(b => {
         html += `<tr>
             <td>${b.id}</td>
             <td>${b.clientName}</td>
             <td>${b.date.split('T')[0]}</td>
             <td>${b.hour}:00</div></div></td>
-            <td><span class="badge badge-${b.status.toLowerCase()}">${b.status}</span></td>
-            <td><a href="booking-detail.html?id=${b.id}" class="btn btn-sm">Open</a></td>
+            <td>${statusBadge(b.status)}</td>
+            <td><a href="booking-detail.html?id=${b.id}" class="btn btn-sm">${__('btn_open')}</a></td>
         </tr>`;
     });
     html += '</tbody></table>';
@@ -80,10 +80,11 @@ async function changePassword(e) {
             body: JSON.stringify({ currentPassword, newPassword })
         });
         if (res.success) {
-            showSuccess('Password changed. Please login again.');
+            showSuccess(__('msg_password_changed'));
             setTimeout(() => logout(), 2000);
         } else showError(res.message);
     } catch(e) { showError(e.message); }
 }
 
 loadProfile();
+window.addEventListener('i18nReady', function () { loadProfile(); });

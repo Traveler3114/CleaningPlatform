@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Managers;
@@ -31,7 +32,7 @@ public class TokenManagerTests
         var key = "this-is-a-test-key-that-is-at-least-32-characters-long!";
         var issuer = "TestIssuer";
         var config = CreateConfig(key, issuer);
-        var manager = new TokenManager(config);
+        var manager = new TokenManager(config, NullStringLocalizer<SharedResources>.Instance);
         var user = new Employee
         {
             Id = 42,
@@ -66,7 +67,7 @@ public class TokenManagerTests
     public async Task CreateAdminToken_OwnerRole_OmitsPermissions()
     {
         var config = CreateConfig("test-key-at-least-32-characters-for-testing!", "Issuer");
-        var manager = new TokenManager(config);
+        var manager = new TokenManager(config, NullStringLocalizer<SharedResources>.Instance);
         var user = new Employee
         {
             Id = 1,
@@ -95,7 +96,7 @@ public class TokenManagerTests
     public async Task CreateMagicLinkToken_ContainsCorrectClaims()
     {
         var config = CreateConfig("test-key-at-least-32-characters-for-testing!", "CP");
-        var manager = new TokenManager(config);
+        var manager = new TokenManager(config, NullStringLocalizer<SharedResources>.Instance);
 
         var token = manager.CreateMagicLinkToken(7, "test@email.com", "Test User");
         var handler = new JsonWebTokenHandler();
@@ -120,7 +121,7 @@ public class TokenManagerTests
     public async Task CreatePortalSessionToken_ContainsCorrectClaims()
     {
         var config = CreateConfig("test-key-at-least-32-characters-for-testing!", "CP");
-        var manager = new TokenManager(config);
+        var manager = new TokenManager(config, NullStringLocalizer<SharedResources>.Instance);
 
         var token = manager.CreatePortalSessionToken(3, "portal@test.com", "Portal User");
         var handler = new JsonWebTokenHandler();
@@ -145,7 +146,7 @@ public class TokenManagerTests
     public void Token_Expiry_RespectsConfiguredHours()
     {
         var config = CreateConfig("test-key-at-least-32-characters-for-testing!", "Issuer", "1");
-        var manager = new TokenManager(config);
+        var manager = new TokenManager(config, NullStringLocalizer<SharedResources>.Instance);
         var user = new Employee
         {
             Id = 1,

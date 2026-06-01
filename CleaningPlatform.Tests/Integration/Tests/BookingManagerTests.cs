@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
@@ -15,9 +16,9 @@ public class BookingManagerTests : TestBase
     public async Task GetAllBookingsAsync_ReturnsPagedResults()
     {
         using var db = CreateDbContext();
-        var availability = new AvailabilityManager(db);
-        var sop = new SopManager(db);
-        var manager = new BookingManager(db, availability, sop);
+        var availability = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new BookingManager(db, availability, sop, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetAllBookingsAsync(new PaginationParams { Page = 1, PageSize = 10 });
 
@@ -30,9 +31,9 @@ public class BookingManagerTests : TestBase
     public async Task GetBookingDetailByIdAsync_ExistingBooking_ReturnsDetail()
     {
         using var db = CreateDbContext();
-        var availability = new AvailabilityManager(db);
-        var sop = new SopManager(db);
-        var manager = new BookingManager(db, availability, sop);
+        var availability = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new BookingManager(db, availability, sop, NullStringLocalizer<SharedResources>.Instance);
         var first = await manager.GetAllBookingsAsync(new PaginationParams { Page = 1, PageSize = 1 });
 
         var result = await manager.GetBookingDetailByIdAsync(first.Items[0].Id);
@@ -45,9 +46,9 @@ public class BookingManagerTests : TestBase
     public async Task GetBookingDetailByIdAsync_MissingBooking_ReturnsFail()
     {
         using var db = CreateDbContext();
-        var availability = new AvailabilityManager(db);
-        var sop = new SopManager(db);
-        var manager = new BookingManager(db, availability, sop);
+        var availability = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new BookingManager(db, availability, sop, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetBookingDetailByIdAsync(-1);
 
@@ -58,9 +59,9 @@ public class BookingManagerTests : TestBase
     public async Task UpdateStatusAsync_ValidTransition_Succeeds()
     {
         using var db = CreateDbContext();
-        var availability = new AvailabilityManager(db);
-        var sop = new SopManager(db);
-        var manager = new BookingManager(db, availability, sop);
+        var availability = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new BookingManager(db, availability, sop, NullStringLocalizer<SharedResources>.Instance);
         var first = await manager.GetAllBookingsAsync(new PaginationParams { Page = 1, PageSize = 1 });
         var bookingId = first.Items[0].Id;
 
@@ -73,9 +74,9 @@ public class BookingManagerTests : TestBase
     public async Task UpdateStatusAsync_InvalidTransition_ReturnsFail()
     {
         using var db = CreateDbContext();
-        var availability = new AvailabilityManager(db);
-        var sop = new SopManager(db);
-        var manager = new BookingManager(db, availability, sop);
+        var availability = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new BookingManager(db, availability, sop, NullStringLocalizer<SharedResources>.Instance);
         var first = await manager.GetAllBookingsAsync(new PaginationParams { Page = 1, PageSize = 1 });
         var bookingId = first.Items[0].Id;
 
@@ -89,9 +90,9 @@ public class BookingManagerTests : TestBase
     public async Task GetBookingsAsync_ByDate_ReturnsBookings()
     {
         using var db = CreateDbContext();
-        var availability = new AvailabilityManager(db);
-        var sop = new SopManager(db);
-        var manager = new BookingManager(db, availability, sop);
+        var availability = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new BookingManager(db, availability, sop, NullStringLocalizer<SharedResources>.Instance);
         var today = DateTime.Today;
 
         var result = await manager.GetBookingsAsync(today);
@@ -103,9 +104,9 @@ public class BookingManagerTests : TestBase
     public async Task AddAssignmentAsync_AddsEmployeeToBooking()
     {
         using var db = CreateDbContext();
-        var availability = new AvailabilityManager(db);
-        var sop = new SopManager(db);
-        var manager = new BookingManager(db, availability, sop);
+        var availability = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new BookingManager(db, availability, sop, NullStringLocalizer<SharedResources>.Instance);
         var booking = await db.Bookings
             .Where(b => b.Status != BookingStatus.Completed && b.Status != BookingStatus.Cancelled)
             .FirstAsync();
@@ -127,9 +128,9 @@ public class BookingManagerTests : TestBase
     public async Task GetAllBookingsAsync_StatusFilter_FiltersCorrectly()
     {
         using var db = CreateDbContext();
-        var availability = new AvailabilityManager(db);
-        var sop = new SopManager(db);
-        var manager = new BookingManager(db, availability, sop);
+        var availability = new AvailabilityManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var sop = new SopManager(db, NullStringLocalizer<SharedResources>.Instance);
+        var manager = new BookingManager(db, availability, sop, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetAllBookingsAsync(new PaginationParams(), "Pending");
 

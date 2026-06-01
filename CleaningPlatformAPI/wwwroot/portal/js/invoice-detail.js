@@ -68,13 +68,22 @@ function render(invoice) {
 
 var params = new URLSearchParams(window.location.search);
 var id = parseInt(params.get('id'));
+var _invoiceData = null;
 
-if (!id) {
-    document.getElementById('invoice-detail').innerHTML = '<div class="alert alert-danger">Invalid invoice ID.</div>';
-} else {
+function loadPortalInvoiceDetail() {
+    if (!id) {
+        document.getElementById('invoice-detail').innerHTML = '<div class="alert alert-danger">Invalid booking ID.</div>';
+        return;
+    }
     apiFetch('/api/portal/invoices/' + id).then(function (data) {
+        _invoiceData = data;
         render(data);
     }).catch(function (err) {
         document.getElementById('invoice-detail').innerHTML = '<div class="alert alert-danger">' + err.message + '</div>';
     });
 }
+
+loadPortalInvoiceDetail();
+window.addEventListener('i18nReady', function () {
+    if (_invoiceData) render(_invoiceData);
+});

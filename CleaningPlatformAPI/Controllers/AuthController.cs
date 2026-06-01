@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
@@ -12,8 +14,10 @@ namespace CleaningPlatformAPI.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AuthManager _authManager;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public AuthController(AuthManager authManager) { _authManager = authManager; }
+    public AuthController(AuthManager authManager, IStringLocalizer<SharedResources> localizer) { _authManager = authManager; 
+            _localizer = localizer;}
 
     [Authorize(Policy = PermissionKeys.UsersCreate)]
     [HttpPost("register")]
@@ -39,7 +43,7 @@ public class AuthController : ControllerBase
     {
         var userId = User.GetEmployeeId();
         if (userId == null)
-            return Unauthorized(OperationResult<string>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<string>.Fail(_localizer["error_invalid_token"]));
 
         var result = await _authManager.ChangePasswordAsync(request, userId.Value, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);

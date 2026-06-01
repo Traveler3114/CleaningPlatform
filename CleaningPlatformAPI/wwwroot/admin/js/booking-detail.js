@@ -5,7 +5,7 @@ let booking = null;
 
 async function loadBookingDetail() {
     if (!bookingId) {
-        document.getElementById('booking-detail').innerHTML = '<div class="alert alert-info">No booking ID provided.</div>';
+        document.getElementById('booking-detail').innerHTML = '<div class="alert alert-info">' + __('label_no_booking_id') + '</div>';
         return;
     }
     try {
@@ -25,45 +25,45 @@ function renderBookingDetail() {
         <section class="detail-section">
             <div class="page-header">
                 <div><strong>Booking #${booking.id}</strong><p style="font-size:0.85rem;color:var(--text-muted);">${booking.date.split('T')[0]} at ${booking.hour}:00</p></div>
-                <span class="badge badge-${booking.status.toLowerCase()}">${booking.status}</span>
+                ${statusBadge(booking.status)}
             </div>
             <div class="inline-form" style="margin-top:0.7rem;">
                 <select id="status-select" class="status-select">
-                    <option ${booking.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                    <option ${booking.status === 'InProgress' ? 'selected' : ''}>InProgress</option>
-                    <option ${booking.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                    <option ${booking.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                    <option ${booking.status === 'Pending' ? 'selected' : ''}>${window.__status('Pending')}</option>
+                    <option ${booking.status === 'InProgress' ? 'selected' : ''}>${window.__status('InProgress')}</option>
+                    <option ${booking.status === 'Completed' ? 'selected' : ''}>${window.__status('Completed')}</option>
+                    <option ${booking.status === 'Cancelled' ? 'selected' : ''}>${window.__status('Cancelled')}</option>
                 </select>
-                <button id="update-status-btn" class="btn btn-sm">Save</button>
-                ${booking.status === 'Completed' ? '<button id="generate-invoice-btn" class="btn btn-sm">Generate Invoice</button>' : ''}
+                <button id="update-status-btn" class="btn btn-sm">${__('btn_save')}</button>
+                ${booking.status === 'Completed' ? '<button id="generate-invoice-btn" class="btn btn-sm">' + __('btn_generate_invoice') + '</button>' : ''}
                 ${renderRecurringButtons()}
             </div>
         </section>
         <section class="detail-section">
-            <h2 class="section-title">Client Info</h2>
-            <p><strong>Name:</strong> <a href="client-detail.html?id=${booking.clientId}">${booking.clientName}</a></p>
-            <p><strong>Phone:</strong> ${booking.clientPhone || '-'}</p>
-            <p><strong>Email:</strong> ${booking.clientEmail || '-'}</p>
+            <h2 class="section-title">${__('th_client')} Info</h2>
+            <p><strong>${__('th_name')}:</strong> <a href="client-detail.html?id=${booking.clientId}">${booking.clientName}</a></p>
+            <p><strong>${__('th_phone')}:</strong> ${booking.clientPhone || '-'}</p>
+            <p><strong>${__('th_email')}:</strong> ${booking.clientEmail || '-'}</p>
         </section>
         <section class="detail-section">
-            <h2 class="section-title">Employee Assignments</h2>
+            <h2 class="section-title">${__('section_assigned_employees')}</h2>
             <div id="assignments-list"></div>
             <div class="inline-form" style="margin-top:1rem;">
-                <select id="employee-select" class="status-select"><option value="">Select employee</option></select>
-                <button id="add-assignment-btn" class="btn btn-sm">Add</button>
+                <select id="employee-select" class="status-select"><option value="">${__('label_select_employee')}</option></select>
+                <button id="add-assignment-btn" class="btn btn-sm">${__('btn_add')}</button>
             </div>
         </section>
         <section class="detail-section">
-            <h2 class="section-title">Services</h2>
+            <h2 class="section-title">${__('section_services')}</h2>
             <div id="services-list"></div>
             <div class="card-lite" style="margin-top:1rem;">
-                <h3 class="section-title">+ Add Service</h3>
+                <h3 class="section-title">+ ${__('btn_add_service')}</h3>
                 <div class="inline-form">
                     <select id="service-catalog-id" class="status-select"><option value="">Select service</option></select>
                     <input type="number" id="service-quantity" value="1" step="0.01" class="small-input" placeholder="Qty" />
                     <input type="number" id="service-estimated" step="0.01" class="small-input" placeholder="Estimated" />
                     <input type="text" id="service-notes" class="text-input" placeholder="Notes" />
-                    <button id="add-service-btn" class="btn btn-sm">Add Service</button>
+                    <button id="add-service-btn" class="btn btn-sm">${__('btn_add_service')}</button>
                 </div>
             </div>
         </section>
@@ -104,19 +104,19 @@ function renderAssignments(assignments) {
 function renderServices(services) {
     const container = document.getElementById('services-list');
     if (!services.length) {
-        container.innerHTML = '<div class="alert alert-info">No services assigned.</div>';
+        container.innerHTML = '<div class="alert alert-info">' + __('empty_no_services_assigned') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>Name</th><th>Quantity</th><th>Estimated</th><th>Final Price</th><th>Notes</th><th>Actions</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_name') + '</th><th>' + __('th_items') + '</th><th>' + __('label_est_price') + '</th><th>' + __('th_price') + '</th><th>' + __('th_notes') + '</th><th>' + __('th_actions') + '</th></tr></thead><tbody>';
     services.forEach(s => {
         html += `<tr>
             <td>${s.serviceName}</td>
             <td>${s.quantity}</td>
             <td>${s.estimatedPrice ? s.estimatedPrice.toFixed(2) : '-'}</td>
             <td><input type="number" id="price-${s.id}" step="0.01" class="small-input" value="${s.finalPrice || ''}" placeholder="Final price" />
-                <button onclick="updateServicePrice(${s.id})" class="btn btn-sm">Save</button></td>
+                <button onclick="updateServicePrice(${s.id})" class="btn btn-sm">${__('btn_save')}</button></td>
             <td>${s.notes || '-'}</td>
-            <td><button onclick="removeService(${s.id})" class="btn btn-sm">Remove</button></td>
+            <td><button onclick="removeService(${s.id})" class="btn btn-sm">${__('btn_remove')}</button></td>
         </tr>`;
     });
     html += '</tbody></table>';
@@ -131,7 +131,7 @@ async function updateStatus() {
             body: JSON.stringify({ status: newStatus })
         });
         if (res.success) {
-            showSuccess('Status updated');
+            showSuccess(__('msg_status_updated'));
             loadBookingDetail();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -148,25 +148,25 @@ async function generateInvoice() {
 
 async function addAssignment() {
     const employeeId = document.getElementById('employee-select').value;
-    if (!employeeId) { showError('Select an employee'); return; }
+    if (!employeeId) { showError(__('msg_select_employee')); return; }
     try {
         const res = await apiFetch(`/bookings/${bookingId}/assignments`, {
             method: 'POST',
             body: JSON.stringify({ employeeId: parseInt(employeeId) })
         });
         if (res.success) {
-            showSuccess('Assignment added');
+            showSuccess(__('msg_assignment_added'));
             loadBookingDetail();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
 }
 
 async function removeAssignment(assignmentId) {
-    if (!confirm('Remove this assignment?')) return;
+    if (!confirm(__('msg_confirm_remove_assignment'))) return;
     try {
         const res = await apiFetch(`/bookings/${bookingId}/assignments/${assignmentId}`, { method: 'DELETE' });
         if (res.success) {
-            showSuccess('Assignment removed');
+            showSuccess(__('msg_assignment_removed'));
             loadBookingDetail();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -174,7 +174,7 @@ async function removeAssignment(assignmentId) {
 
 async function addService() {
     const serviceCatalogId = document.getElementById('service-catalog-id').value;
-    if (!serviceCatalogId) { showError('Select a service'); return; }
+    if (!serviceCatalogId) { showError(__('msg_select_service')); return; }
     const quantity = parseFloat(document.getElementById('service-quantity').value) || 1;
     const estimatedPrice = parseFloat(document.getElementById('service-estimated').value) || null;
     const notes = document.getElementById('service-notes').value;
@@ -184,18 +184,18 @@ async function addService() {
             body: JSON.stringify({ serviceCatalogId: parseInt(serviceCatalogId), quantity, estimatedPrice, notes })
         });
         if (res.success) {
-            showSuccess('Service added');
+            showSuccess(__('msg_service_added_booking'));
             loadBookingDetail();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
 }
 
 async function removeService(serviceId) {
-    if (!confirm('Remove this service?')) return;
+    if (!confirm(__('msg_confirm_remove_service'))) return;
     try {
         const res = await apiFetch(`/bookings/${bookingId}/services/${serviceId}`, { method: 'DELETE' });
         if (res.success) {
-            showSuccess('Service removed');
+            showSuccess(__('msg_service_removed_booking'));
             loadBookingDetail();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -209,7 +209,7 @@ async function updateServicePrice(serviceId) {
             body: JSON.stringify({ finalPrice })
         });
         if (res.success) {
-            showSuccess('Price updated');
+            showSuccess(__('msg_price_updated'));
             loadBookingDetail();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -290,11 +290,11 @@ function renderRecurringButtons() {
     if (booking.recurringScheduleId) {
         return `<span style="margin-left:0.5rem; font-size:0.85rem; color:#666;">
             ↻ Part of <a href="recurring.html" style="text-decoration:underline;">schedule #${booking.recurringScheduleId}</a>
-            <button id="end-series-here-btn" class="btn btn-sm" style="margin-left:0.5rem; background:#c62828; color:#fff;">End series from here</button>
+            <button id="end-series-here-btn" class="btn btn-sm" style="margin-left:0.5rem; background:#c62828; color:#fff;">${__('btn_end_series_from_here')}</button>
         </span>`;
     }
     if (booking.status === 'Completed') {
-        return '<button id="make-recurring-btn" class="btn btn-sm" style="margin-left:0.5rem;">Make Recurring</button>';
+        return '<button id="make-recurring-btn" class="btn btn-sm" style="margin-left:0.5rem;">' + __('btn_make_recurring') + '</button>';
     }
     return '';
 }
@@ -305,8 +305,8 @@ function makeRecurringModalHtml() {
     return `
     <div id="recurring-modal" class="modal-overlay" style="display:none;">
         <div class="modal-content" style="max-width:450px;">
-            <h2>Make Recurring</h2>
-            <p>Create a recurring schedule from booking #${booking.id}.</p>
+            <h2>${__('modal_make_recurring')}</h2>
+            <p>${__('modal_make_recurring_desc').replace('{id}', booking.id)}</p>
             <form id="make-recurring-form" class="form-grid two-col">
                 <label>Frequency
                     <select id="rec-frequency" class="text-input">
@@ -337,8 +337,8 @@ function makeRecurringModalHtml() {
                     <input type="date" id="rec-endson" class="text-input" />
                 </label>
                 <div class="full-span" style="display:flex; gap:0.5rem;">
-                    <button type="submit" class="btn btn-sm">Create Schedule</button>
-                    <button type="button" id="rec-cancel-btn" class="btn btn-sm">Cancel</button>
+                    <button type="submit" class="btn btn-sm">${__('btn_create_recurring_schedule')}</button>
+                    <button type="button" id="rec-cancel-btn" class="btn btn-sm">${__('btn_cancel')}</button>
                 </div>
             </form>
         </div>
@@ -392,7 +392,7 @@ document.addEventListener('click', function (e) {
                     body: JSON.stringify({ frequency, dayOfWeek, dayOfMonth, autoGenerateWeeksAhead, endsOn })
                 });
                 if (res.success) {
-                    showSuccess('Recurring schedule created');
+                    showSuccess(__('msg_recurring_created'));
                     document.getElementById('recurring-modal').style.display = 'none';
                     loadBookingDetail();
                 } else showError(res.message);
@@ -403,7 +403,7 @@ document.addEventListener('click', function (e) {
     // End series from here
     if (e.target.id === 'end-series-here-btn') {
         const today = new Date().toISOString().split('T')[0];
-        if (!confirm(`End recurring series from ${today}? All future pending bookings will be cancelled.`)) return;
+        if (!confirm(__('msg_confirm_end_series').replace('{date}', today))) return;
         (async function () {
             try {
                 const res = await apiFetch(`/recurring/${booking.recurringScheduleId}/end`, {
@@ -411,7 +411,7 @@ document.addEventListener('click', function (e) {
                     body: JSON.stringify({ endsOn: today })
                 });
                 if (res.success) {
-                    showSuccess('Series ended');
+                    showSuccess(__('msg_series_ended'));
                     loadBookingDetail();
                 } else showError(res.message);
             } catch (err) { showError(err.message); }
@@ -420,3 +420,4 @@ document.addEventListener('click', function (e) {
 });
 
 loadBookingDetail();
+window.addEventListener('i18nReady', function () { loadBookingDetail(); });

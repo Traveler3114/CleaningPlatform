@@ -2,7 +2,7 @@
 let schedules = [];
 let editingId = null;
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_KEYS = ['day_sunday', 'day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday'];
 
 async function loadSchedules() {
     try {
@@ -17,18 +17,18 @@ async function loadSchedules() {
 function renderSchedules() {
     const container = document.getElementById('recurring-list');
     if (!schedules.length) {
-        container.innerHTML = '<div class="alert alert-info">No recurring schedules found.</div>';
+        container.innerHTML = '<div class="alert alert-info">' + __('empty_no_recurring') + '</div>';
         return;
     }
     let html = '<table class="admin-table"><thead><tr>' +
-        '<th>ID</th><th>Client</th><th>Site</th><th>Frequency</th><th>Day</th>' +
-        '<th>Weeks Ahead</th><th>Upcoming</th><th>Status</th><th>Ends On</th><th>Actions</th>' +
+        '<th>' + __('th_id') + '</th><th>' + __('th_client') + '</th><th>' + __('th_site') + '</th><th>' + __('th_frequency') + '</th><th>' + __('th_day') + '</th>' +
+        '<th>' + __('th_weeks_ahead') + '</th><th>' + __('th_upcoming') + '</th><th>' + __('th_status') + '</th><th>' + __('th_ends_on') + '</th><th>' + __('th_actions') + '</th>' +
         '</tr></thead><tbody>';
     schedules.forEach(s => {
         const dayText = s.frequency === 'Monthly'
-            ? `Day ${s.dayOfMonth}`
-            : s.dayOfWeek !== null ? DAY_NAMES[s.dayOfWeek] : '-';
-        const statusText = s.isActive ? 'Active' : 'Ended';
+            ? __('label_day_of_month') + ' ' + s.dayOfMonth
+            : s.dayOfWeek !== null ? __(DAY_KEYS[s.dayOfWeek]) : '-';
+        const statusText = s.isActive ? __('status_active') : __('status_ended');
         const statusClass = s.isActive ? 'badge-active' : 'badge-inactive';
         const endsOn = s.endsOn || '-';
         html += `<tr>
@@ -42,8 +42,8 @@ function renderSchedules() {
             <td><span class="badge ${statusClass}">${statusText}</span></td>
             <td>${endsOn}</td>
             <td style="white-space:nowrap;">
-                <button onclick="openEditModal(${s.id})" class="btn btn-sm" ${!s.isActive ? 'disabled' : ''}>Edit</button>
-                <button onclick="openEndModal(${s.id})" class="btn btn-sm" style="background:#c62828;color:#fff;" ${!s.isActive ? 'disabled' : ''}>End Series</button>
+                <button onclick="openEditModal(${s.id})" class="btn btn-sm" ${!s.isActive ? 'disabled' : ''}>${__('btn_edit')}</button>
+                <button onclick="openEndModal(${s.id})" class="btn btn-sm" style="background:#c62828;color:#fff;" ${!s.isActive ? 'disabled' : ''}>${__('btn_end_series')}</button>
             </td>
         </tr>`;
     });
@@ -106,7 +106,7 @@ document.getElementById('edit-form').addEventListener('submit', async function (
             body: JSON.stringify({ frequency, dayOfWeek, dayOfMonth, autoGenerateWeeksAhead, endsOn })
         });
         if (res.success) {
-            showSuccess('Schedule updated');
+            showSuccess(__('msg_schedule_updated'));
             closeEditModal();
             loadSchedules();
         } else showError(res.message);
@@ -131,15 +131,15 @@ document.getElementById('end-form').addEventListener('submit', async function (e
     e.preventDefault();
     if (editingId === null) return;
     const endsOn = document.getElementById('end-date').value;
-    if (!endsOn) { showError('Please select a date.'); return; }
-    if (!confirm(`End series #${editingId} from ${endsOn}? All future pending bookings will be cancelled.`)) return;
+    if (!endsOn) { showError(__('msg_select_date')); return; }
+    if (!confirm(__('msg_confirm_end_series').replace('{id}', editingId).replace('{date}', endsOn))) return;
     try {
         const res = await apiFetch(`/recurring/${editingId}/end`, {
             method: 'POST',
             body: JSON.stringify({ endsOn })
         });
         if (res.success) {
-            showSuccess('Series ended');
+            showSuccess(__('msg_series_ended'));
             closeEndModal();
             loadSchedules();
         } else showError(res.message);
@@ -150,20 +150,21 @@ document.getElementById('end-cancel-btn').addEventListener('click', closeEndModa
 
 document.getElementById('run-auto-btn').addEventListener('click', async function () {
     this.disabled = true;
-    this.textContent = 'Running...';
+    this.textContent = __('msg_running');
     try {
         const res = await apiFetch('/recurring/run-auto', { method: 'POST' });
         if (res.success && res.data) {
             let totalGenerated = 0;
             res.data.forEach(r => { totalGenerated += (r.generated || []).length; });
-            showSuccess(`Auto-generate complete: ${totalGenerated} booking(s) created across ${res.data.length} schedule(s).`);
+            showSuccess(__('msg_auto_generate_complete').replace('{generated}', totalGenerated).replace('{schedules}', res.data.length));
             loadSchedules();
         } else showError(res.message);
     } catch (e) { showError(e.message); }
     finally {
         this.disabled = false;
-        this.textContent = 'Run Auto-Generate';
+        this.textContent = __('btn_run_auto_generate');
     }
 });
 
 loadSchedules();
+window.addEventListener('i18nReady', function () { loadSchedules(); });

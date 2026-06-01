@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Entities;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -10,8 +12,10 @@ namespace CleaningPlatformAPI.Managers;
 public class TokenManager
 {
     private readonly IConfiguration _config;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public TokenManager(IConfiguration config) { _config = config; }
+    public TokenManager(IConfiguration config, IStringLocalizer<SharedResources> localizer) { _config = config; 
+            _localizer = localizer;}
 
     private (SymmetricSecurityKey Key, SigningCredentials Creds, string Issuer) GetSigningConfig()
     {

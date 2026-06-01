@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using FluentAssertions;
 using Xunit;
@@ -10,7 +11,7 @@ public class EmployeeManagerTests : TestBase
     public async Task GetAllUsersAsync_ReturnsUsers()
     {
         using var db = CreateDbContext();
-        var manager = new EmployeeManager(db);
+        var manager = new EmployeeManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetAllUsersAsync();
 
@@ -21,7 +22,7 @@ public class EmployeeManagerTests : TestBase
     public async Task GetActiveEmployeesAsync_ReturnsOnlyActive()
     {
         using var db = CreateDbContext();
-        var manager = new EmployeeManager(db);
+        var manager = new EmployeeManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetActiveEmployeesAsync();
 
@@ -32,7 +33,7 @@ public class EmployeeManagerTests : TestBase
     public async Task GetByIdAsync_ExistingUser_ReturnsUser()
     {
         using var db = CreateDbContext();
-        var manager = new EmployeeManager(db);
+        var manager = new EmployeeManager(db, NullStringLocalizer<SharedResources>.Instance);
         var all = await manager.GetAllUsersAsync();
         var firstId = all[0].Id;
 
@@ -46,7 +47,7 @@ public class EmployeeManagerTests : TestBase
     public async Task ToggleActiveAsync_SwitchesStatus()
     {
         using var db = CreateDbContext();
-        var manager = new EmployeeManager(db);
+        var manager = new EmployeeManager(db, NullStringLocalizer<SharedResources>.Instance);
         var all = await manager.GetAllUsersAsync();
         all.Should().HaveCountGreaterThan(1, "need at least two users to test actor/target separation");
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Users — Cleaning Platform</title>
+    <title data-i18n="page_admin_users">Users — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,9 +12,9 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong>Users</strong></div>
+            <div class="breadcrumb"><strong data-i18n="page_admin_users">Users</strong></div>
         </div>
-        <div class="header-right">
+        <div class="header-right"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <div class="user-info">
                 <div class="user-avatar">U</div>
                 <div class="user-details">
@@ -22,7 +22,7 @@
                     <span class="user-role"></span>
                 </div>
             </div>
-            <button id="logout-btn" class="logout-btn">Sign out</button>
+            <button id="logout-btn" class="logout-btn" data-i18n="nav_sign_out">Sign out</button>
         </div>
     </header>
 <main class="admin-main">
@@ -38,10 +38,10 @@
         <div class="modal-panel">
             <h2 class="section-title">Create User</h2>
             <form id="create-user-form" class="form-grid two-col">
-                <label>First name <input type="text" id="user-firstname" class="text-input" required /></label>
-                <label>Last name <input type="text" id="user-lastname" class="text-input" required /></label>
-                <label>Password <input type="password" id="user-password" class="text-input" required /></label>
-                <label>Role <select id="user-role" class="status-select"></select></label>
+                <label><span data-i18n="th_name">First name</span> <input type="text" id="user-firstname" class="text-input" required /></label>
+                <label><span data-i18n="th_name">Last name</span> <input type="text" id="user-lastname" class="text-input" required /></label>
+                <label><span data-i18n="label_password">Password</span> <input type="password" id="user-password" class="text-input" required /></label>
+                <label><span data-i18n="label_role">Role</span> <select id="user-role" class="status-select"></select></label>
                 <div class="modal-actions full-span">
                     <button type="submit" class="btn btn-sm">Create</button>
                     <button type="button" class="btn btn-sm" onclick="closeUserModal()">Cancel</button>
@@ -55,15 +55,15 @@
         <div class="modal-panel">
             <h2 class="section-title">User Details</h2>
             <div class="form-grid two-col">
-                <label>Username <input id="modal-username" class="text-input" readonly /></label>
-                <label>Full Name <input id="modal-fullname" class="text-input" readonly /></label>
-                <label>Role <input id="modal-role" class="text-input" readonly /></label>
-                <label>Active <input id="modal-active" class="text-input" readonly /></label>
+                <label><span data-i18n="label_username">Username</span> <input id="modal-username" class="text-input" readonly /></label>
+                <label><span data-i18n="label_full_name">Full Name</span> <input id="modal-fullname" class="text-input" readonly /></label>
+                <label><span data-i18n="label_role">Role</span> <input id="modal-role" class="text-input" readonly /></label>
+                <label><span data-i18n="th_active">Active</span> <input id="modal-active" class="text-input" readonly /></label>
             </div>
             <h3 class="section-title" style="margin-top:1rem;">Reset Password</h3>
             <form id="reset-password-form" class="form-grid">
                 <input type="hidden" id="reset-user-id" />
-                <label>New Password <input type="password" id="reset-password" class="text-input" required minlength="8" /></label>
+                <label><span data-i18n="label_new_password">New Password</span> <input type="password" id="reset-password" class="text-input" required minlength="8" /></label>
                 <div class="modal-actions">
                     <button type="submit" class="btn btn-sm">Reset Password</button>
                     <button type="button" class="btn btn-sm" onclick="closeDetailUserModal()">Close</button>
@@ -77,5 +77,6 @@
 <script src="/admin/js/admin-common.js"></script>
 <script src="/admin/js/users.js"></script>
 </div>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

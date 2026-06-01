@@ -18,7 +18,7 @@ function render(booking) {
         '<div class="detail-row"><span>Location</span><span>' + (booking.siteName || 'On-site (vehicle/boat)') + '</span></div>' +
         '</div>' +
         '<div>' +
-        '<div class="detail-row"><span>Status</span><span>' + booking.status + '</span></div>' +
+        '<div class="detail-row"><span>Status</span><span>' + window.__status(booking.status) + '</span></div>' +
         '<div class="detail-row"><span>Assigned to</span><span>' + (booking.assignedEmployees.length ? booking.assignedEmployees.map(function (e) { return e.fullName; }).join(', ') : 'Not yet assigned') + '</span></div>' +
         '<div class="detail-row"><span>Booked on</span><span>' + formatDate(booking.createdAt) + '</span></div>' +
         '</div>' +
@@ -56,13 +56,22 @@ function render(booking) {
 
 var params = new URLSearchParams(window.location.search);
 var id = parseInt(params.get('id'));
+var _bookingData = null;
 
-if (!id) {
-    document.getElementById('booking-detail').innerHTML = '<div class="alert alert-danger">Invalid booking ID.</div>';
-} else {
+function loadPortalBookingDetail() {
+    if (!id) {
+        document.getElementById('booking-detail').innerHTML = '<div class="alert alert-danger">Invalid booking ID.</div>';
+        return;
+    }
     apiFetch('/api/portal/bookings/' + id).then(function (data) {
+        _bookingData = data;
         render(data);
     }).catch(function (err) {
         document.getElementById('booking-detail').innerHTML = '<div class="alert alert-danger">' + err.message + '</div>';
     });
 }
+
+loadPortalBookingDetail();
+window.addEventListener('i18nReady', function () {
+    if (_bookingData) render(_bookingData);
+});

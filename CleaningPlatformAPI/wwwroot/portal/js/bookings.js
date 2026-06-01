@@ -52,3 +52,5 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('filter-all').classList.add('btn-outline');
     loadBookings();
 });
+
+window.addEventListener('i18nReady', function () { loadBookings(); });

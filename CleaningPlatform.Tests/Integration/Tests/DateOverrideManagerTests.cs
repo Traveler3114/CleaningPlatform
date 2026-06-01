@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using FluentAssertions;
@@ -11,7 +12,7 @@ public class DateOverrideManagerTests : TestBase
     public async Task GetOverridesAsync_ReturnsList()
     {
         using var db = CreateDbContext();
-        var manager = new DateOverrideManager(db);
+        var manager = new DateOverrideManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetOverridesAsync();
 
@@ -22,7 +23,7 @@ public class DateOverrideManagerTests : TestBase
     public async Task CreateAndDeleteOverride_Workflow()
     {
         using var db = CreateDbContext();
-        var manager = new DateOverrideManager(db);
+        var manager = new DateOverrideManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var createResult = await manager.CreateOverrideAsync(new DateOverrideRequest
         {

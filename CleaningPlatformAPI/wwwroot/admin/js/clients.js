@@ -17,14 +17,14 @@ async function loadClients() {
 function renderClients(pagedResult) {
     const clients = pagedResult.items || [];
     if (!clients.length) {
-        document.getElementById('clients-list').innerHTML = '<div class="alert alert-info">No clients found.</div>';
+        document.getElementById('clients-list').innerHTML = `<div class="alert alert-info">${__('empty_no_clients')}</div>`;
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>Name</th><th>Type</th><th>Primary Contact</th><th>Phone</th><th>Total Bookings</th><th>Created</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_name') + '</th><th>' + __('th_type') + '</th><th>' + __('th_primary_contact') + '</th><th>' + __('th_phone') + '</th><th>' + __('th_total_bookings') + '</th><th>' + __('th_created') + '</th></tr></thead><tbody>';
     clients.forEach(c => {
         html += `<tr class="client-row" data-id="${c.id}" style="cursor:pointer;">
             <td>${c.clientName}</td>
-            <td><span class="badge badge-${c.type.toLowerCase()}">${c.type}</span></td>
+            <td><span class="badge badge-${c.type.toLowerCase()}">${__(c.type === 'Person' ? 'client_person' : 'client_business')}</span></td>
             <td>${c.primaryContactName || '-'}</td>
             <td>${c.primaryContactPhone || '-'}</td>
             <td>${c.totalBookings}</td>
@@ -34,9 +34,9 @@ function renderClients(pagedResult) {
     html += '</tbody></table>';
     if (pagedResult.totalPages > 1) {
         html += '<div class="pagination">';
-        if (pagedResult.hasPreviousPage) html += `<button onclick="goToPage(${pagedResult.page - 1})" class="btn btn-sm">Previous</button>`;
-        html += `<span>Page ${pagedResult.page} of ${pagedResult.totalPages}</span>`;
-        if (pagedResult.hasNextPage) html += `<button onclick="goToPage(${pagedResult.page + 1})" class="btn btn-sm">Next</button>`;
+        if (pagedResult.hasPreviousPage) html += `<button onclick="goToPage(${pagedResult.page - 1})" class="btn btn-sm">${__('ui_previous')}</button>`;
+        html += `<span>${__('ui_page')} ${pagedResult.page} ${__('ui_of')} ${pagedResult.totalPages}</span>`;
+        if (pagedResult.hasNextPage) html += `<button onclick="goToPage(${pagedResult.page + 1})" class="btn btn-sm">${__('ui_next')}</button>`;
         html += '</div>';
     }
     document.getElementById('clients-list').innerHTML = html;
@@ -53,9 +53,9 @@ function renderKPIs(clients) {
     const persons = clients.filter(c => c.type === 'Person').length;
     const businesses = clients.filter(c => c.type === 'Business').length;
     document.getElementById('kpi-grid').innerHTML = `
-        <div class="kpi-card"><span>Total clients</span><strong>${total}</strong></div>
-        <div class="kpi-card"><span>Persons</span><strong>${persons}</strong></div>
-        <div class="kpi-card"><span>Businesses</span><strong>${businesses}</strong></div>
+        <div class="kpi-card"><span>${__('ui_total')} clients</span><strong>${total}</strong></div>
+        <div class="kpi-card"><span>${__('client_person')}s</span><strong>${persons}</strong></div>
+        <div class="kpi-card"><span>${__('client_business')}es</span><strong>${businesses}</strong></div>
     `;
 }
 
@@ -68,6 +68,7 @@ document.getElementById('apply-filter').addEventListener('click', () => {
     currentSearch = document.getElementById('search-input').value;
     currentType = document.getElementById('type-filter').value;
     currentPage = 1;
-    loadClients();
+loadClients();
+window.addEventListener('i18nReady', function () { loadClients(); });
 });
 loadClients();

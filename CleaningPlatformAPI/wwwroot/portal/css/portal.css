@@ -716,3 +716,28 @@ h1, h2, h3 { line-height: 1.2; letter-spacing: -0.02em; }
     .user-pill-info { display: none; }
     .kpi-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── Language Switcher ──────────────────────────── */
+#lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 0.5rem;
+}
+.lang-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.6);
+    padding: 0.15rem 0.45rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: 0.15s;
+    font-family: inherit;
+    line-height: 1.4;
+}
+.lang-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+.lang-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.header-right #lang-switcher .lang-btn { border-color: var(--border); color: var(--text-muted); }
+.header-right #lang-switcher .lang-btn.active { color: white; }

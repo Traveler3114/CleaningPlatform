@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using FluentAssertions;
 using Xunit;
@@ -10,7 +11,7 @@ public class ReportingManagerTests : TestBase
     public async Task GetDashboardSummaryAsync_ReturnsSummary()
     {
         using var db = CreateDbContext();
-        var manager = new ReportingManager(db);
+        var manager = new ReportingManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetDashboardSummaryAsync();
 
@@ -21,7 +22,7 @@ public class ReportingManagerTests : TestBase
     public async Task GetMonthlyRevenueAsync_ReturnsRevenue()
     {
         using var db = CreateDbContext();
-        var manager = new ReportingManager(db);
+        var manager = new ReportingManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetMonthlyRevenueAsync();
 
@@ -32,7 +33,7 @@ public class ReportingManagerTests : TestBase
     public async Task GetTopClientsAsync_ReturnsClients()
     {
         using var db = CreateDbContext();
-        var manager = new ReportingManager(db);
+        var manager = new ReportingManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetTopClientsAsync(5);
 
@@ -43,7 +44,7 @@ public class ReportingManagerTests : TestBase
     public async Task GetEmployeeUtilizationAsync_ReturnsUtilization()
     {
         using var db = CreateDbContext();
-        var manager = new ReportingManager(db);
+        var manager = new ReportingManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetEmployeeUtilizationAsync();
 
@@ -54,7 +55,7 @@ public class ReportingManagerTests : TestBase
     public async Task GetJobCompletionRateAsync_ReturnsRates()
     {
         using var db = CreateDbContext();
-        var manager = new ReportingManager(db);
+        var manager = new ReportingManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetJobCompletionRateAsync();
 
@@ -65,7 +66,7 @@ public class ReportingManagerTests : TestBase
     public async Task GetOverdueInvoiceSummaryAsync_ReturnsSummary()
     {
         using var db = CreateDbContext();
-        var manager = new ReportingManager(db);
+        var manager = new ReportingManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetOverdueInvoiceSummaryAsync();
 

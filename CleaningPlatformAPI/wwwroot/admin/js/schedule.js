@@ -24,15 +24,15 @@ async function loadOverrides() {
 }
 
 function renderSchedule() {
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayNames = ['day_sunday', 'day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday'];
     if (!schedule.length) {
-        document.getElementById('schedule-list').innerHTML = '<div class="alert alert-info">No schedule entries found.</div>';
+        document.getElementById('schedule-list').innerHTML = '<div class="alert alert-info">' + __('empty_no_schedule_entries') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>Day</th><th>Start</th><th>End</th><th>Capacity</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_day') + '</th><th>' + __('th_start') + '</th><th>' + __('th_end') + '</th><th>' + __('th_capacity') + '</th></tr></thead><tbody>';
     schedule.forEach(s => {
         html += `<tr class="schedule-row" data-day="${s.dayOfWeek}" data-start="${s.startHour}" data-end="${s.endHour}" data-capacity="${s.capacity}" style="cursor:pointer;">
-            <td>${dayNames[s.dayOfWeek]}</td><td>${s.startHour}</td><td>${s.endHour}</td><td>${s.capacity}</td>
+            <td>${__(dayNames[s.dayOfWeek])}</td><td>${s.startHour}</td><td>${s.endHour}</td><td>${s.capacity}</td>
         </tr>`;
     });
     html += '</tbody></table>';
@@ -45,16 +45,16 @@ function renderSchedule() {
 
 function renderOverrides() {
     if (!overrides.length) {
-        document.getElementById('overrides-list').innerHTML = '<div class="alert alert-info">No date overrides defined.</div>';
+        document.getElementById('overrides-list').innerHTML = '<div class="alert alert-info">' + __('empty_no_overrides_found') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>Date</th><th>Start</th><th>End</th><th>Capacity</th><th>Closed</th><th>Actions</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_date') + '</th><th>' + __('th_start') + '</th><th>' + __('th_end') + '</th><th>' + __('th_capacity') + '</th><th>' + __('th_closed') + '</th><th>' + __('th_actions') + '</th></tr></thead><tbody>';
     overrides.forEach(o => {
         html += `<tr>
             <td>${o.date.split('T')[0]}</td><td>${o.startHour ?? '—'}</td><td>${o.endHour ?? '—'}</td><td>${o.capacity ?? '—'}</td>
-            <td>${o.isFullyClosed ? 'Yes' : 'No'}</td>
-            <td><button onclick="editOverride(${o.id})" class="btn btn-sm">Edit</button>
-                <button onclick="deleteOverride(${o.id})" class="btn btn-sm">Delete</button></td>
+            <td>${o.isFullyClosed ? __('ui_yes') : __('ui_no')}</td>
+            <td><button onclick="editOverride(${o.id})" class="btn btn-sm">${__('btn_edit')}</button>
+                <button onclick="deleteOverride(${o.id})" class="btn btn-sm">${__('btn_delete')}</button></td>
         </tr>`;
     });
     html += '</tbody></table>';
@@ -63,7 +63,7 @@ function renderOverrides() {
 
 function openEditSchedule(data) {
     editingDay = parseInt(data.day);
-    document.getElementById('schedule-modal-title').textContent = `Edit ${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][editingDay]}`;
+    document.getElementById('schedule-modal-title').textContent = __('btn_edit') + ' ' + __(['day_sunday','day_monday','day_tuesday','day_wednesday','day_thursday','day_friday','day_saturday'][editingDay]);
     document.getElementById('schedule-day').value = data.day;
     document.getElementById('schedule-start').value = data.start;
     document.getElementById('schedule-end').value = data.end;
@@ -75,7 +75,7 @@ function openEditSchedule(data) {
 
 function openAddSchedule() {
     editingDay = null;
-    document.getElementById('schedule-modal-title').textContent = 'Add Day';
+    document.getElementById('schedule-modal-title').textContent = __('btn_add') + ' ' + __('th_day');
     document.getElementById('schedule-day').value = '';
     document.getElementById('schedule-start').value = '';
     document.getElementById('schedule-end').value = '';
@@ -99,7 +99,7 @@ async function saveSchedule() {
             res = await apiFetch('/schedule', { method: 'POST', body: JSON.stringify(payload) });
         }
         if (res.success) {
-            showSuccess(editingDay ? 'Schedule updated' : 'Schedule added');
+            showSuccess(editingDay ? __('msg_schedule_updated') : __('msg_schedule_added'));
             closeScheduleModal();
             loadSchedule();
         } else showError(res.message);
@@ -107,11 +107,11 @@ async function saveSchedule() {
 }
 
 async function deleteSchedule() {
-    if (!confirm('Delete this schedule entry?')) return;
+    if (!confirm(__('msg_confirm_delete_schedule'))) return;
     try {
         const res = await apiFetch(`/schedule/${editingDay}`, { method: 'DELETE' });
         if (res.success) {
-            showSuccess('Schedule deleted');
+            showSuccess(__('msg_schedule_deleted'));
             closeScheduleModal();
             loadSchedule();
         } else showError(res.message);
@@ -130,7 +130,7 @@ async function saveOverride() {
     try {
         const res = await apiFetch('/overrides', { method: 'POST', body: JSON.stringify(payload) });
         if (res.success) {
-            showSuccess('Override saved');
+            showSuccess(__('msg_override_saved'));
             closeOverrideModal();
             loadOverrides();
         } else showError(res.message);
@@ -138,11 +138,11 @@ async function saveOverride() {
 }
 
 async function deleteOverride(id) {
-    if (!confirm('Delete this override?')) return;
+    if (!confirm(__('msg_confirm_delete_override'))) return;
     try {
         const res = await apiFetch(`/overrides/${id}`, { method: 'DELETE' });
         if (res.success) {
-            showSuccess('Override deleted');
+            showSuccess(__('msg_override_deleted'));
             loadOverrides();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -181,3 +181,4 @@ document.getElementById('override-form').addEventListener('submit', (e) => { e.p
 
 loadSchedule();
 loadOverrides();
+window.addEventListener('i18nReady', function () { loadSchedule(); loadOverrides(); });

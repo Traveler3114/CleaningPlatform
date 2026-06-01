@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -8,6 +9,8 @@ using Scalar.AspNetCore;
 using System.Text;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
+using System.Globalization;
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Middleware;
 using CleaningPlatformAPI.Data;
@@ -25,6 +28,17 @@ builder.Services.AddOpenApi();
 
 // Razor Pages removed - using static HTML instead
 // builder.Services.AddRazorPages();
+
+builder.Services.AddLocalization();
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supported = new[] { new CultureInfo("en"), new CultureInfo("hr") };
+    options.DefaultRequestCulture = new RequestCulture("en");
+    options.SupportedCultures = supported;
+    options.SupportedUICultures = supported;
+    options.RequestCultureProviders.Insert(0, new QueryStringRequestCultureProvider { Options = options });
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -77,17 +91,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnForbidden = context =>
             {
+                var localizer = context.Request.HttpContext.RequestServices
+                    .GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResources>>();
                 context.Response.StatusCode = 403;
                 context.Response.ContentType = "application/json";
-                var result = OperationResult<string>.Fail("Access denied. You do not have permission.");
+                var result = OperationResult<string>.Fail(localizer["error_access_denied"]);
                 return context.Response.WriteAsJsonAsync(result);
             },
             OnChallenge = context =>
             {
+                var localizer = context.Request.HttpContext.RequestServices
+                    .GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResources>>();
                 context.HandleResponse();
                 context.Response.StatusCode = 401;
                 context.Response.ContentType = "application/json";
-                var result = OperationResult<string>.Fail("Authentication required.");
+                var result = OperationResult<string>.Fail(localizer["error_authentication_required"]);
                 return context.Response.WriteAsJsonAsync(result);
             }
         };
@@ -119,12 +137,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+app.UseRequestLocalization();
 
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
     {
         var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        var localizer = context.RequestServices.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResources>>();
         var error = context.Features.Get<IExceptionHandlerFeature>();
         var isDev = app.Environment.IsDevelopment();
 
@@ -149,24 +169,24 @@ app.UseExceptionHandler(errorApp =>
                 ? SqlHelper.GetUserFriendlyMessage(innerSql)
                 : isDev
                     ? $"Database update failed: {dbEx.InnerException?.Message ?? dbEx.Message}"
-                    : "A database error occurred. Please try again.";
+                    : localizer["error_db_error"];
         }
         else if (error?.Error is InvalidOperationException invEx)
         {
             message = isDev
                 ? $"Invalid operation: {invEx.Message}"
-                : "An invalid operation was attempted.";
+                : localizer["error_invalid_operation"];
         }
         else if (error?.Error is UnauthorizedAccessException)
         {
             context.Response.StatusCode = 403;
-            message = "You do not have permission to perform this action.";
+            message = localizer["error_no_permission"];
         }
         else
         {
             message = isDev && error?.Error != null
                 ? $"Unexpected error ({error.Error.GetType().Name}): {error.Error.Message}"
-                : "An unexpected error occurred. Please try again or contact support.";
+                : localizer["error_unexpected"];
         }
 
         await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail(message));
@@ -193,9 +213,10 @@ app.MapFallback(async context =>
 {
     if (context.Request.Path.StartsWithSegments("/api"))
     {
+        var localizer = context.RequestServices.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResources>>();
         context.Response.StatusCode = 404;
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("Endpoint not found."));
+        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail(localizer["error_endpoint_not_found"]));
         return;
     }
     context.Response.Redirect("/public/index.html");

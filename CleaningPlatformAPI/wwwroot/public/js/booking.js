@@ -54,10 +54,10 @@ document.getElementById('request-form').addEventListener('submit', async (e) => 
     const email = document.getElementById('contact-email').value.trim();
     const notes = document.getElementById('contact-notes').value.trim();
 
-    if (selectedIds.length === 0) { errorEl.textContent = 'Please add at least one service.'; return; }
-    if (!name) { errorEl.textContent = 'Please enter your full name.'; return; }
-    if (!phone) { errorEl.textContent = 'Please enter your phone number.'; return; }
-    if (!email) { errorEl.textContent = 'Please enter your email address.'; return; }
+    if (selectedIds.length === 0) { errorEl.textContent = __('msg_add_service_first'); return; }
+    if (!name) { errorEl.textContent = __('msg_enter_name'); return; }
+    if (!phone) { errorEl.textContent = __('msg_enter_phone'); return; }
+    if (!email) { errorEl.textContent = __('msg_enter_email'); return; }
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending…';
@@ -87,16 +87,16 @@ document.getElementById('request-form').addEventListener('submit', async (e) => 
                     <span style="color:var(--text-muted);">Name</span><span>${name}</span>
                     <span style="color:var(--text-muted);">Email</span><span>${email}</span>
                     <span style="color:var(--text-muted);">Phone</span><span>${phone}</span>
-                    <span style="color:var(--text-muted);">Status</span><span>${result.data.status}</span>
+                    <span style="color:var(--text-muted);">Status</span><span>${window.__status(result.data.status)}</span>
                 </div>
             `;
             document.getElementById('request-form').style.display = 'none';
             document.getElementById('success-message').style.display = 'block';
         } else {
-            errorEl.textContent = result.message || 'Request failed. Please try again.';
+            errorEl.textContent = result.message || __('msg_request_failed');
         }
     } catch (e) {
-        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.textContent = __('msg_network_error');
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Send Request';

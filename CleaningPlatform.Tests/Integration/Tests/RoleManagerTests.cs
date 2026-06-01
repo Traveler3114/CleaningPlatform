@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
 using FluentAssertions;
@@ -11,7 +12,7 @@ public class RoleManagerTests : TestBase
     public async Task GetAllRolesAsync_ReturnsRoles()
     {
         using var db = CreateDbContext();
-        var manager = new RoleManager(db);
+        var manager = new RoleManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetAllRolesAsync();
 
@@ -22,7 +23,7 @@ public class RoleManagerTests : TestBase
     public async Task CreateAndDeleteRole_Workflow()
     {
         using var db = CreateDbContext();
-        var manager = new RoleManager(db);
+        var manager = new RoleManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var createResult = await manager.CreateRoleAsync(new CreateRoleRequest
         {
@@ -37,7 +38,7 @@ public class RoleManagerTests : TestBase
     public void GetAvailablePermissions_ReturnsNonEmpty()
     {
         using var db = CreateDbContext();
-        var manager = new RoleManager(db);
+        var manager = new RoleManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = manager.GetAvailablePermissions();
 

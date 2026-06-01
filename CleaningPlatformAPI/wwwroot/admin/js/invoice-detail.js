@@ -20,7 +20,7 @@ function renderInvoice(invoice) {
     const payments = invoice.payments || [];
     document.getElementById('invoice-detail').innerHTML = `
         <div class="page-header">
-            <div><strong style="font-size:1.2rem;">${invoice.invoiceNumber}</strong><span class="badge badge-${invoice.status.toLowerCase()}" style="margin-left:0.5rem;">${invoice.status}</span></div>
+            <div><strong style="font-size:1.2rem;">${invoice.invoiceNumber}</strong>${statusBadge(invoice.status)}</div>
         </div>
         <section class="stats-grid">
             <div class="kpi-card"><span>Total</span><strong>${invoice.totalAmount.toFixed(2)}</strong></div>
@@ -30,12 +30,12 @@ function renderInvoice(invoice) {
             <h2 class="section-title">Update status</h2>
             <div class="inline-form wrap">
                 <select id="status-select" class="status-select">
-                    <option ${invoice.status === 'Draft' ? 'selected' : ''}>Draft</option>
-                    <option ${invoice.status === 'Sent' ? 'selected' : ''}>Sent</option>
-                    <option ${invoice.status === 'PartiallyPaid' ? 'selected' : ''}>PartiallyPaid</option>
-                    <option ${invoice.status === 'Paid' ? 'selected' : ''}>Paid</option>
-                    <option ${invoice.status === 'Overdue' ? 'selected' : ''}>Overdue</option>
-                    <option ${invoice.status === 'WrittenOff' ? 'selected' : ''}>WrittenOff</option>
+                    <option ${invoice.status === 'Draft' ? 'selected' : ''}>${window.__status('Draft')}</option>
+                    <option ${invoice.status === 'Sent' ? 'selected' : ''}>${window.__status('Sent')}</option>
+                    <option ${invoice.status === 'PartiallyPaid' ? 'selected' : ''}>${window.__status('PartiallyPaid')}</option>
+                    <option ${invoice.status === 'Paid' ? 'selected' : ''}>${window.__status('Paid')}</option>
+                    <option ${invoice.status === 'Overdue' ? 'selected' : ''}>${window.__status('Overdue')}</option>
+                    <option ${invoice.status === 'WrittenOff' ? 'selected' : ''}>${window.__status('WrittenOff')}</option>
                 </select>
                 <button id="update-status-btn" class="btn btn-sm">Update Status</button>
             </div>
@@ -78,7 +78,7 @@ async function updateStatus() {
             body: JSON.stringify({ status: newStatus })
         });
         if (res.success) {
-            showSuccess('Status updated');
+            showSuccess(__('msg_status_updated'));
             loadInvoice();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
@@ -87,7 +87,7 @@ async function updateStatus() {
 async function recordPayment() {
     const amount = parseFloat(document.getElementById('payment-amount').value);
     if (!amount || amount <= 0) {
-        showError('Please enter a valid amount');
+        showError(__('msg_enter_valid_amount'));
         return;
     }
     const payload = {
@@ -113,3 +113,4 @@ async function recordPayment() {
 }
 
 loadInvoice();
+window.addEventListener('i18nReady', function () { loadInvoice(); });

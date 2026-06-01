@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Schedule — Cleaning Platform</title>
+    <title data-i18n="page_admin_schedule">Schedule — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,9 +12,9 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong>Schedule</strong></div>
+            <div class="breadcrumb"><strong data-i18n="page_admin_schedule">Schedule</strong></div>
         </div>
-        <div class="header-right">
+        <div class="header-right"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <div class="user-info">
                 <div class="user-avatar">U</div>
                 <div class="user-details">
@@ -22,7 +22,7 @@
                     <span class="user-role"></span>
                 </div>
             </div>
-            <button id="logout-btn" class="logout-btn">Sign out</button>
+            <button id="logout-btn" class="logout-btn" data-i18n="nav_sign_out">Sign out</button>
         </div>
     </header>
     <main class="admin-main">
@@ -46,10 +46,10 @@
             <div class="modal-panel">
                 <h2 class="section-title" id="schedule-modal-title">Add Day</h2>
                 <form id="schedule-add-form" class="form-grid two-col">
-                    <label>Day <select id="schedule-day" class="status-select"><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></label>
-                    <label>Start Hour <input type="number" id="schedule-start" class="small-input" required /></label>
-                    <label>End Hour <input type="number" id="schedule-end" class="small-input" required /></label>
-                    <label>Capacity <input type="number" id="schedule-capacity" class="small-input" required /></label>
+                    <label><span data-i18n="th_day">Day</span> <select id="schedule-day" class="status-select"><option value="0" data-i18n="day_sunday">Sunday</option><option value="1" data-i18n="day_monday">Monday</option><option value="2" data-i18n="day_tuesday">Tuesday</option><option value="3" data-i18n="day_wednesday">Wednesday</option><option value="4" data-i18n="day_thursday">Thursday</option><option value="5" data-i18n="day_friday">Friday</option><option value="6" data-i18n="day_saturday">Saturday</option></select></label>
+                    <label><span data-i18n="th_start">Start Hour</span> <input type="number" id="schedule-start" class="small-input" required /></label>
+                    <label><span data-i18n="th_end">End Hour</span> <input type="number" id="schedule-end" class="small-input" required /></label>
+                    <label><span data-i18n="label_capacity">Capacity</span> <input type="number" id="schedule-capacity" class="small-input" required /></label>
                     <div class="modal-actions full-span"><button type="submit" class="btn btn-sm">Save</button><button type="button" class="btn btn-sm" onclick="closeScheduleModal()">Cancel</button></div>
                 </form>
                 <form id="schedule-delete-form" style="display:none; margin-top:0.75rem;"><button type="submit" class="btn btn-sm" onclick="return confirm('Delete this day?')">Delete</button></form>
@@ -62,10 +62,10 @@
                 <h2 id="override-modal-title">Date Override</h2>
                 <form id="override-form" class="form-grid two-col">
                     <input type="hidden" id="override-id" />
-                    <label>Date <input type="date" id="override-date" class="date-input" required /></label>
-                    <label>Start hour <input type="number" id="override-start" class="small-input" /></label>
-                    <label>End hour <input type="number" id="override-end" class="small-input" /></label>
-                    <label>Capacity <input type="number" id="override-capacity" class="small-input" /></label>
+                    <label><span data-i18n="label_date">Date</span> <input type="date" id="override-date" class="date-input" required /></label>
+                    <label><span data-i18n="th_start">Start hour</span> <input type="number" id="override-start" class="small-input" /></label>
+                    <label><span data-i18n="th_end">End hour</span> <input type="number" id="override-end" class="small-input" /></label>
+                    <label><span data-i18n="label_capacity">Capacity</span> <input type="number" id="override-capacity" class="small-input" /></label>
                     <label class="checkbox-label"><input type="checkbox" id="override-closed" /> Closed all day</label>
                     <div class="modal-actions full-span"><button type="submit" class="btn btn-sm">Save Override</button><button type="button" class="btn btn-sm" onclick="closeOverrideModal()">Cancel</button></div>
                 </form>
@@ -77,5 +77,6 @@
     <script src="/admin/js/admin-common.js"></script>
     <script src="/admin/js/schedule.js"></script>
 </div>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

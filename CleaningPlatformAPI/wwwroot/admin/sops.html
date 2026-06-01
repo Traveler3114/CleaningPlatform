@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SOPs — Cleaning Platform</title>
+    <title data-i18n="page_admin_sops">SOPs — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,9 +12,9 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong>SOP Library</strong></div>
+            <div class="breadcrumb"><strong data-i18n="page_admin_sops">SOP Library</strong></div>
         </div>
-        <div class="header-right">
+        <div class="header-right"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <div class="user-info">
                 <div class="user-avatar">U</div>
                 <div class="user-details">
@@ -22,7 +22,7 @@
                     <span class="user-role"></span>
                 </div>
             </div>
-            <button id="logout-btn" class="logout-btn">Sign out</button>
+            <button id="logout-btn" class="logout-btn" data-i18n="nav_sign_out">Sign out</button>
         </div>
     </header>
     <main class="admin-main">
@@ -32,11 +32,11 @@
         <div id="new-template-panel" class="card-lite" style="margin-bottom:1rem;">
             <h2 class="section-title">New Template</h2>
             <form id="create-template-form" class="form-grid two-col">
-                <label>Name <input type="text" id="template-name" class="text-input" required /></label>
-                <label>Service type <select id="template-service-type" class="text-input"><option>Vehicle</option><option>SiteBased</option><option>Boat</option><option>Generic</option></select></label>
-                <label>Linked service <select id="template-service-catalog" class="text-input"><option value="">Optional</option></select></label>
+                <label><span data-i18n="th_name">Name</span> <input type="text" id="template-name" class="text-input" required /></label>
+                <label><span data-i18n="th_type">Service type</span> <select id="template-service-type" class="text-input"><option>Vehicle</option><option>SiteBased</option><option>Boat</option><option>Generic</option></select></label>
+                <label><span data-i18n="th_linked_service">Linked service</span> <select id="template-service-catalog" class="text-input"><option value="">Optional</option></select></label>
                 <label class="checkbox-label"><input type="checkbox" id="template-active" checked /> Active</label>
-                <label class="full-span">Description <textarea id="template-description" class="text-input"></textarea></label>
+                <label class="full-span"><span data-i18n="label_notes_client">Description</span> <textarea id="template-description" class="text-input"></textarea></label>
                 <div><button type="submit" class="btn btn-sm">Create Template</button></div>
             </form>
         </div>
@@ -49,11 +49,11 @@
                 <h2 class="section-title">Edit SOP Template</h2>
                 <form id="edit-template-form" class="form-grid two-col">
                     <input type="hidden" id="edit-template-id" />
-                    <label>Name <input type="text" id="edit-template-name" class="text-input" required /></label>
-                    <label>Service type <select id="edit-template-service-type" class="text-input"><option>Vehicle</option><option>SiteBased</option><option>Boat</option><option>Generic</option></select></label>
-                    <label>Linked service <select id="edit-template-service-catalog" class="text-input"><option value="">Optional</option></select></label>
+                    <label><span data-i18n="th_name">Name</span> <input type="text" id="edit-template-name" class="text-input" required /></label>
+                    <label><span data-i18n="th_type">Service type</span> <select id="edit-template-service-type" class="text-input"><option>Vehicle</option><option>SiteBased</option><option>Boat</option><option>Generic</option></select></label>
+                    <label><span data-i18n="th_linked_service">Linked service</span> <select id="edit-template-service-catalog" class="text-input"><option value="">Optional</option></select></label>
                     <label class="checkbox-label"><input type="checkbox" id="edit-template-active" /> Active</label>
-                    <label class="full-span">Description <textarea id="edit-template-description" class="text-input"></textarea></label>
+                    <label class="full-span"><span data-i18n="label_notes_client">Description</span> <textarea id="edit-template-description" class="text-input"></textarea></label>
                     <div class="modal-actions"><button type="submit" class="btn btn-sm">Save changes</button><button type="button" class="btn btn-sm" onclick="closeSopModal()">Cancel</button></div>
                 </form>
                 <form id="sop-delete-form" style="margin-top:0.75rem;"><button type="submit" class="btn btn-sm" onclick="return confirm('Deactivate this SOP?')">Deactivate</button></form>
@@ -65,5 +65,6 @@
     <script src="/admin/js/admin-common.js"></script>
     <script src="/admin/js/sops.js"></script>
 </div>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

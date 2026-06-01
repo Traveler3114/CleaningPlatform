@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Bookings — Client Portal</title>
+    <title data-i18n="page_portal_bookings">My Bookings — Client Portal</title>
     <link rel="stylesheet" href="/portal/css/portal.css" />
 </head>
 <body>
     <header class="portal-header">
-        <div class="header-inner">
+        <div class="header-inner"><div id="lang-switcher"><button class="lang-btn" data-lang="en">EN</button><button class="lang-btn" data-lang="hr">HR</button></div>
             <a href="/portal/index.html" class="portal-logo">Chistify</a>
             <div class="user-pill">
                 <div class="user-pill-info">
@@ -35,6 +35,7 @@
     <footer class="portal-footer">&copy; 2026 Chistify. All rights reserved.</footer>
     <script src="/portal/js/portal-common.js"></script>
     <script src="/portal/js/bookings.js"></script>
+<script src="/js/i18n.js"></script>
 </body>
 </html>
 

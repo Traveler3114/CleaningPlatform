@@ -1,3 +1,4 @@
+using CleaningPlatformAPI;
 using CleaningPlatformAPI.Managers;
 using FluentAssertions;
 using Xunit;
@@ -10,7 +11,7 @@ public class KanbanManagerTests : TestBase
     public async Task GetPipelineAsync_ReturnsPipeline()
     {
         using var db = CreateDbContext();
-        var manager = new KanbanManager(db);
+        var manager = new KanbanManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetPipelineAsync();
 
@@ -21,7 +22,7 @@ public class KanbanManagerTests : TestBase
     public async Task GetWeekAsync_ReturnsWeekView()
     {
         using var db = CreateDbContext();
-        var manager = new KanbanManager(db);
+        var manager = new KanbanManager(db, NullStringLocalizer<SharedResources>.Instance);
         var monday = new DateTime(2026, 5, 25);
 
         var result = await manager.GetWeekAsync(monday);
@@ -33,7 +34,7 @@ public class KanbanManagerTests : TestBase
     public async Task GetResourceGridAsync_ReturnsGrid()
     {
         using var db = CreateDbContext();
-        var manager = new KanbanManager(db);
+        var manager = new KanbanManager(db, NullStringLocalizer<SharedResources>.Instance);
 
         var result = await manager.GetResourceGridAsync(new DateTime(2026, 5, 25), "week");
 
