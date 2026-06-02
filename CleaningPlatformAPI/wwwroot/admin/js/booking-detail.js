@@ -217,7 +217,7 @@ async function updateServicePrice(serviceId) {
 
 async function loadEmployeesForSelect() {
     try {
-        const res = await apiFetch('/employees');
+        const res = await apiFetch('/employees/active');
         if (res.success && res.data) {
             const select = document.getElementById('employee-select');
             select.innerHTML = '<option value="">Select employee</option>';
