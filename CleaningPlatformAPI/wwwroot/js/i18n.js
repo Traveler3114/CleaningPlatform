@@ -6,75 +6,19 @@
   var ready = false;
   var _saved = {};
 
-  var fallback = {
-    'nav_daily_view': 'Daily View',
-    'nav_calendar': 'Calendar',
-    'nav_bookings': 'Bookings',
-    'nav_requests': 'Requests',
-    'nav_recurring': 'Recurring',
-    'nav_invoices': 'Invoices',
-    'nav_clients': 'Clients',
-    'nav_schedule': 'Schedule',
-    'nav_services': 'Services',
-    'nav_sops': 'SOPs',
-    'nav_users': 'Users',
-    'nav_roles': 'Roles',
-    'nav_reports': 'Reports',
-    'nav_dashboard': 'Dashboard',
-    'nav_profile': 'Profile',
-    'nav_sign_in': 'Sign In',
-    'nav_sign_out': 'Sign Out',
-    'btn_save': 'Save',
-    'btn_cancel': 'Cancel',
-    'btn_edit': 'Edit',
-    'btn_delete': 'Delete',
-    'btn_add': 'Add',
-    'btn_create': 'Create',
-    'btn_filter': 'Filter',
-    'btn_search': 'Search',
-    'btn_generate': 'Generate',
-    'th_id': 'ID',
-    'th_status': 'Status',
-    'th_date': 'Date',
-    'th_name': 'Name',
-    'th_client': 'Client',
-    'th_total': 'Total',
-    'th_actions': 'Actions',
-    'status_pending': 'Pending',
-    'status_confirmed': 'Confirmed',
-    'status_in_progress': 'In Progress',
-    'status_completed': 'Completed',
-    'status_cancelled': 'Cancelled',
-    'status_paid': 'Paid',
-    'status_unpaid': 'Unpaid',
-    'status_active': 'Active',
-    'status_inactive': 'Inactive',
-    'ui_loading': 'Loading...',
-    'ui_yes': 'Yes',
-    'ui_no': 'No',
-    'ui_all': 'All',
-    'ui_previous': 'Previous',
-    'ui_next': 'Next',
-    'ui_page': 'Page',
-    'ui_of': 'of',
-    'ui_total': 'Total',
-    'lang_en': 'EN',
-    'lang_hr': 'HR',
-  };
-
-  // Synchronous init — always has something to show immediately
+  // Synchronous init — use generated data if available
+  if (typeof window.__I18N_DATA !== 'undefined' && currentLang === 'en') {
+    translations = window.__I18N_DATA;
+    ready = true;
+  }
   var cached = localStorage.getItem('i18n_' + currentLang);
   if (cached) {
     try { translations = JSON.parse(cached); ready = true; } catch (e) {}
   }
-  if (!ready) {
-    translations = fallback;
-    ready = true;
-  }
   document.documentElement.lang = currentLang;
 
-  function loadFromApi(lang) {
-    fetch('/api/localization?culture=' + lang)
+  function loadFromJson(lang) {
+    fetch('/i18n/' + lang + '.json')
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (data && Object.keys(data).length > 0) {
@@ -99,11 +43,12 @@
     document.cookie = 'lang=' + lang + ';path=/';
     var c = localStorage.getItem('i18n_' + lang);
     if (c) { try { translations = JSON.parse(c); ready = true; } catch (e) {} }
-    else { translations = fallback; ready = true; }
+    else if (typeof window.__I18N_DATA !== 'undefined' && lang === 'en') { translations = window.__I18N_DATA; ready = true; }
+    else { translations = {}; ready = true; }
     document.documentElement.lang = lang;
     processDOM();
     window.dispatchEvent(new CustomEvent('i18nReady'));
-    loadFromApi(lang);
+    loadFromJson(lang);
   }
 
   function __(key) {
@@ -114,8 +59,9 @@
 
   function __status(s) {
     if (!s) return '';
-    var key = 'status_' + s.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
-    return __(key) || s;
+    var key = typeof window.__STATUS_MAP !== 'undefined' ? window.__STATUS_MAP[s] : null;
+    if (key) return __(key);
+    return s;
   }
 
   function processDOM() {
@@ -175,7 +121,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     initLanguageSwitcher();
     processDOM();
-    loadFromApi(currentLang);
+    loadFromJson(currentLang);
   });
 
   window.__ = __;

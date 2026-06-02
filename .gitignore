@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# i18n build artifacts
+wwwroot/i18n/
+wwwroot/js/i18n-data.js

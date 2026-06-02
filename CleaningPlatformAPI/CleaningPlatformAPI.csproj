@@ -21,4 +21,7 @@
     <PackageReference Include="SendGrid" Version="9.29.3" />
   </ItemGroup>
 
+  <Target Name="GenerateI18n" BeforeTargets="BeforeBuild">
+    <Exec Command="node build/generate-i18n.mjs" />
+  </Target>
 </Project>
