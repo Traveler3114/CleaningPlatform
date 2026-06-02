@@ -2,7 +2,8 @@
   'use strict';
 
   var translations = {};
-  var currentLang = localStorage.getItem('lang') || 'en';
+  var availableLangs = typeof window.__I18N_LANGS !== 'undefined' ? window.__I18N_LANGS : ['en'];
+  var currentLang = localStorage.getItem('lang') || availableLangs[0];
   var ready = false;
   var _saved = {};
 
@@ -100,13 +101,23 @@
     var switcher = document.getElementById('lang-switcher');
     if (!switcher) return;
     var btns = switcher.querySelectorAll('.lang-btn');
-    for (var i = 0; i < btns.length; i++) {
-      btns[i].addEventListener('click', function () {
-        var lang = this.getAttribute('data-lang');
-        for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
-        this.classList.add('active');
-        setLanguage(lang);
-      });
+    if (btns.length === 0 && typeof window.__I18N_LANGS !== 'undefined') {
+      for (var i = 0; i < window.__I18N_LANGS.length; i++) {
+        var code = window.__I18N_LANGS[i];
+        var btn = document.createElement('button');
+        btn.className = 'lang-btn';
+        btn.setAttribute('data-lang', code);
+        btn.textContent = __('lang_' + code) || code.toUpperCase();
+        btn.addEventListener('click', function () {
+          var lang = this.getAttribute('data-lang');
+          var all = switcher.querySelectorAll('.lang-btn');
+          for (var j = 0; j < all.length; j++) all[j].classList.remove('active');
+          this.classList.add('active');
+          setLanguage(lang);
+        });
+        switcher.appendChild(btn);
+      }
+      btns = switcher.querySelectorAll('.lang-btn');
     }
     for (var i = 0; i < btns.length; i++) {
       if (btns[i].getAttribute('data-lang') === currentLang) btns[i].classList.add('active');
@@ -114,7 +125,7 @@
   }
 
   var browserLang = (navigator.language || navigator.userLanguage || '').substring(0, 2);
-  if (['hr'].indexOf(browserLang) >= 0) {
+  if (availableLangs.indexOf(browserLang) >= 0) {
     if (!localStorage.getItem('lang')) currentLang = browserLang;
   }
 

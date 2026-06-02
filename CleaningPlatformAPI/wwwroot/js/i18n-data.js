@@ -544,3 +544,4 @@ window.__STATUS_MAP = {
   "Converted": "status_converted",
   "Ended": "status_ended"
 };
+window.__I18N_LANGS = ["en","hr"];
