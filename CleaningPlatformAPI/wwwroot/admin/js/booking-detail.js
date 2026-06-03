@@ -107,14 +107,21 @@ function renderServices(services) {
         container.innerHTML = '<div class="alert alert-info">' + __('empty_no_services_assigned') + '</div>';
         return;
     }
-    let html = '<table class="admin-table"><thead><tr><th>' + __('th_name') + '</th><th>' + __('th_items') + '</th><th>' + __('label_est_price') + '</th><th>' + __('th_price') + '</th><th>' + __('th_notes') + '</th><th>' + __('th_actions') + '</th></tr></thead><tbody>';
+    let html = '<table class="admin-table"><thead><tr><th>' + __('th_name') + '</th><th>' + __('th_approx_time') + '</th><th>' + __('th_items') + '</th><th>' + __('label_est_price') + '</th><th>' + __('th_price') + '</th><th>' + __('th_inventory') + '</th><th>' + __('th_notes') + '</th><th>' + __('th_actions') + '</th></tr></thead><tbody>';
     services.forEach(s => {
+        const approxStr = s.approxTime ? s.approxTime + ' min' : '-';
+        let invHtml = '-';
+        if (s.inventoryRequirements && s.inventoryRequirements.length) {
+            invHtml = s.inventoryRequirements.map(r => `${r.inventoryName}: ${r.quantityNeeded} ${r.unit || ''}`).join('<br>');
+        }
         html += `<tr>
             <td>${s.serviceName}</td>
+            <td>${approxStr}</td>
             <td>${s.quantity}</td>
             <td>${s.estimatedPrice ? s.estimatedPrice.toFixed(2) : '-'}</td>
             <td><input type="number" id="price-${s.id}" step="0.01" class="small-input" value="${s.finalPrice || ''}" placeholder="Final price" />
                 <button onclick="updateServicePrice(${s.id})" class="btn btn-sm">${__('btn_save')}</button></td>
+            <td>${invHtml}</td>
             <td>${s.notes || '-'}</td>
             <td><button onclick="removeService(${s.id})" class="btn btn-sm">${__('btn_remove')}</button></td>
         </tr>`;

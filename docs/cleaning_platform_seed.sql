@@ -102,6 +102,7 @@ CREATE TABLE ServiceCatalog (
     Category            NVARCHAR(100)   NULL,
     Unit                NVARCHAR(50)    NULL,
     BasePrice           DECIMAL(10,2)   NULL,
+    ApproxTime          INT             NULL,
     ServiceType         NVARCHAR(50)    NOT NULL DEFAULT 'Vehicle',
     IsActive            BIT             NOT NULL DEFAULT 1,
     CreatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
@@ -155,6 +156,86 @@ INSERT INTO ServiceCatalog (CatalogCode, Name, Category, Unit, BasePrice, Servic
 ('B-102', N'Pranje broda - Detailing', 'Boat', N'Po brodu', 900.00, 'Boat');
 GO
 
+CREATE TABLE Inventory (
+    Id              INT             PRIMARY KEY IDENTITY(1,1),
+    Name            NVARCHAR(200)   NOT NULL,
+    Quantity        DECIMAL(10,2)   NOT NULL,
+    Unit            NVARCHAR(20)    NOT NULL,
+    Category        NVARCHAR(100)   NULL,
+    Type            NVARCHAR(20)    NOT NULL DEFAULT 'Consumable',
+    CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT CHK_Inventory_Type CHECK (Type IN ('Consumable', 'Equipment'))
+);
+GO
+CREATE INDEX IX_Inventory_Category ON Inventory(Category);
+GO
+
+CREATE TABLE ServiceInventoryRequirements (
+    Id                  INT             PRIMARY KEY IDENTITY(1,1),
+    ServiceCatalogId    INT             NOT NULL,
+    InventoryId         INT             NOT NULL,
+    QuantityNeeded      DECIMAL(10,2)   NOT NULL,
+    CONSTRAINT FK_SvcInvReq_Catalog  FOREIGN KEY (ServiceCatalogId) REFERENCES ServiceCatalog(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_SvcInvReq_Inventory FOREIGN KEY (InventoryId)      REFERENCES Inventory(Id),
+    CONSTRAINT UQ_SvcInvReq UNIQUE (ServiceCatalogId, InventoryId)
+);
+GO
+CREATE INDEX IX_SvcInvReq_Catalog   ON ServiceInventoryRequirements(ServiceCatalogId);
+GO
+CREATE INDEX IX_SvcInvReq_Inventory ON ServiceInventoryRequirements(InventoryId);
+GO
+
+-- ============================================================
+-- INVENTORY SEED DATA
+-- ============================================================
+
+INSERT INTO Inventory (Name, Quantity, Unit, Category, Type) VALUES
+('Miniwash Kärcher K2', 3, 'kom', 'Strojevi za pranje', 'Equipment'),
+('Miniwash Kärcher K4', 2, 'kom', 'Strojevi za pranje', 'Equipment'),
+(N'Usisavač vlage i prašine', 2, 'kom', 'Strojevi za pranje', 'Equipment'),
+(N'Šampon za pranje vozila 5L', 5, 'L', N'Kemijska sredstva', 'Consumable'),
+('Sredstvo za stakla 1L', 3, 'L', N'Kemijska sredstva', 'Consumable'),
+(N'Sredstvo za odmašćivanje 5L', 4, 'L', N'Kemijska sredstva', 'Consumable'),
+(N'Šampon za tepihe 5L', 2, 'L', N'Kemijska sredstva', 'Consumable'),
+('Mikrofiber krpe (paket 10)', 10, 'kom', 'Pribor', 'Consumable'),
+(N'Spužva za pranje (meka)', 15, 'kom', 'Pribor', 'Consumable'),
+(N'Četka za felge', 5, 'kom', 'Pribor', 'Equipment'),
+('Kanta za vodu 20L', 4, 'kom', 'Pribor', 'Equipment'),
+(N'Zaštitne rukavice', 20, 'kom', 'Osobna zaštita', 'Consumable');
+GO
+
+-- ============================================================
+-- SERVICE INVENTORY REQUIREMENTS SEED DATA
+-- ============================================================
+
+-- B-01 (Kompletno Pranje vozila - LIM/OBD, Id=23) -> Kärcher K2 (Id=1), Šampon 5L (Id=4), Mikrofiber krpe (Id=8), Spužva (Id=9)
+INSERT INTO ServiceInventoryRequirements (ServiceCatalogId, InventoryId, QuantityNeeded)
+SELECT sc.Id, i.Id, req.Qty
+FROM ServiceCatalog sc
+CROSS JOIN (VALUES ('Kärcher K2', 1), ('Šampon 5L', 0.2), ('Mikrofiber krpe', 2), ('Spužva', 1)) AS req(ItemName, Qty)
+INNER JOIN Inventory i ON i.Name LIKE '%' + req.ItemName + '%'
+WHERE sc.CatalogCode = 'B-01';
+GO
+
+-- B-02 (SUV, Id=24) -> Kärcher K4 (Id=2), Šampon 5L (Id=4), Mikrofiber krpe (Id=8), Spužva (Id=9)
+INSERT INTO ServiceInventoryRequirements (ServiceCatalogId, InventoryId, QuantityNeeded)
+SELECT sc.Id, i.Id, req.Qty
+FROM ServiceCatalog sc
+CROSS JOIN (VALUES ('Kärcher K4', 1), ('Šampon 5L', 0.3), ('Mikrofiber krpe', 3), ('Spužva', 1)) AS req(ItemName, Qty)
+INNER JOIN Inventory i ON i.Name LIKE '%' + req.ItemName + '%'
+WHERE sc.CatalogCode = 'B-02';
+GO
+
+-- B-101 (Pranje jedrilice/broda, Id=38) -> Kärcher K4 (Id=2), Šampon 5L (Id=4), Četka za felge (Id=10)
+INSERT INTO ServiceInventoryRequirements (ServiceCatalogId, InventoryId, QuantityNeeded)
+SELECT sc.Id, i.Id, req.Qty
+FROM ServiceCatalog sc
+CROSS JOIN (VALUES ('Kärcher K4', 1), ('Šampon 5L', 0.5), ('Četka', 1)) AS req(ItemName, Qty)
+INNER JOIN Inventory i ON i.Name LIKE '%' + req.ItemName + '%'
+WHERE sc.CatalogCode = 'B-101';
+GO
+
 CREATE TABLE Roles (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     Name            NVARCHAR(100)   NOT NULL UNIQUE,
@@ -195,7 +276,7 @@ DECLARE @AllowedKeys TABLE (KeyName NVARCHAR(100));
 INSERT INTO @AllowedKeys (KeyName) VALUES
     -- Pages
     ('pages.daily'), ('pages.bookings'), ('pages.schedule'), ('pages.users'),
-    ('pages.roles'), ('pages.clients'), ('pages.kanban'), ('pages.sop'), ('pages.reports'),
+    ('pages.roles'), ('pages.clients'), ('pages.kanban'), ('pages.sop'), ('pages.reports'), ('pages.inventory'),
     -- Bookings
     ('bookings.view'), ('bookings.create'), ('bookings.edit'), ('bookings.delete'),('bookings.progress'),
     -- Clients
@@ -206,6 +287,8 @@ INSERT INTO @AllowedKeys (KeyName) VALUES
     ('sops.view'), ('sops.manage'),
     -- Services
     ('services.view'), ('services.manage'),
+    -- Inventory
+    ('inventory.view'), ('inventory.manage'),
     -- Schedule
     ('schedule.view'), ('schedule.edit'),
     -- Users

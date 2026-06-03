@@ -74,7 +74,18 @@ public static class BookingMapper
             EstimatedPrice = bs.EstimatedPrice,
             FinalPrice = bs.FinalPrice,
             Quantity = bs.Quantity,
-            Notes = bs.Notes
+            ApproxTime = bs.ServiceCatalog?.ApproxTime,
+            Notes = bs.Notes,
+            InventoryRequirements = bs.ServiceCatalog?.InventoryRequirements?.Select(r => new RequirementResponse
+            {
+                Id = r.Id,
+                ServiceCatalogId = r.ServiceCatalogId,
+                InventoryId = r.InventoryId,
+                InventoryName = r.Inventory?.Name ?? string.Empty,
+                Unit = r.Inventory?.Unit ?? string.Empty,
+                InventoryType = r.Inventory?.Type ?? string.Empty,
+                QuantityNeeded = r.QuantityNeeded
+            }).ToList()
         }).ToList();
         return response;
     }

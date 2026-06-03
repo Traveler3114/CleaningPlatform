@@ -98,14 +98,32 @@ async function loadResourceGrid() {
     if (currentView === 'week') apiDate = getMonday(anchorDate);
     if (currentView === 'month') apiDate = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1);
     try {
-        const res = await apiFetch(`/kanban/resourcegrid?anchorDate=${formatDateForApi(apiDate)}&view=${currentView}`);
-        if (res.success && res.data) {
-            resourceGrid = res.data;
-            // CRITICAL: Convert anchorDate string to Date object
+        const [gridRes, warnRes] = await Promise.all([
+            apiFetch(`/kanban/resourcegrid?anchorDate=${formatDateForApi(apiDate)}&view=${currentView}`),
+            currentView === 'day' ? apiFetch(`/kanban/equipment-warnings?date=${formatDateForApi(anchorDate)}`) : Promise.resolve(null)
+        ]);
+        if (gridRes.success && gridRes.data) {
+            resourceGrid = gridRes.data;
             resourceGrid.anchorDate = new Date(resourceGrid.anchorDate);
             renderResourceGrid();
-        } else showError(res.message);
+            renderEquipmentWarnings(warnRes);
+        } else showError(gridRes.message);
     } catch (e) { showError(e.message); }
+}
+
+function renderEquipmentWarnings(warnRes) {
+    const container = document.getElementById('equipment-warnings');
+    if (!container) return;
+    if (!warnRes || !warnRes.success || !warnRes.data || !warnRes.data.length) {
+        container.innerHTML = '';
+        return;
+    }
+    let html = '<div class="alert alert-warning" style="margin-bottom:1rem;"><strong>' + __('label_equipment_warnings') + ':</strong><ul style="margin:0.5rem 0 0 1rem;">';
+    warnRes.data.forEach(w => {
+        html += `<li>${__('label_insufficient_equipment').replace('{0}', w.inventoryName).replace('{1}', w.hour).replace('{2}', w.required).replace('{3}', w.available)}</li>`;
+    });
+    html += '</ul></div>';
+    container.innerHTML = html;
 }
 
 function renderResourceGrid() {

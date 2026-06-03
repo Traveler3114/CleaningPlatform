@@ -12,6 +12,7 @@ public static class PermissionKeys
     public const string PagesKanban = "pages.kanban";
     public const string PagesSop = "pages.sop";
     public const string PagesReports = "pages.reports";
+    public const string PagesInventory = "pages.inventory";
 
     // ── Bookings ─────────────────────────────────────────────
     public const string BookingsView = "bookings.view";
@@ -56,6 +57,10 @@ public static class PermissionKeys
     public const string ReportsView = "reports.view";
     public const string ReportsExport = "reports.export";
 
+    // ── Inventory ────────────────────────────────────────────
+    public const string InventoryView = "inventory.view";
+    public const string InventoryManage = "inventory.manage";
+
     // ── Master list (must stay in sync with Meta below) ──────
     public static readonly string[] All =
     [
@@ -69,6 +74,7 @@ public static class PermissionKeys
         PagesKanban,
         PagesSop,
         PagesReports,
+        PagesInventory,
         // Bookings
         BookingsView,
         BookingsCreate,
@@ -103,6 +109,9 @@ public static class PermissionKeys
         // Reports
         ReportsView,
         ReportsExport,
+        // Inventory
+        InventoryView,
+        InventoryManage,
     ];
 
     public static readonly Dictionary<string, (string DisplayName, string Description, string Category)> Meta = new()
@@ -117,6 +126,7 @@ public static class PermissionKeys
         [PagesKanban] = ("Kanban / Calendar", "Access the kanban and calendar board", "Pages"),
         [PagesSop] = ("SOP Library Page", "Access the SOP library", "Pages"),
         [PagesReports] = ("Reports Page", "Access the finance and reports page", "Pages"),
+        [PagesInventory] = ("Inventory Page", "Access the inventory management page", "Pages"),
 
         // Bookings
         [BookingsView] = ("View Bookings", "Read bookings list and detail", "Bookings"),
@@ -160,6 +170,10 @@ public static class PermissionKeys
         // Reports
         [ReportsView] = ("View Reports", "Read financial reports and dashboards", "Reports"),
         [ReportsExport] = ("Export Reports", "Export financial data to Excel", "Reports"),
+
+        // Inventory
+        [InventoryView] = ("View Inventory", "Read the inventory list", "Inventory"),
+        [InventoryManage] = ("Manage Inventory", "Create, edit and delete inventory items", "Inventory"),
     };
 
     static PermissionKeys()

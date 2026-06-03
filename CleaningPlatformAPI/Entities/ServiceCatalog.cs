@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -23,6 +24,8 @@ public class ServiceCatalog
 
     public decimal? BasePrice { get; set; }
 
+    public int? ApproxTime { get; set; }
+
     [Required, MaxLength(50)]
     public string ServiceType { get; set; } = "Vehicle";
 
@@ -33,4 +36,5 @@ public class ServiceCatalog
     // Navigation
     public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
     public ICollection<SopTemplate> SopTemplates { get; set; } = new List<SopTemplate>();
+    public ICollection<ServiceInventoryRequirement> InventoryRequirements { get; set; } = new List<ServiceInventoryRequirement>();
 }

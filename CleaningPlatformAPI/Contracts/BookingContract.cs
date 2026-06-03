@@ -44,7 +44,9 @@ public class BookingServiceResponse
     public decimal? EstimatedPrice { get; set; }
     public decimal? FinalPrice { get; set; }
     public decimal Quantity { get; set; }
+    public int? ApproxTime { get; set; }
     public string? Notes { get; set; }
+    public List<RequirementResponse>? InventoryRequirements { get; set; }
 }
 
 public record CreateBookingRequest

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="page_admin_inventory">Inventory — Cleaning Platform</title>
+    <link rel="stylesheet" href="/admin/css/admin.css" />
+</head>
+<body>
+<aside class="sidebar" id="sidebar"></aside>
+<div class="main-wrapper">
+    <header class="top-header">
+        <div class="header-left">
+            <button class="mobile-toggle" id="mobile-toggle">☰</button>
+            <div class="breadcrumb"><strong data-i18n="page_admin_inventory">Inventory</strong></div>
+        </div>
+        <div class="header-right"><div id="lang-switcher"></div>
+            <div class="user-info">
+                <div class="user-avatar">U</div>
+                <div class="user-details">
+                    <a href="/admin/profile.html" class="user-name">Loading...</a>
+                    <span class="user-role"></span>
+                </div>
+            </div>
+            <button id="logout-btn" class="logout-btn" data-i18n="nav_sign_out">Sign out</button>
+        </div>
+    </header>
+    <main class="admin-main">
+        <div class="page-header">
+            <button id="new-item-btn" class="btn" data-i18n="btn_create_item">+ Create Item</button>
+        </div>
+        <div id="error-container"></div>
+        <div id="inventory-list"></div>
+
+        <div id="item-modal" class="modal-backdrop" style="display:none;">
+            <div class="modal-panel">
+                <h2 class="section-title" id="item-modal-title" data-i18n="btn_create_item">Create Item</h2>
+                <form id="item-form" class="form-grid two-col">
+                    <input type="hidden" id="item-id" />
+                    <label><span data-i18n="label_item_name">Item Name</span> <input type="text" id="item-name" class="text-input" required /></label>
+                    <label><span data-i18n="label_type">Type</span>
+                        <select id="item-type" class="text-input">
+                            <option value="Consumable" data-i18n="label_consumable">Consumable</option>
+                            <option value="Equipment" data-i18n="label_equipment">Equipment</option>
+                        </select>
+                    </label>
+                    <label><span data-i18n="label_quantity">Quantity</span> <input type="number" id="item-quantity" step="0.01" class="small-input" /></label>
+                    <label><span data-i18n="label_unit">Unit</span> <input type="text" id="item-unit" class="small-input" /></label>
+
+                    <div class="modal-actions full-span">
+                        <button type="submit" class="btn btn-sm">Save</button>
+                        <button type="button" class="btn btn-sm" onclick="closeItemModal()">Cancel</button>
+                    </div>
+                </form>
+                <form id="item-delete-form" style="display:none; margin-top:0.75rem;">
+                    <button type="button" id="delete-item-btn" class="btn btn-sm" style="background:#c62828;color:#fff;">Delete</button>
+                </form>
+                <form id="item-adjust-form" style="display:none; margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid #ddd;">
+                    <h4 class="section-title" data-i18n="label_adjust_stock">Adjust Stock</h4>
+                    <p style="font-size:0.85rem;color:#666;" data-i18n="label_positive_add_negative_remove">Positive adds stock, negative removes.</p>
+                    <div class="inline-form">
+                        <input type="number" id="adjust-amount" step="0.01" class="small-input" placeholder="Amount" />
+                        <button type="button" id="adjust-stock-btn" class="btn btn-sm">Adjust</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <footer class="admin-footer"><p>&copy; 2025 Cleaning Platform</p></footer>
+    <script src="/admin/js/admin-api.js"></script>
+    <script src="/admin/js/admin-common.js"></script>
+    <script src="/admin/js/inventory.js"></script>
+</div>
+  <script src="/js/i18n-data.js"></script>
+  <script src="/js/i18n.js"></script>
+</body>
+</html>

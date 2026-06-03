@@ -47,3 +47,12 @@ public record ResourceBookingCard(
     string Status,
     string? SiteName
 );
+
+public class EquipmentWarningResponse
+{
+    public string InventoryName { get; set; } = string.Empty;
+    public string Unit { get; set; } = string.Empty;
+    public int Hour { get; set; }
+    public decimal Available { get; set; }
+    public decimal Required { get; set; }
+}

@@ -37,6 +37,8 @@ public class AppDbContext : DbContext
     public DbSet<TopClientView> TopClientViews { get; set; }
     public DbSet<EmployeeUtilizationView> EmployeeUtilizationViews { get; set; }
     public DbSet<JobCompletionRateView> JobCompletionRateViews { get; set; }
+    public DbSet<Inventory> Inventory { get; set; }
+    public DbSet<ServiceInventoryRequirement> ServiceInventoryRequirements { get; set; }
     public DbSet<OverdueInvoiceSummaryView> OverdueInvoiceSummaryViews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -92,6 +94,14 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<BoatBookingDetails>()
             .Property(b => b.LengthMeters).HasPrecision(5, 2);
+
+        modelBuilder.Entity<Inventory>()
+            .Property(i => i.Quantity).HasPrecision(10, 2);
+        modelBuilder.Entity<Inventory>()
+            .Property(i => i.Type).HasMaxLength(20);
+
+        modelBuilder.Entity<ServiceInventoryRequirement>()
+            .Property(r => r.QuantityNeeded).HasPrecision(10, 2);
 
         modelBuilder.Entity<Booking>()
             .Property(b => b.ServiceType)
@@ -366,6 +376,23 @@ public class AppDbContext : DbContext
             .HasIndex(cr => new { cr.BookingAssignmentId, cr.ChecklistItemId })
             .IsUnique();
 
+        // ServiceInventoryRequirement → ServiceCatalog
+        modelBuilder.Entity<ServiceInventoryRequirement>()
+            .HasOne(r => r.ServiceCatalog)
+            .WithMany(s => s.InventoryRequirements)
+            .HasForeignKey(r => r.ServiceCatalogId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ServiceInventoryRequirement → Inventory
+        modelBuilder.Entity<ServiceInventoryRequirement>()
+            .HasOne(r => r.Inventory)
+            .WithMany(i => i.ServiceRequirements)
+            .HasForeignKey(r => r.InventoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ServiceInventoryRequirement>()
+            .HasIndex(r => new { r.ServiceCatalogId, r.InventoryId })
+            .IsUnique();
 
         // Global DateTime precision
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

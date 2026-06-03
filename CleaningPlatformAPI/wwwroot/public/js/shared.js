@@ -3,7 +3,7 @@
 const publicNav = [
     { labelKey: 'nav_services', label: 'Services', href: '/public/services.html' },
     { labelKey: 'nav_get_quote', label: 'Get a Quote', href: '/public/book.html', cta: true },
-    { labelKey: 'nav_sign_in', label: 'Sign In', href: '/portal/login.html' },
+    // { labelKey: 'nav_sign_in', label: 'Sign In', href: '/portal/login.html' },
 ];
 
 function renderPublicNav() {

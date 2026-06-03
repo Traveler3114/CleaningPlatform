@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title data-i18n="page_admin_services">Services — Cleaning Platform</title>
+    <title data-i18n="page_admin_service_detail">Service Detail — Cleaning Platform</title>
     <link rel="stylesheet" href="/admin/css/admin.css" />
 </head>
 <body>
@@ -12,7 +12,7 @@
     <header class="top-header">
         <div class="header-left">
             <button class="mobile-toggle" id="mobile-toggle">☰</button>
-            <div class="breadcrumb"><strong data-i18n="page_admin_services">Services</strong></div>
+            <div class="breadcrumb"><strong data-i18n="page_admin_service_detail">Service</strong></div>
         </div>
         <div class="header-right"><div id="lang-switcher"></div>
             <div class="user-info">
@@ -25,17 +25,15 @@
             <button id="logout-btn" class="logout-btn" data-i18n="nav_sign_out">Sign out</button>
         </div>
     </header>
-    <main class="admin-main">
-        <div class="page-header">
-            <a href="service-detail.html" class="btn" data-i18n="btn_create_service">+ Create Service</a>
-        </div>
-        <div id="error-container"></div>
-        <div id="services-list"></div>
-    </main>
-    <footer class="admin-footer"><p>&copy; 2025 Cleaning Platform</p></footer>
-    <script src="/admin/js/admin-api.js"></script>
-    <script src="/admin/js/admin-common.js"></script>
-    <script src="/admin/js/services.js"></script>
+<main class="admin-main">
+    <div id="error-container"></div>
+    <div id="service-detail"></div>
+    <a href="/admin/services.html" class="btn btn-sm" data-i18n="btn_back_to_services">← Back to Services</a>
+</main>
+<footer class="admin-footer"><p>&copy; 2025 Cleaning Platform</p></footer>
+<script src="/admin/js/admin-api.js"></script>
+<script src="/admin/js/admin-common.js"></script>
+<script src="/admin/js/service-detail.js"></script>
 </div>
   <script src="/js/i18n-data.js"></script>
   <script src="/js/i18n.js"></script>

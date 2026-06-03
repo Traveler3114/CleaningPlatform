@@ -102,6 +102,7 @@ CREATE TABLE ServiceCatalog (
     Category            NVARCHAR(100)   NULL,
     Unit                NVARCHAR(50)    NULL,
     BasePrice           DECIMAL(10,2)   NULL,
+    ApproxTime          INT             NULL,
     ServiceType         NVARCHAR(50)    NOT NULL DEFAULT 'Vehicle',
     IsActive            BIT             NOT NULL DEFAULT 1,
     CreatedAt           DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
@@ -155,6 +156,36 @@ INSERT INTO ServiceCatalog (CatalogCode, Name, Category, Unit, BasePrice, Servic
 ('B-102', N'Pranje broda - Detailing', 'Boat', N'Po brodu', 900.00, 'Boat');
 GO
 
+CREATE TABLE Inventory (
+    Id              INT             PRIMARY KEY IDENTITY(1,1),
+    Name            NVARCHAR(200)   NOT NULL,
+    Quantity        DECIMAL(10,2)   NOT NULL,
+    Unit            NVARCHAR(20)    NOT NULL,
+    Category        NVARCHAR(100)   NULL,
+    Type            NVARCHAR(20)    NOT NULL DEFAULT 'Consumable',
+    CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    UpdatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT CHK_Inventory_Type CHECK (Type IN ('Consumable', 'Equipment'))
+);
+GO
+CREATE INDEX IX_Inventory_Category ON Inventory(Category);
+GO
+
+CREATE TABLE ServiceInventoryRequirements (
+    Id                  INT             PRIMARY KEY IDENTITY(1,1),
+    ServiceCatalogId    INT             NOT NULL,
+    InventoryId         INT             NOT NULL,
+    QuantityNeeded      DECIMAL(10,2)   NOT NULL,
+    CONSTRAINT FK_SvcInvReq_Catalog  FOREIGN KEY (ServiceCatalogId) REFERENCES ServiceCatalog(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_SvcInvReq_Inventory FOREIGN KEY (InventoryId)      REFERENCES Inventory(Id),
+    CONSTRAINT UQ_SvcInvReq UNIQUE (ServiceCatalogId, InventoryId)
+);
+GO
+CREATE INDEX IX_SvcInvReq_Catalog   ON ServiceInventoryRequirements(ServiceCatalogId);
+GO
+CREATE INDEX IX_SvcInvReq_Inventory ON ServiceInventoryRequirements(InventoryId);
+GO
+
 CREATE TABLE Roles (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     Name            NVARCHAR(100)   NOT NULL UNIQUE,
@@ -195,7 +226,7 @@ DECLARE @AllowedKeys TABLE (KeyName NVARCHAR(100));
 INSERT INTO @AllowedKeys (KeyName) VALUES
     -- Pages
     ('pages.daily'), ('pages.bookings'), ('pages.schedule'), ('pages.users'),
-    ('pages.roles'), ('pages.clients'), ('pages.kanban'), ('pages.sop'), ('pages.reports'),
+    ('pages.roles'), ('pages.clients'), ('pages.kanban'), ('pages.sop'), ('pages.reports'), ('pages.inventory'),
     -- Bookings
     ('bookings.view'), ('bookings.create'), ('bookings.edit'), ('bookings.delete'),('bookings.progress'),
     -- Clients
@@ -206,6 +237,8 @@ INSERT INTO @AllowedKeys (KeyName) VALUES
     ('sops.view'), ('sops.manage'),
     -- Services
     ('services.view'), ('services.manage'),
+    -- Inventory
+    ('inventory.view'), ('inventory.manage'),
     -- Schedule
     ('schedule.view'), ('schedule.edit'),
     -- Users

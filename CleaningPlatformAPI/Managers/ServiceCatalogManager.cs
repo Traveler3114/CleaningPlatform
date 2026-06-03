@@ -26,6 +26,14 @@ public class ServiceCatalogManager
         return services.Select(ServiceCatalogMapper.ToResponse).ToList();
     }
 
+    public async Task<OperationResult<ServiceCatalogResponse>> GetByIdAsync(int id, CancellationToken ct = default)
+    {
+        var entity = await _db.ServiceCatalog.FindAsync([id], ct);
+        if (entity is null)
+            return OperationResult<ServiceCatalogResponse>.Fail("Service not found.");
+        return OperationResult<ServiceCatalogResponse>.Ok(ServiceCatalogMapper.ToResponse(entity));
+    }
+
     public async Task<OperationResult<ServiceCatalogResponse>> CreateAsync(ServiceCatalogUpsertRequest dto, CancellationToken ct = default)
     {
         var code = dto.CatalogCode.Trim();
@@ -56,6 +64,7 @@ public class ServiceCatalogManager
             Category = category,
             Unit = string.IsNullOrWhiteSpace(dto.Unit) ? null : dto.Unit.Trim(),
             BasePrice = dto.BasePrice,
+            ApproxTime = dto.ApproxTime,
             ServiceType = serviceType,
             IsActive = dto.IsActive,
             CreatedAt = now,
@@ -101,6 +110,7 @@ public class ServiceCatalogManager
         entity.Category = category;
         entity.Unit = string.IsNullOrWhiteSpace(dto.Unit) ? null : dto.Unit.Trim();
         entity.BasePrice = dto.BasePrice;
+        entity.ApproxTime = dto.ApproxTime;
         entity.ServiceType = serviceType;
         entity.IsActive = dto.IsActive;
         entity.UpdatedAt = DateTime.UtcNow;
@@ -118,5 +128,105 @@ public class ServiceCatalogManager
         _db.ServiceCatalog.Remove(entity);
         await _db.SaveChangesAsync(ct);
         return OperationResult<string>.Ok("Service deleted.");
+    }
+
+    // ── Inventory Requirements ─────────────────────────────────
+
+    public async Task<List<RequirementResponse>> GetRequirementsAsync(int serviceId, CancellationToken ct = default)
+    {
+        var requirements = await _db.ServiceInventoryRequirements
+            .Include(r => r.Inventory)
+            .Where(r => r.ServiceCatalogId == serviceId)
+            .ToListAsync(ct);
+
+        return requirements.Select(r => new RequirementResponse
+        {
+            Id = r.Id,
+            ServiceCatalogId = r.ServiceCatalogId,
+            InventoryId = r.InventoryId,
+            InventoryName = r.Inventory?.Name ?? string.Empty,
+            Unit = r.Inventory?.Unit ?? string.Empty,
+            InventoryType = r.Inventory?.Type ?? string.Empty,
+            QuantityNeeded = r.QuantityNeeded
+        }).ToList();
+    }
+
+    public async Task<OperationResult<RequirementResponse>> AddRequirementAsync(int serviceId, RequirementUpsertRequest dto, CancellationToken ct = default)
+    {
+        var serviceExists = await _db.ServiceCatalog.AnyAsync(s => s.Id == serviceId, ct);
+        if (!serviceExists)
+            return OperationResult<RequirementResponse>.Fail("Service not found.");
+
+        var inventoryExists = await _db.Inventory.AnyAsync(i => i.Id == dto.InventoryId, ct);
+        if (!inventoryExists)
+            return OperationResult<RequirementResponse>.Fail("Inventory item not found.");
+
+        var alreadyExists = await _db.ServiceInventoryRequirements
+            .AnyAsync(r => r.ServiceCatalogId == serviceId && r.InventoryId == dto.InventoryId, ct);
+        if (alreadyExists)
+            return OperationResult<RequirementResponse>.Fail("This inventory item is already linked to this service.");
+
+        if (dto.QuantityNeeded <= 0)
+            return OperationResult<RequirementResponse>.Fail("Quantity needed must be greater than zero.");
+
+        var entity = new ServiceInventoryRequirement
+        {
+            ServiceCatalogId = serviceId,
+            InventoryId = dto.InventoryId,
+            QuantityNeeded = dto.QuantityNeeded
+        };
+
+        _db.ServiceInventoryRequirements.Add(entity);
+        await _db.SaveChangesAsync(ct);
+
+        var inventory = await _db.Inventory.FindAsync([dto.InventoryId], ct);
+        return OperationResult<RequirementResponse>.Ok(new RequirementResponse
+        {
+            Id = entity.Id,
+            ServiceCatalogId = entity.ServiceCatalogId,
+            InventoryId = entity.InventoryId,
+            InventoryName = inventory?.Name ?? string.Empty,
+            Unit = inventory?.Unit ?? string.Empty,
+            InventoryType = inventory?.Type ?? string.Empty,
+            QuantityNeeded = entity.QuantityNeeded
+        });
+    }
+
+    public async Task<OperationResult<RequirementResponse>> UpdateRequirementAsync(int serviceId, int reqId, RequirementUpsertRequest dto, CancellationToken ct = default)
+    {
+        var entity = await _db.ServiceInventoryRequirements
+            .Include(r => r.Inventory)
+            .FirstOrDefaultAsync(r => r.Id == reqId && r.ServiceCatalogId == serviceId, ct);
+        if (entity is null)
+            return OperationResult<RequirementResponse>.Fail("Requirement not found.");
+
+        if (dto.QuantityNeeded <= 0)
+            return OperationResult<RequirementResponse>.Fail("Quantity needed must be greater than zero.");
+
+        entity.QuantityNeeded = dto.QuantityNeeded;
+        await _db.SaveChangesAsync(ct);
+
+        return OperationResult<RequirementResponse>.Ok(new RequirementResponse
+        {
+            Id = entity.Id,
+            ServiceCatalogId = entity.ServiceCatalogId,
+            InventoryId = entity.InventoryId,
+            InventoryName = entity.Inventory?.Name ?? string.Empty,
+            Unit = entity.Inventory?.Unit ?? string.Empty,
+            InventoryType = entity.Inventory?.Type ?? string.Empty,
+            QuantityNeeded = entity.QuantityNeeded
+        });
+    }
+
+    public async Task<OperationResult<string>> RemoveRequirementAsync(int serviceId, int reqId, CancellationToken ct = default)
+    {
+        var entity = await _db.ServiceInventoryRequirements
+            .FirstOrDefaultAsync(r => r.Id == reqId && r.ServiceCatalogId == serviceId, ct);
+        if (entity is null)
+            return OperationResult<string>.Fail("Requirement not found.");
+
+        _db.ServiceInventoryRequirements.Remove(entity);
+        await _db.SaveChangesAsync(ct);
+        return OperationResult<string>.Ok("Requirement removed.");
     }
 }

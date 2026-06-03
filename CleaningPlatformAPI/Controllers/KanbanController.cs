@@ -40,6 +40,15 @@ public class KanbanController : ControllerBase
         return Ok(OperationResult<ResourceGridResponse>.Ok(result));
     }
 
+    [HttpGet("equipment-warnings")]
+    public async Task<ActionResult<OperationResult<List<EquipmentWarningResponse>>>> GetEquipmentWarnings(
+        [FromQuery] DateTime date,
+        CancellationToken ct)
+    {
+        var warnings = await _kanbanManager.GetEquipmentWarningsAsync(date, ct);
+        return Ok(OperationResult<List<EquipmentWarningResponse>>.Ok(warnings));
+    }
+
     [HttpGet("employee-week")]
     [Authorize(Policy = PermissionKeys.PagesKanban)] // or use a more specific policy if needed
     public async Task<ActionResult<OperationResult<WeeklyBoardResponse>>> GetEmployeeWeek(

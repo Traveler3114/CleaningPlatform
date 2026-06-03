@@ -13,6 +13,7 @@ public static class ServiceCatalogMapper
         Category = s.Category,
         Unit = s.Unit,
         BasePrice = s.BasePrice,
+        ApproxTime = s.ApproxTime,
         ServiceType = s.ServiceType,
         IsActive = s.IsActive,
         CreatedAt = s.CreatedAt,

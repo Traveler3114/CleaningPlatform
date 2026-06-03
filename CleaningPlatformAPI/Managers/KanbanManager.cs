@@ -3,6 +3,7 @@ using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Enums;
+using CleaningPlatformAPI.Entities;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -169,6 +170,49 @@ public class KanbanManager
         }).ToList();
 
         return new ResourceGridResponse(anchorDate, view, employeeColumns, unassigned);
+    }
+
+    public async Task<List<EquipmentWarningResponse>> GetEquipmentWarningsAsync(DateTime date, CancellationToken ct = default)
+    {
+        var bookings = await _db.Bookings
+            .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
+                .ThenInclude(sc => sc.InventoryRequirements).ThenInclude(r => r.Inventory)
+            .Where(b => b.ScheduledDate.Date == date.Date && b.Status != BookingStatus.Cancelled)
+            .ToListAsync(ct);
+
+        var equipment = await _db.Inventory.Where(i => i.Type == "Equipment").ToListAsync(ct);
+        var warnings = new List<EquipmentWarningResponse>();
+
+        foreach (var item in equipment)
+        {
+            var hourGroups = bookings
+                .SelectMany(b => b.BookingServices
+                    .Where(bs => bs.ServiceCatalog.InventoryRequirements.Any(r => r.InventoryId == item.Id))
+                    .Select(bs => new
+                    {
+                        Hour = b.ScheduledTimeSlot?.Hours ?? 0,
+                        Requirement = bs.ServiceCatalog.InventoryRequirements.First(r => r.InventoryId == item.Id)
+                    }))
+                .GroupBy(x => x.Hour);
+
+            foreach (var group in hourGroups)
+            {
+                var required = group.Sum(x => x.Requirement.QuantityNeeded);
+                if (required > item.Quantity)
+                {
+                    warnings.Add(new EquipmentWarningResponse
+                    {
+                        InventoryName = item.Name,
+                        Unit = item.Unit,
+                        Hour = group.Key,
+                        Available = item.Quantity,
+                        Required = required
+                    });
+                }
+            }
+        }
+
+        return warnings;
     }
 
     // ── Shared helpers ─────────────────────────────────────────────────────

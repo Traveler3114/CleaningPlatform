@@ -575,4 +575,42 @@
   <data name="th_upcoming" xml:space="preserve"><value>Nadolazeće</value></data>
   <data name="th_vat" xml:space="preserve"><value>PDV</value></data>
   <data name="th_weeks_ahead" xml:space="preserve"><value>Tjedni unaprijed</value></data>
+  <data name="nav_inventory" xml:space="preserve"><value>Inventar</value></data>
+  <data name="page_admin_inventory" xml:space="preserve"><value>Inventar — Cleaning Platform</value></data>
+  <data name="page_admin_service_detail" xml:space="preserve"><value>Detalji usluge — Cleaning Platform</value></data>
+  <data name="th_approx_time" xml:space="preserve"><value>Okv. vrijeme</value></data>
+  <data name="th_inventory" xml:space="preserve"><value>Inventar</value></data>
+  <data name="th_quantity_needed" xml:space="preserve"><value>Potrebna kol.</value></data>
+  <data name="th_qty_available" xml:space="preserve"><value>Dostupno</value></data>
+  <data name="th_item_type" xml:space="preserve"><value>Tip</value></data>
+  <data name="label_approx_time" xml:space="preserve"><value>Okv. vrijeme (min)</value></data>
+  <data name="label_item_name" xml:space="preserve"><value>Naziv artikla</value></data>
+  <data name="label_quantity" xml:space="preserve"><value>Količina</value></data>
+  <data name="label_unit" xml:space="preserve"><value>Jedinica</value></data>
+  <data name="label_type" xml:space="preserve"><value>Tip</value></data>
+  <data name="label_requirements" xml:space="preserve"><value>Inventarni zahtjevi</value></data>
+  <data name="label_consumable" xml:space="preserve"><value>Potrošni</value></data>
+  <data name="label_equipment" xml:space="preserve"><value>Oprema</value></data>
+  <data name="label_cost_price" xml:space="preserve"><value>Nabavna cijena</value></data>
+  <data name="label_adjust_stock" xml:space="preserve"><value>Prilagodi zalihu</value></data>
+  <data name="label_adjustment_amount" xml:space="preserve"><value>Iznos prilagodbe</value></data>
+  <data name="label_positive_add_negative_remove" xml:space="preserve"><value>Pozitivno dodaje, negativno oduzima.</value></data>
+  <data name="label_equipment_warnings" xml:space="preserve"><value>Upozorenja o opremi</value></data>
+  <data name="label_insufficient_equipment" xml:space="preserve"><value>Nedovoljno {0} u {1}:00 — potrebno {2}, ima {3}</value></data>
+  <data name="ph_search_inventory" xml:space="preserve"><value>Pretraži inventar...</value></data>
+  <data name="btn_create_item" xml:space="preserve"><value>Kreiraj artikl</value></data>
+  <data name="btn_adjust_stock" xml:space="preserve"><value>Prilagodi zalihu</value></data>
+  <data name="btn_back_to_services" xml:space="preserve"><value>← Natrag na usluge</value></data>
+  <data name="btn_back_to_inventory" xml:space="preserve"><value>← Natrag na inventar</value></data>
+  <data name="msg_inventory_created" xml:space="preserve"><value>Artikl inventara kreiran.</value></data>
+  <data name="msg_inventory_updated" xml:space="preserve"><value>Artikl inventara ažuriran.</value></data>
+  <data name="msg_inventory_deleted" xml:space="preserve"><value>Artikl inventara obrisan.</value></data>
+  <data name="msg_stock_adjusted" xml:space="preserve"><value>Zaliha prilagođena.</value></data>
+  <data name="msg_requirement_added" xml:space="preserve"><value>Zahtjev dodan.</value></data>
+  <data name="msg_requirement_updated" xml:space="preserve"><value>Zahtjev ažuriran.</value></data>
+  <data name="msg_requirement_removed" xml:space="preserve"><value>Zahtjev uklonjen.</value></data>
+  <data name="empty_no_inventory" xml:space="preserve"><value>Nema artikala inventara.</value></data>
+  <data name="empty_no_requirements" xml:space="preserve"><value>Nema inventarnih zahtjeva za ovu uslugu.</value></data>
+  <data name="err_inventory_name_required" xml:space="preserve"><value>Naziv artikla je obavezan.</value></data>
+  <data name="err_quantity_needed_required" xml:space="preserve"><value>Potrebna količina mora biti veća od nule.</value></data>
 </root>

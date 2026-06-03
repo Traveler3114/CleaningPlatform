@@ -606,4 +606,42 @@
   <data name="th_upcoming" xml:space="preserve"><value>Upcoming</value></data>
   <data name="th_vat" xml:space="preserve"><value>VAT</value></data>
   <data name="th_weeks_ahead" xml:space="preserve"><value>Weeks Ahead</value></data>
+  <data name="nav_inventory" xml:space="preserve"><value>Inventory</value></data>
+  <data name="page_admin_inventory" xml:space="preserve"><value>Inventory — Cleaning Platform</value></data>
+  <data name="page_admin_service_detail" xml:space="preserve"><value>Service Detail — Cleaning Platform</value></data>
+  <data name="th_approx_time" xml:space="preserve"><value>Approx. Time</value></data>
+  <data name="th_inventory" xml:space="preserve"><value>Inventory</value></data>
+  <data name="th_quantity_needed" xml:space="preserve"><value>Qty Needed</value></data>
+  <data name="th_qty_available" xml:space="preserve"><value>Available</value></data>
+  <data name="th_item_type" xml:space="preserve"><value>Type</value></data>
+  <data name="label_approx_time" xml:space="preserve"><value>Approx. Time (min)</value></data>
+  <data name="label_item_name" xml:space="preserve"><value>Item Name</value></data>
+  <data name="label_quantity" xml:space="preserve"><value>Quantity</value></data>
+  <data name="label_unit" xml:space="preserve"><value>Unit</value></data>
+  <data name="label_type" xml:space="preserve"><value>Type</value></data>
+  <data name="label_requirements" xml:space="preserve"><value>Inventory Requirements</value></data>
+  <data name="label_consumable" xml:space="preserve"><value>Consumable</value></data>
+  <data name="label_equipment" xml:space="preserve"><value>Equipment</value></data>
+  <data name="label_cost_price" xml:space="preserve"><value>Cost Price</value></data>
+  <data name="label_adjust_stock" xml:space="preserve"><value>Adjust Stock</value></data>
+  <data name="label_adjustment_amount" xml:space="preserve"><value>Adjustment Amount</value></data>
+  <data name="label_positive_add_negative_remove" xml:space="preserve"><value>Positive adds stock, negative removes.</value></data>
+  <data name="label_equipment_warnings" xml:space="preserve"><value>Equipment Warnings</value></data>
+  <data name="label_insufficient_equipment" xml:space="preserve"><value>Insufficient {0} at {1}:00 — need {2}, have {3}</value></data>
+  <data name="ph_search_inventory" xml:space="preserve"><value>Search inventory...</value></data>
+  <data name="btn_create_item" xml:space="preserve"><value>Create Item</value></data>
+  <data name="btn_adjust_stock" xml:space="preserve"><value>Adjust Stock</value></data>
+  <data name="btn_back_to_services" xml:space="preserve"><value>← Back to Services</value></data>
+  <data name="btn_back_to_inventory" xml:space="preserve"><value>← Back to Inventory</value></data>
+  <data name="msg_inventory_created" xml:space="preserve"><value>Inventory item created.</value></data>
+  <data name="msg_inventory_updated" xml:space="preserve"><value>Inventory item updated.</value></data>
+  <data name="msg_inventory_deleted" xml:space="preserve"><value>Inventory item deleted.</value></data>
+  <data name="msg_stock_adjusted" xml:space="preserve"><value>Stock adjusted.</value></data>
+  <data name="msg_requirement_added" xml:space="preserve"><value>Requirement added.</value></data>
+  <data name="msg_requirement_updated" xml:space="preserve"><value>Requirement updated.</value></data>
+  <data name="msg_requirement_removed" xml:space="preserve"><value>Requirement removed.</value></data>
+  <data name="empty_no_inventory" xml:space="preserve"><value>No inventory items found.</value></data>
+  <data name="empty_no_requirements" xml:space="preserve"><value>No inventory requirements for this service.</value></data>
+  <data name="err_inventory_name_required" xml:space="preserve"><value>Item name is required.</value></data>
+  <data name="err_quantity_needed_required" xml:space="preserve"><value>Quantity needed must be greater than zero.</value></data>
 </root>

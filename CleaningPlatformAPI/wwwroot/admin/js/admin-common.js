@@ -17,6 +17,7 @@ const adminNav = [
     { sectionKey: 'nav_section_config', section: 'Config', items: [
         { labelKey: 'nav_schedule', label: 'Schedule', href: 'schedule.html', perm: 'schedule.view' },
         { labelKey: 'nav_services', label: 'Services', href: 'services.html', perm: 'services.view' },
+        { labelKey: 'nav_inventory', label: 'Inventory', href: 'inventory.html', perm: 'pages.inventory' },
         { labelKey: 'nav_sops', label: 'SOPs', href: 'sops.html', perm: 'pages.sop' },
     ]},
     { sectionKey: 'nav_section_admin', section: 'Admin', items: [

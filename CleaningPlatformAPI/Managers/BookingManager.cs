@@ -19,9 +19,10 @@ public class BookingManager
     private readonly AppDbContext _db;
     private readonly AvailabilityManager _availability;
     private readonly SopManager _sopManager;
+    private readonly InventoryManager _inventoryManager;
     private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public BookingManager(AppDbContext db, AvailabilityManager availability, SopManager sopManager, IStringLocalizer<SharedResources> localizer) { _db = db; _availability = availability; _sopManager = sopManager; 
+    public BookingManager(AppDbContext db, AvailabilityManager availability, SopManager sopManager, InventoryManager inventoryManager, IStringLocalizer<SharedResources> localizer) { _db = db; _availability = availability; _sopManager = sopManager; _inventoryManager = inventoryManager;
             _localizer = localizer;}
 
     public async Task<List<BookingResponse>> GetBookingsAsync(DateTime date, CancellationToken ct = default)
@@ -94,6 +95,7 @@ public class BookingManager
             .Include(b => b.Client).ThenInclude(c => c.Contacts)
             .Include(b => b.Assignments).ThenInclude(a => a.Employee).ThenInclude(e => e.Role)
             .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
+                .ThenInclude(sc => sc.InventoryRequirements).ThenInclude(r => r.Inventory)
             .FirstOrDefaultAsync(b => b.Id == id, ct);
         return booking is null
             ? OperationResult<BookingResponse>.Fail($"Booking #{id} was not found.")
@@ -362,12 +364,18 @@ public class BookingManager
         if (booking is null)
             return OperationResult<BookingResponse>.Fail($"Booking #{id} was not found.");
 
+        var wasCancelled = booking.Status != BookingStatus.Cancelled && bookingStatus == BookingStatus.Cancelled;
+
         booking.Status    = bookingStatus;
         booking.UpdatedAt = DateTime.UtcNow;
         if (bookingStatus == BookingStatus.Completed)
             booking.CompletedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);
+
+        if (wasCancelled)
+            await RestoreAllConsumablesForBookingAsync(id, ct);
+
         return OperationResult<BookingResponse>.Ok(BookingMapper.ToResponse(booking));
     }
 
@@ -451,6 +459,8 @@ public class BookingManager
         booking.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
 
+        await DeductConsumablesForServiceAsync(serviceCatalogId, ct);
+
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
         return detail;
     }
@@ -465,6 +475,8 @@ public class BookingManager
             .FirstOrDefaultAsync(bs => bs.Id == bookingServiceId && bs.BookingId == bookingId, ct);
         if (bookingService is null)
             return OperationResult<string>.Fail($"Service #{bookingServiceId} was not found on booking #{bookingId}.");
+
+        await RestoreConsumablesForServiceAsync(bookingService.ServiceCatalogId, ct);
 
         _db.BookingServices.Remove(bookingService);
         var booking = await _db.Bookings.FindAsync([bookingId], ct);
@@ -487,5 +499,35 @@ public class BookingManager
 
         var detail = await GetBookingDetailByIdAsync(bookingId, ct);
         return detail;
+    }
+
+    private async Task DeductConsumablesForServiceAsync(int serviceCatalogId, CancellationToken ct)
+    {
+        var requirements = await _db.ServiceInventoryRequirements
+            .Include(r => r.Inventory)
+            .Where(r => r.ServiceCatalogId == serviceCatalogId && r.Inventory.Type == "Consumable")
+            .ToListAsync(ct);
+        foreach (var req in requirements)
+            await _inventoryManager.AdjustStockAsync(req.InventoryId, -req.QuantityNeeded, ct);
+    }
+
+    private async Task RestoreConsumablesForServiceAsync(int serviceCatalogId, CancellationToken ct)
+    {
+        var requirements = await _db.ServiceInventoryRequirements
+            .Include(r => r.Inventory)
+            .Where(r => r.ServiceCatalogId == serviceCatalogId && r.Inventory.Type == "Consumable")
+            .ToListAsync(ct);
+        foreach (var req in requirements)
+            await _inventoryManager.AdjustStockAsync(req.InventoryId, req.QuantityNeeded, ct);
+    }
+
+    private async Task RestoreAllConsumablesForBookingAsync(int bookingId, CancellationToken ct)
+    {
+        var serviceIds = await _db.BookingServices
+            .Where(bs => bs.BookingId == bookingId)
+            .Select(bs => bs.ServiceCatalogId)
+            .ToListAsync(ct);
+        foreach (var serviceId in serviceIds)
+            await RestoreConsumablesForServiceAsync(serviceId, ct);
     }
 }
