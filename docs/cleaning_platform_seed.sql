@@ -822,7 +822,7 @@ WITH BookingTotals AS (
         SELECT TOP 1 ba.EmployeeId
         FROM BookingAssignments ba
         WHERE ba.BookingId = b.Id
-        ORDER BY ba.Id
+        ORDER BY ba.EmployeeId
     ) aa
     JOIN BookingServices bs ON bs.BookingId = b.Id
     WHERE b.Id % 2 = 0
