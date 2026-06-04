@@ -3,6 +3,7 @@ using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
+using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Mapping;
 
 namespace CleaningPlatformAPI.Managers;
@@ -34,8 +35,8 @@ public class InventoryManager
         var name = dto.Name.Trim();
         if (string.IsNullOrWhiteSpace(name))
             return OperationResult<InventoryResponse>.Fail("Item name is required.");
-        if (string.IsNullOrWhiteSpace(dto.Unit))
-            return OperationResult<InventoryResponse>.Fail("Unit is required.");
+        if (!Enum.IsDefined(typeof(InventoryUnit), dto.Unit))
+            return OperationResult<InventoryResponse>.Fail("Invalid unit value.");
         if (dto.Quantity < 0)
             return OperationResult<InventoryResponse>.Fail("Quantity cannot be negative.");
 
@@ -44,7 +45,7 @@ public class InventoryManager
         {
             Name = name,
             Quantity = dto.Quantity,
-            Unit = dto.Unit.Trim(),
+            Unit = dto.Unit,
             Category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim(),
             Type = dto.Type ?? "Consumable",
             CreatedAt = now,
@@ -66,14 +67,14 @@ public class InventoryManager
         var name = dto.Name.Trim();
         if (string.IsNullOrWhiteSpace(name))
             return OperationResult<InventoryResponse>.Fail("Item name is required.");
-        if (string.IsNullOrWhiteSpace(dto.Unit))
-            return OperationResult<InventoryResponse>.Fail("Unit is required.");
+        if (!Enum.IsDefined(typeof(InventoryUnit), dto.Unit))
+            return OperationResult<InventoryResponse>.Fail("Invalid unit value.");
         if (dto.Quantity < 0)
             return OperationResult<InventoryResponse>.Fail("Quantity cannot be negative.");
 
         entity.Name = name;
         entity.Quantity = dto.Quantity;
-        entity.Unit = dto.Unit.Trim();
+        entity.Unit = dto.Unit;
         entity.Category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim();
         entity.Type = dto.Type ?? "Consumable";
         entity.UpdatedAt = DateTime.UtcNow;

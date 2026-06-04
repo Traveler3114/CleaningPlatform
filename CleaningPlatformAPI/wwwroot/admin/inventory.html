@@ -45,7 +45,21 @@
                         </select>
                     </label>
                     <label><span data-i18n="label_quantity">Quantity</span> <input type="number" id="item-quantity" step="0.01" class="small-input" /></label>
-                    <label><span data-i18n="label_unit">Unit</span> <input type="text" id="item-unit" class="small-input" /></label>
+                    <label><span data-i18n="label_unit">Unit</span>
+                        <select id="item-unit" class="text-input">
+                            <option value="Piece">Piece</option>
+                            <option value="Liter">Liter</option>
+                            <option value="Kilogram">Kilogram</option>
+                            <option value="Meter">Meter</option>
+                            <option value="SquareMeter">Square Meter</option>
+                            <option value="Pair">Pair</option>
+                            <option value="Roll">Roll</option>
+                            <option value="Bottle">Bottle</option>
+                            <option value="Box">Box</option>
+                            <option value="Bag">Bag</option>
+                            <option value="Set">Set</option>
+                        </select>
+                    </label>
 
                     <div class="modal-actions full-span">
                         <button type="submit" class="btn btn-sm">Save</button>

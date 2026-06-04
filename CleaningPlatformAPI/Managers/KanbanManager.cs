@@ -208,7 +208,7 @@ public class KanbanManager
                     warnings.Add(new EquipmentWarningResponse
                     {
                         InventoryName = item.Name,
-                        Unit = item.Unit,
+                        Unit = item.Unit.ToString(),
                         Hour = group.Key,
                         Available = item.Quantity,
                         Required = required

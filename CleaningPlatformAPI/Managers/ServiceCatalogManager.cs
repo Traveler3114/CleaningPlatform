@@ -144,7 +144,7 @@ public class ServiceCatalogManager
             ServiceCatalogId = r.ServiceCatalogId,
             InventoryId = r.InventoryId,
             InventoryName = r.Inventory?.Name ?? string.Empty,
-            Unit = r.Inventory?.Unit ?? string.Empty,
+            Unit = (r.Inventory?.Unit ?? default).ToString() ?? string.Empty,
             InventoryType = r.Inventory?.Type ?? string.Empty,
             QuantityNeeded = r.QuantityNeeded
         }).ToList();
@@ -184,7 +184,7 @@ public class ServiceCatalogManager
             ServiceCatalogId = entity.ServiceCatalogId,
             InventoryId = entity.InventoryId,
             InventoryName = inventory?.Name ?? string.Empty,
-            Unit = inventory?.Unit ?? string.Empty,
+            Unit = (inventory?.Unit ?? default).ToString() ?? string.Empty,
             InventoryType = inventory?.Type ?? string.Empty,
             QuantityNeeded = entity.QuantityNeeded
         });
@@ -209,7 +209,7 @@ public class ServiceCatalogManager
             ServiceCatalogId = entity.ServiceCatalogId,
             InventoryId = entity.InventoryId,
             InventoryName = entity.Inventory?.Name ?? string.Empty,
-            Unit = entity.Inventory?.Unit ?? string.Empty,
+            Unit = (entity.Inventory?.Unit ?? default).ToString() ?? string.Empty,
             InventoryType = entity.Inventory?.Type ?? string.Empty,
             QuantityNeeded = entity.QuantityNeeded
         });

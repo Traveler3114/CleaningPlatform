@@ -79,7 +79,7 @@ public static class BookingMapper
                 ServiceCatalogId = r.ServiceCatalogId,
                 InventoryId = r.InventoryId,
                 InventoryName = r.Inventory?.Name ?? string.Empty,
-                Unit = r.Inventory?.Unit ?? string.Empty,
+                Unit = (r.Inventory?.Unit ?? default).ToString() ?? string.Empty,
                 InventoryType = r.Inventory?.Type ?? string.Empty,
                 QuantityNeeded = r.QuantityNeeded
             }).ToList()

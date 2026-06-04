@@ -188,18 +188,18 @@ GO
 -- ============================================================
 
 INSERT INTO Inventory (Name, Quantity, Unit, Category, Type) VALUES
-('Miniwash Kärcher K2', 3, 'kom', 'Strojevi za pranje', 'Equipment'),
-('Miniwash Kärcher K4', 2, 'kom', 'Strojevi za pranje', 'Equipment'),
-(N'Usisavač vlage i prašine', 2, 'kom', 'Strojevi za pranje', 'Equipment'),
-(N'Šampon za pranje vozila 5L', 5, 'L', N'Kemijska sredstva', 'Consumable'),
-('Sredstvo za stakla 1L', 3, 'L', N'Kemijska sredstva', 'Consumable'),
-(N'Sredstvo za odmašćivanje 5L', 4, 'L', N'Kemijska sredstva', 'Consumable'),
-(N'Šampon za tepihe 5L', 2, 'L', N'Kemijska sredstva', 'Consumable'),
-('Mikrofiber krpe (paket 10)', 10, 'kom', 'Pribor', 'Consumable'),
-(N'Spužva za pranje (meka)', 15, 'kom', 'Pribor', 'Consumable'),
-(N'Četka za felge', 5, 'kom', 'Pribor', 'Equipment'),
-('Kanta za vodu 20L', 4, 'kom', 'Pribor', 'Equipment'),
-(N'Zaštitne rukavice', 20, 'kom', 'Osobna zaštita', 'Consumable');
+('Miniwash Kärcher K2', 3, 'Piece', 'Strojevi za pranje', 'Equipment'),
+('Miniwash Kärcher K4', 2, 'Piece', 'Strojevi za pranje', 'Equipment'),
+(N'Usisavač vlage i prašine', 2, 'Piece', 'Strojevi za pranje', 'Equipment'),
+(N'Šampon za pranje vozila 5L', 5, 'Liter', N'Kemijska sredstva', 'Consumable'),
+('Sredstvo za stakla 1L', 3, 'Liter', N'Kemijska sredstva', 'Consumable'),
+(N'Sredstvo za odmašćivanje 5L', 4, 'Liter', N'Kemijska sredstva', 'Consumable'),
+(N'Šampon za tepihe 5L', 2, 'Liter', N'Kemijska sredstva', 'Consumable'),
+('Mikrofiber krpe (paket 10)', 10, 'Piece', 'Pribor', 'Consumable'),
+(N'Spužva za pranje (meka)', 15, 'Piece', 'Pribor', 'Consumable'),
+(N'Četka za felge', 5, 'Piece', 'Pribor', 'Equipment'),
+('Kanta za vodu 20L', 4, 'Piece', 'Pribor', 'Equipment'),
+(N'Zaštitne rukavice', 20, 'Piece', 'Osobna zaštita', 'Consumable');
 GO
 
 -- ============================================================

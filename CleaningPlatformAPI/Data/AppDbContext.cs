@@ -101,6 +101,10 @@ public class AppDbContext : DbContext
             .Property(i => i.Quantity).HasPrecision(10, 2);
         modelBuilder.Entity<Inventory>()
             .Property(i => i.Type).HasMaxLength(20);
+        modelBuilder.Entity<Inventory>()
+            .Property(i => i.Unit)
+            .HasConversion<string>()
+            .HasMaxLength(50);
 
         modelBuilder.Entity<ServiceInventoryRequirement>()
             .Property(r => r.QuantityNeeded).HasPrecision(10, 2);

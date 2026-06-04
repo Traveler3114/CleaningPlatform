@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using CleaningPlatformAPI.Enums;
 
 namespace CleaningPlatformAPI.Entities;
 [Table("Inventory")]
@@ -15,8 +16,8 @@ public class Inventory
 
     public decimal Quantity { get; set; }
 
-    [Required, MaxLength(20)]
-    public string Unit { get; set; } = string.Empty;
+    [Required]
+    public InventoryUnit Unit { get; set; } = InventoryUnit.Piece;
 
     [MaxLength(100)]
     public string? Category { get; set; }

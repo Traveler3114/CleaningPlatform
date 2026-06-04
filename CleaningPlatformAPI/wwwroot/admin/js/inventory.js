@@ -43,7 +43,7 @@ function openEditItem(data) {
     document.getElementById('item-name').value = item.name;
     document.getElementById('item-type').value = item.type;
     document.getElementById('item-quantity').value = item.quantity;
-    document.getElementById('item-unit').value = item.unit || '';
+    document.getElementById('item-unit').value = item.unit || 'Piece';
     document.getElementById('item-delete-form').style.display = 'block';
     document.getElementById('item-adjust-form').style.display = 'block';
     document.getElementById('adjust-amount').value = '';
@@ -57,7 +57,7 @@ function openCreateItem() {
     document.getElementById('item-name').value = '';
     document.getElementById('item-type').value = 'Consumable';
     document.getElementById('item-quantity').value = '';
-    document.getElementById('item-unit').value = '';
+    document.getElementById('item-unit').value = 'Piece';
     document.getElementById('item-delete-form').style.display = 'none';
     document.getElementById('item-adjust-form').style.display = 'none';
     document.getElementById('item-modal').style.display = 'flex';
@@ -70,7 +70,7 @@ async function saveItem() {
         name: document.getElementById('item-name').value,
         type: document.getElementById('item-type').value,
         quantity: parseFloat(document.getElementById('item-quantity').value) || 0,
-        unit: document.getElementById('item-unit').value || null
+        unit: document.getElementById('item-unit').value
     };
     try {
         let res;

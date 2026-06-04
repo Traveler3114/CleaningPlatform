@@ -160,7 +160,7 @@ CREATE TABLE Inventory (
     Id              INT             PRIMARY KEY IDENTITY(1,1),
     Name            NVARCHAR(200)   NOT NULL,
     Quantity        DECIMAL(10,2)   NOT NULL,
-    Unit            NVARCHAR(20)    NOT NULL,
+    Unit            NVARCHAR(50)    NOT NULL,
     Category        NVARCHAR(100)   NULL,
     Type            NVARCHAR(20)    NOT NULL DEFAULT 'Consumable',
     CreatedAt       DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
