@@ -18,7 +18,6 @@ public static class SopMapper
     public static ChecklistItemResponse ToChecklistItemResponse(ChecklistItem i) => new(i.Id, i.SopTemplateId, i.ItemText, i.SortOrder, i.IsRequired);
 
     public static BookingSopAssignmentResponse ToAssignmentResponse(BookingSopAssignment a, int completedItems = 0, List<ChecklistResponseResponse>? checklistItems = null) => new(
-        a.Id,
         a.BookingId,
         a.SopTemplateId,
         a.SopTemplate.Name,
@@ -28,7 +27,6 @@ public static class SopMapper
         checklistItems ?? []);
 
     public static ChecklistResponseResponse ToChecklistResponseResponse(ChecklistItem item, ChecklistResponse? response) => new(
-        response?.Id ?? 0,
         item.Id,
         item.ItemText,
         item.IsRequired,

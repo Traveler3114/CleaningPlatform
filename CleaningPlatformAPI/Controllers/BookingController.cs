@@ -79,12 +79,12 @@ public class BookingController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpDelete("{id:int}/assignments/{assignmentId:int}")]
+    [HttpDelete("{id:int}/assignments/{employeeId:int}")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<ActionResult<OperationResult<string>>> RemoveAssignment(
-        int id, int assignmentId, CancellationToken ct)
+        int id, int employeeId, CancellationToken ct)
     {
-        var result = await _bookingManager.RemoveAssignmentAsync(id, assignmentId, ct);
+        var result = await _bookingManager.RemoveAssignmentAsync(id, employeeId, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
@@ -99,21 +99,21 @@ public class BookingController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpDelete("{id:int}/services/{serviceId:int}")]
+    [HttpDelete("{id:int}/services/{serviceCatalogId:int}")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<ActionResult<OperationResult<string>>> RemoveService(
-        int id, int serviceId, CancellationToken ct)
+        int id, int serviceCatalogId, CancellationToken ct)
     {
-        var result = await _bookingManager.RemoveServiceAsync(id, serviceId, ct);
+        var result = await _bookingManager.RemoveServiceAsync(id, serviceCatalogId, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpPut("{id:int}/services/{serviceId:int}")]
+    [HttpPut("{id:int}/services/{serviceCatalogId:int}")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
     public async Task<ActionResult<OperationResult<BookingResponse>>> UpdateServicePrice(
-        int id, int serviceId, [FromBody] UpdateServicePriceRequest request, CancellationToken ct)
+        int id, int serviceCatalogId, [FromBody] UpdateServicePriceRequest request, CancellationToken ct)
     {
-        var result = await _bookingManager.UpdateServicePriceAsync(id, serviceId, request.FinalPrice, ct);
+        var result = await _bookingManager.UpdateServicePriceAsync(id, serviceCatalogId, request.FinalPrice, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
@@ -130,6 +130,24 @@ public class BookingController : ControllerBase
     public async Task<ActionResult<OperationResult<BookingSopAssignmentResponse>>> AssignSop(int id, [FromBody] AssignSopRequest request, CancellationToken ct)
     {
         var result = await _sopManager.AssignSopToBookingAsync(id, request, ct);
+        return result.Success ? Ok(result) : UnprocessableEntity(result);
+    }
+
+    [HttpGet("{id:int}/sops/{sopTemplateId:int}/checklist")]
+    [Authorize(Policy = PermissionKeys.BookingsView)]
+    public async Task<ActionResult<OperationResult<List<ChecklistResponseResponse>>>> GetSopChecklist(
+        int id, int sopTemplateId, CancellationToken ct)
+    {
+        var items = await _sopManager.GetChecklistForSopAssignmentAsync(id, sopTemplateId, ct);
+        return Ok(OperationResult<List<ChecklistResponseResponse>>.Ok(items));
+    }
+
+    [HttpPut("{id:int}/sops/{sopTemplateId:int}/checklist/{checklistItemId:int}")]
+    [Authorize(Policy = PermissionKeys.BookingsEdit)]
+    public async Task<ActionResult<OperationResult<ChecklistResponseResponse>>> CompleteChecklistItem(
+        int id, int sopTemplateId, int checklistItemId, [FromBody] CompleteChecklistItemRequest request, CancellationToken ct)
+    {
+        var result = await _sopManager.CompleteChecklistItemAsync(id, sopTemplateId, checklistItemId, request, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 

@@ -2,7 +2,6 @@ namespace CleaningPlatformAPI.Contracts;
 
 public class RequirementResponse
 {
-    public int Id { get; set; }
     public int ServiceCatalogId { get; set; }
     public int InventoryId { get; set; }
     public string InventoryName { get; set; } = string.Empty;

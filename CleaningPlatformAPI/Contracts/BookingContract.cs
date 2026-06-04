@@ -33,12 +33,10 @@ public class AssignedEmployeeResponse
     public int EmployeeId { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
-    public int AssignmentId { get; set; }
 }
 
 public class BookingServiceResponse
 {
-    public int Id { get; set; }
     public int ServiceCatalogId { get; set; }
     public string ServiceName { get; set; } = string.Empty;
     public decimal? EstimatedPrice { get; set; }

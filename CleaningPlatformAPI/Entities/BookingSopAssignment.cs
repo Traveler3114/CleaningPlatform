@@ -6,9 +6,6 @@ namespace CleaningPlatformAPI.Entities;
 [Table("BookingSopAssignments")]
 public class BookingSopAssignment
 {
-    [Key]
-    public int Id { get; set; }
-
     public int BookingId { get; set; }
     public int SopTemplateId { get; set; }
     public string? CustomInstructions { get; set; }

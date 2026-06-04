@@ -19,7 +19,6 @@ public static class BookingMapper
         RecurringScheduleId = b.RecurringScheduleId,
         AssignedEmployees = b.Assignments?.Select(a => new AssignedEmployeeResponse
         {
-            AssignmentId = a.Id,
             EmployeeId = a.EmployeeId,
             FullName = $"{a.Employee.FirstName} {a.Employee.LastName}".Trim(),
             Role = a.Employee.Role?.Name ?? string.Empty
@@ -68,7 +67,6 @@ public static class BookingMapper
         response.ClientEmail = primaryContact?.Email;
         response.Services = b.BookingServices.Select(bs => new BookingServiceResponse
         {
-            Id = bs.Id,
             ServiceCatalogId = bs.ServiceCatalogId,
             ServiceName = bs.ServiceCatalog?.Name ?? string.Empty,
             EstimatedPrice = bs.EstimatedPrice,
@@ -78,7 +76,6 @@ public static class BookingMapper
             Notes = bs.Notes,
             InventoryRequirements = bs.ServiceCatalog?.InventoryRequirements?.Select(r => new RequirementResponse
             {
-                Id = r.Id,
                 ServiceCatalogId = r.ServiceCatalogId,
                 InventoryId = r.InventoryId,
                 InventoryName = r.Inventory?.Name ?? string.Empty,

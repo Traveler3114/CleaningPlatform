@@ -24,7 +24,8 @@ public class KanbanManager
             query = query.Where(b => b.Assignments.Any(a => a.EmployeeId == employeeId.Value));
 
         var bookings = await query.OrderBy(b => b.ScheduledTimeSlot).ToListAsync(ct);
-        return new KanbanBoardResponse(date.Date, BuildColumns(bookings), await GetEmployeesForDateAsync(date.Date, ct));
+        var completedCounts = await GetCompletedCountsAsync(bookings, ct);
+        return new KanbanBoardResponse(date.Date, BuildColumns(bookings, completedCounts), await GetEmployeesForDateAsync(date.Date, ct));
     }
 
     public async Task<KanbanBoardResponse> GetPipelineAsync(CancellationToken ct = default)
@@ -33,7 +34,8 @@ public class KanbanManager
             .Where(b => b.Status == BookingStatus.Pending || b.Status == BookingStatus.InProgress)
             .OrderBy(b => b.ScheduledDate).ThenBy(b => b.ScheduledTimeSlot)
             .ToListAsync(ct);
-        return new KanbanBoardResponse(DateTime.UtcNow.Date, BuildColumns(bookings), await GetEmployeesForDateAsync(DateTime.UtcNow.Date, ct));
+        var completedCounts = await GetCompletedCountsAsync(bookings, ct);
+        return new KanbanBoardResponse(DateTime.UtcNow.Date, BuildColumns(bookings, completedCounts), await GetEmployeesForDateAsync(DateTime.UtcNow.Date, ct));
     }
 
     public async Task<WeeklyBoardResponse> GetWeekAsync(DateTime weekStart, int? filterEmployeeId = null, CancellationToken ct = default)
@@ -47,6 +49,7 @@ public class KanbanManager
             query = query.Where(b => b.Assignments.Any(a => a.EmployeeId == filterEmployeeId.Value));
 
         var bookings = await query.OrderBy(b => b.ScheduledDate).ThenBy(b => b.ScheduledTimeSlot).ToListAsync(ct);
+        var completedCounts = await GetCompletedCountsAsync(bookings, ct);
 
         var today = DateTime.UtcNow.Date;
         var days = Enumerable.Range(0, 7).Select(i =>
@@ -54,7 +57,7 @@ public class KanbanManager
             var date = weekStart.AddDays(i);
             var dayBookings = bookings
                 .Where(b => b.ScheduledDate.Date == date.Date)
-                .Select(ToWeeklyCard)
+                .Select(b => ToWeeklyCard(b, completedCounts.GetValueOrDefault(b.Id, 0)))
                 .ToList();
 
             return new DayColumnResponse(
@@ -81,13 +84,15 @@ public class KanbanManager
             .OrderBy(b => b.ScheduledDate).ThenBy(b => b.ScheduledTimeSlot)
             .ToListAsync(ct);
 
+        var completedCounts = await GetCompletedCountsAsync(bookings, ct);
+
         var today = DateTime.UtcNow.Date;
         var days = Enumerable.Range(0, 7).Select(i =>
         {
             var date = weekStart.AddDays(i);
             var dayBookings = bookings
                 .Where(b => b.ScheduledDate.Date == date.Date)
-                .Select(ToWeeklyCard)
+                .Select(b => ToWeeklyCard(b, completedCounts.GetValueOrDefault(b.Id, 0)))
                 .ToList();
 
             return new DayColumnResponse(
@@ -223,20 +228,19 @@ public class KanbanManager
         .Include(b => b.BookingServices)
         .Include(b => b.SopAssignments).ThenInclude(sa => sa.SopTemplate).ThenInclude(st => st.ChecklistItems)
         .Include(b => b.Assignments).ThenInclude(a => a.Employee).ThenInclude(e => e.Role)
-        .Include(b => b.Assignments).ThenInclude(a => a.ChecklistResponses)
         .AsSplitQuery();
 
-    private List<KanbanColumnResponse> BuildColumns(List<Entities.Booking> bookings) => Statuses
+    private List<KanbanColumnResponse> BuildColumns(List<Entities.Booking> bookings, Dictionary<int, int> completedCounts) => Statuses
         .Select(status => new KanbanColumnResponse(
             status,
-            bookings.Where(b => b.Status.ToString() == status).Select(ToCard).ToList()))
+            bookings.Where(b => b.Status.ToString() == status).Select(b => ToCard(b, completedCounts.GetValueOrDefault(b.Id, 0))).ToList()))
         .ToList();
 
-    private static KanbanCardResponse ToCard(Entities.Booking b)
+    private static KanbanCardResponse ToCard(Entities.Booking b, int completedItems = 0)
     {
         var primaryContact = b.Client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)
             ?? b.Client.Contacts.FirstOrDefault(c => c.IsActive);
-        var (pct, _) = GetSopProgress(b);
+        var pct = GetSopProgress(b, completedItems);
         return new KanbanCardResponse(
             b.Id, b.Client.ClientName, primaryContact?.Phone,
             b.Site?.SiteName, b.Site?.Address,
@@ -246,11 +250,11 @@ public class KanbanManager
             MapAssignees(b), b.SopAssignments.Count != 0, pct);
     }
 
-    private static KanbanCardResponse ToWeeklyCard(Entities.Booking b)
+    private static KanbanCardResponse ToWeeklyCard(Entities.Booking b, int completedItems = 0)
     {
         var primaryContact = b.Client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)
             ?? b.Client.Contacts.FirstOrDefault(c => c.IsActive);
-        var (pct, _) = GetSopProgress(b);
+        var pct = GetSopProgress(b, completedItems);
         return new KanbanCardResponse(
             b.Id,
             b.Client.ClientName,
@@ -281,18 +285,25 @@ public class KanbanManager
     private static List<AssignedEmployeeResponse> MapAssignees(Entities.Booking b) =>
         b.Assignments.Select(a => new AssignedEmployeeResponse
         {
-            AssignmentId = a.Id,
             EmployeeId = a.EmployeeId,
             FullName = $"{a.Employee.FirstName} {a.Employee.LastName}".Trim(),
             Role = a.Employee.Role?.Name ?? string.Empty
         }).ToList();
 
-    private static (decimal pct, int completed) GetSopProgress(Entities.Booking b)
+    private static decimal GetSopProgress(Entities.Booking b, int completedItems)
     {
         var totalItems = b.SopAssignments.Sum(sa => sa.SopTemplate.ChecklistItems.Count);
-        var completed = b.Assignments.SelectMany(a => a.ChecklistResponses).Count(r => r.IsCompleted);
-        var pct = totalItems == 0 ? 0 : Math.Round((decimal)completed / totalItems * 100, 1);
-        return (pct, completed);
+        return totalItems == 0 ? 0 : Math.Round((decimal)completedItems / totalItems * 100, 1);
+    }
+
+    private async Task<Dictionary<int, int>> GetCompletedCountsAsync(List<Entities.Booking> bookings, CancellationToken ct)
+    {
+        var bookingIds = bookings.Select(b => b.Id).ToList();
+        if (bookingIds.Count == 0) return new();
+        return await _db.ChecklistResponses
+            .Where(r => bookingIds.Contains(r.BookingId) && r.IsCompleted)
+            .GroupBy(r => r.BookingId)
+            .ToDictionaryAsync(g => g.Key, g => g.Count(), ct);
     }
 
     private async Task<List<KanbanEmployeeResponse>> GetEmployeesForDateAsync(DateTime date, CancellationToken ct)

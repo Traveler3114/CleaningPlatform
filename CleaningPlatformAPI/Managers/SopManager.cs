@@ -184,7 +184,7 @@ public class SopManager
         var loaded = await _db.BookingSopAssignments
             .Include(a => a.SopTemplate)
             .ThenInclude(t => t.ChecklistItems)
-            .FirstAsync(a => a.Id == assignment.Id, ct);
+            .FirstAsync(a => a.BookingId == bookingId && a.SopTemplateId == dto.SopTemplateId, ct);
 
         return OperationResult<BookingSopAssignmentResponse>.Ok(SopMapper.ToAssignmentResponse(loaded));
     }
@@ -197,65 +197,41 @@ public class SopManager
             .Where(a => a.BookingId == bookingId)
             .ToListAsync(ct);
 
-        var bookingAssignmentIds = await _db.BookingAssignments
-            .Where(a => a.BookingId == bookingId)
-            .Select(a => a.Id)
-            .ToListAsync(ct);
-
         var responses = await _db.ChecklistResponses
-            .Where(r => bookingAssignmentIds.Contains(r.BookingAssignmentId))
-            .Include(r => r.ChecklistItem)
+            .Where(r => r.BookingId == bookingId)
             .ToListAsync(ct);
-
-        var completed = responses
-            .Where(r => r.IsCompleted)
-            .GroupBy(r => r.ChecklistItem.SopTemplateId)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var responsesByItem = responses
-            .GroupBy(r => r.ChecklistItemId)
-            .ToDictionary(
-                g => g.Key,
-                g => g.OrderByDescending(r => r.IsCompleted)
-                       .ThenByDescending(r => r.CompletedAt)
-                       .First());
 
         return assignments.Select(a =>
         {
+            var assignmentResponses = responses
+                .Where(r => r.SopTemplateId == a.SopTemplateId)
+                .ToList();
+
+            var completedCount = assignmentResponses.Count(r => r.IsCompleted);
+
             var items = a.SopTemplate.ChecklistItems
                 .OrderBy(i => i.SortOrder)
                 .ThenBy(i => i.Id)
                 .Select(i =>
                 {
-                    responsesByItem.TryGetValue(i.Id, out var response);
+                    var response = assignmentResponses.FirstOrDefault(r => r.ChecklistItemId == i.Id);
                     return SopMapper.ToChecklistResponseResponse(i, response);
                 })
                 .ToList();
 
-            completed.TryGetValue(a.SopTemplateId, out var count);
-            return SopMapper.ToAssignmentResponse(a, count, items);
+            return SopMapper.ToAssignmentResponse(a, completedCount, items);
         }).ToList();
     }
 
-    public async Task<List<ChecklistResponseResponse>> GetChecklistForAssignmentAsync(int bookingAssignmentId, CancellationToken ct = default)
+    public async Task<List<ChecklistResponseResponse>> GetChecklistForSopAssignmentAsync(int bookingId, int sopTemplateId, CancellationToken ct = default)
     {
-        var assignment = await _db.BookingAssignments
-            .Include(a => a.Booking)
-            .FirstOrDefaultAsync(a => a.Id == bookingAssignmentId, ct);
-        if (assignment is null) return [];
-
-        var sopIds = await _db.BookingSopAssignments
-            .Where(a => a.BookingId == assignment.BookingId)
-            .Select(a => a.SopTemplateId)
-            .ToListAsync(ct);
-
         var items = await _db.ChecklistItems
-            .Where(i => sopIds.Contains(i.SopTemplateId))
+            .Where(i => i.SopTemplateId == sopTemplateId)
             .OrderBy(i => i.SortOrder)
             .ToListAsync(ct);
 
         var responses = await _db.ChecklistResponses
-            .Where(r => r.BookingAssignmentId == bookingAssignmentId)
+            .Where(r => r.BookingId == bookingId && r.SopTemplateId == sopTemplateId)
             .ToDictionaryAsync(r => r.ChecklistItemId, ct);
 
         return items.Select(i =>
@@ -263,24 +239,26 @@ public class SopManager
             .ToList();
     }
 
-    public async Task<OperationResult<ChecklistResponseResponse>> CompleteChecklistItemAsync(int bookingAssignmentId, int checklistItemId, CompleteChecklistItemRequest dto, CancellationToken ct = default)
+    public async Task<OperationResult<ChecklistResponseResponse>> CompleteChecklistItemAsync(int bookingId, int sopTemplateId, int checklistItemId, CompleteChecklistItemRequest dto, CancellationToken ct = default)
     {
-        var assignmentExists = await _db.BookingAssignments.AnyAsync(a => a.Id == bookingAssignmentId, ct);
-        if (!assignmentExists)
-            return OperationResult<ChecklistResponseResponse>.Fail($"Booking assignment #{bookingAssignmentId} was not found.");
+        var sopAssignmentExists = await _db.BookingSopAssignments
+            .AnyAsync(a => a.BookingId == bookingId && a.SopTemplateId == sopTemplateId, ct);
+        if (!sopAssignmentExists)
+            return OperationResult<ChecklistResponseResponse>.Fail($"SOP assignment for booking #{bookingId}, template #{sopTemplateId} was not found.");
 
         var item = await _db.ChecklistItems.FindAsync([checklistItemId], ct);
         if (item is null)
             return OperationResult<ChecklistResponseResponse>.Fail($"Checklist item #{checklistItemId} was not found.");
 
         var response = await _db.ChecklistResponses
-            .FirstOrDefaultAsync(r => r.BookingAssignmentId == bookingAssignmentId && r.ChecklistItemId == checklistItemId, ct);
+            .FirstOrDefaultAsync(r => r.BookingId == bookingId && r.SopTemplateId == sopTemplateId && r.ChecklistItemId == checklistItemId, ct);
 
         if (response is null)
         {
             response = new ChecklistResponse
             {
-                BookingAssignmentId = bookingAssignmentId,
+                BookingId = bookingId,
+                SopTemplateId = sopTemplateId,
                 ChecklistItemId = checklistItemId
             };
             _db.ChecklistResponses.Add(response);

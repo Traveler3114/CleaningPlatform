@@ -95,7 +95,7 @@ function renderAssignments(assignments) {
     let html = '<ul>';
     assignments.forEach(a => {
         html += `<li style="margin-bottom:0.4rem;">${a.fullName} (${a.role}) 
-            <button onclick="removeAssignment(${a.assignmentId})" class="btn btn-sm">Remove</button></li>`;
+            <button onclick="removeAssignment(${a.employeeId})" class="btn btn-sm">Remove</button></li>`;
     });
     html += '</ul>';
     container.innerHTML = html;
@@ -119,11 +119,11 @@ function renderServices(services) {
             <td>${approxStr}</td>
             <td>${s.quantity}</td>
             <td>${s.estimatedPrice ? s.estimatedPrice.toFixed(2) : '-'}</td>
-            <td><input type="number" id="price-${s.id}" step="0.01" class="small-input" value="${s.finalPrice || ''}" placeholder="Final price" />
-                <button onclick="updateServicePrice(${s.id})" class="btn btn-sm">${__('btn_save')}</button></td>
+            <td><input type="number" id="price-${s.serviceCatalogId}" step="0.01" class="small-input" value="${s.finalPrice || ''}" placeholder="Final price" />
+                <button onclick="updateServicePrice(${s.serviceCatalogId})" class="btn btn-sm">${__('btn_save')}</button></td>
             <td>${invHtml}</td>
             <td>${s.notes || '-'}</td>
-            <td><button onclick="removeService(${s.id})" class="btn btn-sm">${__('btn_remove')}</button></td>
+            <td><button onclick="removeService(${s.serviceCatalogId})" class="btn btn-sm">${__('btn_remove')}</button></td>
         </tr>`;
     });
     html += '</tbody></table>';
@@ -168,10 +168,10 @@ async function addAssignment() {
     } catch(e) { showError(e.message); }
 }
 
-async function removeAssignment(assignmentId) {
+async function removeAssignment(employeeId) {
     if (!confirm(__('msg_confirm_remove_assignment'))) return;
     try {
-        const res = await apiFetch(`/bookings/${bookingId}/assignments/${assignmentId}`, { method: 'DELETE' });
+        const res = await apiFetch(`/bookings/${bookingId}/assignments/${employeeId}`, { method: 'DELETE' });
         if (res.success) {
             showSuccess(__('msg_assignment_removed'));
             loadBookingDetail();
@@ -197,10 +197,10 @@ async function addService() {
     } catch(e) { showError(e.message); }
 }
 
-async function removeService(serviceId) {
+async function removeService(serviceCatalogId) {
     if (!confirm(__('msg_confirm_remove_service'))) return;
     try {
-        const res = await apiFetch(`/bookings/${bookingId}/services/${serviceId}`, { method: 'DELETE' });
+        const res = await apiFetch(`/bookings/${bookingId}/services/${serviceCatalogId}`, { method: 'DELETE' });
         if (res.success) {
             showSuccess(__('msg_service_removed_booking'));
             loadBookingDetail();
@@ -208,10 +208,10 @@ async function removeService(serviceId) {
     } catch(e) { showError(e.message); }
 }
 
-async function updateServicePrice(serviceId) {
-    const finalPrice = parseFloat(document.getElementById(`price-${serviceId}`).value) || null;
+async function updateServicePrice(serviceCatalogId) {
+    const finalPrice = parseFloat(document.getElementById(`price-${serviceCatalogId}`).value) || null;
     try {
-        const res = await apiFetch(`/bookings/${bookingId}/services/${serviceId}`, {
+        const res = await apiFetch(`/bookings/${bookingId}/services/${serviceCatalogId}`, {
             method: 'PUT',
             body: JSON.stringify({ finalPrice })
         });
@@ -271,7 +271,7 @@ function renderSops(sops) {
             <ul style="margin-top:0.75rem; list-style:none;">`;
         (sop.checklistItems || []).forEach(item => {
             html += `<li style="display:flex; gap:0.5rem; padding:0.35rem 0;">
-                <input type="checkbox" ${item.isCompleted ? 'checked' : ''} onchange="completeChecklistItem(${sop.id}, ${item.id}, this.checked)" />
+                <input type="checkbox" ${item.isCompleted ? 'checked' : ''} onchange="completeChecklistItem(${bookingId}, ${sop.sopTemplateId}, ${item.id}, this.checked)" />
                 <span style="${item.isCompleted ? 'text-decoration:line-through;' : ''}">${item.itemText} ${item.isRequired ? '<span style="color:#c62828;">*</span>' : ''}</span>
             </li>`;
         });
@@ -280,10 +280,10 @@ function renderSops(sops) {
     container.innerHTML = html;
 }
 
-async function completeChecklistItem(assignmentId, itemId, isCompleted) {
+async function completeChecklistItem(bookingId, sopTemplateId, itemId, isCompleted) {
     try {
-        const res = await apiFetch(`/assignments/${assignmentId}/checklist/${itemId}`, {
-            method: 'POST',
+        const res = await apiFetch(`/bookings/${bookingId}/sops/${sopTemplateId}/checklist/${itemId}`, {
+            method: 'PUT',
             body: JSON.stringify({ isCompleted })
         });
         if (!res.success) showError(res.message);

@@ -5,11 +5,8 @@ namespace CleaningPlatformAPI.Entities;
 [Table("InvoiceBookings")]
 public class InvoiceBooking
 {
-    [Key]
-    public int Id { get; set; }
-
-    public int InvoiceId { get; set; }
     public int BookingId { get; set; }
+    public int InvoiceId { get; set; }
 
     [ForeignKey(nameof(InvoiceId))]
     public Invoice Invoice { get; set; } = null!;

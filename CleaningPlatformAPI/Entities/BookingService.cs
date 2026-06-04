@@ -5,9 +5,6 @@ namespace CleaningPlatformAPI.Entities;
 [Table("BookingServices")]
 public class BookingService
 {
-    [Key]
-    public int Id { get; set; }
-
     public int BookingId { get; set; }
     public int ServiceCatalogId { get; set; }
 

@@ -141,7 +141,6 @@ public class ServiceCatalogManager
 
         return requirements.Select(r => new RequirementResponse
         {
-            Id = r.Id,
             ServiceCatalogId = r.ServiceCatalogId,
             InventoryId = r.InventoryId,
             InventoryName = r.Inventory?.Name ?? string.Empty,
@@ -182,7 +181,6 @@ public class ServiceCatalogManager
         var inventory = await _db.Inventory.FindAsync([dto.InventoryId], ct);
         return OperationResult<RequirementResponse>.Ok(new RequirementResponse
         {
-            Id = entity.Id,
             ServiceCatalogId = entity.ServiceCatalogId,
             InventoryId = entity.InventoryId,
             InventoryName = inventory?.Name ?? string.Empty,
@@ -192,11 +190,11 @@ public class ServiceCatalogManager
         });
     }
 
-    public async Task<OperationResult<RequirementResponse>> UpdateRequirementAsync(int serviceId, int reqId, RequirementUpsertRequest dto, CancellationToken ct = default)
+    public async Task<OperationResult<RequirementResponse>> UpdateRequirementAsync(int serviceId, int inventoryId, RequirementUpsertRequest dto, CancellationToken ct = default)
     {
         var entity = await _db.ServiceInventoryRequirements
             .Include(r => r.Inventory)
-            .FirstOrDefaultAsync(r => r.Id == reqId && r.ServiceCatalogId == serviceId, ct);
+            .FirstOrDefaultAsync(r => r.InventoryId == inventoryId && r.ServiceCatalogId == serviceId, ct);
         if (entity is null)
             return OperationResult<RequirementResponse>.Fail("Requirement not found.");
 
@@ -208,7 +206,6 @@ public class ServiceCatalogManager
 
         return OperationResult<RequirementResponse>.Ok(new RequirementResponse
         {
-            Id = entity.Id,
             ServiceCatalogId = entity.ServiceCatalogId,
             InventoryId = entity.InventoryId,
             InventoryName = entity.Inventory?.Name ?? string.Empty,
@@ -218,10 +215,10 @@ public class ServiceCatalogManager
         });
     }
 
-    public async Task<OperationResult<string>> RemoveRequirementAsync(int serviceId, int reqId, CancellationToken ct = default)
+    public async Task<OperationResult<string>> RemoveRequirementAsync(int serviceId, int inventoryId, CancellationToken ct = default)
     {
         var entity = await _db.ServiceInventoryRequirements
-            .FirstOrDefaultAsync(r => r.Id == reqId && r.ServiceCatalogId == serviceId, ct);
+            .FirstOrDefaultAsync(r => r.InventoryId == inventoryId && r.ServiceCatalogId == serviceId, ct);
         if (entity is null)
             return OperationResult<string>.Fail("Requirement not found.");
 

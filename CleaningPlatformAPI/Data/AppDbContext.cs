@@ -60,6 +60,8 @@ public class AppDbContext : DbContext
             .Property(s => s.BasePrice).HasPrecision(10, 2);
 
         modelBuilder.Entity<BookingService>()
+            .HasKey(bs => new { bs.BookingId, bs.ServiceCatalogId });
+        modelBuilder.Entity<BookingService>()
             .Property(bs => bs.EstimatedPrice).HasPrecision(10, 2);
         modelBuilder.Entity<BookingService>()
             .Property(bs => bs.FinalPrice).HasPrecision(10, 2);
@@ -155,6 +157,8 @@ public class AppDbContext : DbContext
 
         // Role → RolePermissions
         modelBuilder.Entity<RolePermission>()
+            .HasKey(rp => new { rp.RoleId, rp.PermissionKey });
+        modelBuilder.Entity<RolePermission>()
             .HasOne(rp => rp.Role)
             .WithMany(r => r.Permissions)
             .HasForeignKey(rp => rp.RoleId)
@@ -218,8 +222,7 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<BookingAssignment>()
-            .HasIndex(ba => new { ba.BookingId, ba.EmployeeId })
-            .IsUnique();
+            .HasKey(ba => new { ba.BookingId, ba.EmployeeId });
 
         // RecurringSchedule → SourceBooking
         modelBuilder.Entity<RecurringSchedule>()
@@ -263,8 +266,7 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<BookingRequestService>()
-            .HasIndex(brs => new { brs.BookingRequestId, brs.ServiceCatalogId })
-            .IsUnique();
+            .HasKey(brs => new { brs.BookingRequestId, brs.ServiceCatalogId });
 
         modelBuilder.Entity<RecurringSchedule>()
             .Property(rs => rs.Frequency)
@@ -325,8 +327,7 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<InvoiceBooking>()
-            .HasIndex(ib => ib.BookingId)
-            .IsUnique();
+            .HasKey(ib => ib.BookingId);
 
         // SOP template → checklist items
         modelBuilder.Entity<ChecklistItem>()
@@ -356,14 +357,16 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<BookingSopAssignment>()
-            .HasIndex(bsa => new { bsa.BookingId, bsa.SopTemplateId })
-            .IsUnique();
+            .HasKey(bsa => new { bsa.BookingId, bsa.SopTemplateId });
 
-        // Booking assignment/checklist item → checklist responses
+        // BookingSopAssignment → checklist responses
         modelBuilder.Entity<ChecklistResponse>()
-            .HasOne(cr => cr.BookingAssignment)
-            .WithMany(ba => ba.ChecklistResponses)
-            .HasForeignKey(cr => cr.BookingAssignmentId)
+            .HasKey(cr => new { cr.BookingId, cr.SopTemplateId, cr.ChecklistItemId });
+
+        modelBuilder.Entity<ChecklistResponse>()
+            .HasOne(cr => cr.BookingSopAssignment)
+            .WithMany()
+            .HasForeignKey(cr => new { cr.BookingId, cr.SopTemplateId })
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ChecklistResponse>()
@@ -371,10 +374,6 @@ public class AppDbContext : DbContext
             .WithMany(ci => ci.ChecklistResponses)
             .HasForeignKey(cr => cr.ChecklistItemId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        modelBuilder.Entity<ChecklistResponse>()
-            .HasIndex(cr => new { cr.BookingAssignmentId, cr.ChecklistItemId })
-            .IsUnique();
 
         // ServiceInventoryRequirement → ServiceCatalog
         modelBuilder.Entity<ServiceInventoryRequirement>()
@@ -391,8 +390,7 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ServiceInventoryRequirement>()
-            .HasIndex(r => new { r.ServiceCatalogId, r.InventoryId })
-            .IsUnique();
+            .HasKey(r => new { r.ServiceCatalogId, r.InventoryId });
 
         // Global DateTime precision
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())

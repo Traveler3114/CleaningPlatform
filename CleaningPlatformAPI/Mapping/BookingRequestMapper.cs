@@ -19,7 +19,6 @@ public static class BookingRequestMapper
         UpdatedAt = r.UpdatedAt,
         Services = r.RequestServices?.Select(s => new BookingRequestServiceResponse
         {
-            Id = s.Id,
             ServiceCatalogId = s.ServiceCatalogId,
             ServiceName = s.ServiceCatalog?.Name ?? string.Empty
         }).ToList() ?? []
@@ -37,7 +36,6 @@ public static class BookingRequestMapper
         Status = r.Status.ToString(),
         Services = r.RequestServices?.Select(s => new BookingRequestServiceResponse
         {
-            Id = s.Id,
             ServiceCatalogId = s.ServiceCatalogId,
             ServiceName = s.ServiceCatalog?.Name ?? string.Empty
         }).ToList() ?? []

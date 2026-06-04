@@ -72,19 +72,19 @@ public class ServiceCatalogController : ControllerBase
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpPut("{serviceId}/requirements/{reqId}")]
+    [HttpPut("{serviceId}/requirements/{inventoryId}")]
     [Authorize(Policy = PermissionKeys.ServicesManage)]
-    public async Task<ActionResult<OperationResult<RequirementResponse>>> UpdateRequirement(int serviceId, int reqId, [FromBody] RequirementUpsertRequest request, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<RequirementResponse>>> UpdateRequirement(int serviceId, int inventoryId, [FromBody] RequirementUpsertRequest request, CancellationToken ct)
     {
-        var result = await _manager.UpdateRequirementAsync(serviceId, reqId, request, ct);
+        var result = await _manager.UpdateRequirementAsync(serviceId, inventoryId, request, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 
-    [HttpDelete("{serviceId}/requirements/{reqId}")]
+    [HttpDelete("{serviceId}/requirements/{inventoryId}")]
     [Authorize(Policy = PermissionKeys.ServicesManage)]
-    public async Task<ActionResult<OperationResult<string>>> RemoveRequirement(int serviceId, int reqId, CancellationToken ct)
+    public async Task<ActionResult<OperationResult<string>>> RemoveRequirement(int serviceId, int inventoryId, CancellationToken ct)
     {
-        var result = await _manager.RemoveRequirementAsync(serviceId, reqId, ct);
+        var result = await _manager.RemoveRequirementAsync(serviceId, inventoryId, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }
 }

@@ -17,7 +17,6 @@ public class BookingRequestResponse
 
 public class BookingRequestServiceResponse
 {
-    public int Id { get; set; }
     public int ServiceCatalogId { get; set; }
     public string ServiceName { get; set; } = string.Empty;
 }

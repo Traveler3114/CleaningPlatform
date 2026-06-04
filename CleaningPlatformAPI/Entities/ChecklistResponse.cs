@@ -6,10 +6,8 @@ namespace CleaningPlatformAPI.Entities;
 [Table("ChecklistResponses")]
 public class ChecklistResponse
 {
-    [Key]
-    public int Id { get; set; }
-
-    public int BookingAssignmentId { get; set; }
+    public int BookingId { get; set; }
+    public int SopTemplateId { get; set; }
     public int ChecklistItemId { get; set; }
     public bool IsCompleted { get; set; }
     public DateTime? CompletedAt { get; set; }
@@ -17,6 +15,6 @@ public class ChecklistResponse
     [MaxLength(500)]
     public string? Notes { get; set; }
 
-    public BookingAssignment BookingAssignment { get; set; } = null!;
+    public BookingSopAssignment BookingSopAssignment { get; set; } = null!;
     public ChecklistItem ChecklistItem { get; set; } = null!;
 }

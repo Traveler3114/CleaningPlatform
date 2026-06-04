@@ -410,7 +410,7 @@ public class BookingManager
         return detail;
     }
 
-    public async Task<OperationResult<string>> RemoveAssignmentAsync(int bookingId, int assignmentId, CancellationToken ct = default)
+    public async Task<OperationResult<string>> RemoveAssignmentAsync(int bookingId, int employeeId, CancellationToken ct = default)
     {
         var booking = await _db.Bookings.FirstOrDefaultAsync(b => b.Id == bookingId, ct);
         if (booking is null)
@@ -420,9 +420,9 @@ public class BookingManager
             return OperationResult<string>.Fail($"Cannot remove an assignment from a booking with status '{booking.Status}'.");
 
         var assignment = await _db.BookingAssignments
-            .FirstOrDefaultAsync(a => a.Id == assignmentId && a.BookingId == bookingId, ct);
+            .FirstOrDefaultAsync(a => a.EmployeeId == employeeId && a.BookingId == bookingId, ct);
         if (assignment is null)
-            return OperationResult<string>.Fail($"Assignment #{assignmentId} was not found for booking #{bookingId}.");
+            return OperationResult<string>.Fail($"Employee #{employeeId} is not assigned to booking #{bookingId}.");
 
         _db.BookingAssignments.Remove(assignment);
         booking.UpdatedAt = DateTime.UtcNow;
@@ -465,16 +465,16 @@ public class BookingManager
         return detail;
     }
 
-    public async Task<OperationResult<string>> RemoveServiceAsync(int bookingId, int bookingServiceId, CancellationToken ct = default)
+    public async Task<OperationResult<string>> RemoveServiceAsync(int bookingId, int serviceCatalogId, CancellationToken ct = default)
     {
         var hasInvoice = await _db.InvoiceBookings.AnyAsync(ib => ib.BookingId == bookingId, ct);
         if (hasInvoice)
             return OperationResult<string>.Fail("Cannot remove services after an invoice has been generated for this booking.");
 
         var bookingService = await _db.BookingServices
-            .FirstOrDefaultAsync(bs => bs.Id == bookingServiceId && bs.BookingId == bookingId, ct);
+            .FirstOrDefaultAsync(bs => bs.ServiceCatalogId == serviceCatalogId && bs.BookingId == bookingId, ct);
         if (bookingService is null)
-            return OperationResult<string>.Fail($"Service #{bookingServiceId} was not found on booking #{bookingId}.");
+            return OperationResult<string>.Fail($"Service #{serviceCatalogId} was not found on booking #{bookingId}.");
 
         await RestoreConsumablesForServiceAsync(bookingService.ServiceCatalogId, ct);
 
@@ -485,12 +485,12 @@ public class BookingManager
         return OperationResult<string>.Ok("Service removed.");
     }
 
-    public async Task<OperationResult<BookingResponse>> UpdateServicePriceAsync(int bookingId, int bookingServiceId, decimal? finalPrice, CancellationToken ct = default)
+    public async Task<OperationResult<BookingResponse>> UpdateServicePriceAsync(int bookingId, int serviceCatalogId, decimal? finalPrice, CancellationToken ct = default)
     {
         var bookingService = await _db.BookingServices
-            .FirstOrDefaultAsync(bs => bs.Id == bookingServiceId && bs.BookingId == bookingId, ct);
+            .FirstOrDefaultAsync(bs => bs.ServiceCatalogId == serviceCatalogId && bs.BookingId == bookingId, ct);
         if (bookingService is null)
-            return OperationResult<BookingResponse>.Fail($"Service #{bookingServiceId} was not found on booking #{bookingId}.");
+            return OperationResult<BookingResponse>.Fail($"Service #{serviceCatalogId} was not found on booking #{bookingId}.");
 
         bookingService.FinalPrice = finalPrice;
         var booking = await _db.Bookings.FindAsync([bookingId], ct);

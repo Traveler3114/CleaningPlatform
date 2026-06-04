@@ -176,8 +176,8 @@ function renderRequirements(requirements) {
             <td>${r.unit || '-'}</td>
             <td>${r.quantityNeeded}</td>
             <td>
-                <button onclick="editRequirement(${r.id}, ${r.quantityNeeded})" class="btn btn-sm">${__('btn_edit')}</button>
-                <button onclick="removeRequirement(${r.id})" class="btn btn-sm">${__('btn_remove')}</button>
+                <button onclick="editRequirement(${r.inventoryId}, ${r.quantityNeeded})" class="btn btn-sm">${__('btn_edit')}</button>
+                <button onclick="removeRequirement(${r.inventoryId})" class="btn btn-sm">${__('btn_remove')}</button>
             </td>
         </tr>`;
     });
@@ -217,13 +217,13 @@ async function addRequirement(e) {
     } catch(e) { showError(e.message); }
 }
 
-async function editRequirement(reqId, currentQty) {
+async function editRequirement(inventoryId, currentQty) {
     const newQty = prompt(`${__('th_quantity_needed')}:`, currentQty);
     if (!newQty || parseFloat(newQty) <= 0) return;
     try {
-        const res = await apiFetch(`/services/${serviceId}/requirements/${reqId}`, {
+        const res = await apiFetch(`/services/${serviceId}/requirements/${inventoryId}`, {
             method: 'PUT',
-            body: JSON.stringify({ inventoryId: 0, quantityNeeded: parseFloat(newQty) })
+            body: JSON.stringify({ quantityNeeded: parseFloat(newQty) })
         });
         if (res.success) {
             showSuccess(__('msg_requirement_updated'));
@@ -232,10 +232,10 @@ async function editRequirement(reqId, currentQty) {
     } catch(e) { showError(e.message); }
 }
 
-async function removeRequirement(reqId) {
+async function removeRequirement(inventoryId) {
     if (!confirm(__('msg_confirm_remove_item'))) return;
     try {
-        const res = await apiFetch(`/services/${serviceId}/requirements/${reqId}`, { method: 'DELETE' });
+        const res = await apiFetch(`/services/${serviceId}/requirements/${inventoryId}`, { method: 'DELETE' });
         if (res.success) {
             showSuccess(__('msg_requirement_removed'));
             loadRequirements();

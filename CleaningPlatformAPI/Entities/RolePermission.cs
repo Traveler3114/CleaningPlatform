@@ -5,9 +5,6 @@ namespace CleaningPlatformAPI.Entities;
 [Table("RolePermissions")]
 public class RolePermission
 {
-    [Key]
-    public int Id { get; set; }
-
     public int RoleId { get; set; }
 
     [Required, MaxLength(100)]

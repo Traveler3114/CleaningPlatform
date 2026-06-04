@@ -172,16 +172,13 @@ CREATE INDEX IX_Inventory_Category ON Inventory(Category);
 GO
 
 CREATE TABLE ServiceInventoryRequirements (
-    Id                  INT             PRIMARY KEY IDENTITY(1,1),
     ServiceCatalogId    INT             NOT NULL,
     InventoryId         INT             NOT NULL,
     QuantityNeeded      DECIMAL(10,2)   NOT NULL,
+    CONSTRAINT PK_SvcInvReq PRIMARY KEY (ServiceCatalogId, InventoryId),
     CONSTRAINT FK_SvcInvReq_Catalog  FOREIGN KEY (ServiceCatalogId) REFERENCES ServiceCatalog(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_SvcInvReq_Inventory FOREIGN KEY (InventoryId)      REFERENCES Inventory(Id),
-    CONSTRAINT UQ_SvcInvReq UNIQUE (ServiceCatalogId, InventoryId)
+    CONSTRAINT FK_SvcInvReq_Inventory FOREIGN KEY (InventoryId)      REFERENCES Inventory(Id)
 );
-GO
-CREATE INDEX IX_SvcInvReq_Catalog   ON ServiceInventoryRequirements(ServiceCatalogId);
 GO
 CREATE INDEX IX_SvcInvReq_Inventory ON ServiceInventoryRequirements(InventoryId);
 GO
@@ -253,14 +250,12 @@ INSERT INTO Roles (Name, IsProtected) VALUES
 GO
 
 CREATE TABLE RolePermissions (
-    Id              INT             PRIMARY KEY IDENTITY(1,1),
     RoleId          INT             NOT NULL,
     PermissionKey   NVARCHAR(100)   NOT NULL,
+    CONSTRAINT PK_RolePermissions PRIMARY KEY (RoleId, PermissionKey),
     CONSTRAINT FK_RolePermission_Role FOREIGN KEY (RoleId) REFERENCES Roles(Id) ON DELETE CASCADE
 );
 GO
-CREATE INDEX IX_RolePermissions_RoleId ON RolePermissions(RoleId);
-CREATE INDEX IX_RolePermissions_Key    ON RolePermissions(PermissionKey);
 GO
 
 -- ============================================================
@@ -405,16 +400,14 @@ CREATE TABLE BookingRequests (
 GO
 
 CREATE TABLE BookingRequestServices (
-    Id              INT             PRIMARY KEY IDENTITY(1,1),
     BookingRequestId INT            NOT NULL,
     ServiceCatalogId INT            NOT NULL,
+    CONSTRAINT PK_BookingRequestServices PRIMARY KEY (BookingRequestId, ServiceCatalogId),
     CONSTRAINT FK_BookingRequestService_Request FOREIGN KEY (BookingRequestId)
         REFERENCES BookingRequests(Id) ON DELETE CASCADE,
     CONSTRAINT FK_BookingRequestService_Catalog FOREIGN KEY (ServiceCatalogId)
         REFERENCES ServiceCatalog(Id)
 );
-GO
-CREATE INDEX IX_BookingRequestServices_RequestId ON BookingRequestServices(BookingRequestId);
 GO
 
 CREATE TABLE Bookings (
@@ -445,32 +438,28 @@ CREATE INDEX IX_Bookings_Status        ON Bookings(Status);
 GO
 
 CREATE TABLE BookingAssignments (
-    Id          INT         PRIMARY KEY IDENTITY(1,1),
     BookingId   INT         NOT NULL,
     EmployeeId  INT         NOT NULL,
     AssignedAt  DATETIME2   NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT PK_BookingAssignments PRIMARY KEY (BookingId, EmployeeId),
     CONSTRAINT FK_BookingAssignment_Booking  FOREIGN KEY (BookingId)  REFERENCES Bookings(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_BookingAssignment_Employee FOREIGN KEY (EmployeeId) REFERENCES Employees(Id),
-    CONSTRAINT UQ_BookingAssignment UNIQUE (BookingId, EmployeeId)
+    CONSTRAINT FK_BookingAssignment_Employee FOREIGN KEY (EmployeeId) REFERENCES Employees(Id)
 );
 GO
-CREATE INDEX IX_BookingAssignments_BookingId  ON BookingAssignments(BookingId);
 CREATE INDEX IX_BookingAssignments_EmployeeId ON BookingAssignments(EmployeeId);
 GO
 
 CREATE TABLE BookingServices (
-    Id                  INT             PRIMARY KEY IDENTITY(1,1),
     BookingId           INT             NOT NULL,
     ServiceCatalogId    INT             NOT NULL,
     EstimatedPrice      DECIMAL(10,2)   NULL,
     FinalPrice          DECIMAL(10,2)   NULL,
     Quantity            DECIMAL(10,2)   NOT NULL DEFAULT 1,
     Notes               NVARCHAR(MAX)   NULL,
+    CONSTRAINT PK_BookingServices PRIMARY KEY (BookingId, ServiceCatalogId),
     CONSTRAINT FK_BookingService_Booking FOREIGN KEY (BookingId)        REFERENCES Bookings(Id)       ON DELETE CASCADE,
     CONSTRAINT FK_BookingService_Catalog FOREIGN KEY (ServiceCatalogId) REFERENCES ServiceCatalog(Id)
 );
-GO
-CREATE INDEX IX_BookingServices_Booking ON BookingServices(BookingId);
 GO
 
 -- ============================================================
@@ -586,16 +575,13 @@ CREATE INDEX IX_InvoiceLines_Source    ON InvoiceLines(SourceType, SourceId);
 GO
 
 CREATE TABLE InvoiceBookings (
-    Id          INT     PRIMARY KEY IDENTITY(1,1),
     InvoiceId   INT     NOT NULL,
-    BookingId   INT     NOT NULL,
+    BookingId   INT     NOT NULL PRIMARY KEY,
     CONSTRAINT FK_InvoiceBooking_Invoice FOREIGN KEY (InvoiceId) REFERENCES Invoices(Id) ON DELETE CASCADE,
-    CONSTRAINT FK_InvoiceBooking_Booking FOREIGN KEY (BookingId) REFERENCES Bookings(Id),
-    CONSTRAINT UQ_InvoiceBooking UNIQUE (BookingId)
+    CONSTRAINT FK_InvoiceBooking_Booking FOREIGN KEY (BookingId) REFERENCES Bookings(Id)
 );
 GO
 CREATE INDEX IX_InvoiceBookings_InvoiceId ON InvoiceBookings(InvoiceId);
-CREATE INDEX IX_InvoiceBookings_BookingId ON InvoiceBookings(BookingId);
 GO
 
 CREATE TABLE Payments (
@@ -957,37 +943,33 @@ CREATE INDEX IX_ChecklistItems_SopTemplate ON ChecklistItems(SopTemplateId);
 GO
 
 CREATE TABLE BookingSopAssignments (
-    Id                  INT             PRIMARY KEY IDENTITY(1,1),
     BookingId           INT             NOT NULL,
     SopTemplateId       INT             NOT NULL,
     CustomInstructions  NVARCHAR(MAX)   NULL,
     AssignedAt          DATETIME2       NOT NULL DEFAULT GETUTCDATE(),
+    CONSTRAINT PK_BookingSopAssignments PRIMARY KEY (BookingId, SopTemplateId),
     CONSTRAINT FK_BookingSop_Booking FOREIGN KEY (BookingId)
         REFERENCES Bookings(Id) ON DELETE CASCADE,
     CONSTRAINT FK_BookingSop_Sop     FOREIGN KEY (SopTemplateId)
-        REFERENCES SopTemplates(Id),
-    CONSTRAINT UQ_BookingSop UNIQUE (BookingId, SopTemplateId)
+        REFERENCES SopTemplates(Id)
 );
 GO
-CREATE INDEX IX_BookingSop_Booking ON BookingSopAssignments(BookingId);
-CREATE INDEX IX_BookingSop_Sop     ON BookingSopAssignments(SopTemplateId);
+CREATE INDEX IX_BookingSop_Sop ON BookingSopAssignments(SopTemplateId);
 GO
 
 CREATE TABLE ChecklistResponses (
-    Id                    INT             PRIMARY KEY IDENTITY(1,1),
-    BookingAssignmentId   INT             NOT NULL,
-    ChecklistItemId       INT             NOT NULL,
-    IsCompleted           BIT             NOT NULL DEFAULT 0,
-    CompletedAt           DATETIME2       NULL,
-    Notes                 NVARCHAR(500)   NULL,
-    CONSTRAINT FK_ChecklistResponse_Assignment FOREIGN KEY (BookingAssignmentId)
-        REFERENCES BookingAssignments(Id),
+    BookingId           INT             NOT NULL,
+    SopTemplateId       INT             NOT NULL,
+    ChecklistItemId     INT             NOT NULL,
+    IsCompleted         BIT             NOT NULL DEFAULT 0,
+    CompletedAt         DATETIME2       NULL,
+    Notes               NVARCHAR(500)   NULL,
+    CONSTRAINT PK_ChecklistResponses PRIMARY KEY (BookingId, SopTemplateId, ChecklistItemId),
+    CONSTRAINT FK_ChecklistResponse_Assignment FOREIGN KEY (BookingId, SopTemplateId)
+        REFERENCES BookingSopAssignments(BookingId, SopTemplateId) ON DELETE CASCADE,
     CONSTRAINT FK_ChecklistResponse_Item       FOREIGN KEY (ChecklistItemId)
-        REFERENCES ChecklistItems(Id),
-    CONSTRAINT UQ_ChecklistResponse UNIQUE (BookingAssignmentId, ChecklistItemId)
+        REFERENCES ChecklistItems(Id)
 );
-GO
-CREATE INDEX IX_ChecklistResponses_Assignment ON ChecklistResponses(BookingAssignmentId);
 GO
 
 -- SOP SEED DATA
@@ -1041,27 +1023,25 @@ CROSS JOIN (SELECT Id FROM SopTemplates WHERE Name = 'Carwash LIM komplet') st
 WHERE b.ServiceType = 'Vehicle'
   AND b.Id BETWEEN 5 AND 10;
 
-INSERT INTO ChecklistResponses (BookingAssignmentId, ChecklistItemId, IsCompleted, CompletedAt, Notes)
+INSERT INTO ChecklistResponses (BookingId, SopTemplateId, ChecklistItemId, IsCompleted, CompletedAt, Notes)
 SELECT
-    ba.Id,
+    bsa.BookingId,
+    bsa.SopTemplateId,
     ci.Id,
     CASE WHEN b.Status = 'Completed' THEN 1 ELSE 0 END,
     CASE WHEN b.Status = 'Completed' THEN DATEADD(HOUR, -1, GETUTCDATE()) ELSE NULL END,
     CASE WHEN b.Status = 'InProgress' THEN 'U tijeku' ELSE NULL END
-FROM BookingAssignments ba
-INNER JOIN Bookings b ON ba.BookingId = b.Id
-INNER JOIN BookingSopAssignments bsa ON bsa.BookingId = b.Id
+FROM BookingSopAssignments bsa
+INNER JOIN Bookings b ON bsa.BookingId = b.Id
 INNER JOIN ChecklistItems ci ON ci.SopTemplateId = bsa.SopTemplateId
-WHERE b.Id IN (SELECT BookingId FROM BookingSopAssignments)
-  AND ba.EmployeeId IS NOT NULL;
+WHERE b.Id IN (SELECT BookingId FROM BookingSopAssignments);
 
-UPDATE ChecklistResponses
+UPDATE cr
 SET Notes = 'Klijent tražio preskakanje - uredski tepisi već oprani jučer'
-WHERE BookingAssignmentId IN (
-    SELECT ba.Id FROM BookingAssignments ba
-    JOIN Bookings b ON ba.BookingId = b.Id
-    WHERE b.Id = 6
-) AND ChecklistItemId = (SELECT Id FROM ChecklistItems WHERE ItemText LIKE '%tepih%');
+FROM ChecklistResponses cr
+INNER JOIN BookingSopAssignments bsa ON bsa.BookingId = cr.BookingId AND bsa.SopTemplateId = cr.SopTemplateId
+WHERE bsa.BookingId = 6
+  AND cr.ChecklistItemId = (SELECT Id FROM ChecklistItems WHERE ItemText LIKE '%tepih%');
 GO
 
 -- ============================================================
@@ -1155,10 +1135,9 @@ FROM Bookings b
 INNER JOIN BookingSopAssignments bsa ON bsa.BookingId = b.Id
 INNER JOIN SopTemplates st ON st.Id = bsa.SopTemplateId
 INNER JOIN ChecklistItems ci ON ci.SopTemplateId = st.Id
-LEFT JOIN ChecklistResponses cr ON cr.ChecklistItemId = ci.Id
-    AND cr.BookingAssignmentId IN (
-        SELECT ba.Id FROM BookingAssignments ba WHERE ba.BookingId = b.Id
-    )
+LEFT JOIN ChecklistResponses cr ON cr.BookingId = b.Id
+    AND cr.SopTemplateId = bsa.SopTemplateId
+    AND cr.ChecklistItemId = ci.Id
 GROUP BY b.Id, st.Id, st.Name;
 GO
 

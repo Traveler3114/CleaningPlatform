@@ -5,9 +5,6 @@ namespace CleaningPlatformAPI.Entities;
 [Table("ServiceInventoryRequirements")]
 public class ServiceInventoryRequirement
 {
-    [Key]
-    public int Id { get; set; }
-
     public int ServiceCatalogId { get; set; }
     public int InventoryId { get; set; }
 
