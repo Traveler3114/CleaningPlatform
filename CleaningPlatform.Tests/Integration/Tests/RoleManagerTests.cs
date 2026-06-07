@@ -28,7 +28,7 @@ public class RoleManagerTests : TestBase
         var createResult = await manager.CreateRoleAsync(new CreateRoleRequest
         {
             Name = $"TestRole_{Guid.NewGuid():N}",
-            Permissions = new List<string> { "bookings.view" }
+            Permissions = ["bookings.view"]
         });
 
         createResult.Success.Should().BeTrue();

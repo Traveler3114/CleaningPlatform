@@ -28,8 +28,8 @@ public class Client
     public DateTime UpdatedAt { get; set; }
 
     // Navigation
-    public ICollection<Contact> Contacts { get; set; } = new List<Contact>();
-    public ICollection<Site> Sites { get; set; } = new List<Site>();
-    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
-    public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
+    public ICollection<Contact> Contacts { get; set; } = [];
+    public ICollection<Site> Sites { get; set; } = [];
+    public ICollection<Booking> Bookings { get; set; } = [];
+    public ICollection<Invoice> Invoices { get; set; } = [];
 }

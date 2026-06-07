@@ -159,7 +159,7 @@ public class BookingController : ControllerBase
         CancellationToken ct)
     {
         var targetId = employeeId ?? User.GetEmployeeId();
-        if (targetId == null)
+        if (targetId is null)
             return Unauthorized(OperationResult<List<BookingResponse>>.Fail("Invalid token."));
 
         var currentUserId = User.GetEmployeeId();

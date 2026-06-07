@@ -18,5 +18,5 @@ public class ChecklistItem
     public bool IsRequired { get; set; } = true;
 
     public SopTemplate SopTemplate { get; set; } = null!;
-    public ICollection<ChecklistResponse> ChecklistResponses { get; set; } = new List<ChecklistResponse>();
+    public ICollection<ChecklistResponse> ChecklistResponses { get; set; } = [];
 }

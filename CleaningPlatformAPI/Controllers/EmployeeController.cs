@@ -20,7 +20,7 @@ public class EmployeeController : ControllerBase
     public async Task<ActionResult<OperationResult<UserResponse>>> Me(CancellationToken ct)
     {
         var userId = User.GetEmployeeId();
-        if (userId == null)
+        if (userId is null)
             return Unauthorized(OperationResult<UserResponse>.Fail("Invalid token."));
 
         var result = await _userManager.GetByIdAsync(userId.Value, ct);
@@ -47,7 +47,7 @@ public class EmployeeController : ControllerBase
     public async Task<ActionResult<OperationResult<UserResponse>>> Update(int id, [FromBody] UpdateEmployeeRequest request, CancellationToken ct)
     {
         var requestingUserId = User.GetEmployeeId();
-        if (requestingUserId == null)
+        if (requestingUserId is null)
             return Unauthorized(OperationResult<UserResponse>.Fail("Invalid token."));
 
         var result = await _userManager.UpdateEmployeeAsync(id, request, requestingUserId.Value, ct);
@@ -59,7 +59,7 @@ public class EmployeeController : ControllerBase
     public async Task<ActionResult<OperationResult<UserResponse>>> Toggle(int id, CancellationToken ct)
     {
         var requestingUserId = User.GetEmployeeId();
-        if (requestingUserId == null)
+        if (requestingUserId is null)
             return Unauthorized(OperationResult<UserResponse>.Fail("Invalid token."));
 
         var result = await _userManager.ToggleActiveAsync(id, requestingUserId.Value, ct);

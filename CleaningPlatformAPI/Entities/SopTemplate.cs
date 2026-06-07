@@ -23,6 +23,6 @@ public class SopTemplate
     public DateTime UpdatedAt { get; set; }
 
     public ServiceCatalog? ServiceCatalog { get; set; }
-    public ICollection<ChecklistItem> ChecklistItems { get; set; } = new List<ChecklistItem>();
-    public ICollection<BookingSopAssignment> BookingSopAssignments { get; set; } = new List<BookingSopAssignment>();
+    public ICollection<ChecklistItem> ChecklistItems { get; set; } = [];
+    public ICollection<BookingSopAssignment> BookingSopAssignments { get; set; } = [];
 }

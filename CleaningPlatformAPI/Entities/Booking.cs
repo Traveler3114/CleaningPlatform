@@ -40,8 +40,8 @@ public class Booking
     public VehicleBookingDetails? VehicleDetails { get; set; }
     public BoatBookingDetails? BoatDetails { get; set; }
 
-    public ICollection<BookingAssignment> Assignments { get; set; } = new List<BookingAssignment>();
-    public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
-    public ICollection<InvoiceBooking> InvoiceBookings { get; set; } = new List<InvoiceBooking>();
-    public ICollection<BookingSopAssignment> SopAssignments { get; set; } = new List<BookingSopAssignment>();
+    public ICollection<BookingAssignment> Assignments { get; set; } = [];
+    public ICollection<BookingService> BookingServices { get; set; } = [];
+    public ICollection<InvoiceBooking> InvoiceBookings { get; set; } = [];
+    public ICollection<BookingSopAssignment> SopAssignments { get; set; } = [];
 }

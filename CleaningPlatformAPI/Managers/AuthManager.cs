@@ -97,14 +97,14 @@ public class AuthManager
         var permissions = auth.Data.Permissions;
         var roleName = user.Role?.Name ?? string.Empty;
 
-        var claims = new List<Claim>
-        {
+        List<Claim> claims =
+        [
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Role, roleName),
             new Claim("security_stamp", user.SecurityStamp)
-        };
+        ];
 
         if (roleName != RoleNames.Owner)
         {

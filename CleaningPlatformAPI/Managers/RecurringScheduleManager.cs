@@ -32,7 +32,7 @@ public class RecurringScheduleManager
 
         var schedules = await query.OrderByDescending(rs => rs.CreatedAt).ToListAsync(ct);
 
-        var result = new List<RecurringScheduleResponse>(schedules.Count);
+        List<RecurringScheduleResponse> result = [];
         foreach (var s in schedules)
         {
             var upcomingCount = await _db.Bookings
@@ -212,7 +212,7 @@ public class RecurringScheduleManager
             .Where(rs => rs.IsActive && (rs.EndsOn == null || rs.EndsOn > today))
             .ToListAsync(ct);
 
-        var results = new List<GenerateResult>(schedules.Count);
+        List<GenerateResult> results = [];
         foreach (var schedule in schedules)
         {
             try
@@ -268,10 +268,10 @@ public class RecurringScheduleManager
 
         var closedSet = new HashSet<DateOnly>(overrides);
 
-        var generated = new List<BookingResponse>();
-        var skipped = new List<SkippedOccurrence>();
+        List<BookingResponse> generated = [];
+        List<SkippedOccurrence> skipped = [];
         var now = DateTime.UtcNow;
-        var newBookings = new List<Booking>();
+        List<Booking> newBookings = [];
 
         foreach (var date in occurrenceDates)
         {
@@ -329,7 +329,7 @@ public class RecurringScheduleManager
 
     private static List<DateOnly> GetOccurrenceDates(RecurringSchedule schedule, DateOnly rangeStart, DateOnly rangeEnd, DateOnly anchorDate)
     {
-        var dates = new List<DateOnly>();
+        List<DateOnly> dates = [];
         var current = rangeStart;
 
         while (current <= rangeEnd)

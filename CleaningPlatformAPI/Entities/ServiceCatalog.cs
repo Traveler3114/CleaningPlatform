@@ -34,7 +34,7 @@ public class ServiceCatalog
     public DateTime UpdatedAt { get; set; }
 
     // Navigation
-    public ICollection<BookingService> BookingServices { get; set; } = new List<BookingService>();
-    public ICollection<SopTemplate> SopTemplates { get; set; } = new List<SopTemplate>();
-    public ICollection<ServiceInventoryRequirement> InventoryRequirements { get; set; } = new List<ServiceInventoryRequirement>();
+    public ICollection<BookingService> BookingServices { get; set; } = [];
+    public ICollection<SopTemplate> SopTemplates { get; set; } = [];
+    public ICollection<ServiceInventoryRequirement> InventoryRequirements { get; set; } = [];
 }

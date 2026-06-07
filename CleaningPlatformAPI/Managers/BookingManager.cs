@@ -197,8 +197,8 @@ public class BookingManager
                         IsActive = true,
                         CreatedAt = now,
                         UpdatedAt = now,
-                        Contacts = new List<Contact>
-                    {
+                        Contacts =
+                    [
                         new Contact
                         {
                             ContactName = customerName,
@@ -209,7 +209,7 @@ public class BookingManager
                             CreatedAt = now,
                             UpdatedAt = now
                         }
-                    }
+                    ]
                     };
                     _db.Clients.Add(client);
                     // Save to get the client ID before creating the booking

@@ -36,5 +36,5 @@ public class Site
     [ForeignKey(nameof(ClientId))]
     public Client Client { get; set; } = null!;
 
-    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public ICollection<Booking> Bookings { get; set; } = [];
 }

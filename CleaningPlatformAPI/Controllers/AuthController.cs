@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
         CancellationToken ct)
     {
         var userId = User.GetEmployeeId();
-        if (userId == null)
+        if (userId is null)
             return Unauthorized(OperationResult<string>.Fail(_localizer["error_invalid_token"]));
 
         var result = await _authManager.ChangePasswordAsync(request, userId.Value, ct);

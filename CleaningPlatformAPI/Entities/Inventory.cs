@@ -29,5 +29,5 @@ public class Inventory
     public DateTime UpdatedAt { get; set; }
 
     // Navigation
-    public ICollection<ServiceInventoryRequirement> ServiceRequirements { get; set; } = new List<ServiceInventoryRequirement>();
+    public ICollection<ServiceInventoryRequirement> ServiceRequirements { get; set; } = [];
 }

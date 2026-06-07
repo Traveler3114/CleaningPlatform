@@ -31,8 +31,8 @@ public class TokenManager
 
         var roleName = user.Role?.Name ?? string.Empty;
 
-        var claims = new List<Claim>
-        {
+        List<Claim> claims =
+        [
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
@@ -40,7 +40,7 @@ public class TokenManager
             new Claim("security_stamp", user.SecurityStamp),
             new Claim("auth_type", "admin"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+        ];
 
         if (roleName != RoleNames.Owner)
         {
@@ -54,15 +54,15 @@ public class TokenManager
     public string CreateMagicLinkToken(int clientId, string email, string name)
     {
         var (key, creds, issuer) = GetSigningConfig();
-        var claims = new List<Claim>
-        {
+        List<Claim> claims =
+        [
             new Claim("client_id", clientId.ToString()),
             new Claim("email", email),
             new Claim("name", name),
             new Claim("auth_type", "portal"),
             new Claim("purpose", "magic_link"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+        ];
 
         return CreateToken(claims, DateTime.UtcNow.AddMinutes(15), issuer, creds);
     }
@@ -70,15 +70,15 @@ public class TokenManager
     public string CreatePortalSessionToken(int clientId, string email, string name)
     {
         var (key, creds, issuer) = GetSigningConfig();
-        var claims = new List<Claim>
-        {
+        List<Claim> claims =
+        [
             new Claim("client_id", clientId.ToString()),
             new Claim("email", email),
             new Claim("name", name),
             new Claim("auth_type", "portal"),
             new Claim(ClaimTypes.Role, "Client"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+        ];
 
         var expiry = DateTime.UtcNow.AddHours(double.Parse(_config["Jwt:ExpiryHours"]!));
         return CreateToken(claims, expiry, issuer, creds);
@@ -87,14 +87,14 @@ public class TokenManager
     public string CreateBookingRequestToken(int bookingRequestId, string email)
     {
         var (key, creds, issuer) = GetSigningConfig();
-        var claims = new List<Claim>
-        {
+        List<Claim> claims =
+        [
             new Claim("booking_request_id", bookingRequestId.ToString()),
             new Claim("email", email),
             new Claim("purpose", "booking_request_confirmation"),
             new Claim("auth_type", "public"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+        ];
 
         return CreateToken(claims, DateTime.UtcNow.AddHours(48), issuer, creds);
     }

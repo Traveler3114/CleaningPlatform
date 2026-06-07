@@ -56,7 +56,7 @@ public class KanbanController : ControllerBase
         CancellationToken ct)
     {
         var userId = User.GetEmployeeId();
-        if (userId == null)
+        if (userId is null)
             return Unauthorized(OperationResult<WeeklyBoardResponse>.Fail("Invalid token."));
 
         var result = await _kanbanManager.GetEmployeeWeekAsync(userId.Value, weekStart, ct);

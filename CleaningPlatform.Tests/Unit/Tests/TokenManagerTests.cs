@@ -40,7 +40,7 @@ public class TokenManagerTests
             SecurityStamp = "stamp123",
             Role = new Role { Name = "Manager" }
         };
-        var permissions = new List<string> { "bookings.read", "bookings.write" };
+        List<string> permissions = ["bookings.read", "bookings.write"];
 
         var token = manager.CreateAdminToken(user, permissions);
         var handler = new JsonWebTokenHandler();
@@ -76,7 +76,7 @@ public class TokenManagerTests
             Role = new Role { Name = RoleNames.Owner }
         };
 
-        var token = manager.CreateAdminToken(user, new List<string> { "some.permission" });
+        var token = manager.CreateAdminToken(user, ["some.permission"]);
         var handler = new JsonWebTokenHandler();
         var result = await handler.ValidateTokenAsync(token, new TokenValidationParameters
         {
@@ -155,7 +155,7 @@ public class TokenManagerTests
             Role = new Role { Name = "User" }
         };
 
-        var token = manager.CreateAdminToken(user, new List<string>());
+        var token = manager.CreateAdminToken(user, []);
         var handler = new JsonWebTokenHandler();
         var jwt = handler.ReadJsonWebToken(token);
 

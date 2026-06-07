@@ -149,7 +149,7 @@ app.UseExceptionHandler(errorApp =>
         var error = context.Features.Get<IExceptionHandlerFeature>();
         var isDev = app.Environment.IsDevelopment();
 
-        if (error != null)
+        if (error is not null)
         {
             logger.LogError(error.Error, "Unhandled exception on {Method} {Path}",
                 context.Request.Method, context.Request.Path);
@@ -185,7 +185,7 @@ app.UseExceptionHandler(errorApp =>
         }
         else
         {
-            message = isDev && error?.Error != null
+            message = isDev && error?.Error is not null
                 ? $"Unexpected error ({error.Error.GetType().Name}): {error.Error.Message}"
                 : localizer["error_unexpected"];
         }

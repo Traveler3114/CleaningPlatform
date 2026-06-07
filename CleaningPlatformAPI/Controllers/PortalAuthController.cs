@@ -36,7 +36,7 @@ public class PortalAuthController : ControllerBase
             .Include(c => c.Client)
             .FirstOrDefaultAsync(c => c.Email != null && c.Email.ToLower() == email && c.IsActive);
 
-        if (contact != null && contact.Client.IsActive)
+        if (contact is not null && contact.Client.IsActive)
         {
             var token = _tokenManager.CreateMagicLinkToken(contact.ClientId, email, contact.Client.ClientName);
             var scheme = Request.Scheme;
@@ -93,7 +93,7 @@ public class PortalAuthController : ControllerBase
         var emailClaim = payloadClaims.FirstOrDefault(c => c.Type == "email")?.Value;
         var nameClaim = payloadClaims.FirstOrDefault(c => c.Type == "name")?.Value;
 
-        if (clientIdClaim == null || emailClaim == null || nameClaim == null)
+        if (clientIdClaim is null || emailClaim is null || nameClaim is null)
             return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
 
         var clientId = int.Parse(clientIdClaim);

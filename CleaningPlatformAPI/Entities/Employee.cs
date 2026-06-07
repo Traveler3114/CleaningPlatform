@@ -42,5 +42,5 @@ public class Employee
     public int RoleId { get; set; }
     public Role Role { get; set; } = null!;
 
-    public ICollection<BookingAssignment> BookingAssignments { get; set; } = new List<BookingAssignment>();
+    public ICollection<BookingAssignment> BookingAssignments { get; set; } = [];
 }

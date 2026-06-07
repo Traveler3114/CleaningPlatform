@@ -18,7 +18,7 @@ public class PortalDataController : ControllerBase
     private int? GetClientId()
     {
         var claim = User.FindFirst("client_id")?.Value;
-        return claim != null && int.TryParse(claim, out var id) ? id : null;
+        return claim is not null && int.TryParse(claim, out var id) ? id : null;
     }
 
     [HttpGet("dashboard")]

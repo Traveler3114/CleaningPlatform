@@ -36,7 +36,7 @@ public class Invoice
     [ForeignKey(nameof(CreatedByEmployeeId))]
     public Employee? CreatedByEmployee { get; set; }
 
-    public ICollection<InvoiceLine> Lines { get; set; } = new List<InvoiceLine>();
-    public ICollection<Payment> Payments { get; set; } = new List<Payment>();
-    public ICollection<InvoiceBooking> InvoiceBookings { get; set; } = new List<InvoiceBooking>();
+    public ICollection<InvoiceLine> Lines { get; set; } = [];
+    public ICollection<Payment> Payments { get; set; } = [];
+    public ICollection<InvoiceBooking> InvoiceBookings { get; set; } = [];
 }

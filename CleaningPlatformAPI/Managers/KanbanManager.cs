@@ -186,7 +186,7 @@ public class KanbanManager
             .ToListAsync(ct);
 
         var equipment = await _db.Inventory.Where(i => i.Type == "Equipment").ToListAsync(ct);
-        var warnings = new List<EquipmentWarningResponse>();
+        List<EquipmentWarningResponse> warnings = [];
 
         foreach (var item in equipment)
         {
