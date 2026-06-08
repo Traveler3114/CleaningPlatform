@@ -38,7 +38,7 @@ function renderUsers() {
             <td>
                 <label class="checkbox-label">
                     <input type="checkbox" class="checkbox" ${u.isActive ? 'checked' : ''} onchange="toggleUserStatus(${u.id}, this.checked)" />
-                    ' + __('status_active') + '
+                    ${__('status_active')}
                 </label>
             </td>
         </tr>`;

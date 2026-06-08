@@ -47,6 +47,18 @@ public record ResetPasswordRequest
     public string NewPassword { get; set; } = string.Empty;
 }
 
+public class AvailableEmployeeResponse
+{
+    public int Id { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string FullName => $"{FirstName} {LastName}".Trim();
+    public string Role { get; set; } = string.Empty;
+    public int JobsToday { get; set; }
+    public int? MaxJobsPerDay { get; set; }
+    public bool IsAvailable { get; set; }
+}
+
 public record UpdateEmployeeRequest
 {
     public string Role { get; set; } = string.Empty;

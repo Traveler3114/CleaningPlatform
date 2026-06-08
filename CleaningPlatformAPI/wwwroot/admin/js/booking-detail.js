@@ -49,7 +49,11 @@ function renderBookingDetail() {
             <h2 class="section-title">${__('section_assigned_employees')}</h2>
             <div id="assignments-list"></div>
             <div class="inline-form" style="margin-top:1rem;">
-                <select id="employee-select" class="status-select"><option value="">${__('label_select_employee')}</option></select>
+                <div class="autocomplete-wrapper">
+                    <input type="text" id="employee-search" class="text-input" placeholder="${__('label_select_employee')}" autocomplete="off" />
+                    <input type="hidden" id="employee-id" value="" />
+                    <div id="employee-results" class="autocomplete-dropdown"></div>
+                </div>
                 <button id="add-assignment-btn" class="btn btn-sm">${__('btn_add')}</button>
             </div>
         </section>
@@ -154,7 +158,7 @@ async function generateInvoice() {
 }
 
 async function addAssignment() {
-    const employeeId = document.getElementById('employee-select').value;
+    const employeeId = document.getElementById('employee-id').value;
     if (!employeeId) { showError(__('msg_select_employee')); return; }
     try {
         const res = await apiFetch(`/bookings/${bookingId}/assignments`, {
@@ -163,9 +167,63 @@ async function addAssignment() {
         });
         if (res.success) {
             showSuccess(__('msg_assignment_added'));
+            document.getElementById('employee-search').value = '';
+            document.getElementById('employee-id').value = '';
             loadBookingDetail();
         } else showError(res.message);
     } catch(e) { showError(e.message); }
+}
+
+let _autocompleteInit = false;
+function initEmployeeAutocomplete() {
+    if (_autocompleteInit) return;
+    const input = document.getElementById('employee-search');
+    const results = document.getElementById('employee-results');
+    if (!input || !results) return;
+    _autocompleteInit = true;
+
+    input.addEventListener('focus', function () {
+        if (window._employeeList?.length) renderResults(window._employeeList);
+    });
+
+    input.addEventListener('input', function () {
+        const q = this.value.toLowerCase().trim();
+        document.getElementById('employee-id').value = '';
+        if (!q) { renderResults(window._employeeList); return; }
+        renderResults(window._employeeList.filter(e =>
+            e.fullName.toLowerCase().includes(q) || e.role.toLowerCase().includes(q)
+        ));
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.autocomplete-wrapper')) {
+            results.style.display = 'none';
+        }
+    });
+}
+
+function renderResults(list) {
+    const results = document.getElementById('employee-results');
+    if (!results) return;
+    results.innerHTML = '';
+    if (!list?.length) { results.style.display = 'none'; return; }
+    list.forEach(e => {
+        const status = e.isAvailable
+            ? `<span style="color:var(--success);font-size:0.8rem;">${e.jobsToday}/${e.maxJobsPerDay || '∞'}</span>`
+            : `<span style="color:var(--danger);font-size:0.8rem;">Full</span>`;
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item' + (e.isAvailable ? '' : ' disabled');
+        div.innerHTML = `<strong>${e.fullName}</strong> <span style="color:var(--text-muted);font-size:0.85rem;">${e.role}</span> ${status}`;
+        if (e.isAvailable) {
+            div.addEventListener('click', function () {
+                document.getElementById('employee-search').value = e.fullName;
+                document.getElementById('employee-id').value = e.id;
+                results.style.display = 'none';
+            });
+        }
+        results.appendChild(div);
+    });
+    results.style.display = 'block';
 }
 
 async function removeAssignment(employeeId) {
@@ -224,13 +282,10 @@ async function updateServicePrice(serviceCatalogId) {
 
 async function loadEmployeesForSelect() {
     try {
-        const res = await apiFetch('/employees/active');
+        const res = await apiFetch(`/employees/available-for-booking/${bookingId}`);
         if (res.success && res.data) {
-            const select = document.getElementById('employee-select');
-            select.innerHTML = '<option value="">Select employee</option>';
-            res.data.forEach(e => {
-                select.innerHTML += `<option value="${e.id}">${e.fullName} (${e.role})</option>`;
-            });
+            window._employeeList = res.data;
+            initEmployeeAutocomplete();
         }
     } catch(e) { console.error(e); }
 }

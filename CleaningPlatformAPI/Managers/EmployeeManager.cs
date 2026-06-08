@@ -4,6 +4,7 @@ using CleaningPlatformAPI;
 using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
+using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Mapping;
 
 namespace CleaningPlatformAPI.Managers;
@@ -45,6 +46,46 @@ public class EmployeeManager
             .ToListAsync(ct);
 
         return OperationResult<UserResponse>.Ok(UserMapper.ToResponse(user, permissions));
+    }
+
+    public async Task<List<AvailableEmployeeResponse>> GetAvailableForBookingAsync(int bookingId, CancellationToken ct = default)
+    {
+        var booking = await _db.Bookings.FindAsync([bookingId], ct);
+        if (booking is null) return [];
+
+        var assignedIds = await _db.BookingAssignments
+            .Where(a => a.BookingId == bookingId)
+            .Select(a => a.EmployeeId)
+            .ToListAsync(ct);
+
+        var todayJobs = await _db.BookingAssignments
+            .Where(a => a.Booking.ScheduledDate.Date == booking.ScheduledDate.Date
+                     && a.Booking.Status != BookingStatus.Cancelled)
+            .GroupBy(a => a.EmployeeId)
+            .Select(g => new { EmployeeId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.EmployeeId, x => x.Count, ct);
+
+        var employees = await _db.Employees
+            .Include(e => e.Role)
+            .Where(e => e.IsActive && !assignedIds.Contains(e.Id))
+            .OrderBy(e => e.FirstName)
+            .ThenBy(e => e.LastName)
+            .ToListAsync(ct);
+
+        return employees.Select(e =>
+        {
+            todayJobs.TryGetValue(e.Id, out var count);
+            return new AvailableEmployeeResponse
+            {
+                Id = e.Id,
+                FirstName = e.FirstName,
+                LastName = e.LastName,
+                Role = e.Role?.Name ?? string.Empty,
+                JobsToday = count,
+                MaxJobsPerDay = e.MaxJobsPerDay,
+                IsAvailable = !e.MaxJobsPerDay.HasValue || count < e.MaxJobsPerDay.Value
+            };
+        }).ToList();
     }
 
     public async Task<List<EmployeeSimpleResponse>> GetActiveEmployeesAsync(CancellationToken ct = default)

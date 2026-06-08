@@ -1028,3 +1028,37 @@ body.login-page {
 .lang-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 .header-right #lang-switcher .lang-btn { border-color: var(--border); color: var(--text-muted); }
 .header-right #lang-switcher .lang-btn.active { color: white; }
+
+/* ===== Autocomplete Dropdown ===== */
+.autocomplete-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+}
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    max-height: 240px;
+    overflow-y: auto;
+}
+.autocomplete-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.15s;
+}
+.autocomplete-item:hover { background: var(--accent-light); }
+.autocomplete-item.disabled {
+    opacity: 0.5;
+    cursor: default;
+}

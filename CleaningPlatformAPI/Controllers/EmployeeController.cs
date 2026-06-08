@@ -27,6 +27,13 @@ public class EmployeeController : ControllerBase
         return result.Success ? Ok(result) : Unauthorized(result);
     }
 
+    [HttpGet("available-for-booking/{bookingId:int}")]
+    public async Task<ActionResult<OperationResult<List<AvailableEmployeeResponse>>>> GetAvailableForBooking(int bookingId, CancellationToken ct)
+    {
+        var employees = await _userManager.GetAvailableForBookingAsync(bookingId, ct);
+        return Ok(OperationResult<List<AvailableEmployeeResponse>>.Ok(employees));
+    }
+
     [HttpGet("active")]
     public async Task<ActionResult<OperationResult<List<EmployeeSimpleResponse>>>> GetActiveEmployees(CancellationToken ct)
     {
