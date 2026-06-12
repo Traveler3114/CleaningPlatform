@@ -55,7 +55,7 @@
                     showSuccess(data.data || data.message || 'Magic link sent! Check the server console.');
                     document.getElementById('email').value = '';
                 } else {
-                    showError(data.message || 'Something went wrong.');
+                    showError(window.__error(data.code, data.message) || 'Something went wrong.');
                 }
             } catch (e) {
                 showError('Could not connect to server. Please try again.');

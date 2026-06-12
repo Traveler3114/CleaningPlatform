@@ -33,11 +33,9 @@ builder.Services.AddLocalization();
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
-    var supported = new[] { new CultureInfo("en"), new CultureInfo("hr") };
     options.DefaultRequestCulture = new RequestCulture("en");
-    options.SupportedCultures = supported;
-    options.SupportedUICultures = supported;
-    options.RequestCultureProviders.Insert(0, new QueryStringRequestCultureProvider { Options = options });
+    options.SupportedCultures = new[] { new CultureInfo("en") };
+    options.SupportedUICultures = new[] { new CultureInfo("en") };
 });
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -96,7 +94,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResources>>();
                 context.Response.StatusCode = 403;
                 context.Response.ContentType = "application/json";
-                var result = OperationResult<string>.Fail(localizer["error_access_denied"]);
+                var result = OperationResult<string>.Fail("ACCESS_DENIED", localizer["error_access_denied"]);
                 return context.Response.WriteAsJsonAsync(result);
             },
             OnChallenge = context =>
@@ -106,7 +104,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 context.HandleResponse();
                 context.Response.StatusCode = 401;
                 context.Response.ContentType = "application/json";
-                var result = OperationResult<string>.Fail(localizer["error_authentication_required"]);
+                var result = OperationResult<string>.Fail("AUTHENTICATION_REQUIRED", localizer["error_authentication_required"]);
                 return context.Response.WriteAsJsonAsync(result);
             }
         };
@@ -190,7 +188,7 @@ app.UseExceptionHandler(errorApp =>
                 : localizer["error_unexpected"];
         }
 
-        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail(message));
+        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("UNEXPECTED_ERROR", message));
     });
 });
 
@@ -217,7 +215,7 @@ app.MapFallback(async context =>
         var localizer = context.RequestServices.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResources>>();
         context.Response.StatusCode = 404;
         context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail(localizer["error_endpoint_not_found"]));
+        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("ENDPOINT_NOT_FOUND", localizer["error_endpoint_not_found"]));
         return;
     }
     context.Response.Redirect("/public/index.html");

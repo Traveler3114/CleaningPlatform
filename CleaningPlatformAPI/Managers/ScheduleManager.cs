@@ -25,12 +25,12 @@ public class ScheduleManager
     public async Task<OperationResult<WeeklyScheduleResponse>> CreateDayAsync(WeeklyScheduleRequest request, CancellationToken ct = default)
     {
         var err = ValidateScheduleRequest(request.DayOfWeek, request.StartHour, request.EndHour, request.Capacity, true);
-        if (err is not null) return OperationResult<WeeklyScheduleResponse>.Fail(err);
+        if (err is not null) return OperationResult<WeeklyScheduleResponse>.Fail("SCHEDULE_ERROR", err);
 
         var dayName  = ((DayOfWeek)request.DayOfWeek).ToString();
         var existing = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == request.DayOfWeek, ct);
         if (existing is not null)
-            return OperationResult<WeeklyScheduleResponse>.Fail(
+            return OperationResult<WeeklyScheduleResponse>.Fail("SCHEDULE_ENTRY_EXISTS",
                 $"A schedule entry for {dayName} already exists. Click the row to edit the existing entry instead.");
 
         var schedule = new WeeklySchedule
@@ -48,11 +48,11 @@ public class ScheduleManager
     public async Task<OperationResult<WeeklyScheduleResponse>> UpdateDayAsync(int dayOfWeek, UpdateWeeklyScheduleRequest request, CancellationToken ct = default)
     {
         var err = ValidateScheduleRequest(dayOfWeek, request.StartHour, request.EndHour, request.Capacity, false);
-        if (err is not null) return OperationResult<WeeklyScheduleResponse>.Fail(err);
+        if (err is not null) return OperationResult<WeeklyScheduleResponse>.Fail("SCHEDULE_ERROR", err);
 
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == dayOfWeek, ct);
         if (schedule is null)
-            return OperationResult<WeeklyScheduleResponse>.Fail(
+            return OperationResult<WeeklyScheduleResponse>.Fail("SCHEDULE_ENTRY_NOT_FOUND",
                 $"No schedule entry found for {((DayOfWeek)dayOfWeek)}.");
 
         schedule.StartHour = request.StartHour;
@@ -66,7 +66,7 @@ public class ScheduleManager
     {
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == dayOfWeek, ct);
         if (schedule is null)
-            return OperationResult<bool>.Fail($"No schedule entry found for {((DayOfWeek)dayOfWeek)}.");
+            return OperationResult<bool>.Fail("SCHEDULE_ENTRY_NOT_FOUND", $"No schedule entry found for {((DayOfWeek)dayOfWeek)}.");
 
         _db.WeeklySchedules.Remove(schedule);
         await _db.SaveChangesAsync(ct);

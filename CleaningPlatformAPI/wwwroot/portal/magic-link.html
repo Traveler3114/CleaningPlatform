@@ -46,8 +46,13 @@
                 } else {
                     document.getElementById('spinner').style.display = 'none';
                     document.getElementById('status-text').className = 'error';
+                    var displayMsg = data.message || 'This link has expired.';
+                    if (data.code && window.ERROR_CODE_MAP && window.ERROR_CODE_MAP[data.code] && window.__I18N_DATA) {
+                        var t = window.__I18N_DATA[window.ERROR_CODE_MAP[data.code]];
+                        if (t) displayMsg = t;
+                    }
                     document.getElementById('status-text').innerHTML =
-                        (data.message || 'This link has expired.') + ' <a href="/portal/login.html">Request a new link</a>';
+                        displayMsg + ' <a href="/portal/login.html">Request a new link</a>';
                 }
             } catch (e) {
                 document.getElementById('spinner').style.display = 'none';

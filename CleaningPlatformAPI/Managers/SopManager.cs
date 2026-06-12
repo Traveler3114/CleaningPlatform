@@ -34,18 +34,18 @@ public class SopManager
             .Include(t => t.ChecklistItems)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
         return template is null
-            ? OperationResult<SopTemplateResponse>.Fail($"SOP template #{id} was not found.")
+            ? OperationResult<SopTemplateResponse>.Fail("SOP_NOT_FOUND", $"SOP template #{id} was not found.")
             : OperationResult<SopTemplateResponse>.Ok(SopMapper.ToTemplateResponse(template));
     }
 
     public async Task<OperationResult<SopTemplateResponse>> CreateTemplateAsync(CreateSopTemplateRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.Name))
-            return OperationResult<SopTemplateResponse>.Fail(_localizer["err_sop_name_required"]);
+            return OperationResult<SopTemplateResponse>.Fail("SOP_NAME_REQUIRED", _localizer["err_sop_name_required"]);
 
         var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat", "Generic" };
         if (!validServiceTypes.Contains(dto.ServiceType?.Trim()))
-            return OperationResult<SopTemplateResponse>.Fail("ServiceType must be one of: Vehicle, SiteBased, Boat, Generic.");
+            return OperationResult<SopTemplateResponse>.Fail("INVALID_SERVICE_TYPE", "ServiceType must be one of: Vehicle, SiteBased, Boat, Generic.");
 
         var now = DateTime.UtcNow;
         var template = new SopTemplate
@@ -67,11 +67,11 @@ public class SopManager
     {
         var template = await _db.SopTemplates.FindAsync([id], ct);
         if (template is null)
-            return OperationResult<SopTemplateResponse>.Fail($"SOP template #{id} was not found.");
+            return OperationResult<SopTemplateResponse>.Fail("SOP_NOT_FOUND", $"SOP template #{id} was not found.");
 
         var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat", "Generic" };
         if (!validServiceTypes.Contains(dto.ServiceType?.Trim()))
-            return OperationResult<SopTemplateResponse>.Fail("ServiceType must be one of: Vehicle, SiteBased, Boat, Generic.");
+            return OperationResult<SopTemplateResponse>.Fail("INVALID_SERVICE_TYPE", "ServiceType must be one of: Vehicle, SiteBased, Boat, Generic.");
 
         template.ServiceCatalogId = dto.ServiceCatalogId;
         template.Name = dto.Name.Trim();
@@ -87,7 +87,7 @@ public class SopManager
     {
         var template = await _db.SopTemplates.FindAsync([id], ct);
         if (template is null)
-            return OperationResult<SopTemplateResponse>.Fail($"SOP template #{id} was not found.");
+            return OperationResult<SopTemplateResponse>.Fail("SOP_NOT_FOUND", $"SOP template #{id} was not found.");
 
         template.IsActive = isActive;
         template.UpdatedAt = DateTime.UtcNow;
@@ -98,11 +98,11 @@ public class SopManager
     public async Task<OperationResult<ChecklistItemResponse>> AddChecklistItemAsync(int templateId, UpsertChecklistItemRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ItemText))
-            return OperationResult<ChecklistItemResponse>.Fail(_localizer["err_checklist_text_required"]);
+            return OperationResult<ChecklistItemResponse>.Fail("CHECKLIST_TEXT_REQUIRED", _localizer["err_checklist_text_required"]);
 
         var templateExists = await _db.SopTemplates.AnyAsync(t => t.Id == templateId, ct);
         if (!templateExists)
-            return OperationResult<ChecklistItemResponse>.Fail($"SOP template #{templateId} was not found.");
+            return OperationResult<ChecklistItemResponse>.Fail("SOP_NOT_FOUND", $"SOP template #{templateId} was not found.");
 
         var item = new ChecklistItem
         {
@@ -119,11 +119,11 @@ public class SopManager
     public async Task<OperationResult<ChecklistItemResponse>> UpdateChecklistItemAsync(int itemId, UpsertChecklistItemRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ItemText))
-            return OperationResult<ChecklistItemResponse>.Fail(_localizer["err_checklist_text_required"]);
+            return OperationResult<ChecklistItemResponse>.Fail("CHECKLIST_TEXT_REQUIRED", _localizer["err_checklist_text_required"]);
 
         var item = await _db.ChecklistItems.FindAsync([itemId], ct);
         if (item is null)
-            return OperationResult<ChecklistItemResponse>.Fail($"Checklist item #{itemId} was not found.");
+            return OperationResult<ChecklistItemResponse>.Fail("CHECKLIST_ITEM_NOT_FOUND", $"Checklist item #{itemId} was not found.");
 
         item.ItemText = dto.ItemText.Trim();
         item.SortOrder = dto.SortOrder;
@@ -136,7 +136,7 @@ public class SopManager
     {
         var item = await _db.ChecklistItems.FindAsync([itemId], ct);
         if (item is null)
-            return OperationResult<string>.Fail($"Checklist item #{itemId} was not found.");
+            return OperationResult<string>.Fail("CHECKLIST_ITEM_NOT_FOUND", $"Checklist item #{itemId} was not found.");
 
         var responses = await _db.ChecklistResponses
             .Where(r => r.ChecklistItemId == itemId)
@@ -160,16 +160,16 @@ public class SopManager
     {
         var bookingExists = await _db.Bookings.AnyAsync(b => b.Id == bookingId, ct);
         if (!bookingExists)
-            return OperationResult<BookingSopAssignmentResponse>.Fail($"Booking #{bookingId} was not found.");
+            return OperationResult<BookingSopAssignmentResponse>.Fail("BOOKING_NOT_FOUND", $"Booking #{bookingId} was not found.");
 
         var sopExists = await _db.SopTemplates.AnyAsync(t => t.Id == dto.SopTemplateId && t.IsActive, ct);
         if (!sopExists)
-            return OperationResult<BookingSopAssignmentResponse>.Fail($"SOP template #{dto.SopTemplateId} was not found or is inactive.");
+            return OperationResult<BookingSopAssignmentResponse>.Fail("SOP_NOT_FOUND_INACTIVE", $"SOP template #{dto.SopTemplateId} was not found or is inactive.");
 
         var alreadyAssigned = await _db.BookingSopAssignments
             .AnyAsync(a => a.BookingId == bookingId && a.SopTemplateId == dto.SopTemplateId, ct);
         if (alreadyAssigned)
-            return OperationResult<BookingSopAssignmentResponse>.Fail("This SOP template is already assigned to the booking.");
+            return OperationResult<BookingSopAssignmentResponse>.Fail("SOP_ALREADY_ASSIGNED", "This SOP template is already assigned to the booking.");
 
         var assignment = new BookingSopAssignment
         {
@@ -244,11 +244,11 @@ public class SopManager
         var sopAssignmentExists = await _db.BookingSopAssignments
             .AnyAsync(a => a.BookingId == bookingId && a.SopTemplateId == sopTemplateId, ct);
         if (!sopAssignmentExists)
-            return OperationResult<ChecklistResponseResponse>.Fail($"SOP assignment for booking #{bookingId}, template #{sopTemplateId} was not found.");
+            return OperationResult<ChecklistResponseResponse>.Fail("SOP_ASSIGNMENT_NOT_FOUND", $"SOP assignment for booking #{bookingId}, template #{sopTemplateId} was not found.");
 
         var item = await _db.ChecklistItems.FindAsync([checklistItemId], ct);
         if (item is null)
-            return OperationResult<ChecklistResponseResponse>.Fail($"Checklist item #{checklistItemId} was not found.");
+            return OperationResult<ChecklistResponseResponse>.Fail("CHECKLIST_ITEM_NOT_FOUND", $"Checklist item #{checklistItemId} was not found.");
 
         var response = await _db.ChecklistResponses
             .FirstOrDefaultAsync(r => r.BookingId == bookingId && r.SopTemplateId == sopTemplateId && r.ChecklistItemId == checklistItemId, ct);

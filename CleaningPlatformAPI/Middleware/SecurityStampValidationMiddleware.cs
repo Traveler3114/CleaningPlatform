@@ -31,7 +31,7 @@ public class SecurityStampValidationMiddleware
                 {
                     context.Response.StatusCode = 401;
                     context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("Session is no longer valid."));
+                    await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("SESSION_INVALID", "Session is no longer valid."));
                     return;
                 }
             }

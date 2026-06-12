@@ -29,7 +29,7 @@ public class DateOverrideManager
     public async Task<OperationResult<DateOverrideResponse>> CreateOverrideAsync(DateOverrideRequest request, CancellationToken ct = default)
     {
         if (request.Date < DateOnly.FromDateTime(DateTime.UtcNow))
-            return OperationResult<DateOverrideResponse>.Fail(
+            return OperationResult<DateOverrideResponse>.Fail("DATE_OVERRIDE_PAST",
                 $"Date overrides cannot be created for past dates. The selected date was {request.Date:dd MMM yyyy}.");
 
         var existing = await _db.DateOverrides
@@ -66,7 +66,7 @@ public class DateOverrideManager
     {
         var entity = await _db.DateOverrides.FindAsync([id], ct);
         if (entity is null)
-            return OperationResult<bool>.Fail($"Date override #{id} was not found.");
+            return OperationResult<bool>.Fail("DATE_OVERRIDE_NOT_FOUND", $"Date override #{id} was not found.");
 
         _db.DateOverrides.Remove(entity);
         await _db.SaveChangesAsync(ct);

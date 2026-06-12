@@ -22,7 +22,7 @@ public class PortalDataManager
     {
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<PortalDashboardResponse>.Fail("Client not found.");
+            return OperationResult<PortalDashboardResponse>.Fail("CLIENT_NOT_FOUND", "Client not found.");
 
         var upcomingCount = await _db.Bookings
             .CountAsync(b => b.ClientId == clientId && b.Status != BookingStatus.Completed && b.Status != BookingStatus.Cancelled, ct);
@@ -70,7 +70,7 @@ public class PortalDataManager
     {
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<List<BookingResponse>>.Fail("Client not found.");
+            return OperationResult<List<BookingResponse>>.Fail("CLIENT_NOT_FOUND", "Client not found.");
 
         var query = _db.Bookings
             .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
@@ -99,7 +99,7 @@ public class PortalDataManager
             .FirstOrDefaultAsync(b => b.Id == bookingId && b.ClientId == clientId, ct);
 
         if (booking is null)
-            return OperationResult<BookingResponse>.Fail("Booking not found.");
+            return OperationResult<BookingResponse>.Fail("BOOKING_NOT_FOUND", "Booking not found.");
 
         return OperationResult<BookingResponse>.Ok(BookingMapper.ToDetailResponse(booking));
     }
@@ -108,7 +108,7 @@ public class PortalDataManager
     {
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<List<InvoiceResponse>>.Fail("Client not found.");
+            return OperationResult<List<InvoiceResponse>>.Fail("CLIENT_NOT_FOUND", "Client not found.");
 
         var invoices = await _db.Invoices
             .Include(i => i.Lines)
@@ -128,7 +128,7 @@ public class PortalDataManager
             .FirstOrDefaultAsync(i => i.Id == invoiceId && i.ClientId == clientId, ct);
 
         if (invoice is null)
-            return OperationResult<InvoiceResponse>.Fail("Invoice not found.");
+            return OperationResult<InvoiceResponse>.Fail("INVOICE_NOT_FOUND", "Invoice not found.");
 
         return OperationResult<InvoiceResponse>.Ok(InvoiceMapper.ToResponse(invoice));
     }
@@ -141,7 +141,7 @@ public class PortalDataManager
             .FirstOrDefaultAsync(c => c.Id == clientId, ct);
 
         if (client is null)
-            return OperationResult<PortalProfileResponse>.Fail("Client not found.");
+            return OperationResult<PortalProfileResponse>.Fail("CLIENT_NOT_FOUND", "Client not found.");
 
         var primary = client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)
             ?? client.Contacts.FirstOrDefault(c => c.IsActive);

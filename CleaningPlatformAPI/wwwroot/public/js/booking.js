@@ -93,7 +93,7 @@ document.getElementById('request-form').addEventListener('submit', async (e) => 
             document.getElementById('request-form').style.display = 'none';
             document.getElementById('success-message').style.display = 'block';
         } else {
-            errorEl.textContent = result.message || __('msg_request_failed');
+            errorEl.textContent = window.__error(result.code, result.message) || __('msg_request_failed');
         }
     } catch (e) {
         errorEl.textContent = __('msg_network_error');

@@ -38,7 +38,7 @@ public class EmployeeManager
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user is null)
-            return OperationResult<UserResponse>.Fail($"User #{id} was not found.");
+            return OperationResult<UserResponse>.Fail("USER_NOT_FOUND", $"User #{id} was not found.");
 
         var permissions = await _db.RolePermissions
             .Where(rp => rp.RoleId == user.RoleId)
@@ -106,18 +106,18 @@ public class EmployeeManager
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user is null)
-            return OperationResult<UserResponse>.Fail($"Employee #{id} was not found.");
+            return OperationResult<UserResponse>.Fail("EMPLOYEE_NOT_FOUND", $"Employee #{id} was not found.");
 
         var roleName = request.Role?.Trim();
         if (string.IsNullOrWhiteSpace(roleName))
-            return OperationResult<UserResponse>.Fail("Role is required.");
+            return OperationResult<UserResponse>.Fail("ROLE_REQUIRED", "Role is required.");
 
         var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName, ct);
         if (role is null)
-            return OperationResult<UserResponse>.Fail($"Role '{roleName}' was not found.");
+            return OperationResult<UserResponse>.Fail("ROLE_NOT_FOUND", $"Role '{roleName}' was not found.");
 
         if (id == requestingUserId && role.Id != user.RoleId)
-            return OperationResult<UserResponse>.Fail("You cannot change your own role.");
+            return OperationResult<UserResponse>.Fail("CANNOT_CHANGE_OWN_ROLE", "You cannot change your own role.");
 
         user.RoleId = role.Id;
         user.HourlyRate = request.HourlyRate;
@@ -137,13 +137,13 @@ public class EmployeeManager
     public async Task<OperationResult<UserResponse>> ToggleActiveAsync(int id, int requestingUserId, CancellationToken ct = default)
     {
         if (id == requestingUserId)
-            return OperationResult<UserResponse>.Fail("You cannot deactivate your own account.");
+            return OperationResult<UserResponse>.Fail("CANNOT_DEACTIVATE_SELF", "You cannot deactivate your own account.");
 
         var user = await _db.Employees
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user is null)
-            return OperationResult<UserResponse>.Fail("User not found.");
+            return OperationResult<UserResponse>.Fail("USER_NOT_FOUND", "User not found.");
 
         user.IsActive = !user.IsActive;
         user.UpdatedAt = DateTime.UtcNow;

@@ -61,7 +61,7 @@ public class InvoiceManager
             .Include(i => i.InvoiceBookings)
             .FirstOrDefaultAsync(i => i.Id == id, ct);
         return invoice is null
-            ? OperationResult<InvoiceResponse>.Fail($"Invoice #{id} was not found.")
+            ? OperationResult<InvoiceResponse>.Fail("INVOICE_NOT_FOUND", $"Invoice #{id} was not found.")
             : OperationResult<InvoiceResponse>.Ok(InvoiceMapper.ToResponse(invoice));
     }
 
@@ -75,15 +75,15 @@ public class InvoiceManager
             .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
 
         if (booking is null)
-            return OperationResult<InvoiceResponse>.Fail($"Booking #{bookingId} was not found.");
+            return OperationResult<InvoiceResponse>.Fail("BOOKING_NOT_FOUND", $"Booking #{bookingId} was not found.");
 
         if (booking.Status != BookingStatus.Completed)
-            return OperationResult<InvoiceResponse>.Fail($"Booking #{bookingId} cannot be invoiced — its current status is '{booking.Status}'. Only Completed bookings can generate an invoice.");
+            return OperationResult<InvoiceResponse>.Fail("BOOKING_NOT_COMPLETED", $"Booking #{bookingId} cannot be invoiced — its current status is '{booking.Status}'. Only Completed bookings can generate an invoice.");
 
         var existingLink = await _db.InvoiceBookings.AsNoTracking()
             .FirstOrDefaultAsync(ib => ib.BookingId == bookingId, ct);
         if (existingLink is not null)
-            return OperationResult<InvoiceResponse>.Fail($"Booking #{bookingId} is already linked to invoice #{existingLink.InvoiceId}. Open that invoice to record additional payments.");
+            return OperationResult<InvoiceResponse>.Fail("BOOKING_ALREADY_INVOICED", $"Booking #{bookingId} is already linked to invoice #{existingLink.InvoiceId}. Open that invoice to record additional payments.");
 
         var now           = DateTime.UtcNow;
         var invoiceNumber = await GenerateInvoiceNumberAsync(ct);
@@ -148,15 +148,15 @@ public class InvoiceManager
     public async Task<OperationResult<InvoiceResponse>> RecordPaymentAsync(int invoiceId, RecordPaymentRequest request, int? recordedBy, CancellationToken ct = default)
     {
         if (request.Amount <= 0)
-            return OperationResult<InvoiceResponse>.Fail(_localizer["err_payment_amount_zero"]);
+            return OperationResult<InvoiceResponse>.Fail("PAYMENT_AMOUNT_ZERO", _localizer["err_payment_amount_zero"]);
 
         var method = string.IsNullOrWhiteSpace(request.Method) ? "BankTransfer" : request.Method.Trim();
         if (!AllowedPaymentMethods.Contains(method))
-            return OperationResult<InvoiceResponse>.Fail($"'{method}' is not a valid payment method. Accepted values: {string.Join(", ", AllowedPaymentMethods)}.");
+            return OperationResult<InvoiceResponse>.Fail("INVALID_PAYMENT_METHOD", $"'{method}' is not a valid payment method. Accepted values: {string.Join(", ", AllowedPaymentMethods)}.");
 
         var invoice = await _db.Invoices.Include(i => i.Payments).FirstOrDefaultAsync(i => i.Id == invoiceId, ct);
         if (invoice is null)
-            return OperationResult<InvoiceResponse>.Fail($"Invoice #{invoiceId} was not found.");
+            return OperationResult<InvoiceResponse>.Fail("INVOICE_NOT_FOUND", $"Invoice #{invoiceId} was not found.");
 
         var paymentDate = request.PaymentDate == default ? DateTime.UtcNow.Date : request.PaymentDate.Date;
 
@@ -187,11 +187,11 @@ public class InvoiceManager
     {
         var trimmed = status?.Trim() ?? "";
         if (!AllowedStatuses.Contains(trimmed))
-            return OperationResult<InvoiceResponse>.Fail($"'{trimmed}' is not a valid invoice status. Accepted values: {string.Join(", ", AllowedStatuses)}.");
+            return OperationResult<InvoiceResponse>.Fail("INVALID_INVOICE_STATUS", $"'{trimmed}' is not a valid invoice status. Accepted values: {string.Join(", ", AllowedStatuses)}.");
 
         var invoice = await _db.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId, ct);
         if (invoice is null)
-            return OperationResult<InvoiceResponse>.Fail($"Invoice #{invoiceId} was not found.");
+            return OperationResult<InvoiceResponse>.Fail("INVOICE_NOT_FOUND", $"Invoice #{invoiceId} was not found.");
 
         invoice.Status    = trimmed;
         invoice.UpdatedAt = DateTime.UtcNow;

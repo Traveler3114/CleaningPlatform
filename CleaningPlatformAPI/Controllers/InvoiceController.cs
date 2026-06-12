@@ -50,7 +50,7 @@ public class InvoiceController : ControllerBase
     public async Task<ActionResult<OperationResult<InvoiceResponse>>> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingRequest request, CancellationToken ct)
     {
         if (request.BookingId <= 0)
-            return BadRequest(OperationResult<InvoiceResponse>.Fail(_localizer["err_booking_id_required"]));
+            return BadRequest(OperationResult<InvoiceResponse>.Fail("BOOKING_ID_REQUIRED", _localizer["err_booking_id_required"]));
         var result = await _invoiceManager.CreateFromBookingAsync(request.BookingId, User.GetEmployeeId(), ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
     }

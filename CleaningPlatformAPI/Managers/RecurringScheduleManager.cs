@@ -70,7 +70,7 @@ public class RecurringScheduleManager
             .FirstOrDefaultAsync(rs => rs.Id == id, ct);
 
         if (s is null)
-            return OperationResult<RecurringScheduleResponse>.Fail($"Recurring schedule #{id} was not found.");
+            return OperationResult<RecurringScheduleResponse>.Fail("RECURRING_NOT_FOUND", $"Recurring schedule #{id} was not found.");
 
         var upcomingCount = await _db.Bookings
             .CountAsync(b => b.RecurringScheduleId == s.Id
@@ -100,17 +100,17 @@ public class RecurringScheduleManager
     {
         var validation = ValidateFrequency(dto.Frequency, dto.DayOfWeek, dto.DayOfMonth, dto.AutoGenerateWeeksAhead);
         if (validation is not null)
-            return OperationResult<RecurringScheduleResponse>.Fail(validation);
+            return OperationResult<RecurringScheduleResponse>.Fail("RECURRING_VALIDATION", validation);
 
         var booking = await _db.Bookings
             .Include(b => b.BookingServices)
             .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
 
         if (booking is null)
-            return OperationResult<RecurringScheduleResponse>.Fail($"Booking #{bookingId} was not found.");
+            return OperationResult<RecurringScheduleResponse>.Fail("BOOKING_NOT_FOUND", $"Booking #{bookingId} was not found.");
 
         if (booking.Status != BookingStatus.Completed)
-            return OperationResult<RecurringScheduleResponse>.Fail(
+            return OperationResult<RecurringScheduleResponse>.Fail("BOOKING_NOT_COMPLETED_RECURRING",
                 $"Booking #{bookingId} has status '{booking.Status}'. Only Completed bookings can be used as a recurring source.");
 
         var now = DateTime.UtcNow;
@@ -141,7 +141,7 @@ public class RecurringScheduleManager
     {
         var validation = ValidateFrequency(dto.Frequency, dto.DayOfWeek, dto.DayOfMonth, dto.AutoGenerateWeeksAhead);
         if (validation is not null)
-            return OperationResult<RecurringScheduleResponse>.Fail(validation);
+            return OperationResult<RecurringScheduleResponse>.Fail("RECURRING_VALIDATION", validation);
 
         var schedule = await _db.RecurringSchedules
             .Include(rs => rs.SourceBooking).ThenInclude(b => b.Client)
@@ -149,7 +149,7 @@ public class RecurringScheduleManager
             .FirstOrDefaultAsync(rs => rs.Id == id, ct);
 
         if (schedule is null)
-            return OperationResult<RecurringScheduleResponse>.Fail($"Recurring schedule #{id} was not found.");
+            return OperationResult<RecurringScheduleResponse>.Fail("RECURRING_NOT_FOUND", $"Recurring schedule #{id} was not found.");
 
         schedule.Frequency = dto.Frequency;
         schedule.DayOfWeek = dto.DayOfWeek;
@@ -185,7 +185,7 @@ public class RecurringScheduleManager
     {
         var schedule = await _db.RecurringSchedules.FindAsync([id], ct);
         if (schedule is null)
-            return OperationResult<RecurringScheduleResponse>.Fail($"Recurring schedule #{id} was not found.");
+            return OperationResult<RecurringScheduleResponse>.Fail("RECURRING_NOT_FOUND", $"Recurring schedule #{id} was not found.");
 
         schedule.IsActive = false;
         schedule.EndsOn = dto.EndsOn;

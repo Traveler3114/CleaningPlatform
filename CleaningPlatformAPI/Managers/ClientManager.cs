@@ -71,7 +71,7 @@ public class ClientManager
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
         if (client is null)
-            return OperationResult<ClientResponse>.Fail($"Client #{id} was not found.");
+            return OperationResult<ClientResponse>.Fail("CLIENT_NOT_FOUND", $"Client #{id} was not found.");
 
         var recentBookings = await _db.Bookings
             .Where(b => b.ClientId == id)
@@ -106,16 +106,16 @@ public class ClientManager
     public async Task<OperationResult<ClientResponse>> CreateAsync(CreateClientRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ClientName))
-            return OperationResult<ClientResponse>.Fail("Client name is required.");
+            return OperationResult<ClientResponse>.Fail("CLIENT_NAME_REQUIRED", "Client name is required.");
 
         if (dto.Type != "Person" && dto.Type != "Business")
-            return OperationResult<ClientResponse>.Fail("Client type must be Person or Business.");
+            return OperationResult<ClientResponse>.Fail("CLIENT_TYPE_INVALID", "Client type must be Person or Business.");
 
         if (string.IsNullOrWhiteSpace(dto.PrimaryContactName))
-            return OperationResult<ClientResponse>.Fail("Primary contact name is required.");
+            return OperationResult<ClientResponse>.Fail("PRIMARY_CONTACT_NAME_REQUIRED", "Primary contact name is required.");
 
         if (string.IsNullOrWhiteSpace(dto.PrimaryContactPhone))
-            return OperationResult<ClientResponse>.Fail("Primary contact phone number is required.");
+            return OperationResult<ClientResponse>.Fail("PRIMARY_CONTACT_PHONE_REQUIRED", "Primary contact phone number is required.");
 
         var now = DateTime.UtcNow;
         var client = new Client
@@ -166,18 +166,18 @@ public class ClientManager
     public async Task<OperationResult<ClientResponse>> UpdateProfileAsync(int id, UpdateClientProfileRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ClientName))
-            return OperationResult<ClientResponse>.Fail("Client name is required.");
+            return OperationResult<ClientResponse>.Fail("CLIENT_NAME_REQUIRED", "Client name is required.");
 
         var rawContacts = (dto.Contacts ?? [])
             .Where(c => !string.IsNullOrWhiteSpace(c.ContactName) || !string.IsNullOrWhiteSpace(c.Phone))
             .ToList();
 
         if (rawContacts.Count == 0)
-            return OperationResult<ClientResponse>.Fail("At least one active contact with a name and phone number is required.");
+            return OperationResult<ClientResponse>.Fail("ACTIVE_CONTACT_REQUIRED", "At least one active contact with a name and phone number is required.");
 
         var invalidContacts = rawContacts.Where(c => string.IsNullOrWhiteSpace(c.ContactName) || string.IsNullOrWhiteSpace(c.Phone)).ToList();
         if (invalidContacts.Count > 0)
-            return OperationResult<ClientResponse>.Fail("Every contact must have both a name and a phone number. Please check your contact entries.");
+            return OperationResult<ClientResponse>.Fail("CONTACT_VALIDATION_FAILED", "Every contact must have both a name and a phone number. Please check your contact entries.");
 
         var client = await _db.Clients
             .Include(c => c.Contacts)
@@ -185,7 +185,7 @@ public class ClientManager
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
         if (client is null)
-            return OperationResult<ClientResponse>.Fail($"Client #{id} was not found.");
+            return OperationResult<ClientResponse>.Fail("CLIENT_NOT_FOUND", $"Client #{id} was not found.");
 
         var now = DateTime.UtcNow;
         await using var transaction = await _db.Database.BeginTransactionAsync(ct);
@@ -202,7 +202,7 @@ public class ClientManager
 
             var activeContacts = client.Contacts.Where(c => c.IsActive).ToList();
             if (activeContacts.Count == 0)
-                return OperationResult<ClientResponse>.Fail("At least one active contact is required. You cannot deactivate all contacts.");
+                return OperationResult<ClientResponse>.Fail("CANNOT_DEACTIVATE_ALL_CONTACTS", "At least one active contact is required. You cannot deactivate all contacts.");
 
             EnforceSinglePrimary(activeContacts, now);
 
@@ -278,7 +278,7 @@ public class ClientManager
     {
         var exists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!exists)
-            return OperationResult<List<SiteResponse>>.Fail($"Client #{clientId} was not found.");
+            return OperationResult<List<SiteResponse>>.Fail("CLIENT_NOT_FOUND", $"Client #{clientId} was not found.");
 
         var sites = await _db.Sites
             .Where(s => s.ClientId == clientId)
@@ -294,11 +294,11 @@ public class ClientManager
     {
         var validationError = ValidateSiteDto(dto);
         if (validationError is not null)
-            return OperationResult<SiteResponse>.Fail(validationError);
+            return OperationResult<SiteResponse>.Fail("CONTACT_VALIDATION_FAILED", validationError);
 
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<SiteResponse>.Fail($"Client #{clientId} was not found.");
+            return OperationResult<SiteResponse>.Fail("CLIENT_NOT_FOUND", $"Client #{clientId} was not found.");
 
         var now  = DateTime.UtcNow;
         var site = new Site
@@ -325,11 +325,11 @@ public class ClientManager
     {
         var validationError = ValidateSiteDto(dto);
         if (validationError is not null)
-            return OperationResult<SiteResponse>.Fail(validationError);
+            return OperationResult<SiteResponse>.Fail("CONTACT_VALIDATION_FAILED", validationError);
 
         var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId && s.ClientId == clientId, ct);
         if (site is null)
-            return OperationResult<SiteResponse>.Fail($"Site #{siteId} was not found for client #{clientId}.");
+            return OperationResult<SiteResponse>.Fail("SITE_NOT_FOUND", $"Site #{siteId} was not found for client #{clientId}.");
 
         site.SiteName    = dto.SiteName.Trim();
         site.Address     = dto.Address.Trim();
@@ -349,7 +349,7 @@ public class ClientManager
     {
         var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId && s.ClientId == clientId, ct);
         if (site is null)
-            return OperationResult<SiteResponse>.Fail($"Site #{siteId} was not found for client #{clientId}.");
+            return OperationResult<SiteResponse>.Fail("SITE_NOT_FOUND", $"Site #{siteId} was not found for client #{clientId}.");
 
         site.IsActive  = false;
         site.UpdatedAt = DateTime.UtcNow;

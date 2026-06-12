@@ -160,7 +160,7 @@ public class BookingController : ControllerBase
     {
         var targetId = employeeId ?? User.GetEmployeeId();
         if (targetId is null)
-            return Unauthorized(OperationResult<List<BookingResponse>>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<List<BookingResponse>>.Fail("INVALID_TOKEN", "Invalid token."));
 
         var currentUserId = User.GetEmployeeId();
         if (currentUserId != targetId && !User.IsInRole(RoleNames.Owner) && !User.IsInRole(RoleNames.Admin))

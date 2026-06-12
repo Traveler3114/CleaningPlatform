@@ -14,7 +14,7 @@ async function loadRequest() {
             requestData = result.data;
             renderDetails();
         } else {
-            showMessage(result.message || 'Could not load request details. The link may be expired.', 'error');
+            showMessage(window.__error(result.code, result.message) || 'Could not load request details. The link may be expired.', 'error');
         }
     } catch (e) {
         showMessage(__('msg_network_error'), 'error');
@@ -79,9 +79,9 @@ async function confirmRequest() {
         });
         const result = await res.json();
         if (result.success) {
-            showResult('success', result.message || 'Your request has been confirmed!');
+            showResult('success', window.__error(result.code, result.message) || 'Your request has been confirmed!');
         } else {
-            showResult('error', result.message || 'Could not confirm request.');
+            showResult('error', window.__error(result.code, result.message) || 'Could not confirm request.');
         }
     } catch (e) {
         showResult('error', __('msg_network_error'));
@@ -101,9 +101,9 @@ async function cancelRequest() {
         });
         const result = await res.json();
         if (result.success) {
-            showResult('info', result.message || 'Your request has been cancelled.');
+            showResult('info', window.__error(result.code, result.message) || 'Your request has been cancelled.');
         } else {
-            showResult('error', result.message || 'Could not cancel request.');
+            showResult('error', window.__error(result.code, result.message) || 'Could not cancel request.');
         }
     } catch (e) {
         showResult('error', __('msg_network_error'));

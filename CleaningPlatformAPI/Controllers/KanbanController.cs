@@ -57,7 +57,7 @@ public class KanbanController : ControllerBase
     {
         var userId = User.GetEmployeeId();
         if (userId is null)
-            return Unauthorized(OperationResult<WeeklyBoardResponse>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<WeeklyBoardResponse>.Fail("INVALID_TOKEN", "Invalid token."));
 
         var result = await _kanbanManager.GetEmployeeWeekAsync(userId.Value, weekStart, ct);
         return Ok(OperationResult<WeeklyBoardResponse>.Ok(result));

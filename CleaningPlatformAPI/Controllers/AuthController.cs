@@ -43,7 +43,7 @@ public class AuthController : ControllerBase
     {
         var userId = User.GetEmployeeId();
         if (userId is null)
-            return Unauthorized(OperationResult<string>.Fail(_localizer["error_invalid_token"]));
+            return Unauthorized(OperationResult<string>.Fail("INVALID_TOKEN", _localizer["error_invalid_token"]));
 
         var result = await _authManager.ChangePasswordAsync(request, userId.Value, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);

@@ -644,4 +644,88 @@
   <data name="empty_no_requirements" xml:space="preserve"><value>No inventory requirements for this service.</value></data>
   <data name="err_inventory_name_required" xml:space="preserve"><value>Item name is required.</value></data>
   <data name="err_quantity_needed_required" xml:space="preserve"><value>Quantity needed must be greater than zero.</value></data>
+  <data name="SESSION_INVALID" xml:space="preserve"><value>Session is no longer valid.</value></data>
+  <data name="INVALID_ROLE_NAME" xml:space="preserve"><value>Invalid role name.</value></data>
+  <data name="NAME_REQUIRED" xml:space="preserve"><value>First and last name are required.</value></data>
+  <data name="PASSWORD_COMPLEXITY" xml:space="preserve"><value>Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.</value></data>
+  <data name="USERNAME_GENERATION_FAILED" xml:space="preserve"><value>Could not generate a unique username.</value></data>
+  <data name="NEW_PASSWORD_REQUIRED" xml:space="preserve"><value>New password is required.</value></data>
+  <data name="USER_NOT_FOUND" xml:space="preserve"><value>User not found.</value></data>
+  <data name="CURRENT_PASSWORD_REQUIRED" xml:space="preserve"><value>Current password is required.</value></data>
+  <data name="CURRENT_PASSWORD_INCORRECT" xml:space="preserve"><value>Current password is incorrect.</value></data>
+  <data name="SLOT_CLOSED" xml:space="preserve"><value>This time slot is closed and not available for booking.</value></data>
+  <data name="SLOT_FULLY_BOOKED" xml:space="preserve"><value>This time slot is fully booked.</value></data>
+  <data name="PHONE_REQUIRED" xml:space="preserve"><value>Phone number is required.</value></data>
+  <data name="SERVICE_NOT_FOUND" xml:space="preserve"><value>Service not found.</value></data>
+  <data name="INVALID_SERVICE_TYPE" xml:space="preserve"><value>Invalid service type.</value></data>
+  <data name="CLIENT_NOT_FOUND_INACTIVE" xml:space="preserve"><value>Client was not found or is inactive.</value></data>
+  <data name="SITE_NOT_FOUND_INACTIVE" xml:space="preserve"><value>Site does not belong to this client or is inactive.</value></data>
+  <data name="BOOKING_CREATE_LOAD_FAILED" xml:space="preserve"><value>Booking was created but could not be loaded. Please refresh.</value></data>
+  <data name="INVALID_BOOKING_STATUS" xml:space="preserve"><value>Invalid booking status.</value></data>
+  <data name="INVALID_BOOKING_FOR_ASSIGN" xml:space="preserve"><value>Cannot assign employees to a booking with this status.</value></data>
+  <data name="EMPLOYEE_NOT_FOUND" xml:space="preserve"><value>Employee not found.</value></data>
+  <data name="EMPLOYEE_ALREADY_ASSIGNED" xml:space="preserve"><value>This employee is already assigned to this booking.</value></data>
+  <data name="INVALID_BOOKING_FOR_REMOVE" xml:space="preserve"><value>Cannot remove an assignment from a booking with this status.</value></data>
+  <data name="EMPLOYEE_NOT_ASSIGNED" xml:space="preserve"><value>This employee is not assigned to this booking.</value></data>
+  <data name="INVOICE_ALREADY_EXISTS" xml:space="preserve"><value>An invoice has already been generated for this booking.</value></data>
+  <data name="CATALOG_SERVICE_NOT_FOUND" xml:space="preserve"><value>Service was not found in the catalog.</value></data>
+  <data name="CANNOT_REMOVE_AFTER_INVOICE" xml:space="preserve"><value>Cannot remove services after an invoice has been generated.</value></data>
+  <data name="SERVICE_NOT_ON_BOOKING" xml:space="preserve"><value>Service was not found on this booking.</value></data>
+  <data name="BOOKING_REQUEST_NOT_FOUND" xml:space="preserve"><value>Booking request not found.</value></data>
+  <data name="EMAIL_REQUIRED" xml:space="preserve"><value>Email is required.</value></data>
+  <data name="SERVICE_REQUIRED" xml:space="preserve"><value>At least one service must be selected.</value></data>
+  <data name="INVALID_SERVICES" xml:space="preserve"><value>Invalid or inactive services selected.</value></data>
+  <data name="INVALID_REQUEST_STATUS" xml:space="preserve"><value>Cannot edit a request with this status.</value></data>
+  <data name="CANNOT_SEND_CUSTOMER" xml:space="preserve"><value>Cannot send this request to the customer.</value></data>
+  <data name="INVALID_TOKEN_PAYLOAD" xml:space="preserve"><value>Invalid token payload.</value></data>
+  <data name="REQUEST_NOT_FOUND" xml:space="preserve"><value>Request not found.</value></data>
+  <data name="REQUEST_NOT_AVAILABLE" xml:space="preserve"><value>This request is not available for action.</value></data>
+  <data name="REQUEST_ALREADY_STATUS" xml:space="preserve"><value>Request already has this status.</value></data>
+  <data name="CANNOT_CONFIRM_STATUS" xml:space="preserve"><value>Cannot confirm a request with this status.</value></data>
+  <data name="CANNOT_CONVERT_STATUS" xml:space="preserve"><value>Cannot convert a request with this status.</value></data>
+  <data name="CANNOT_CONVERT_NO_SERVICES" xml:space="preserve"><value>Cannot convert a request with no services.</value></data>
+  <data name="CLIENT_NOT_FOUND" xml:space="preserve"><value>Client not found.</value></data>
+  <data name="CLIENT_NAME_REQUIRED" xml:space="preserve"><value>Client name is required.</value></data>
+  <data name="CLIENT_TYPE_INVALID" xml:space="preserve"><value>Client type must be Person or Business.</value></data>
+  <data name="PRIMARY_CONTACT_NAME_REQUIRED" xml:space="preserve"><value>Primary contact name is required.</value></data>
+  <data name="PRIMARY_CONTACT_PHONE_REQUIRED" xml:space="preserve"><value>Primary contact phone number is required.</value></data>
+  <data name="ACTIVE_CONTACT_REQUIRED" xml:space="preserve"><value>At least one active contact with a name and phone number is required.</value></data>
+  <data name="CONTACT_VALIDATION_FAILED" xml:space="preserve"><value>Contact validation failed. Please check your entries.</value></data>
+  <data name="CANNOT_DEACTIVATE_ALL_CONTACTS" xml:space="preserve"><value>At least one active contact is required. You cannot deactivate all contacts.</value></data>
+  <data name="SITE_NOT_FOUND" xml:space="preserve"><value>Site not found.</value></data>
+  <data name="DATE_OVERRIDE_PAST" xml:space="preserve"><value>Date overrides cannot be created for past dates.</value></data>
+  <data name="DATE_OVERRIDE_NOT_FOUND" xml:space="preserve"><value>Date override not found.</value></data>
+  <data name="ROLE_NOT_FOUND" xml:space="preserve"><value>Role not found.</value></data>
+  <data name="CANNOT_CHANGE_OWN_ROLE" xml:space="preserve"><value>You cannot change your own role.</value></data>
+  <data name="CANNOT_DEACTIVATE_SELF" xml:space="preserve"><value>You cannot deactivate your own account.</value></data>
+  <data name="ITEM_NAME_REQUIRED" xml:space="preserve"><value>Item name is required.</value></data>
+  <data name="INVALID_UNIT_VALUE" xml:space="preserve"><value>Invalid unit value.</value></data>
+  <data name="NEGATIVE_QUANTITY" xml:space="preserve"><value>Quantity cannot be negative.</value></data>
+  <data name="INVENTORY_IN_USE" xml:space="preserve"><value>Cannot delete this item because it is referenced by service requirements.</value></data>
+  <data name="INVOICE_NOT_FOUND" xml:space="preserve"><value>Invoice not found.</value></data>
+  <data name="BOOKING_NOT_COMPLETED" xml:space="preserve"><value>Only completed bookings can generate an invoice.</value></data>
+  <data name="BOOKING_ALREADY_INVOICED" xml:space="preserve"><value>Booking is already linked to an invoice.</value></data>
+  <data name="INVALID_PAYMENT_METHOD" xml:space="preserve"><value>Invalid payment method.</value></data>
+  <data name="INVALID_INVOICE_STATUS" xml:space="preserve"><value>Invalid invoice status.</value></data>
+  <data name="RECURRING_NOT_FOUND" xml:space="preserve"><value>Recurring schedule not found.</value></data>
+  <data name="BOOKING_NOT_COMPLETED_RECURRING" xml:space="preserve"><value>Only completed bookings can be used as a recurring source.</value></data>
+  <data name="ROLE_NAME_EXISTS" xml:space="preserve"><value>A role with this name already exists.</value></data>
+  <data name="INVALID_PERMISSION_KEYS" xml:space="preserve"><value>Invalid permission keys.</value></data>
+  <data name="ROLE_PROTECTED" xml:space="preserve"><value>This role is protected and cannot be modified or deleted.</value></data>
+  <data name="ROLE_HAS_ASSIGNED_USERS" xml:space="preserve"><value>Users are assigned to this role. Reassign them before deleting.</value></data>
+  <data name="SCHEDULE_ENTRY_EXISTS" xml:space="preserve"><value>A schedule entry for this day already exists.</value></data>
+  <data name="SCHEDULE_ENTRY_NOT_FOUND" xml:space="preserve"><value>No schedule entry found.</value></data>
+  <data name="INVALID_CATEGORY" xml:space="preserve"><value>Invalid category.</value></data>
+  <data name="INVENTORY_ALREADY_LINKED" xml:space="preserve"><value>This inventory item is already linked to this service.</value></data>
+  <data name="QUANTITY_NEEDED_POSITIVE" xml:space="preserve"><value>Quantity needed must be greater than zero.</value></data>
+  <data name="REQUIREMENT_NOT_FOUND" xml:space="preserve"><value>Requirement not found.</value></data>
+  <data name="SOP_NOT_FOUND" xml:space="preserve"><value>SOP template not found.</value></data>
+  <data name="CHECKLIST_ITEM_NOT_FOUND" xml:space="preserve"><value>Checklist item not found.</value></data>
+  <data name="SOP_NOT_FOUND_INACTIVE" xml:space="preserve"><value>SOP template was not found or is inactive.</value></data>
+  <data name="SOP_ALREADY_ASSIGNED" xml:space="preserve"><value>This SOP template is already assigned to the booking.</value></data>
+  <data name="SOP_ASSIGNMENT_NOT_FOUND" xml:space="preserve"><value>SOP assignment not found.</value></data>
+  <data name="EXPIRED_INVALID_LINK" xml:space="preserve"><value>This link has expired or is invalid. Please request a new one.</value></data>
+  <data name="INVALID_LINK" xml:space="preserve"><value>This link is invalid. Please request a new one.</value></data>
+  <data name="RECURRING_VALIDATION" xml:space="preserve"><value>Recurring schedule validation failed.</value></data>
+  <data name="SCHEDULE_ERROR" xml:space="preserve"><value>Schedule operation failed.</value></data>
 </root>

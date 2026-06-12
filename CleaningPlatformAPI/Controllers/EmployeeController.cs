@@ -21,7 +21,7 @@ public class EmployeeController : ControllerBase
     {
         var userId = User.GetEmployeeId();
         if (userId is null)
-            return Unauthorized(OperationResult<UserResponse>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<UserResponse>.Fail("INVALID_TOKEN", "Invalid token."));
 
         var result = await _userManager.GetByIdAsync(userId.Value, ct);
         return result.Success ? Ok(result) : Unauthorized(result);
@@ -55,7 +55,7 @@ public class EmployeeController : ControllerBase
     {
         var requestingUserId = User.GetEmployeeId();
         if (requestingUserId is null)
-            return Unauthorized(OperationResult<UserResponse>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<UserResponse>.Fail("INVALID_TOKEN", "Invalid token."));
 
         var result = await _userManager.UpdateEmployeeAsync(id, request, requestingUserId.Value, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);
@@ -67,7 +67,7 @@ public class EmployeeController : ControllerBase
     {
         var requestingUserId = User.GetEmployeeId();
         if (requestingUserId is null)
-            return Unauthorized(OperationResult<UserResponse>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<UserResponse>.Fail("INVALID_TOKEN", "Invalid token."));
 
         var result = await _userManager.ToggleActiveAsync(id, requestingUserId.Value, ct);
         return result.Success ? Ok(result) : UnprocessableEntity(result);

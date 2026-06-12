@@ -30,7 +30,7 @@ public class ServiceCatalogManager
     {
         var entity = await _db.ServiceCatalog.FindAsync([id], ct);
         if (entity is null)
-            return OperationResult<ServiceCatalogResponse>.Fail("Service not found.");
+            return OperationResult<ServiceCatalogResponse>.Fail("SERVICE_NOT_FOUND", "Service not found.");
         return OperationResult<ServiceCatalogResponse>.Ok(ServiceCatalogMapper.ToResponse(entity));
     }
 
@@ -40,21 +40,21 @@ public class ServiceCatalogManager
         var name = dto.Name.Trim();
 
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
-            return OperationResult<ServiceCatalogResponse>.Fail(_localizer["err_catalog_required"]);
+            return OperationResult<ServiceCatalogResponse>.Fail("CATALOG_REQUIRED", _localizer["err_catalog_required"]);
 
         var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat" };
         var serviceType = dto.ServiceType?.Trim();
         if (string.IsNullOrWhiteSpace(serviceType) || !validServiceTypes.Contains(serviceType))
-            return OperationResult<ServiceCatalogResponse>.Fail("Service type must be one of: Vehicle, SiteBased, Boat.");
+            return OperationResult<ServiceCatalogResponse>.Fail("INVALID_SERVICE_TYPE", "Service type must be one of: Vehicle, SiteBased, Boat.");
 
         var validCategories = new[] { "Stairs", "Office", "Private", "Special", "Carpet", "Furniture", "Exterior", "Laundry", "Vehicle", "Boat" };
         var category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim();
         if (category is not null && !validCategories.Contains(category))
-            return OperationResult<ServiceCatalogResponse>.Fail("Category must be one of: Stairs, Office, Private, Special, Carpet, Furniture, Exterior, Laundry, Vehicle, Boat.");
+            return OperationResult<ServiceCatalogResponse>.Fail("INVALID_CATEGORY", "Category must be one of: Stairs, Office, Private, Special, Carpet, Furniture, Exterior, Laundry, Vehicle, Boat.");
 
         var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code, ct);
         if (exists)
-            return OperationResult<ServiceCatalogResponse>.Fail(_localizer["err_catalog_code_exists"]);
+            return OperationResult<ServiceCatalogResponse>.Fail("CATALOG_CODE_EXISTS", _localizer["err_catalog_code_exists"]);
 
         var now = DateTime.UtcNow;
         var entity = new ServiceCatalog
@@ -81,28 +81,28 @@ public class ServiceCatalogManager
     {
         var entity = await _db.ServiceCatalog.FindAsync([id], ct);
         if (entity is null)
-            return OperationResult<ServiceCatalogResponse>.Fail("Service not found.");
+            return OperationResult<ServiceCatalogResponse>.Fail("SERVICE_NOT_FOUND", "Service not found.");
 
         var code = dto.CatalogCode.Trim();
         var name = dto.Name.Trim();
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(name))
-            return OperationResult<ServiceCatalogResponse>.Fail(_localizer["err_catalog_required"]);
+            return OperationResult<ServiceCatalogResponse>.Fail("CATALOG_REQUIRED", _localizer["err_catalog_required"]);
 
         var validServiceTypes = new[] { "Vehicle", "SiteBased", "Boat" };
         var serviceType = dto.ServiceType?.Trim();
         if (string.IsNullOrWhiteSpace(serviceType) || !validServiceTypes.Contains(serviceType))
-            return OperationResult<ServiceCatalogResponse>.Fail("Service type must be one of: Vehicle, SiteBased, Boat.");
+            return OperationResult<ServiceCatalogResponse>.Fail("INVALID_SERVICE_TYPE", "Service type must be one of: Vehicle, SiteBased, Boat.");
 
         var validCategories = new[] { "Stairs", "Office", "Private", "Special", "Carpet", "Furniture", "Exterior", "Laundry", "Vehicle", "Boat" };
         var category = string.IsNullOrWhiteSpace(dto.Category) ? null : dto.Category.Trim();
         if (category is not null && !validCategories.Contains(category))
-            return OperationResult<ServiceCatalogResponse>.Fail("Category must be one of: Stairs, Office, Private, Special, Carpet, Furniture, Exterior, Laundry, Vehicle, Boat.");
+            return OperationResult<ServiceCatalogResponse>.Fail("INVALID_CATEGORY", "Category must be one of: Stairs, Office, Private, Special, Carpet, Furniture, Exterior, Laundry, Vehicle, Boat.");
 
         if (!string.Equals(entity.CatalogCode, code, StringComparison.OrdinalIgnoreCase))
         {
             var exists = await _db.ServiceCatalog.AnyAsync(s => s.CatalogCode == code && s.Id != id, ct);
             if (exists)
-                return OperationResult<ServiceCatalogResponse>.Fail(_localizer["err_catalog_code_exists"]);
+                return OperationResult<ServiceCatalogResponse>.Fail("CATALOG_CODE_EXISTS", _localizer["err_catalog_code_exists"]);
         }
 
         entity.CatalogCode = code;
@@ -123,7 +123,7 @@ public class ServiceCatalogManager
     {
         var entity = await _db.ServiceCatalog.FindAsync([id], ct);
         if (entity is null)
-            return OperationResult<string>.Fail("Service not found.");
+            return OperationResult<string>.Fail("SERVICE_NOT_FOUND", "Service not found.");
 
         _db.ServiceCatalog.Remove(entity);
         await _db.SaveChangesAsync(ct);
@@ -154,19 +154,19 @@ public class ServiceCatalogManager
     {
         var serviceExists = await _db.ServiceCatalog.AnyAsync(s => s.Id == serviceId, ct);
         if (!serviceExists)
-            return OperationResult<RequirementResponse>.Fail("Service not found.");
+            return OperationResult<RequirementResponse>.Fail("SERVICE_NOT_FOUND", "Service not found.");
 
         var inventoryExists = await _db.Inventory.AnyAsync(i => i.Id == dto.InventoryId, ct);
         if (!inventoryExists)
-            return OperationResult<RequirementResponse>.Fail("Inventory item not found.");
+            return OperationResult<RequirementResponse>.Fail("INVENTORY_NOT_FOUND", "Inventory item not found.");
 
         var alreadyExists = await _db.ServiceInventoryRequirements
             .AnyAsync(r => r.ServiceCatalogId == serviceId && r.InventoryId == dto.InventoryId, ct);
         if (alreadyExists)
-            return OperationResult<RequirementResponse>.Fail("This inventory item is already linked to this service.");
+            return OperationResult<RequirementResponse>.Fail("INVENTORY_ALREADY_LINKED", "This inventory item is already linked to this service.");
 
         if (dto.QuantityNeeded <= 0)
-            return OperationResult<RequirementResponse>.Fail("Quantity needed must be greater than zero.");
+            return OperationResult<RequirementResponse>.Fail("QUANTITY_NEEDED_POSITIVE", "Quantity needed must be greater than zero.");
 
         var entity = new ServiceInventoryRequirement
         {
@@ -196,10 +196,10 @@ public class ServiceCatalogManager
             .Include(r => r.Inventory)
             .FirstOrDefaultAsync(r => r.InventoryId == inventoryId && r.ServiceCatalogId == serviceId, ct);
         if (entity is null)
-            return OperationResult<RequirementResponse>.Fail("Requirement not found.");
+            return OperationResult<RequirementResponse>.Fail("REQUIREMENT_NOT_FOUND", "Requirement not found.");
 
         if (dto.QuantityNeeded <= 0)
-            return OperationResult<RequirementResponse>.Fail("Quantity needed must be greater than zero.");
+            return OperationResult<RequirementResponse>.Fail("QUANTITY_NEEDED_POSITIVE", "Quantity needed must be greater than zero.");
 
         entity.QuantityNeeded = dto.QuantityNeeded;
         await _db.SaveChangesAsync(ct);
@@ -220,7 +220,7 @@ public class ServiceCatalogManager
         var entity = await _db.ServiceInventoryRequirements
             .FirstOrDefaultAsync(r => r.InventoryId == inventoryId && r.ServiceCatalogId == serviceId, ct);
         if (entity is null)
-            return OperationResult<string>.Fail("Requirement not found.");
+            return OperationResult<string>.Fail("REQUIREMENT_NOT_FOUND", "Requirement not found.");
 
         _db.ServiceInventoryRequirements.Remove(entity);
         await _db.SaveChangesAsync(ct);

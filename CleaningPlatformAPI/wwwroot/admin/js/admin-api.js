@@ -19,6 +19,15 @@ function logout() {
     window.location.href = 'login.html';
 }
 
+function translateApiError(code, fallback) {
+    if (code && window.ERROR_CODE_MAP && window.ERROR_CODE_MAP[code]) {
+        var key = window.ERROR_CODE_MAP[code];
+        var t = window.__(key);
+        if (t !== key) return t;
+    }
+    return fallback || 'Request failed.';
+}
+
 async function apiFetch(endpoint, options = {}) {
     const token = getToken();
     const headers = {
@@ -27,10 +36,6 @@ async function apiFetch(endpoint, options = {}) {
     };
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
-    }
-    var lang = localStorage.getItem('lang');
-    if (lang && lang !== 'en') {
-        endpoint += (endpoint.indexOf('?') >= 0 ? '&' : '?') + 'culture=' + encodeURIComponent(lang);
     }
     const response = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
@@ -62,11 +67,13 @@ async function apiFetch(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-        const errorMsg = data.message || `Request failed (HTTP ${response.status})`;
+        const errorMsg = translateApiError(data && data.code, data && data.message) || `Request failed (HTTP ${response.status})`;
         throw new Error(errorMsg);
     }
     if (data && data.success === false) {
-        throw new Error(data.message || 'Request failed');
+        var err = new Error(translateApiError(data.code, data.message));
+        err.code = data.code;
+        throw err;
     }
     return data; // OperationResult<T> shape: { success, message, data }
 }

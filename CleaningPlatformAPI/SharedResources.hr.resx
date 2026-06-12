@@ -613,4 +613,88 @@
   <data name="empty_no_requirements" xml:space="preserve"><value>Nema inventarnih zahtjeva za ovu uslugu.</value></data>
   <data name="err_inventory_name_required" xml:space="preserve"><value>Naziv artikla je obavezan.</value></data>
   <data name="err_quantity_needed_required" xml:space="preserve"><value>Potrebna količina mora biti veća od nule.</value></data>
+  <data name="SESSION_INVALID" xml:space="preserve"><value>Sesija više nije važeća.</value></data>
+  <data name="INVALID_ROLE_NAME" xml:space="preserve"><value>Nevažeći naziv uloge.</value></data>
+  <data name="NAME_REQUIRED" xml:space="preserve"><value>Ime i prezime su obavezni.</value></data>
+  <data name="PASSWORD_COMPLEXITY" xml:space="preserve"><value>Lozinka mora imati najmanje 8 znakova, uključujući veliko slovo, malo slovo i broj.</value></data>
+  <data name="USERNAME_GENERATION_FAILED" xml:space="preserve"><value>Nije moguće generirati jedinstveno korisničko ime.</value></data>
+  <data name="NEW_PASSWORD_REQUIRED" xml:space="preserve"><value>Nova lozinka je obavezna.</value></data>
+  <data name="USER_NOT_FOUND" xml:space="preserve"><value>Korisnik nije pronađen.</value></data>
+  <data name="CURRENT_PASSWORD_REQUIRED" xml:space="preserve"><value>Trenutna lozinka je obavezna.</value></data>
+  <data name="CURRENT_PASSWORD_INCORRECT" xml:space="preserve"><value>Trenutna lozinka nije ispravna.</value></data>
+  <data name="SLOT_CLOSED" xml:space="preserve"><value>Ovaj termin je zatvoren i nije dostupan za rezervaciju.</value></data>
+  <data name="SLOT_FULLY_BOOKED" xml:space="preserve"><value>Ovaj termin je u potpunosti popunjen.</value></data>
+  <data name="PHONE_REQUIRED" xml:space="preserve"><value>Broj telefona je obavezan.</value></data>
+  <data name="SERVICE_NOT_FOUND" xml:space="preserve"><value>Usluga nije pronađena.</value></data>
+  <data name="INVALID_SERVICE_TYPE" xml:space="preserve"><value>Nevažeći tip usluge.</value></data>
+  <data name="CLIENT_NOT_FOUND_INACTIVE" xml:space="preserve"><value>Klijent nije pronađen ili je neaktivan.</value></data>
+  <data name="SITE_NOT_FOUND_INACTIVE" xml:space="preserve"><value>Lokacija ne pripada ovom klijentu ili je neaktivna.</value></data>
+  <data name="BOOKING_CREATE_LOAD_FAILED" xml:space="preserve"><value>Rezervacija je kreirana, ali nije moguće učitati podatke. Molimo osvježite.</value></data>
+  <data name="INVALID_BOOKING_STATUS" xml:space="preserve"><value>Nevažeći status rezervacije.</value></data>
+  <data name="INVALID_BOOKING_FOR_ASSIGN" xml:space="preserve"><value>Nije moguće dodijeliti zaposlenike rezervaciji s ovim statusom.</value></data>
+  <data name="EMPLOYEE_NOT_FOUND" xml:space="preserve"><value>Zaposlenik nije pronađen.</value></data>
+  <data name="EMPLOYEE_ALREADY_ASSIGNED" xml:space="preserve"><value>Ovaj zaposlenik je već dodijeljen ovoj rezervaciji.</value></data>
+  <data name="INVALID_BOOKING_FOR_REMOVE" xml:space="preserve"><value>Nije moguće ukloniti dodjelu s rezervacijom s ovim statusom.</value></data>
+  <data name="EMPLOYEE_NOT_ASSIGNED" xml:space="preserve"><value>Ovaj zaposlenik nije dodijeljen ovoj rezervaciji.</value></data>
+  <data name="INVOICE_ALREADY_EXISTS" xml:space="preserve"><value>Račun je već generiran za ovu rezervaciju.</value></data>
+  <data name="CATALOG_SERVICE_NOT_FOUND" xml:space="preserve"><value>Usluga nije pronađena u katalogu.</value></data>
+  <data name="CANNOT_REMOVE_AFTER_INVOICE" xml:space="preserve"><value>Nije moguće ukloniti usluge nakon što je račun generiran.</value></data>
+  <data name="SERVICE_NOT_ON_BOOKING" xml:space="preserve"><value>Usluga nije pronađena na ovoj rezervaciji.</value></data>
+  <data name="BOOKING_REQUEST_NOT_FOUND" xml:space="preserve"><value>Zahtjev za rezervaciju nije pronađen.</value></data>
+  <data name="EMAIL_REQUIRED" xml:space="preserve"><value>Email je obavezan.</value></data>
+  <data name="SERVICE_REQUIRED" xml:space="preserve"><value>Mora biti odabrana najmanje jedna usluga.</value></data>
+  <data name="INVALID_SERVICES" xml:space="preserve"><value>Odabrane su nevažeće ili neaktivne usluge.</value></data>
+  <data name="INVALID_REQUEST_STATUS" xml:space="preserve"><value>Nije moguće uređivati zahtjev s ovim statusom.</value></data>
+  <data name="CANNOT_SEND_CUSTOMER" xml:space="preserve"><value>Nije moguće poslati ovaj zahtjev kupcu.</value></data>
+  <data name="INVALID_TOKEN_PAYLOAD" xml:space="preserve"><value>Nevažeći token.</value></data>
+  <data name="REQUEST_NOT_FOUND" xml:space="preserve"><value>Zahtjev nije pronađen.</value></data>
+  <data name="REQUEST_NOT_AVAILABLE" xml:space="preserve"><value>Ovaj zahtjev nije dostupan za akciju.</value></data>
+  <data name="REQUEST_ALREADY_STATUS" xml:space="preserve"><value>Zahtjev već ima ovaj status.</value></data>
+  <data name="CANNOT_CONFIRM_STATUS" xml:space="preserve"><value>Nije moguće potvrditi zahtjev s ovim statusom.</value></data>
+  <data name="CANNOT_CONVERT_STATUS" xml:space="preserve"><value>Nije moguće konvertirati zahtjev s ovim statusom.</value></data>
+  <data name="CANNOT_CONVERT_NO_SERVICES" xml:space="preserve"><value>Nije moguće konvertirati zahtjev bez usluga.</value></data>
+  <data name="CLIENT_NOT_FOUND" xml:space="preserve"><value>Klijent nije pronađen.</value></data>
+  <data name="CLIENT_NAME_REQUIRED" xml:space="preserve"><value>Naziv klijenta je obavezan.</value></data>
+  <data name="CLIENT_TYPE_INVALID" xml:space="preserve"><value>Tip klijenta mora biti Fizička ili Pravna osoba.</value></data>
+  <data name="PRIMARY_CONTACT_NAME_REQUIRED" xml:space="preserve"><value>Ime primarnog kontakta je obavezno.</value></data>
+  <data name="PRIMARY_CONTACT_PHONE_REQUIRED" xml:space="preserve"><value>Telefon primarnog kontakta je obavezan.</value></data>
+  <data name="ACTIVE_CONTACT_REQUIRED" xml:space="preserve"><value>Potreban je najmanje jedan aktivni kontakt s imenom i telefonom.</value></data>
+  <data name="CONTACT_VALIDATION_FAILED" xml:space="preserve"><value>Validacija kontakta nije uspjela. Provjerite unose.</value></data>
+  <data name="CANNOT_DEACTIVATE_ALL_CONTACTS" xml:space="preserve"><value>Potreban je najmanje jedan aktivni kontakt. Ne možete deaktivirati sve kontakte.</value></data>
+  <data name="SITE_NOT_FOUND" xml:space="preserve"><value>Lokacija nije pronađena.</value></data>
+  <data name="DATE_OVERRIDE_PAST" xml:space="preserve"><value>Izmjene datuma nije moguće kreirati za prošle datume.</value></data>
+  <data name="DATE_OVERRIDE_NOT_FOUND" xml:space="preserve"><value>Izmjena datuma nije pronađena.</value></data>
+  <data name="ROLE_NOT_FOUND" xml:space="preserve"><value>Uloga nije pronađena.</value></data>
+  <data name="CANNOT_CHANGE_OWN_ROLE" xml:space="preserve"><value>Ne možete promijeniti vlastitu ulogu.</value></data>
+  <data name="CANNOT_DEACTIVATE_SELF" xml:space="preserve"><value>Ne možete deaktivirati vlastiti račun.</value></data>
+  <data name="ITEM_NAME_REQUIRED" xml:space="preserve"><value>Naziv artikla je obavezan.</value></data>
+  <data name="INVALID_UNIT_VALUE" xml:space="preserve"><value>Nevažeća vrijednost jedinice.</value></data>
+  <data name="NEGATIVE_QUANTITY" xml:space="preserve"><value>Količina ne može biti negativna.</value></data>
+  <data name="INVENTORY_IN_USE" xml:space="preserve"><value>Nije moguće izbrisati ovaj artikl jer je povezan sa zahtjevima usluge.</value></data>
+  <data name="INVOICE_NOT_FOUND" xml:space="preserve"><value>Račun nije pronađen.</value></data>
+  <data name="BOOKING_NOT_COMPLETED" xml:space="preserve"><value>Samo dovršene rezervacije mogu generirati račun.</value></data>
+  <data name="BOOKING_ALREADY_INVOICED" xml:space="preserve"><value>Rezervacija je već povezana s računom.</value></data>
+  <data name="INVALID_PAYMENT_METHOD" xml:space="preserve"><value>Nevažeći način plaćanja.</value></data>
+  <data name="INVALID_INVOICE_STATUS" xml:space="preserve"><value>Nevažeći status računa.</value></data>
+  <data name="RECURRING_NOT_FOUND" xml:space="preserve"><value>Ponavljajući raspored nije pronađen.</value></data>
+  <data name="BOOKING_NOT_COMPLETED_RECURRING" xml:space="preserve"><value>Samo dovršene rezervacije mogu se koristiti kao ponavljajući izvor.</value></data>
+  <data name="ROLE_NAME_EXISTS" xml:space="preserve"><value>Uloga s ovim nazivom već postoji.</value></data>
+  <data name="INVALID_PERMISSION_KEYS" xml:space="preserve"><value>Nevažeći ključevi dozvola.</value></data>
+  <data name="ROLE_PROTECTED" xml:space="preserve"><value>Ova uloga je zaštićena i ne može se mijenjati ili brisati.</value></data>
+  <data name="ROLE_HAS_ASSIGNED_USERS" xml:space="preserve"><value>Korisnici su dodijeljeni ovoj ulozi. Prenamjestite ih prije brisanja.</value></data>
+  <data name="SCHEDULE_ENTRY_EXISTS" xml:space="preserve"><value>Unos rasporeda za ovaj dan već postoji.</value></data>
+  <data name="SCHEDULE_ENTRY_NOT_FOUND" xml:space="preserve"><value>Nema unosa rasporeda.</value></data>
+  <data name="INVALID_CATEGORY" xml:space="preserve"><value>Nevažeća kategorija.</value></data>
+  <data name="INVENTORY_ALREADY_LINKED" xml:space="preserve"><value>Ovaj inventarni artikl je već povezan s ovom uslugom.</value></data>
+  <data name="QUANTITY_NEEDED_POSITIVE" xml:space="preserve"><value>Potrebna količina mora biti veća od nule.</value></data>
+  <data name="REQUIREMENT_NOT_FOUND" xml:space="preserve"><value>Zahtjev nije pronađen.</value></data>
+  <data name="SOP_NOT_FOUND" xml:space="preserve"><value>SOP predložak nije pronađen.</value></data>
+  <data name="CHECKLIST_ITEM_NOT_FOUND" xml:space="preserve"><value>Stavka popisa nije pronađena.</value></data>
+  <data name="SOP_NOT_FOUND_INACTIVE" xml:space="preserve"><value>SOP predložak nije pronađen ili je neaktivan.</value></data>
+  <data name="SOP_ALREADY_ASSIGNED" xml:space="preserve"><value>Ovaj SOP predložak je već dodijeljen rezervaciji.</value></data>
+  <data name="SOP_ASSIGNMENT_NOT_FOUND" xml:space="preserve"><value>SOP dodjela nije pronađena.</value></data>
+  <data name="EXPIRED_INVALID_LINK" xml:space="preserve"><value>Ova veza je istekla ili je nevažeća. Molimo zatražite novu.</value></data>
+  <data name="INVALID_LINK" xml:space="preserve"><value>Ova veza je nevažeća. Molimo zatražite novu.</value></data>
+  <data name="RECURRING_VALIDATION" xml:space="preserve"><value>Validacija ponavljajućeg rasporeda nije uspjela.</value></data>
+  <data name="SCHEDULE_ERROR" xml:space="preserve"><value>Operacija rasporeda nije uspjela.</value></data>
 </root>

@@ -58,7 +58,7 @@ public class PortalAuthController : ControllerBase
     public async Task<ActionResult<OperationResult<string>>> ValidateToken([FromBody] ValidateTokenRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Token))
-            return UnprocessableEntity(OperationResult<string>.Fail(_localizer["error_token_required"]));
+            return UnprocessableEntity(OperationResult<string>.Fail("TOKEN_REQUIRED", _localizer["error_token_required"]));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
 
@@ -77,7 +77,7 @@ public class PortalAuthController : ControllerBase
         var result = await handler.ValidateTokenAsync(request.Token, validationParameters);
 
         if (!result.IsValid)
-            return UnprocessableEntity(OperationResult<string>.Fail("This link has expired or is invalid. Please request a new one."));
+            return UnprocessableEntity(OperationResult<string>.Fail("EXPIRED_INVALID_LINK", "This link has expired or is invalid. Please request a new one."));
 
         // Read claims from the validated JWT payload via the JsonWebToken
         var jwt = handler.ReadJsonWebToken(request.Token);
@@ -87,14 +87,14 @@ public class PortalAuthController : ControllerBase
         var purpose = payloadClaims.FirstOrDefault(c => c.Type == "purpose")?.Value;
 
         if (authType != "portal" || purpose != "magic_link")
-            return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
+            return UnprocessableEntity(OperationResult<string>.Fail("INVALID_LINK", "This link is invalid. Please request a new one."));
 
         var clientIdClaim = payloadClaims.FirstOrDefault(c => c.Type == "client_id")?.Value;
         var emailClaim = payloadClaims.FirstOrDefault(c => c.Type == "email")?.Value;
         var nameClaim = payloadClaims.FirstOrDefault(c => c.Type == "name")?.Value;
 
         if (clientIdClaim is null || emailClaim is null || nameClaim is null)
-            return UnprocessableEntity(OperationResult<string>.Fail("This link is invalid. Please request a new one."));
+            return UnprocessableEntity(OperationResult<string>.Fail("INVALID_LINK", "This link is invalid. Please request a new one."));
 
         var clientId = int.Parse(clientIdClaim);
         var email = emailClaim;

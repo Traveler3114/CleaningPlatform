@@ -26,7 +26,7 @@ public class InventoryManager
     {
         var item = await _db.Inventory.FindAsync([id], ct);
         if (item is null)
-            return OperationResult<InventoryResponse>.Fail("Inventory item not found.");
+            return OperationResult<InventoryResponse>.Fail("INVENTORY_NOT_FOUND", "Inventory item not found.");
         return OperationResult<InventoryResponse>.Ok(InventoryMapper.ToResponse(item));
     }
 
@@ -34,11 +34,11 @@ public class InventoryManager
     {
         var name = dto.Name.Trim();
         if (string.IsNullOrWhiteSpace(name))
-            return OperationResult<InventoryResponse>.Fail("Item name is required.");
+            return OperationResult<InventoryResponse>.Fail("ITEM_NAME_REQUIRED", "Item name is required.");
         if (!Enum.IsDefined(typeof(InventoryUnit), dto.Unit))
-            return OperationResult<InventoryResponse>.Fail("Invalid unit value.");
+            return OperationResult<InventoryResponse>.Fail("INVALID_UNIT_VALUE", "Invalid unit value.");
         if (dto.Quantity < 0)
-            return OperationResult<InventoryResponse>.Fail("Quantity cannot be negative.");
+            return OperationResult<InventoryResponse>.Fail("NEGATIVE_QUANTITY", "Quantity cannot be negative.");
 
         var now = DateTime.UtcNow;
         var entity = new Inventory
@@ -62,15 +62,15 @@ public class InventoryManager
     {
         var entity = await _db.Inventory.FindAsync([id], ct);
         if (entity is null)
-            return OperationResult<InventoryResponse>.Fail("Inventory item not found.");
+            return OperationResult<InventoryResponse>.Fail("INVENTORY_NOT_FOUND", "Inventory item not found.");
 
         var name = dto.Name.Trim();
         if (string.IsNullOrWhiteSpace(name))
-            return OperationResult<InventoryResponse>.Fail("Item name is required.");
+            return OperationResult<InventoryResponse>.Fail("ITEM_NAME_REQUIRED", "Item name is required.");
         if (!Enum.IsDefined(typeof(InventoryUnit), dto.Unit))
-            return OperationResult<InventoryResponse>.Fail("Invalid unit value.");
+            return OperationResult<InventoryResponse>.Fail("INVALID_UNIT_VALUE", "Invalid unit value.");
         if (dto.Quantity < 0)
-            return OperationResult<InventoryResponse>.Fail("Quantity cannot be negative.");
+            return OperationResult<InventoryResponse>.Fail("NEGATIVE_QUANTITY", "Quantity cannot be negative.");
 
         entity.Name = name;
         entity.Quantity = dto.Quantity;
@@ -87,11 +87,11 @@ public class InventoryManager
     {
         var entity = await _db.Inventory.FindAsync([id], ct);
         if (entity is null)
-            return OperationResult<string>.Fail("Inventory item not found.");
+            return OperationResult<string>.Fail("INVENTORY_NOT_FOUND", "Inventory item not found.");
 
         var hasReferences = await _db.ServiceInventoryRequirements.AnyAsync(r => r.InventoryId == id, ct);
         if (hasReferences)
-            return OperationResult<string>.Fail("Cannot delete this item because it is referenced by one or more service requirements.");
+            return OperationResult<string>.Fail("INVENTORY_IN_USE", "Cannot delete this item because it is referenced by one or more service requirements.");
 
         _db.Inventory.Remove(entity);
         await _db.SaveChangesAsync(ct);

@@ -27,19 +27,19 @@ public class AuthManager
     {
         var roleName = request.Role.Trim();
         if (string.IsNullOrWhiteSpace(roleName))
-            return OperationResult<string>.Fail(_localizer["err_role_required"]);
+            return OperationResult<string>.Fail("ROLE_REQUIRED", _localizer["err_role_required"]);
 
         var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName, ct);
         if (role is null)
-            return OperationResult<string>.Fail("Invalid role name.");
+            return OperationResult<string>.Fail("INVALID_ROLE_NAME", "Invalid role name.");
 
         var firstName = request.FirstName.Trim();
         var lastName = request.LastName.Trim();
         if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
-            return OperationResult<string>.Fail("First and last name are required.");
+            return OperationResult<string>.Fail("NAME_REQUIRED", "First and last name are required.");
 
         if (!IsValidPassword(request.Password))
-            return OperationResult<string>.Fail("Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
+            return OperationResult<string>.Fail("PASSWORD_COMPLEXITY", "Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
 
         var usernameBase = (firstName[..1] + lastName).ToLowerInvariant();
         var counter = 1;
@@ -74,14 +74,14 @@ public class AuthManager
             }
         }
 
-        return OperationResult<string>.Fail("Could not generate a unique username.");
+        return OperationResult<string>.Fail("USERNAME_GENERATION_FAILED", "Could not generate a unique username.");
     }
 
     public async Task<OperationResult<string>> LoginAsync(LoginRequest request, CancellationToken ct = default)
     {
         var auth = await ValidateLoginAsync(request, ct);
         if (!auth.Success || auth.Data is null)
-            return OperationResult<string>.Fail(auth.Message ?? "Invalid credentials.");
+            return OperationResult<string>.Fail("INVALID_CREDENTIALS", auth.Message ?? "Invalid credentials.");
 
         var token = _tokenManager.CreateAdminToken(auth.Data.User, auth.Data.Permissions);
         return OperationResult<string>.Ok(token);
@@ -91,7 +91,7 @@ public class AuthManager
     {
         var auth = await ValidateLoginAsync(request, ct);
         if (!auth.Success || auth.Data is null)
-            return OperationResult<List<Claim>>.Fail(auth.Message ?? "Invalid credentials.");
+            return OperationResult<List<Claim>>.Fail("INVALID_CREDENTIALS", auth.Message ?? "Invalid credentials.");
 
         var user = auth.Data.User;
         var permissions = auth.Data.Permissions;
@@ -123,10 +123,10 @@ public class AuthManager
             .FirstOrDefaultAsync(u => u.Username == username, ct);
 
         if (user is null || !user.IsActive)
-            return OperationResult<LoginContext>.Fail(_localizer["err_invalid_credentials"]);
+            return OperationResult<LoginContext>.Fail("INVALID_CREDENTIALS", _localizer["err_invalid_credentials"]);
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            return OperationResult<LoginContext>.Fail(_localizer["err_invalid_credentials"]);
+            return OperationResult<LoginContext>.Fail("INVALID_CREDENTIALS", _localizer["err_invalid_credentials"]);
 
         var permissions = await _db.RolePermissions
             .Where(rp => rp.RoleId == user.RoleId)
@@ -145,13 +145,13 @@ public class AuthManager
     public async Task<OperationResult<string>> ResetPasswordAsync(ResetPasswordRequest request, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.NewPassword))
-            return OperationResult<string>.Fail("New password is required.");
+            return OperationResult<string>.Fail("NEW_PASSWORD_REQUIRED", "New password is required.");
         if (!IsValidPassword(request.NewPassword))
-            return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
+            return OperationResult<string>.Fail("PASSWORD_COMPLEXITY", "New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
 
         var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == request.UserId, ct);
         if (user is null)
-            return OperationResult<string>.Fail("User not found.");
+            return OperationResult<string>.Fail("USER_NOT_FOUND", "User not found.");
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, GetBcryptWorkFactor());
         user.SecurityStamp = Guid.NewGuid().ToString();
@@ -164,18 +164,18 @@ public class AuthManager
     public async Task<OperationResult<string>> ChangePasswordAsync(ChangePasswordRequest request, int requestingUserId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(request.CurrentPassword))
-            return OperationResult<string>.Fail("Current password is required.");
+            return OperationResult<string>.Fail("CURRENT_PASSWORD_REQUIRED", "Current password is required.");
         if (string.IsNullOrWhiteSpace(request.NewPassword))
-            return OperationResult<string>.Fail("New password is required.");
+            return OperationResult<string>.Fail("NEW_PASSWORD_REQUIRED", "New password is required.");
         if (!IsValidPassword(request.NewPassword))
-            return OperationResult<string>.Fail("New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
+            return OperationResult<string>.Fail("PASSWORD_COMPLEXITY", "New password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.");
 
         var user = await _db.Employees.FirstOrDefaultAsync(e => e.Id == requestingUserId, ct);
         if (user is null)
-            return OperationResult<string>.Fail("User not found.");
+            return OperationResult<string>.Fail("USER_NOT_FOUND", "User not found.");
 
         if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
-            return OperationResult<string>.Fail("Current password is incorrect.");
+            return OperationResult<string>.Fail("CURRENT_PASSWORD_INCORRECT", "Current password is incorrect.");
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword, GetBcryptWorkFactor());
         user.SecurityStamp = Guid.NewGuid().ToString();

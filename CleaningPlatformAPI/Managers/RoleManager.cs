@@ -33,7 +33,7 @@ public class RoleManager
             .Include(r => r.Permissions)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
         return role is null
-            ? OperationResult<RoleResponse>.Fail($"Role #{id} was not found.")
+            ? OperationResult<RoleResponse>.Fail("ROLE_NOT_FOUND", $"Role #{id} was not found.")
             : OperationResult<RoleResponse>.Ok(RoleMapper.ToResponse(role));
     }
 
@@ -50,14 +50,14 @@ public class RoleManager
     {
         var trimmedName = dto.Name.Trim();
         if (string.IsNullOrEmpty(trimmedName))
-            return OperationResult<RoleResponse>.Fail(_localizer["msg_role_name_required"]);
+            return OperationResult<RoleResponse>.Fail("ROLE_NAME_REQUIRED", _localizer["msg_role_name_required"]);
 
         if (await _db.Roles.AnyAsync(r => r.Name == trimmedName, ct))
-            return OperationResult<RoleResponse>.Fail("A role with this name already exists.");
+            return OperationResult<RoleResponse>.Fail("ROLE_NAME_EXISTS", "A role with this name already exists.");
 
         var invalidKeys = dto.Permissions.Except(PermissionKeys.All).ToList();
         if (invalidKeys.Count > 0)
-            return OperationResult<RoleResponse>.Fail($"Invalid permission keys: {string.Join(", ", invalidKeys)}");
+            return OperationResult<RoleResponse>.Fail("INVALID_PERMISSION_KEYS", $"Invalid permission keys: {string.Join(", ", invalidKeys)}");
 
         var role = new Role
         {
@@ -80,21 +80,21 @@ public class RoleManager
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
         if (role is null)
-            return OperationResult<RoleResponse>.Fail("Role not found.");
+            return OperationResult<RoleResponse>.Fail("ROLE_NOT_FOUND", "Role not found.");
 
         if (role.IsProtected)
-            return OperationResult<RoleResponse>.Fail("This role is protected and cannot be modified.");
+            return OperationResult<RoleResponse>.Fail("ROLE_PROTECTED", "This role is protected and cannot be modified.");
 
         var trimmedName = dto.Name.Trim();
         if (string.IsNullOrEmpty(trimmedName))
-            return OperationResult<RoleResponse>.Fail(_localizer["msg_role_name_required"]);
+            return OperationResult<RoleResponse>.Fail("ROLE_NAME_REQUIRED", _localizer["msg_role_name_required"]);
 
         if (await _db.Roles.AnyAsync(r => r.Name == trimmedName && r.Id != id, ct))
-            return OperationResult<RoleResponse>.Fail("A role with this name already exists.");
+            return OperationResult<RoleResponse>.Fail("ROLE_NAME_EXISTS", "A role with this name already exists.");
 
         var invalidKeys = dto.Permissions.Except(PermissionKeys.All).ToList();
         if (invalidKeys.Count > 0)
-            return OperationResult<RoleResponse>.Fail($"Invalid permission keys: {string.Join(", ", invalidKeys)}");
+            return OperationResult<RoleResponse>.Fail("INVALID_PERMISSION_KEYS", $"Invalid permission keys: {string.Join(", ", invalidKeys)}");
 
         role.Name = trimmedName;
         _db.RolePermissions.RemoveRange(role.Permissions);
@@ -112,15 +112,15 @@ public class RoleManager
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
         if (role is null)
-            return OperationResult<string>.Fail("Role not found.");
+            return OperationResult<string>.Fail("ROLE_NOT_FOUND", "Role not found.");
 
         if (role.IsProtected)
-            return OperationResult<string>.Fail("This role is protected and cannot be deleted.");
+            return OperationResult<string>.Fail("ROLE_PROTECTED", "This role is protected and cannot be deleted.");
 
         var assignedCount = await _db.Employees.CountAsync(e => e.RoleId == id, ct);
 
         if (assignedCount > 0)
-            return OperationResult<string>.Fail($"{assignedCount} user(s) are assigned to this role. Reassign them before deleting.");
+            return OperationResult<string>.Fail("ROLE_HAS_ASSIGNED_USERS", $"{assignedCount} user(s) are assigned to this role. Reassign them before deleting.");
 
         _db.RolePermissions.RemoveRange(role.Permissions);
         _db.Roles.Remove(role);

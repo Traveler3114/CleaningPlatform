@@ -65,6 +65,15 @@
     return s;
   }
 
+  function __error(code, fallback) {
+    if (code && typeof window.ERROR_CODE_MAP !== 'undefined' && window.ERROR_CODE_MAP[code]) {
+      var key = window.ERROR_CODE_MAP[code];
+      var t = __(key);
+      if (t !== key) return t;
+    }
+    return fallback || 'Request failed.';
+  }
+
   function processDOM() {
     var els = document.querySelectorAll('[data-i18n]');
     for (var i = 0; i < els.length; i++) {
@@ -137,6 +146,7 @@
 
   window.__ = __;
   window.__status = __status;
+  window.__error = __error;
   window.setLanguage = setLanguage;
   window.i18nReady = false;
   window.addEventListener('i18nReady', function () { window.i18nReady = true; });

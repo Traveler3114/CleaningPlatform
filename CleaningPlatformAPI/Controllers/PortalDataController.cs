@@ -27,7 +27,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<PortalDashboardResponse>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<PortalDashboardResponse>.Fail("INVALID_TOKEN", "Invalid token."));
         var result = await _portalManager.GetDashboardAsync(clientId.Value, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
@@ -39,7 +39,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<List<BookingResponse>>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<List<BookingResponse>>.Fail("INVALID_TOKEN", "Invalid token."));
         var result = await _portalManager.GetBookingsAsync(clientId.Value, status, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
@@ -51,7 +51,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<BookingResponse>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<BookingResponse>.Fail("INVALID_TOKEN", "Invalid token."));
         var result = await _portalManager.GetBookingDetailAsync(clientId.Value, id, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
@@ -62,7 +62,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<List<InvoiceResponse>>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<List<InvoiceResponse>>.Fail("INVALID_TOKEN", "Invalid token."));
         var result = await _portalManager.GetInvoicesAsync(clientId.Value, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
@@ -74,7 +74,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<InvoiceResponse>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<InvoiceResponse>.Fail("INVALID_TOKEN", "Invalid token."));
         var result = await _portalManager.GetInvoiceDetailAsync(clientId.Value, id, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
@@ -85,7 +85,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<PortalProfileResponse>.Fail("Invalid token."));
+            return Unauthorized(OperationResult<PortalProfileResponse>.Fail("INVALID_TOKEN", "Invalid token."));
         var result = await _portalManager.GetProfileAsync(clientId.Value, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }

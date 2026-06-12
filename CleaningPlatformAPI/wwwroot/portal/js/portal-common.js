@@ -56,22 +56,31 @@ function logout() {
     window.location.href = 'login.html';
 }
 
+function translateApiError(code, fallback) {
+    if (code && window.ERROR_CODE_MAP && window.ERROR_CODE_MAP[code]) {
+        var key = window.ERROR_CODE_MAP[code];
+        var t = window.__(key);
+        if (t !== key) return t;
+    }
+    return fallback || 'Request failed.';
+}
+
 function apiFetch(path, options) {
     var token = getSessionToken();
     if (!token) {
         logout();
         return Promise.reject('No token');
     }
-    var lang = localStorage.getItem('lang');
-    if (lang && lang !== 'en') {
-        path += (path.indexOf('?') >= 0 ? '&' : '?') + 'culture=' + encodeURIComponent(lang);
-    }
     return fetch(path, {
         method: 'GET',
         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
         ...options
     }).then(function (r) { return r.json(); }).then(function (res) {
-        if (!res.success) throw new Error(res.message || 'Request failed');
+        if (!res.success) {
+            var err = new Error(translateApiError(res.code, res.message));
+            err.code = res.code;
+            throw err;
+        }
         return res.data;
     });
 }
