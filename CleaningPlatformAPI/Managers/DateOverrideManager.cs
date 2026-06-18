@@ -4,8 +4,8 @@ using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Mapping;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -26,11 +26,11 @@ public class DateOverrideManager
         return overrides.Select(ScheduleMapper.ToDateOverrideResponse).ToList();
     }
 
-    public async Task<OperationResult<DateOverrideResponse>> CreateOverrideAsync(DateOverrideRequest request, CancellationToken ct = default)
+    public async Task<DateOverrideResponse> CreateOverrideAsync(DateOverrideRequest request, CancellationToken ct = default)
     {
         if (request.Date < DateOnly.FromDateTime(DateTime.UtcNow))
-            return OperationResult<DateOverrideResponse>.Fail("DATE_OVERRIDE_PAST",
-                $"Date overrides cannot be created for past dates. The selected date was {request.Date:dd MMM yyyy}.");
+            throw new AppException("DATE_OVERRIDE_PAST",
+                $"Date overrides cannot be created for past dates. The selected date was {request.Date:dd MMM yyyy}.", 422);
 
         var existing = await _db.DateOverrides
             .FirstOrDefaultAsync(o => o.Date == request.Date, ct);
@@ -59,17 +59,17 @@ public class DateOverrideManager
         }
 
         await _db.SaveChangesAsync(ct);
-        return OperationResult<DateOverrideResponse>.Ok(ScheduleMapper.ToDateOverrideResponse(entity));
+        return ScheduleMapper.ToDateOverrideResponse(entity);
     }
 
-    public async Task<OperationResult<bool>> DeleteOverrideAsync(int id, CancellationToken ct = default)
+    public async Task DeleteOverrideAsync(int id, CancellationToken ct = default)
     {
         var entity = await _db.DateOverrides.FindAsync([id], ct);
         if (entity is null)
-            return OperationResult<bool>.Fail("DATE_OVERRIDE_NOT_FOUND", $"Date override #{id} was not found.");
+            throw new AppException("DATE_OVERRIDE_NOT_FOUND", $"Date override #{id} was not found.", 404);
 
         _db.DateOverrides.Remove(entity);
         await _db.SaveChangesAsync(ct);
-        return OperationResult<bool>.Ok(true);
+        return;
     }
 }

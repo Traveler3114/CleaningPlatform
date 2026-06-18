@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
+using CleaningPlatformAPI.Common;
+using CleaningPlatformAPI.Models;
 
 namespace CleaningPlatformAPI.Controllers;
 
@@ -21,53 +22,47 @@ public class InvoiceController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.InvoicesView)]
-    public async Task<ActionResult<OperationResult<PagedResult<InvoiceResponse>>>> GetAll(
+    public async Task<ActionResult<Paginated<InvoiceResponse>>> GetAll(
         [FromQuery] PaginationParams pagination,
         CancellationToken ct)
     {
-        var paged = await _invoiceManager.GetAllAsync(pagination, ct);
-        return Ok(OperationResult<PagedResult<InvoiceResponse>>.Ok(paged));
+        return Ok(await _invoiceManager.GetAllAsync(pagination, ct));
     }
 
     [HttpGet("{id:int}")]
     [Authorize(Policy = PermissionKeys.InvoicesView)]
-    public async Task<ActionResult<OperationResult<InvoiceResponse>>> GetById(int id, CancellationToken ct)
+    public async Task<ActionResult<InvoiceResponse>> GetById(int id, CancellationToken ct)
     {
-        var result = await _invoiceManager.GetByIdAsync(id, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+        return Ok(await _invoiceManager.GetByIdAsync(id, ct));
     }
 
     [HttpPost("from-booking/{bookingId:int}")]
     [Authorize(Policy = PermissionKeys.InvoicesCreate)]
-    public async Task<ActionResult<OperationResult<InvoiceResponse>>> CreateFromBooking(int bookingId, CancellationToken ct)
+    public async Task<ActionResult<InvoiceResponse>> CreateFromBooking(int bookingId, CancellationToken ct)
     {
-        var result = await _invoiceManager.CreateFromBookingAsync(bookingId, User.GetEmployeeId(), ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _invoiceManager.CreateFromBookingAsync(bookingId, User.GetEmployeeId(), ct));
     }
 
     [HttpPost("from-booking")]
     [Authorize(Policy = PermissionKeys.InvoicesCreate)]
-    public async Task<ActionResult<OperationResult<InvoiceResponse>>> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingRequest request, CancellationToken ct)
+    public async Task<ActionResult<InvoiceResponse>> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingRequest request, CancellationToken ct)
     {
         if (request.BookingId <= 0)
-            return BadRequest(OperationResult<InvoiceResponse>.Fail("BOOKING_ID_REQUIRED", _localizer["err_booking_id_required"]));
-        var result = await _invoiceManager.CreateFromBookingAsync(request.BookingId, User.GetEmployeeId(), ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+            return Problem(statusCode: 400, title: "BOOKING_ID_REQUIRED", detail: _localizer["err_booking_id_required"]);
+        return Ok(await _invoiceManager.CreateFromBookingAsync(request.BookingId, User.GetEmployeeId(), ct));
     }
 
     [HttpPost("{id:int}/payments")]
     [Authorize(Policy = PermissionKeys.InvoicesEdit)]
-    public async Task<ActionResult<OperationResult<InvoiceResponse>>> RecordPayment(int id, [FromBody] RecordPaymentRequest request, CancellationToken ct)
+    public async Task<ActionResult<InvoiceResponse>> RecordPayment(int id, [FromBody] RecordPaymentRequest request, CancellationToken ct)
     {
-        var result = await _invoiceManager.RecordPaymentAsync(id, request, User.GetEmployeeId(), ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _invoiceManager.RecordPaymentAsync(id, request, User.GetEmployeeId(), ct));
     }
 
     [HttpPut("{id:int}/status")]
     [Authorize(Policy = PermissionKeys.InvoicesEdit)]
-    public async Task<ActionResult<OperationResult<InvoiceResponse>>> UpdateStatus(int id, [FromBody] UpdateInvoiceStatusRequest request, CancellationToken ct)
+    public async Task<ActionResult<InvoiceResponse>> UpdateStatus(int id, [FromBody] UpdateInvoiceStatusRequest request, CancellationToken ct)
     {
-        var result = await _invoiceManager.UpdateStatusAsync(id, request.Status, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _invoiceManager.UpdateStatusAsync(id, request.Status, ct));
     }
 }

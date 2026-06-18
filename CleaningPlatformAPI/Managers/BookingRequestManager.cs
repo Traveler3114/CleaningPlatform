@@ -1,13 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Mapping;
 using CleaningPlatformAPI.Services;
+using CleaningPlatformAPI.Common;
+using CleaningPlatformAPI.Models;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -28,7 +29,7 @@ public class BookingRequestManager
             _localizer = localizer;
     }
 
-    public async Task<PagedResult<BookingRequestResponse>> GetAllAsync(
+    public async Task<Paginated<BookingRequestResponse>> GetAllAsync(
         PaginationParams pagination,
         string? statusFilter = null,
         CancellationToken ct = default)
@@ -50,30 +51,30 @@ public class BookingRequestManager
             .ToListAsync(ct);
 
         var mapped = items.Select(BookingRequestMapper.ToResponse).ToList();
-        return PagedResult<BookingRequestResponse>.From(mapped, totalCount, pagination.Page, pagination.PageSize);
+        return new Paginated<BookingRequestResponse>(mapped, totalCount);
     }
 
-    public async Task<OperationResult<BookingRequestResponse>> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<BookingRequestResponse> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var request = await _db.BookingRequests
             .Include(r => r.RequestServices).ThenInclude(s => s.ServiceCatalog)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
-        return request is null
-            ? OperationResult<BookingRequestResponse>.Fail("BOOKING_REQUEST_NOT_FOUND", $"Booking request #{id} was not found.")
-            : OperationResult<BookingRequestResponse>.Ok(BookingRequestMapper.ToResponse(request));
+        if (request is null)
+            throw new AppException("BOOKING_REQUEST_NOT_FOUND", $"Booking request #{id} was not found.", 404);
+        return BookingRequestMapper.ToResponse(request);
     }
 
-    public async Task<OperationResult<BookingRequestResponse>> CreateAsync(CreateBookingRequestRequest dto, CancellationToken ct = default)
+    public async Task<BookingRequestResponse> CreateAsync(CreateBookingRequestRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ContactName))
-            return OperationResult<BookingRequestResponse>.Fail("CONTACT_NAME_REQUIRED", _localizer["err_contact_name_required"]);
+            throw new AppException("CONTACT_NAME_REQUIRED", _localizer["err_contact_name_required"], 422);
         if (string.IsNullOrWhiteSpace(dto.Phone))
-            return OperationResult<BookingRequestResponse>.Fail("PHONE_REQUIRED", "Phone number is required.");
+            throw new AppException("PHONE_REQUIRED", "Phone number is required.", 422);
         if (string.IsNullOrWhiteSpace(dto.Email))
-            return OperationResult<BookingRequestResponse>.Fail("EMAIL_REQUIRED", "Email is required.");
+            throw new AppException("EMAIL_REQUIRED", "Email is required.", 422);
         if (dto.ServiceCatalogIds is null || dto.ServiceCatalogIds.Count == 0)
-            return OperationResult<BookingRequestResponse>.Fail("SERVICE_REQUIRED", "At least one service must be selected.");
+            throw new AppException("SERVICE_REQUIRED", "At least one service must be selected.", 422);
 
         var validServiceIds = await _db.ServiceCatalog
             .Where(s => dto.ServiceCatalogIds.Contains(s.Id) && s.IsActive)
@@ -82,7 +83,7 @@ public class BookingRequestManager
 
         var invalidIds = dto.ServiceCatalogIds.Except(validServiceIds).ToList();
         if (invalidIds.Count > 0)
-                return OperationResult<BookingRequestResponse>.Fail("INVALID_SERVICES", $"Invalid or inactive services: {string.Join(", ", invalidIds)}");
+                throw new AppException("INVALID_SERVICES", $"Invalid or inactive services: {string.Join(", ", invalidIds)}", 422);
 
         var now = DateTime.UtcNow;
 
@@ -110,20 +111,20 @@ public class BookingRequestManager
             $"Dear {request.ContactName},\n\nThank you for submitting your service request. We have received it and will be in touch shortly to discuss the details and provide a quote.\n\nBest regards,\nChistify Team"
         );
 
-        return OperationResult<BookingRequestResponse>.Ok(BookingRequestMapper.ToResponse(request));
+        return BookingRequestMapper.ToResponse(request);
     }
 
-    public async Task<OperationResult<BookingRequestResponse>> UpdateAsync(int id, UpdateBookingRequestRequest dto, CancellationToken ct = default)
+    public async Task<BookingRequestResponse> UpdateAsync(int id, UpdateBookingRequestRequest dto, CancellationToken ct = default)
     {
         var request = await _db.BookingRequests
             .Include(r => r.RequestServices)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
         if (request is null)
-            return OperationResult<BookingRequestResponse>.Fail("BOOKING_REQUEST_NOT_FOUND", $"Booking request #{id} was not found.");
+            throw new AppException("BOOKING_REQUEST_NOT_FOUND", $"Booking request #{id} was not found.", 404);
 
         if (request.Status is BookingRequestStatus.Cancelled or BookingRequestStatus.Converted)
-            return OperationResult<BookingRequestResponse>.Fail("INVALID_REQUEST_STATUS", $"Cannot edit a request with status '{request.Status}'.");
+            throw new AppException("INVALID_REQUEST_STATUS", $"Cannot edit a request with status '{request.Status}'.", 422);
 
         if (dto.ServiceCatalogIds is not null && dto.ServiceCatalogIds.Count > 0)
         {
@@ -134,7 +135,7 @@ public class BookingRequestManager
 
             var invalidIds = dto.ServiceCatalogIds.Except(validServiceIds).ToList();
             if (invalidIds.Count > 0)
-            return OperationResult<BookingRequestResponse>.Fail("INVALID_SERVICES", $"Invalid or inactive services: {string.Join(", ", invalidIds)}");
+            throw new AppException("INVALID_SERVICES", $"Invalid or inactive services: {string.Join(", ", invalidIds)}", 422);
 
 
             _db.BookingRequestServices.RemoveRange(request.RequestServices);
@@ -160,20 +161,20 @@ public class BookingRequestManager
             .Include(r => r.RequestServices).ThenInclude(s => s.ServiceCatalog)
             .FirstAsync(r => r.Id == id, ct);
 
-        return OperationResult<BookingRequestResponse>.Ok(BookingRequestMapper.ToResponse(updated));
+        return BookingRequestMapper.ToResponse(updated);
     }
 
-    public async Task<OperationResult<BookingRequestResponse>> SendToCustomerAsync(int id, CancellationToken ct = default)
+    public async Task<BookingRequestResponse> SendToCustomerAsync(int id, CancellationToken ct = default)
     {
         var request = await _db.BookingRequests
             .Include(r => r.RequestServices).ThenInclude(s => s.ServiceCatalog)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
         if (request is null)
-            return OperationResult<BookingRequestResponse>.Fail("BOOKING_REQUEST_NOT_FOUND", $"Booking request #{id} was not found.");
+            throw new AppException("BOOKING_REQUEST_NOT_FOUND", $"Booking request #{id} was not found.", 404);
 
         if (request.Status is not (BookingRequestStatus.New or BookingRequestStatus.AdminReviewed))
-            return OperationResult<BookingRequestResponse>.Fail("CANNOT_SEND_CUSTOMER", $"Cannot send to customer. Current status is '{request.Status}'. Expected 'New' or 'AdminReviewed'.");
+            throw new AppException("CANNOT_SEND_CUSTOMER", $"Cannot send to customer. Current status is '{request.Status}'. Expected 'New' or 'AdminReviewed'.", 422);
 
         var token = _tokenManager.CreateBookingRequestToken(request.Id, request.Email);
 
@@ -200,101 +201,97 @@ public class BookingRequestManager
         Console.WriteLine("═══════════════════════════════════════════════════");
         Console.WriteLine("");
 
-        return OperationResult<BookingRequestResponse>.Ok(BookingRequestMapper.ToResponse(request));
+        return BookingRequestMapper.ToResponse(request);
     }
 
-    public async Task<OperationResult<CustomerPreviewResponse>> CustomerPreviewAsync(string token, CancellationToken ct = default)
+    public async Task<CustomerPreviewResponse> CustomerPreviewAsync(string token, CancellationToken ct = default)
     {
         var principal = _tokenManager.ValidateBookingRequestToken(token);
         if (principal is null)
-            return OperationResult<CustomerPreviewResponse>.Fail("INVALID_EXPIRED_TOKEN", _localizer["err_invalid_expired_token"]);
+            throw new AppException("INVALID_EXPIRED_TOKEN", _localizer["err_invalid_expired_token"], 400);
 
         var requestIdClaim = principal.FindFirst("booking_request_id")?.Value;
         if (requestIdClaim is null || !int.TryParse(requestIdClaim, out var requestId))
-            return OperationResult<CustomerPreviewResponse>.Fail("INVALID_TOKEN_PAYLOAD", "Invalid token payload.");
+            throw new AppException("INVALID_TOKEN_PAYLOAD", "Invalid token payload.", 400);
 
         var request = await _db.BookingRequests
             .Include(r => r.RequestServices).ThenInclude(s => s.ServiceCatalog)
             .FirstOrDefaultAsync(r => r.Id == requestId, ct);
 
         if (request is null)
-            return OperationResult<CustomerPreviewResponse>.Fail("REQUEST_NOT_FOUND", "Request was not found.");
+            throw new AppException("REQUEST_NOT_FOUND", "Request was not found.", 404);
 
         if (request.Status is not (BookingRequestStatus.SentToCustomer or BookingRequestStatus.CustomerConfirmed or BookingRequestStatus.Cancelled))
-            return OperationResult<CustomerPreviewResponse>.Fail("REQUEST_NOT_AVAILABLE", "This request is not available for action.");
+            throw new AppException("REQUEST_NOT_AVAILABLE", "This request is not available for action.", 422);
 
-        return OperationResult<CustomerPreviewResponse>.Ok(BookingRequestMapper.ToPreviewResponse(request));
+        return BookingRequestMapper.ToPreviewResponse(request);
     }
 
-    public async Task<OperationResult<string>> CustomerConfirmAsync(string token, CancellationToken ct = default)
+    public async Task CustomerConfirmAsync(string token, CancellationToken ct = default)
     {
         var principal = _tokenManager.ValidateBookingRequestToken(token);
         if (principal is null)
-            return OperationResult<string>.Fail("INVALID_EXPIRED_TOKEN", _localizer["err_invalid_expired_token"]);
+            throw new AppException("INVALID_EXPIRED_TOKEN", _localizer["err_invalid_expired_token"], 400);
 
         var requestIdClaim = principal.FindFirst("booking_request_id")?.Value;
         if (requestIdClaim is null || !int.TryParse(requestIdClaim, out var requestId))
-            return OperationResult<string>.Fail("INVALID_TOKEN_PAYLOAD", "Invalid token payload.");
+            throw new AppException("INVALID_TOKEN_PAYLOAD", "Invalid token payload.", 400);
 
         var request = await _db.BookingRequests
             .Include(r => r.RequestServices).ThenInclude(s => s.ServiceCatalog)
             .FirstOrDefaultAsync(r => r.Id == requestId, ct);
 
         if (request is null)
-            return OperationResult<string>.Fail("REQUEST_NOT_FOUND", "Request was not found.");
+            throw new AppException("REQUEST_NOT_FOUND", "Request was not found.", 404);
 
         if (request.Status is BookingRequestStatus.Cancelled or BookingRequestStatus.Converted or BookingRequestStatus.CustomerConfirmed)
-            return OperationResult<string>.Fail("REQUEST_ALREADY_STATUS", $"Request already has status '{request.Status}'.");
+            throw new AppException("REQUEST_ALREADY_STATUS", $"Request already has status '{request.Status}'.", 409);
 
         if (request.Status != BookingRequestStatus.SentToCustomer)
-            return OperationResult<string>.Fail("CANNOT_CONFIRM_STATUS", $"Cannot confirm a request with status '{request.Status}'. Expected 'SentToCustomer'.");
+            throw new AppException("CANNOT_CONFIRM_STATUS", $"Cannot confirm a request with status '{request.Status}'. Expected 'SentToCustomer'.", 422);
 
         request.Status = BookingRequestStatus.CustomerConfirmed;
         request.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
-
-        return OperationResult<string>.Ok("Your request has been confirmed. We will be in touch to schedule the service.");
     }
 
-    public async Task<OperationResult<string>> CustomerCancelAsync(string token, CancellationToken ct = default)
+    public async Task CustomerCancelAsync(string token, CancellationToken ct = default)
     {
         var principal = _tokenManager.ValidateBookingRequestToken(token);
         if (principal is null)
-            return OperationResult<string>.Fail("INVALID_EXPIRED_TOKEN", _localizer["err_invalid_expired_token"]);
+            throw new AppException("INVALID_EXPIRED_TOKEN", _localizer["err_invalid_expired_token"], 400);
 
         var requestIdClaim = principal.FindFirst("booking_request_id")?.Value;
         if (requestIdClaim is null || !int.TryParse(requestIdClaim, out var requestId))
-            return OperationResult<string>.Fail("INVALID_TOKEN_PAYLOAD", "Invalid token payload.");
+            throw new AppException("INVALID_TOKEN_PAYLOAD", "Invalid token payload.", 400);
 
         var request = await _db.BookingRequests.FirstOrDefaultAsync(r => r.Id == requestId, ct);
 
         if (request is null)
-            return OperationResult<string>.Fail("REQUEST_NOT_FOUND", "Request was not found.");
+            throw new AppException("REQUEST_NOT_FOUND", "Request was not found.", 404);
 
         if (request.Status is BookingRequestStatus.Cancelled or BookingRequestStatus.Converted)
-            return OperationResult<string>.Fail("REQUEST_ALREADY_STATUS", $"Request already has status '{request.Status}'.");
+            throw new AppException("REQUEST_ALREADY_STATUS", $"Request already has status '{request.Status}'.", 409);
 
         request.Status = BookingRequestStatus.Cancelled;
         request.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
-
-        return OperationResult<string>.Ok("Your request has been cancelled.");
     }
 
-    public async Task<OperationResult<BookingResponse>> AdminConfirmAsync(int id, CancellationToken ct = default)
+    public async Task<BookingResponse> AdminConfirmAsync(int id, CancellationToken ct = default)
     {
         var request = await _db.BookingRequests
             .Include(r => r.RequestServices).ThenInclude(s => s.ServiceCatalog)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
         if (request is null)
-            return OperationResult<BookingResponse>.Fail("BOOKING_REQUEST_NOT_FOUND", $"Booking request #{id} was not found.");
+            throw new AppException("BOOKING_REQUEST_NOT_FOUND", $"Booking request #{id} was not found.", 404);
 
         if (request.Status != BookingRequestStatus.CustomerConfirmed)
-            return OperationResult<BookingResponse>.Fail("CANNOT_CONVERT_STATUS", $"Cannot convert a request with status '{request.Status}'. Expected 'CustomerConfirmed'.");
+            throw new AppException("CANNOT_CONVERT_STATUS", $"Cannot convert a request with status '{request.Status}'. Expected 'CustomerConfirmed'.", 422);
 
         if (request.RequestServices is null || request.RequestServices.Count == 0)
-            return OperationResult<BookingResponse>.Fail("CANNOT_CONVERT_NO_SERVICES", "Cannot convert a request with no services.");
+            throw new AppException("CANNOT_CONVERT_NO_SERVICES", "Cannot convert a request with no services.", 422);
 
         var now = DateTime.UtcNow;
 
@@ -360,6 +357,6 @@ public class BookingRequestManager
             .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
             .FirstAsync(b => b.Id == booking.Id, ct);
 
-        return OperationResult<BookingResponse>.Ok(BookingMapper.ToDetailResponse(createdBooking));
+        return BookingMapper.ToDetailResponse(createdBooking);
     }
 }

@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Managers;
 using CleaningPlatformAPI.Contracts;
@@ -26,11 +25,11 @@ public class PortalAuthController : ControllerBase
             _localizer = localizer;}
 
     [HttpPost("send-link")]
-    public async Task<ActionResult<OperationResult<string>>> SendLink([FromBody] SendMagicLinkRequest request)
+    public async Task<ActionResult> SendLink([FromBody] SendMagicLinkRequest request)
     {
         var email = request.Email?.Trim().ToLower();
         if (string.IsNullOrWhiteSpace(email))
-            return Ok(OperationResult<string>.Ok("If the email exists, a sign-in link has been sent."));
+            return NoContent();
 
         var contact = await _db.Contacts
             .Include(c => c.Client)
@@ -51,14 +50,14 @@ public class PortalAuthController : ControllerBase
             await _emailService.SendAsync(email, "Sign in to Chistify", body);
         }
 
-        return Ok(OperationResult<string>.Ok("If the email exists, a sign-in link has been sent."));
+        return NoContent();
     }
 
     [HttpPost("validate-token")]
-    public async Task<ActionResult<OperationResult<string>>> ValidateToken([FromBody] ValidateTokenRequest request)
+    public async Task<ActionResult<string>> ValidateToken([FromBody] ValidateTokenRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Token))
-            return UnprocessableEntity(OperationResult<string>.Fail("TOKEN_REQUIRED", _localizer["error_token_required"]));
+            return Problem(statusCode: 422, title: "TOKEN_REQUIRED", detail: _localizer["error_token_required"]);
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
 
@@ -77,9 +76,8 @@ public class PortalAuthController : ControllerBase
         var result = await handler.ValidateTokenAsync(request.Token, validationParameters);
 
         if (!result.IsValid)
-            return UnprocessableEntity(OperationResult<string>.Fail("EXPIRED_INVALID_LINK", "This link has expired or is invalid. Please request a new one."));
+            return Problem(statusCode: 422, title: "EXPIRED_INVALID_LINK", detail: "This link has expired or is invalid. Please request a new one.");
 
-        // Read claims from the validated JWT payload via the JsonWebToken
         var jwt = handler.ReadJsonWebToken(request.Token);
         var payloadClaims = jwt.Claims.ToList();
 
@@ -87,20 +85,20 @@ public class PortalAuthController : ControllerBase
         var purpose = payloadClaims.FirstOrDefault(c => c.Type == "purpose")?.Value;
 
         if (authType != "portal" || purpose != "magic_link")
-            return UnprocessableEntity(OperationResult<string>.Fail("INVALID_LINK", "This link is invalid. Please request a new one."));
+            return Problem(statusCode: 422, title: "INVALID_LINK", detail: "This link is invalid. Please request a new one.");
 
         var clientIdClaim = payloadClaims.FirstOrDefault(c => c.Type == "client_id")?.Value;
         var emailClaim = payloadClaims.FirstOrDefault(c => c.Type == "email")?.Value;
         var nameClaim = payloadClaims.FirstOrDefault(c => c.Type == "name")?.Value;
 
         if (clientIdClaim is null || emailClaim is null || nameClaim is null)
-            return UnprocessableEntity(OperationResult<string>.Fail("INVALID_LINK", "This link is invalid. Please request a new one."));
+            return Problem(statusCode: 422, title: "INVALID_LINK", detail: "This link is invalid. Please request a new one.");
 
         var clientId = int.Parse(clientIdClaim);
         var email = emailClaim;
         var name = nameClaim;
 
         var sessionToken = _tokenManager.CreatePortalSessionToken(clientId, email, name);
-        return Ok(OperationResult<string>.Ok(sessionToken));
+        return Ok(sessionToken);
     }
 }

@@ -1,9 +1,9 @@
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Controllers;
 
@@ -17,50 +17,45 @@ public class KanbanController : ControllerBase
     public KanbanController(KanbanManager kanbanManager) { _kanbanManager = kanbanManager; }
 
     [HttpGet]
-    public async Task<ActionResult<OperationResult<KanbanBoardResponse>>> Get([FromQuery] DateTime? date, [FromQuery] int? employeeId, CancellationToken ct)
+    public async Task<ActionResult<KanbanBoardResponse>> Get([FromQuery] DateTime? date, [FromQuery] int? employeeId, CancellationToken ct)
     {
-        var board = await _kanbanManager.GetBoardAsync(date ?? DateTime.UtcNow.Date, employeeId, ct);
-        return Ok(OperationResult<KanbanBoardResponse>.Ok(board));
+        return Ok(await _kanbanManager.GetBoardAsync(date ?? DateTime.UtcNow.Date, employeeId, ct));
     }
 
     [HttpGet("pipeline")]
-    public async Task<ActionResult<OperationResult<KanbanBoardResponse>>> Pipeline(CancellationToken ct)
+    public async Task<ActionResult<KanbanBoardResponse>> Pipeline(CancellationToken ct)
     {
-        var pipeline = await _kanbanManager.GetPipelineAsync(ct);
-        return Ok(OperationResult<KanbanBoardResponse>.Ok(pipeline));
+        return Ok(await _kanbanManager.GetPipelineAsync(ct));
     }
 
     [HttpGet("resourcegrid")]
-    public async Task<ActionResult<OperationResult<ResourceGridResponse>>> GetResourceGrid(
+    public async Task<ActionResult<ResourceGridResponse>> GetResourceGrid(
         [FromQuery] DateTime anchorDate,
         [FromQuery] string view,
         CancellationToken ct)
     {
-        var result = await _kanbanManager.GetResourceGridAsync(anchorDate, view, ct);
-        return Ok(OperationResult<ResourceGridResponse>.Ok(result));
+        return Ok(await _kanbanManager.GetResourceGridAsync(anchorDate, view, ct));
     }
 
     [HttpGet("equipment-warnings")]
-    public async Task<ActionResult<OperationResult<List<EquipmentWarningResponse>>>> GetEquipmentWarnings(
+    public async Task<ActionResult<List<EquipmentWarningResponse>>> GetEquipmentWarnings(
         [FromQuery] DateTime date,
         CancellationToken ct)
     {
-        var warnings = await _kanbanManager.GetEquipmentWarningsAsync(date, ct);
-        return Ok(OperationResult<List<EquipmentWarningResponse>>.Ok(warnings));
+        return Ok(await _kanbanManager.GetEquipmentWarningsAsync(date, ct));
     }
 
     [HttpGet("employee-week")]
     [Authorize(Policy = PermissionKeys.PagesKanban)] // or use a more specific policy if needed
-    public async Task<ActionResult<OperationResult<WeeklyBoardResponse>>> GetEmployeeWeek(
+    public async Task<ActionResult<WeeklyBoardResponse>> GetEmployeeWeek(
         [FromQuery] DateTime weekStart,
         CancellationToken ct)
     {
         var userId = User.GetEmployeeId();
         if (userId is null)
-            return Unauthorized(OperationResult<WeeklyBoardResponse>.Fail("INVALID_TOKEN", "Invalid token."));
+            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
 
-        var result = await _kanbanManager.GetEmployeeWeekAsync(userId.Value, weekStart, ct);
-        return Ok(OperationResult<WeeklyBoardResponse>.Ok(result));
+        return Ok(await _kanbanManager.GetEmployeeWeekAsync(userId.Value, weekStart, ct));
     }
 }
 

@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Mapping;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -22,23 +22,23 @@ public class InventoryManager
         return items.Select(InventoryMapper.ToResponse).ToList();
     }
 
-    public async Task<OperationResult<InventoryResponse>> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<InventoryResponse> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var item = await _db.Inventory.FindAsync([id], ct);
         if (item is null)
-            return OperationResult<InventoryResponse>.Fail("INVENTORY_NOT_FOUND", "Inventory item not found.");
-        return OperationResult<InventoryResponse>.Ok(InventoryMapper.ToResponse(item));
+            throw new AppException("INVENTORY_NOT_FOUND", "Inventory item not found.", 404);
+        return InventoryMapper.ToResponse(item);
     }
 
-    public async Task<OperationResult<InventoryResponse>> CreateAsync(InventoryUpsertRequest dto, CancellationToken ct = default)
+    public async Task<InventoryResponse> CreateAsync(InventoryUpsertRequest dto, CancellationToken ct = default)
     {
         var name = dto.Name.Trim();
         if (string.IsNullOrWhiteSpace(name))
-            return OperationResult<InventoryResponse>.Fail("ITEM_NAME_REQUIRED", "Item name is required.");
+            throw new AppException("ITEM_NAME_REQUIRED", "Item name is required.", 422);
         if (!Enum.IsDefined(typeof(InventoryUnit), dto.Unit))
-            return OperationResult<InventoryResponse>.Fail("INVALID_UNIT_VALUE", "Invalid unit value.");
+            throw new AppException("INVALID_UNIT_VALUE", "Invalid unit value.", 422);
         if (dto.Quantity < 0)
-            return OperationResult<InventoryResponse>.Fail("NEGATIVE_QUANTITY", "Quantity cannot be negative.");
+            throw new AppException("NEGATIVE_QUANTITY", "Quantity cannot be negative.", 422);
 
         var now = DateTime.UtcNow;
         var entity = new Inventory
@@ -55,22 +55,22 @@ public class InventoryManager
         _db.Inventory.Add(entity);
         await _db.SaveChangesAsync(ct);
 
-        return OperationResult<InventoryResponse>.Ok(InventoryMapper.ToResponse(entity));
+        return InventoryMapper.ToResponse(entity);
     }
 
-    public async Task<OperationResult<InventoryResponse>> UpdateAsync(int id, InventoryUpsertRequest dto, CancellationToken ct = default)
+    public async Task<InventoryResponse> UpdateAsync(int id, InventoryUpsertRequest dto, CancellationToken ct = default)
     {
         var entity = await _db.Inventory.FindAsync([id], ct);
         if (entity is null)
-            return OperationResult<InventoryResponse>.Fail("INVENTORY_NOT_FOUND", "Inventory item not found.");
+            throw new AppException("INVENTORY_NOT_FOUND", "Inventory item not found.", 404);
 
         var name = dto.Name.Trim();
         if (string.IsNullOrWhiteSpace(name))
-            return OperationResult<InventoryResponse>.Fail("ITEM_NAME_REQUIRED", "Item name is required.");
+            throw new AppException("ITEM_NAME_REQUIRED", "Item name is required.", 422);
         if (!Enum.IsDefined(typeof(InventoryUnit), dto.Unit))
-            return OperationResult<InventoryResponse>.Fail("INVALID_UNIT_VALUE", "Invalid unit value.");
+            throw new AppException("INVALID_UNIT_VALUE", "Invalid unit value.", 422);
         if (dto.Quantity < 0)
-            return OperationResult<InventoryResponse>.Fail("NEGATIVE_QUANTITY", "Quantity cannot be negative.");
+            throw new AppException("NEGATIVE_QUANTITY", "Quantity cannot be negative.", 422);
 
         entity.Name = name;
         entity.Quantity = dto.Quantity;
@@ -80,22 +80,21 @@ public class InventoryManager
         entity.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);
-        return OperationResult<InventoryResponse>.Ok(InventoryMapper.ToResponse(entity));
+        return InventoryMapper.ToResponse(entity);
     }
 
-    public async Task<OperationResult<string>> DeleteAsync(int id, CancellationToken ct = default)
+    public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
         var entity = await _db.Inventory.FindAsync([id], ct);
         if (entity is null)
-            return OperationResult<string>.Fail("INVENTORY_NOT_FOUND", "Inventory item not found.");
+            throw new AppException("INVENTORY_NOT_FOUND", "Inventory item not found.", 404);
 
         var hasReferences = await _db.ServiceInventoryRequirements.AnyAsync(r => r.InventoryId == id, ct);
         if (hasReferences)
-            return OperationResult<string>.Fail("INVENTORY_IN_USE", "Cannot delete this item because it is referenced by one or more service requirements.");
+            throw new AppException("INVENTORY_IN_USE", "Cannot delete this item because it is referenced by one or more service requirements.", 409);
 
         _db.Inventory.Remove(entity);
         await _db.SaveChangesAsync(ct);
-        return OperationResult<string>.Ok("Inventory item deleted.");
     }
 
     public async Task AdjustStockAsync(int inventoryId, decimal delta, CancellationToken ct = default)

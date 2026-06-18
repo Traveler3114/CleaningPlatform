@@ -1,9 +1,10 @@
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Extensions;
 using CleaningPlatformAPI.Managers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CleaningPlatformAPI.Common;
+using CleaningPlatformAPI.Models;
 
 namespace CleaningPlatformAPI.Controllers;
 
@@ -19,159 +20,141 @@ public class BookingController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.BookingsView)]
-    public async Task<ActionResult<OperationResult<object>>> Get(
+    public async Task<ActionResult<object>> Get(
         [FromQuery] DateTime? date,
         [FromQuery] PaginationParams pagination,
         [FromQuery] string? status,
         CancellationToken ct)
     {
         if (date.HasValue)
-        {
-            var daily = await _bookingManager.GetBookingsAsync(date.Value, ct);
-            return Ok(OperationResult<List<BookingResponse>>.Ok(daily));
-        }
+            return Ok(await _bookingManager.GetBookingsAsync(date.Value, ct));
 
-        var paged = await _bookingManager.GetAllBookingsAsync(pagination, status, ct);
-        return Ok(OperationResult<PagedResult<BookingResponse>>.Ok(paged));
+        return Ok(await _bookingManager.GetAllBookingsAsync(pagination, status, ct));
     }
 
     [HttpGet("{id:int}", Name = "GetBookingById")]
     [Authorize(Policy = PermissionKeys.BookingsView)]
-    public async Task<ActionResult<OperationResult<BookingResponse>>> GetById(int id, CancellationToken ct)
+    public async Task<ActionResult<BookingResponse>> GetById(int id, CancellationToken ct)
     {
-        var result = await _bookingManager.GetBookingDetailByIdAsync(id, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+        return Ok(await _bookingManager.GetBookingDetailByIdAsync(id, ct));
     }
 
     [AllowAnonymous]
     [HttpPost]
-    public async Task<ActionResult<OperationResult<BookingResponse>>> Post(
+    public async Task<ActionResult<BookingResponse>> Post(
         [FromBody] CreateBookingRequest request, CancellationToken ct)
     {
-        var result = await _bookingManager.CreateBookingAsync(request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _bookingManager.CreateBookingAsync(request, ct));
     }
 
     [HttpPost("admin")]
     [Authorize(Policy = PermissionKeys.BookingsCreate)]
-    public async Task<ActionResult<OperationResult<BookingResponse>>> CreateAdmin(
+    public async Task<ActionResult<BookingResponse>> CreateAdmin(
         [FromBody] CreateAdminBookingRequest request, CancellationToken ct)
     {
-        var result = await _bookingManager.CreateAdminBookingAsync(request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _bookingManager.CreateAdminBookingAsync(request, ct));
     }
 
     [HttpPut("{id:int}/status")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<BookingResponse>>> UpdateStatus(
+    public async Task<ActionResult<BookingResponse>> UpdateStatus(
         int id, [FromBody] UpdateStatusRequest request, CancellationToken ct)
     {
-        var result = await _bookingManager.UpdateStatusAsync(id, request.Status, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _bookingManager.UpdateStatusAsync(id, request.Status, ct));
     }
 
     [HttpPost("{id:int}/assignments")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<BookingResponse>>> AddAssignment(
+    public async Task<ActionResult<BookingResponse>> AddAssignment(
         int id, [FromBody] AssignEmployeeRequest request, CancellationToken ct)
     {
-        var result = await _bookingManager.AddAssignmentAsync(id, request.EmployeeId, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _bookingManager.AddAssignmentAsync(id, request.EmployeeId, ct));
     }
 
     [HttpDelete("{id:int}/assignments/{employeeId:int}")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<string>>> RemoveAssignment(
+    public async Task<ActionResult> RemoveAssignment(
         int id, int employeeId, CancellationToken ct)
     {
-        var result = await _bookingManager.RemoveAssignmentAsync(id, employeeId, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        await _bookingManager.RemoveAssignmentAsync(id, employeeId, ct);
+        return NoContent();
     }
 
     [HttpPost("{id:int}/services")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<BookingResponse>>> AddService(
+    public async Task<ActionResult<BookingResponse>> AddService(
         int id, [FromBody] AddServiceRequest request, CancellationToken ct)
     {
-        var result = await _bookingManager.AddServiceAsync(
+        return Ok(await _bookingManager.AddServiceAsync(
             id, request.ServiceCatalogId, request.EstimatedPrice,
-            request.Quantity, request.FinalPrice, request.Notes, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+            request.Quantity, request.FinalPrice, request.Notes, ct));
     }
 
     [HttpDelete("{id:int}/services/{serviceCatalogId:int}")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<string>>> RemoveService(
+    public async Task<ActionResult> RemoveService(
         int id, int serviceCatalogId, CancellationToken ct)
     {
-        var result = await _bookingManager.RemoveServiceAsync(id, serviceCatalogId, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        await _bookingManager.RemoveServiceAsync(id, serviceCatalogId, ct);
+        return NoContent();
     }
 
     [HttpPut("{id:int}/services/{serviceCatalogId:int}")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<BookingResponse>>> UpdateServicePrice(
+    public async Task<ActionResult<BookingResponse>> UpdateServicePrice(
         int id, int serviceCatalogId, [FromBody] UpdateServicePriceRequest request, CancellationToken ct)
     {
-        var result = await _bookingManager.UpdateServicePriceAsync(id, serviceCatalogId, request.FinalPrice, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _bookingManager.UpdateServicePriceAsync(id, serviceCatalogId, request.FinalPrice, ct));
     }
 
     [HttpGet("{id:int}/sops")]
     [Authorize(Policy = PermissionKeys.BookingsView)]
-    public async Task<ActionResult<OperationResult<List<BookingSopAssignmentResponse>>>> GetBookingSops(int id, CancellationToken ct)
+    public async Task<ActionResult<List<BookingSopAssignmentResponse>>> GetBookingSops(int id, CancellationToken ct)
     {
-        var assignments = await _sopManager.GetBookingSopsAsync(id, ct);
-        return Ok(OperationResult<List<BookingSopAssignmentResponse>>.Ok(assignments));
+        return Ok(await _sopManager.GetBookingSopsAsync(id, ct));
     }
 
     [HttpPost("{id:int}/sops")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<BookingSopAssignmentResponse>>> AssignSop(int id, [FromBody] AssignSopRequest request, CancellationToken ct)
+    public async Task<ActionResult<BookingSopAssignmentResponse>> AssignSop(int id, [FromBody] AssignSopRequest request, CancellationToken ct)
     {
-        var result = await _sopManager.AssignSopToBookingAsync(id, request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _sopManager.AssignSopToBookingAsync(id, request, ct));
     }
 
     [HttpGet("{id:int}/sops/{sopTemplateId:int}/checklist")]
     [Authorize(Policy = PermissionKeys.BookingsView)]
-    public async Task<ActionResult<OperationResult<List<ChecklistResponseResponse>>>> GetSopChecklist(
+    public async Task<ActionResult<List<ChecklistResponseResponse>>> GetSopChecklist(
         int id, int sopTemplateId, CancellationToken ct)
     {
-        var items = await _sopManager.GetChecklistForSopAssignmentAsync(id, sopTemplateId, ct);
-        return Ok(OperationResult<List<ChecklistResponseResponse>>.Ok(items));
+        return Ok(await _sopManager.GetChecklistForSopAssignmentAsync(id, sopTemplateId, ct));
     }
 
     [HttpPut("{id:int}/sops/{sopTemplateId:int}/checklist/{checklistItemId:int}")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<ChecklistResponseResponse>>> CompleteChecklistItem(
+    public async Task<ActionResult<ChecklistResponseResponse>> CompleteChecklistItem(
         int id, int sopTemplateId, int checklistItemId, [FromBody] CompleteChecklistItemRequest request, CancellationToken ct)
     {
-        var result = await _sopManager.CompleteChecklistItemAsync(id, sopTemplateId, checklistItemId, request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _sopManager.CompleteChecklistItemAsync(id, sopTemplateId, checklistItemId, request, ct));
     }
 
     [HttpGet("employee/assigned")]
     [Authorize]
-    public async Task<ActionResult<OperationResult<List<BookingResponse>>>> GetAssignedForEmployee(
+    public async Task<ActionResult<List<BookingResponse>>> GetAssignedForEmployee(
         [FromQuery] int? employeeId,
         [FromQuery] DateTime? date,
         CancellationToken ct)
     {
         var targetId = employeeId ?? User.GetEmployeeId();
         if (targetId is null)
-            return Unauthorized(OperationResult<List<BookingResponse>>.Fail("INVALID_TOKEN", "Invalid token."));
+            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
 
         var currentUserId = User.GetEmployeeId();
         if (currentUserId != targetId && !User.IsInRole(RoleNames.Owner) && !User.IsInRole(RoleNames.Admin))
             return Forbid();
 
-        List<BookingResponse> result;
         if (date.HasValue)
-            result = await _bookingManager.GetAssignedBookingsForEmployeeByDateAsync(targetId.Value, date.Value, ct);
+            return Ok(await _bookingManager.GetAssignedBookingsForEmployeeByDateAsync(targetId.Value, date.Value, ct));
         else
-            result = await _bookingManager.GetAssignedBookingsForEmployeeAsync(targetId.Value, ct);
-
-        return Ok(OperationResult<List<BookingResponse>>.Ok(result));
+            return Ok(await _bookingManager.GetAssignedBookingsForEmployeeAsync(targetId.Value, ct));
     }
 }

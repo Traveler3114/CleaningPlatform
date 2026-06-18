@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
+using CleaningPlatformAPI.Common;
+using CleaningPlatformAPI.Models;
 
 namespace CleaningPlatformAPI.Controllers;
 
@@ -19,93 +20,85 @@ public class BookingRequestController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.BookingsView)]
-    public async Task<ActionResult<OperationResult<PagedResult<BookingRequestResponse>>>> GetAll(
+    public async Task<ActionResult<Paginated<BookingRequestResponse>>> GetAll(
         [FromQuery] PaginationParams pagination,
         [FromQuery] string? status = null,
         CancellationToken ct = default)
     {
-        var result = await _manager.GetAllAsync(pagination, status, ct);
-        return Ok(OperationResult<PagedResult<BookingRequestResponse>>.Ok(result));
+        return Ok(await _manager.GetAllAsync(pagination, status, ct));
     }
 
     [HttpGet("{id}")]
     [Authorize(Policy = PermissionKeys.BookingsView)]
-    public async Task<ActionResult<OperationResult<BookingRequestResponse>>> GetById(int id, CancellationToken ct = default)
+    public async Task<ActionResult<BookingRequestResponse>> GetById(int id, CancellationToken ct = default)
     {
-        var result = await _manager.GetByIdAsync(id, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+        return Ok(await _manager.GetByIdAsync(id, ct));
     }
 
     [HttpPost]
     [AllowAnonymous]
-    public async Task<ActionResult<OperationResult<BookingRequestResponse>>> Create(
+    public async Task<ActionResult<BookingRequestResponse>> Create(
         [FromBody] CreateBookingRequestRequest dto,
         CancellationToken ct = default)
     {
-        var result = await _manager.CreateAsync(dto, ct);
-        return result.Success
-            ? CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result)
-            : UnprocessableEntity(result);
+        var created = await _manager.CreateAsync(dto, ct);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<BookingRequestResponse>>> Update(
+    public async Task<ActionResult<BookingRequestResponse>> Update(
         int id,
         [FromBody] UpdateBookingRequestRequest dto,
         CancellationToken ct = default)
     {
-        var result = await _manager.UpdateAsync(id, dto, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _manager.UpdateAsync(id, dto, ct));
     }
 
     [HttpPost("{id}/send")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<BookingRequestResponse>>> SendToCustomer(
+    public async Task<ActionResult<BookingRequestResponse>> SendToCustomer(
         int id,
         CancellationToken ct = default)
     {
-        var result = await _manager.SendToCustomerAsync(id, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _manager.SendToCustomerAsync(id, ct));
     }
 
     [HttpPost("{id}/confirm")]
     [Authorize(Policy = PermissionKeys.BookingsEdit)]
-    public async Task<ActionResult<OperationResult<BookingResponse>>> AdminConfirm(
+    public async Task<ActionResult<BookingResponse>> AdminConfirm(
         int id,
         CancellationToken ct = default)
     {
-        var result = await _manager.AdminConfirmAsync(id, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _manager.AdminConfirmAsync(id, ct));
     }
 
     [HttpGet("customer-preview")]
     [AllowAnonymous]
-    public async Task<ActionResult<OperationResult<CustomerPreviewResponse>>> CustomerPreview(
+    public async Task<ActionResult<CustomerPreviewResponse>> CustomerPreview(
         [FromQuery] string token,
         CancellationToken ct = default)
     {
-        var result = await _manager.CustomerPreviewAsync(token, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _manager.CustomerPreviewAsync(token, ct));
     }
 
     [HttpPost("customer-confirm")]
     [AllowAnonymous]
-    public async Task<ActionResult<OperationResult<string>>> CustomerConfirm(
+    public async Task<ActionResult> CustomerConfirm(
         [FromBody] CustomerConfirmRequest dto,
         CancellationToken ct = default)
     {
-        var result = await _manager.CustomerConfirmAsync(dto.Token, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        await _manager.CustomerConfirmAsync(dto.Token, ct);
+        return NoContent();
     }
 
     [HttpPost("customer-cancel")]
     [AllowAnonymous]
-    public async Task<ActionResult<OperationResult<string>>> CustomerCancel(
+    public async Task<ActionResult> CustomerCancel(
         [FromBody] CustomerConfirmRequest dto,
         CancellationToken ct = default)
     {
-        var result = await _manager.CustomerCancelAsync(dto.Token, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        await _manager.CustomerCancelAsync(dto.Token, ct);
+        return NoContent();
     }
 }

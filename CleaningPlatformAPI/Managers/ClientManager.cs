@@ -4,8 +4,9 @@ using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Mapping;
+using CleaningPlatformAPI.Common;
+using CleaningPlatformAPI.Models;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -19,7 +20,7 @@ public class ClientManager
     public ClientManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
             _localizer = localizer;}
 
-    public async Task<PagedResult<ClientResponse>> GetAllAsync(
+    public async Task<Paginated<ClientResponse>> GetAllAsync(
         PaginationParams pagination,
         string? type = null,
         CancellationToken ct = default)
@@ -60,10 +61,10 @@ public class ClientManager
             })
             .ToListAsync(ct);
 
-        return PagedResult<ClientResponse>.From(items, totalCount, pagination.Page, pagination.PageSize);
+        return new Paginated<ClientResponse>(items, totalCount);
     }
 
-    public async Task<OperationResult<ClientResponse>> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<ClientResponse> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var client = await _db.Clients
             .Include(c => c.Contacts)
@@ -71,7 +72,7 @@ public class ClientManager
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
         if (client is null)
-            return OperationResult<ClientResponse>.Fail("CLIENT_NOT_FOUND", $"Client #{id} was not found.");
+            throw new AppException("CLIENT_NOT_FOUND", $"Client #{id} was not found.", 404);
 
         var recentBookings = await _db.Bookings
             .Where(b => b.ClientId == id)
@@ -79,10 +80,10 @@ public class ClientManager
             .Take(5)
             .ToListAsync(ct);
 
-        return OperationResult<ClientResponse>.Ok(ClientMapper.ToProfileResponse(client, recentBookings));
+        return ClientMapper.ToProfileResponse(client, recentBookings);
     }
 
-    public async Task<PagedResult<BookingResponse>> GetClientBookingsAsync(int clientId, PaginationParams pagination, CancellationToken ct = default)
+    public async Task<Paginated<BookingResponse>> GetClientBookingsAsync(int clientId, PaginationParams pagination, CancellationToken ct = default)
     {
         var query = _db.Bookings
             .Include(b => b.Client).ThenInclude(c => c.Contacts)
@@ -100,22 +101,22 @@ public class ClientManager
             .ToListAsync(ct);
 
         var mapped = items.Select(BookingMapper.ToResponse).ToList();
-        return PagedResult<BookingResponse>.From(mapped, totalCount, pagination.Page, pagination.PageSize);
+        return new Paginated<BookingResponse>(mapped, totalCount);
     }
 
-    public async Task<OperationResult<ClientResponse>> CreateAsync(CreateClientRequest dto, CancellationToken ct = default)
+    public async Task<ClientResponse> CreateAsync(CreateClientRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ClientName))
-            return OperationResult<ClientResponse>.Fail("CLIENT_NAME_REQUIRED", "Client name is required.");
+            throw new AppException("CLIENT_NAME_REQUIRED", "Client name is required.", 422);
 
         if (dto.Type != "Person" && dto.Type != "Business")
-            return OperationResult<ClientResponse>.Fail("CLIENT_TYPE_INVALID", "Client type must be Person or Business.");
+            throw new AppException("CLIENT_TYPE_INVALID", "Client type must be Person or Business.", 422);
 
         if (string.IsNullOrWhiteSpace(dto.PrimaryContactName))
-            return OperationResult<ClientResponse>.Fail("PRIMARY_CONTACT_NAME_REQUIRED", "Primary contact name is required.");
+            throw new AppException("PRIMARY_CONTACT_NAME_REQUIRED", "Primary contact name is required.", 422);
 
         if (string.IsNullOrWhiteSpace(dto.PrimaryContactPhone))
-            return OperationResult<ClientResponse>.Fail("PRIMARY_CONTACT_PHONE_REQUIRED", "Primary contact phone number is required.");
+            throw new AppException("PRIMARY_CONTACT_PHONE_REQUIRED", "Primary contact phone number is required.", 422);
 
         var now = DateTime.UtcNow;
         var client = new Client
@@ -146,7 +147,7 @@ public class ClientManager
         _db.Clients.Add(client);
         await _db.SaveChangesAsync(ct);
 
-        return OperationResult<ClientResponse>.Ok(new ClientResponse
+        return new ClientResponse
         {
             Id                  = client.Id,
             ClientName          = client.ClientName,
@@ -160,24 +161,24 @@ public class ClientManager
             PrimaryContactPhone = dto.PrimaryContactPhone,
             PrimaryContactEmail = dto.PrimaryContactEmail,
             TotalBookings       = 0
-        });
+        };
     }
 
-    public async Task<OperationResult<ClientResponse>> UpdateProfileAsync(int id, UpdateClientProfileRequest dto, CancellationToken ct = default)
+    public async Task<ClientResponse> UpdateProfileAsync(int id, UpdateClientProfileRequest dto, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(dto.ClientName))
-            return OperationResult<ClientResponse>.Fail("CLIENT_NAME_REQUIRED", "Client name is required.");
+            throw new AppException("CLIENT_NAME_REQUIRED", "Client name is required.", 422);
 
         var rawContacts = (dto.Contacts ?? [])
             .Where(c => !string.IsNullOrWhiteSpace(c.ContactName) || !string.IsNullOrWhiteSpace(c.Phone))
             .ToList();
 
         if (rawContacts.Count == 0)
-            return OperationResult<ClientResponse>.Fail("ACTIVE_CONTACT_REQUIRED", "At least one active contact with a name and phone number is required.");
+            throw new AppException("ACTIVE_CONTACT_REQUIRED", "At least one active contact with a name and phone number is required.", 422);
 
         var invalidContacts = rawContacts.Where(c => string.IsNullOrWhiteSpace(c.ContactName) || string.IsNullOrWhiteSpace(c.Phone)).ToList();
         if (invalidContacts.Count > 0)
-            return OperationResult<ClientResponse>.Fail("CONTACT_VALIDATION_FAILED", "Every contact must have both a name and a phone number. Please check your contact entries.");
+            throw new AppException("CONTACT_VALIDATION_FAILED", "Every contact must have both a name and a phone number. Please check your contact entries.", 422);
 
         var client = await _db.Clients
             .Include(c => c.Contacts)
@@ -185,7 +186,7 @@ public class ClientManager
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
         if (client is null)
-            return OperationResult<ClientResponse>.Fail("CLIENT_NOT_FOUND", $"Client #{id} was not found.");
+            throw new AppException("CLIENT_NOT_FOUND", $"Client #{id} was not found.", 404);
 
         var now = DateTime.UtcNow;
         await using var transaction = await _db.Database.BeginTransactionAsync(ct);
@@ -202,7 +203,7 @@ public class ClientManager
 
             var activeContacts = client.Contacts.Where(c => c.IsActive).ToList();
             if (activeContacts.Count == 0)
-                return OperationResult<ClientResponse>.Fail("CANNOT_DEACTIVATE_ALL_CONTACTS", "At least one active contact is required. You cannot deactivate all contacts.");
+                throw new AppException("CANNOT_DEACTIVATE_ALL_CONTACTS", "At least one active contact is required. You cannot deactivate all contacts.", 422);
 
             EnforceSinglePrimary(activeContacts, now);
 
@@ -215,7 +216,7 @@ public class ClientManager
                 .Take(5)
                 .ToListAsync(ct);
 
-            return OperationResult<ClientResponse>.Ok(ClientMapper.ToProfileResponse(client, recentBookings));
+            return ClientMapper.ToProfileResponse(client, recentBookings);
         }
         catch
         {
@@ -274,11 +275,11 @@ public class ClientManager
         }
     }
 
-    public async Task<OperationResult<List<SiteResponse>>> GetSitesAsync(int clientId, CancellationToken ct = default)
+    public async Task<List<SiteResponse>> GetSitesAsync(int clientId, CancellationToken ct = default)
     {
         var exists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!exists)
-            return OperationResult<List<SiteResponse>>.Fail("CLIENT_NOT_FOUND", $"Client #{clientId} was not found.");
+            throw new AppException("CLIENT_NOT_FOUND", $"Client #{clientId} was not found.", 404);
 
         var sites = await _db.Sites
             .Where(s => s.ClientId == clientId)
@@ -287,18 +288,18 @@ public class ClientManager
             .Select(ClientMapper.ToSiteResponseExpression())
             .ToListAsync(ct);
 
-        return OperationResult<List<SiteResponse>>.Ok(sites);
+        return sites;
     }
 
-    public async Task<OperationResult<SiteResponse>> CreateSiteAsync(int clientId, UpsertSiteRequest dto, CancellationToken ct = default)
+    public async Task<SiteResponse> CreateSiteAsync(int clientId, UpsertSiteRequest dto, CancellationToken ct = default)
     {
         var validationError = ValidateSiteDto(dto);
         if (validationError is not null)
-            return OperationResult<SiteResponse>.Fail("CONTACT_VALIDATION_FAILED", validationError);
+            throw new AppException("CONTACT_VALIDATION_FAILED", validationError, 422);
 
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<SiteResponse>.Fail("CLIENT_NOT_FOUND", $"Client #{clientId} was not found.");
+            throw new AppException("CLIENT_NOT_FOUND", $"Client #{clientId} was not found.", 404);
 
         var now  = DateTime.UtcNow;
         var site = new Site
@@ -318,18 +319,18 @@ public class ClientManager
 
         _db.Sites.Add(site);
         await _db.SaveChangesAsync(ct);
-        return OperationResult<SiteResponse>.Ok(ClientMapper.ToSiteResponse(site));
+        return ClientMapper.ToSiteResponse(site);
     }
 
-    public async Task<OperationResult<SiteResponse>> UpdateSiteAsync(int clientId, int siteId, UpsertSiteRequest dto, CancellationToken ct = default)
+    public async Task<SiteResponse> UpdateSiteAsync(int clientId, int siteId, UpsertSiteRequest dto, CancellationToken ct = default)
     {
         var validationError = ValidateSiteDto(dto);
         if (validationError is not null)
-            return OperationResult<SiteResponse>.Fail("CONTACT_VALIDATION_FAILED", validationError);
+            throw new AppException("CONTACT_VALIDATION_FAILED", validationError, 422);
 
         var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId && s.ClientId == clientId, ct);
         if (site is null)
-            return OperationResult<SiteResponse>.Fail("SITE_NOT_FOUND", $"Site #{siteId} was not found for client #{clientId}.");
+            throw new AppException("SITE_NOT_FOUND", $"Site #{siteId} was not found for client #{clientId}.", 404);
 
         site.SiteName    = dto.SiteName.Trim();
         site.Address     = dto.Address.Trim();
@@ -342,19 +343,19 @@ public class ClientManager
         site.UpdatedAt   = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);
-        return OperationResult<SiteResponse>.Ok(ClientMapper.ToSiteResponse(site));
+        return ClientMapper.ToSiteResponse(site);
     }
 
-    public async Task<OperationResult<SiteResponse>> DeactivateSiteAsync(int clientId, int siteId, CancellationToken ct = default)
+    public async Task<SiteResponse> DeactivateSiteAsync(int clientId, int siteId, CancellationToken ct = default)
     {
         var site = await _db.Sites.FirstOrDefaultAsync(s => s.Id == siteId && s.ClientId == clientId, ct);
         if (site is null)
-            return OperationResult<SiteResponse>.Fail("SITE_NOT_FOUND", $"Site #{siteId} was not found for client #{clientId}.");
+            throw new AppException("SITE_NOT_FOUND", $"Site #{siteId} was not found for client #{clientId}.", 404);
 
         site.IsActive  = false;
         site.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
-        return OperationResult<SiteResponse>.Ok(ClientMapper.ToSiteResponse(site));
+        return ClientMapper.ToSiteResponse(site);
     }
 
     private static string? ValidateSiteDto(UpsertSiteRequest dto)

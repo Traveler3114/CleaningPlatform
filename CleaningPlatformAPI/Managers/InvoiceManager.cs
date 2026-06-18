@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Mapping;
+using CleaningPlatformAPI.Common;
+using CleaningPlatformAPI.Models;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -21,7 +22,7 @@ public class InvoiceManager
     public InvoiceManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
             _localizer = localizer;}
 
-    public async Task<PagedResult<InvoiceResponse>> GetAllAsync(
+    public async Task<Paginated<InvoiceResponse>> GetAllAsync(
         PaginationParams pagination,
         CancellationToken ct = default)
     {
@@ -49,10 +50,10 @@ public class InvoiceManager
             .Select(i => InvoiceMapper.ToResponse(i))
             .ToListAsync(ct);
 
-        return PagedResult<InvoiceResponse>.From(items, totalCount, pagination.Page, pagination.PageSize);
+        return new Paginated<InvoiceResponse>(items, totalCount);
     }
 
-    public async Task<OperationResult<InvoiceResponse>> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<InvoiceResponse> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var invoice = await _db.Invoices
             .Include(i => i.Client)
@@ -60,12 +61,12 @@ public class InvoiceManager
             .Include(i => i.Payments)
             .Include(i => i.InvoiceBookings)
             .FirstOrDefaultAsync(i => i.Id == id, ct);
-        return invoice is null
-            ? OperationResult<InvoiceResponse>.Fail("INVOICE_NOT_FOUND", $"Invoice #{id} was not found.")
-            : OperationResult<InvoiceResponse>.Ok(InvoiceMapper.ToResponse(invoice));
+        if (invoice is null)
+            throw new AppException("INVOICE_NOT_FOUND", $"Invoice #{id} was not found.", 404);
+        return InvoiceMapper.ToResponse(invoice);
     }
 
-    public async Task<OperationResult<InvoiceResponse>> CreateFromBookingAsync(int bookingId, int? createdByEmployeeId, CancellationToken ct = default)
+    public async Task<InvoiceResponse> CreateFromBookingAsync(int bookingId, int? createdByEmployeeId, CancellationToken ct = default)
     {
         await using var transaction = await _db.Database.BeginTransactionAsync(ct);
 
@@ -75,15 +76,15 @@ public class InvoiceManager
             .FirstOrDefaultAsync(b => b.Id == bookingId, ct);
 
         if (booking is null)
-            return OperationResult<InvoiceResponse>.Fail("BOOKING_NOT_FOUND", $"Booking #{bookingId} was not found.");
+            throw new AppException("BOOKING_NOT_FOUND", $"Booking #{bookingId} was not found.", 404);
 
         if (booking.Status != BookingStatus.Completed)
-            return OperationResult<InvoiceResponse>.Fail("BOOKING_NOT_COMPLETED", $"Booking #{bookingId} cannot be invoiced — its current status is '{booking.Status}'. Only Completed bookings can generate an invoice.");
+            throw new AppException("BOOKING_NOT_COMPLETED", $"Booking #{bookingId} cannot be invoiced — its current status is '{booking.Status}'. Only Completed bookings can generate an invoice.", 422);
 
         var existingLink = await _db.InvoiceBookings.AsNoTracking()
             .FirstOrDefaultAsync(ib => ib.BookingId == bookingId, ct);
         if (existingLink is not null)
-            return OperationResult<InvoiceResponse>.Fail("BOOKING_ALREADY_INVOICED", $"Booking #{bookingId} is already linked to invoice #{existingLink.InvoiceId}. Open that invoice to record additional payments.");
+            throw new AppException("BOOKING_ALREADY_INVOICED", $"Booking #{bookingId} is already linked to invoice #{existingLink.InvoiceId}. Open that invoice to record additional payments.", 409);
 
         var now           = DateTime.UtcNow;
         var invoiceNumber = await GenerateInvoiceNumberAsync(ct);
@@ -145,18 +146,18 @@ public class InvoiceManager
         return created;
     }
 
-    public async Task<OperationResult<InvoiceResponse>> RecordPaymentAsync(int invoiceId, RecordPaymentRequest request, int? recordedBy, CancellationToken ct = default)
+    public async Task<InvoiceResponse> RecordPaymentAsync(int invoiceId, RecordPaymentRequest request, int? recordedBy, CancellationToken ct = default)
     {
         if (request.Amount <= 0)
-            return OperationResult<InvoiceResponse>.Fail("PAYMENT_AMOUNT_ZERO", _localizer["err_payment_amount_zero"]);
+            throw new AppException("PAYMENT_AMOUNT_ZERO", _localizer["err_payment_amount_zero"], 422);
 
         var method = string.IsNullOrWhiteSpace(request.Method) ? "BankTransfer" : request.Method.Trim();
         if (!AllowedPaymentMethods.Contains(method))
-            return OperationResult<InvoiceResponse>.Fail("INVALID_PAYMENT_METHOD", $"'{method}' is not a valid payment method. Accepted values: {string.Join(", ", AllowedPaymentMethods)}.");
+            throw new AppException("INVALID_PAYMENT_METHOD", $"'{method}' is not a valid payment method. Accepted values: {string.Join(", ", AllowedPaymentMethods)}.", 422);
 
         var invoice = await _db.Invoices.Include(i => i.Payments).FirstOrDefaultAsync(i => i.Id == invoiceId, ct);
         if (invoice is null)
-            return OperationResult<InvoiceResponse>.Fail("INVOICE_NOT_FOUND", $"Invoice #{invoiceId} was not found.");
+            throw new AppException("INVOICE_NOT_FOUND", $"Invoice #{invoiceId} was not found.", 404);
 
         var paymentDate = request.PaymentDate == default ? DateTime.UtcNow.Date : request.PaymentDate.Date;
 
@@ -183,15 +184,15 @@ public class InvoiceManager
         return updated;
     }
 
-    public async Task<OperationResult<InvoiceResponse>> UpdateStatusAsync(int invoiceId, string status, CancellationToken ct = default)
+    public async Task<InvoiceResponse> UpdateStatusAsync(int invoiceId, string status, CancellationToken ct = default)
     {
         var trimmed = status?.Trim() ?? "";
         if (!AllowedStatuses.Contains(trimmed))
-            return OperationResult<InvoiceResponse>.Fail("INVALID_INVOICE_STATUS", $"'{trimmed}' is not a valid invoice status. Accepted values: {string.Join(", ", AllowedStatuses)}.");
+            throw new AppException("INVALID_INVOICE_STATUS", $"'{trimmed}' is not a valid invoice status. Accepted values: {string.Join(", ", AllowedStatuses)}.", 422);
 
         var invoice = await _db.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId, ct);
         if (invoice is null)
-            return OperationResult<InvoiceResponse>.Fail("INVOICE_NOT_FOUND", $"Invoice #{invoiceId} was not found.");
+            throw new AppException("INVOICE_NOT_FOUND", $"Invoice #{invoiceId} was not found.", 404);
 
         invoice.Status    = trimmed;
         invoice.UpdatedAt = DateTime.UtcNow;

@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Mapping;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -32,20 +32,20 @@ public class EmployeeManager
         return users.Select(u => UserMapper.ToResponse(u, rolePermissions.GetValueOrDefault(u.Role?.Name ?? string.Empty, []))).ToList();
     }
 
-    public async Task<OperationResult<UserResponse>> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<UserResponse> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var user = await _db.Employees
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user is null)
-            return OperationResult<UserResponse>.Fail("USER_NOT_FOUND", $"User #{id} was not found.");
+            throw new AppException("USER_NOT_FOUND", $"User #{id} was not found.", 404);
 
         var permissions = await _db.RolePermissions
             .Where(rp => rp.RoleId == user.RoleId)
             .Select(rp => rp.PermissionKey)
             .ToListAsync(ct);
 
-        return OperationResult<UserResponse>.Ok(UserMapper.ToResponse(user, permissions));
+        return UserMapper.ToResponse(user, permissions);
     }
 
     public async Task<List<AvailableEmployeeResponse>> GetAvailableForBookingAsync(int bookingId, CancellationToken ct = default)
@@ -100,24 +100,24 @@ public class EmployeeManager
         return employees.Select(UserMapper.ToSimpleResponse).ToList();
     }
 
-    public async Task<OperationResult<UserResponse>> UpdateEmployeeAsync(int id, UpdateEmployeeRequest request, int requestingUserId, CancellationToken ct = default)
+    public async Task<UserResponse> UpdateEmployeeAsync(int id, UpdateEmployeeRequest request, int requestingUserId, CancellationToken ct = default)
     {
         var user = await _db.Employees
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user is null)
-            return OperationResult<UserResponse>.Fail("EMPLOYEE_NOT_FOUND", $"Employee #{id} was not found.");
+            throw new AppException("EMPLOYEE_NOT_FOUND", $"Employee #{id} was not found.", 404);
 
         var roleName = request.Role?.Trim();
         if (string.IsNullOrWhiteSpace(roleName))
-            return OperationResult<UserResponse>.Fail("ROLE_REQUIRED", "Role is required.");
+            throw new AppException("ROLE_REQUIRED", "Role is required.", 422);
 
         var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == roleName, ct);
         if (role is null)
-            return OperationResult<UserResponse>.Fail("ROLE_NOT_FOUND", $"Role '{roleName}' was not found.");
+            throw new AppException("ROLE_NOT_FOUND", $"Role '{roleName}' was not found.", 404);
 
         if (id == requestingUserId && role.Id != user.RoleId)
-            return OperationResult<UserResponse>.Fail("CANNOT_CHANGE_OWN_ROLE", "You cannot change your own role.");
+            throw new AppException("CANNOT_CHANGE_OWN_ROLE", "You cannot change your own role.", 422);
 
         user.RoleId = role.Id;
         user.HourlyRate = request.HourlyRate;
@@ -131,19 +131,19 @@ public class EmployeeManager
             .Select(rp => rp.PermissionKey)
             .ToListAsync(ct);
 
-        return OperationResult<UserResponse>.Ok(UserMapper.ToResponse(user, permissions));
+        return UserMapper.ToResponse(user, permissions);
     }
 
-    public async Task<OperationResult<UserResponse>> ToggleActiveAsync(int id, int requestingUserId, CancellationToken ct = default)
+    public async Task<UserResponse> ToggleActiveAsync(int id, int requestingUserId, CancellationToken ct = default)
     {
         if (id == requestingUserId)
-            return OperationResult<UserResponse>.Fail("CANNOT_DEACTIVATE_SELF", "You cannot deactivate your own account.");
+            throw new AppException("CANNOT_DEACTIVATE_SELF", "You cannot deactivate your own account.", 422);
 
         var user = await _db.Employees
             .Include(e => e.Role)
             .FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user is null)
-            return OperationResult<UserResponse>.Fail("USER_NOT_FOUND", "User not found.");
+            throw new AppException("USER_NOT_FOUND", "User not found.", 404);
 
         user.IsActive = !user.IsActive;
         user.UpdatedAt = DateTime.UtcNow;
@@ -154,6 +154,6 @@ public class EmployeeManager
             .Select(rp => rp.PermissionKey)
             .ToListAsync(ct);
 
-        return OperationResult<UserResponse>.Ok(UserMapper.ToResponse(user, permissions));
+        return UserMapper.ToResponse(user, permissions);
     }
 }

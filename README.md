@@ -79,7 +79,8 @@ The project currently includes:
 CleaningPlatformAPI/
 ├── Program.cs                 # App startup, DI, middleware, error handling
 ├── Authorization/             # Custom permission handler
-├── Common/                    # Shared types (OperationResult, PermissionKeys, RoleNames)
+├── Common/                    # Shared types (AppException, PermissionKeys, RoleNames, SqlHelper)
+├── Models/                    # Paginated<T>
 ├── Contracts/                 # DTOs (request/response types)
 ├── Controllers/               # REST API endpoints (16 controllers)
 ├── Data/                      # EF Core DbContext
@@ -135,8 +136,9 @@ All endpoints follow a consistent pattern:
 - Base route: `/api/{plural-noun}`
 - All controllers have `[ApiController]`, `[Route]`, and class-level `[Authorize]`
 - Action-level authorization via granular permission policies
-- Responses wrapped in `OperationResult<T>`: `{ success, message, data }`
-- Global exception handler returns consistent error responses
+- Error responses follow RFC 7807 `ProblemDetails`: `{ type, title, status, detail, code }`
+- Success responses return data directly (no envelope)
+- Global exception handler returns consistent `ProblemDetails`
 
 ---
 

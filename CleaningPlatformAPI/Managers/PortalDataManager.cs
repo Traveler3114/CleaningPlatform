@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Data;
 using CleaningPlatformAPI.Entities;
 using CleaningPlatformAPI.Enums;
 using CleaningPlatformAPI.Mapping;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -18,11 +18,11 @@ public class PortalDataManager
     public PortalDataManager(AppDbContext db, IStringLocalizer<SharedResources> localizer) { _db = db; 
             _localizer = localizer;}
 
-    public async Task<OperationResult<PortalDashboardResponse>> GetDashboardAsync(int clientId, CancellationToken ct = default)
+    public async Task<PortalDashboardResponse> GetDashboardAsync(int clientId, CancellationToken ct = default)
     {
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<PortalDashboardResponse>.Fail("CLIENT_NOT_FOUND", "Client not found.");
+            throw new AppException("CLIENT_NOT_FOUND", "Client not found.", 404);
 
         var upcomingCount = await _db.Bookings
             .CountAsync(b => b.ClientId == clientId && b.Status != BookingStatus.Completed && b.Status != BookingStatus.Cancelled, ct);
@@ -55,7 +55,7 @@ public class PortalDataManager
             .Take(5)
             .ToListAsync(ct);
 
-        return OperationResult<PortalDashboardResponse>.Ok(new PortalDashboardResponse
+        return new PortalDashboardResponse
         {
             UpcomingBookings = upcomingCount,
             CompletedBookings = completedCount,
@@ -63,14 +63,14 @@ public class PortalDataManager
             OutstandingAmount = outstanding,
             UpcomingBookingList = upcomingBookings.Select(BookingMapper.ToDetailResponse).ToList(),
             RecentInvoices = recentInvoices.Select(InvoiceMapper.ToResponse).ToList()
-        });
+        };
     }
 
-    public async Task<OperationResult<List<BookingResponse>>> GetBookingsAsync(int clientId, string? status, CancellationToken ct = default)
+    public async Task<List<BookingResponse>> GetBookingsAsync(int clientId, string? status, CancellationToken ct = default)
     {
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<List<BookingResponse>>.Fail("CLIENT_NOT_FOUND", "Client not found.");
+            throw new AppException("CLIENT_NOT_FOUND", "Client not found.", 404);
 
         var query = _db.Bookings
             .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
@@ -87,10 +87,10 @@ public class PortalDataManager
             .OrderByDescending(b => b.ScheduledDate).ThenByDescending(b => b.ScheduledTimeSlot)
             .ToListAsync(ct);
 
-        return OperationResult<List<BookingResponse>>.Ok(bookings.Select(BookingMapper.ToDetailResponse).ToList());
+        return bookings.Select(BookingMapper.ToDetailResponse).ToList();
     }
 
-    public async Task<OperationResult<BookingResponse>> GetBookingDetailAsync(int clientId, int bookingId, CancellationToken ct = default)
+    public async Task<BookingResponse> GetBookingDetailAsync(int clientId, int bookingId, CancellationToken ct = default)
     {
         var booking = await _db.Bookings
             .Include(b => b.BookingServices).ThenInclude(bs => bs.ServiceCatalog)
@@ -99,16 +99,16 @@ public class PortalDataManager
             .FirstOrDefaultAsync(b => b.Id == bookingId && b.ClientId == clientId, ct);
 
         if (booking is null)
-            return OperationResult<BookingResponse>.Fail("BOOKING_NOT_FOUND", "Booking not found.");
+            throw new AppException("BOOKING_NOT_FOUND", "Booking not found.", 404);
 
-        return OperationResult<BookingResponse>.Ok(BookingMapper.ToDetailResponse(booking));
+        return BookingMapper.ToDetailResponse(booking);
     }
 
-    public async Task<OperationResult<List<InvoiceResponse>>> GetInvoicesAsync(int clientId, CancellationToken ct = default)
+    public async Task<List<InvoiceResponse>> GetInvoicesAsync(int clientId, CancellationToken ct = default)
     {
         var clientExists = await _db.Clients.AnyAsync(c => c.Id == clientId, ct);
         if (!clientExists)
-            return OperationResult<List<InvoiceResponse>>.Fail("CLIENT_NOT_FOUND", "Client not found.");
+            throw new AppException("CLIENT_NOT_FOUND", "Client not found.", 404);
 
         var invoices = await _db.Invoices
             .Include(i => i.Lines)
@@ -117,10 +117,10 @@ public class PortalDataManager
             .OrderByDescending(i => i.IssueDate)
             .ToListAsync(ct);
 
-        return OperationResult<List<InvoiceResponse>>.Ok(invoices.Select(InvoiceMapper.ToResponse).ToList());
+        return invoices.Select(InvoiceMapper.ToResponse).ToList();
     }
 
-    public async Task<OperationResult<InvoiceResponse>> GetInvoiceDetailAsync(int clientId, int invoiceId, CancellationToken ct = default)
+    public async Task<InvoiceResponse> GetInvoiceDetailAsync(int clientId, int invoiceId, CancellationToken ct = default)
     {
         var invoice = await _db.Invoices
             .Include(i => i.Lines)
@@ -128,12 +128,12 @@ public class PortalDataManager
             .FirstOrDefaultAsync(i => i.Id == invoiceId && i.ClientId == clientId, ct);
 
         if (invoice is null)
-            return OperationResult<InvoiceResponse>.Fail("INVOICE_NOT_FOUND", "Invoice not found.");
+            throw new AppException("INVOICE_NOT_FOUND", "Invoice not found.", 404);
 
-        return OperationResult<InvoiceResponse>.Ok(InvoiceMapper.ToResponse(invoice));
+        return InvoiceMapper.ToResponse(invoice);
     }
 
-    public async Task<OperationResult<PortalProfileResponse>> GetProfileAsync(int clientId, CancellationToken ct = default)
+    public async Task<PortalProfileResponse> GetProfileAsync(int clientId, CancellationToken ct = default)
     {
         var client = await _db.Clients
             .Include(c => c.Contacts)
@@ -141,7 +141,7 @@ public class PortalDataManager
             .FirstOrDefaultAsync(c => c.Id == clientId, ct);
 
         if (client is null)
-            return OperationResult<PortalProfileResponse>.Fail("CLIENT_NOT_FOUND", "Client not found.");
+            throw new AppException("CLIENT_NOT_FOUND", "Client not found.", 404);
 
         var primary = client.Contacts.FirstOrDefault(c => c.IsPrimary && c.IsActive)
             ?? client.Contacts.FirstOrDefault(c => c.IsActive);
@@ -150,7 +150,7 @@ public class PortalDataManager
             ? client.ClientName[0].ToString().ToUpper()
             : "?";
 
-        return OperationResult<PortalProfileResponse>.Ok(new PortalProfileResponse
+        return new PortalProfileResponse
         {
             Id = client.Id,
             Name = client.ClientName,
@@ -171,6 +171,6 @@ public class PortalDataManager
                     SiteType = s.SiteType,
                     AccessNotes = s.AccessNotes
                 }).ToList()
-        });
+        };
     }
 }

@@ -1,4 +1,4 @@
-using CleaningPlatformAPI.Common;
+using CleaningPlatformAPI.Models;
 using FluentAssertions;
 using Xunit;
 

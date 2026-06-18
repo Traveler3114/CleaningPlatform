@@ -15,7 +15,8 @@
 CleaningPlatformAPI/
 ├── Program.cs                 # Startup, DI, middleware, global error handler
 ├── Authorization/             # PermissionHandler, PermissionRequirement
-├── Common/                    # OperationResult<T>, PermissionKeys, RoleNames, PagedResult
+├── Common/                    # AppException, PermissionKeys, RoleNames, SqlHelper
+├── Models/                    # Paginated<T>, PaginationParams
 ├── Contracts/                 # DTOs (request/response records/classes)
 ├── Controllers/               # REST API endpoints
 ├── Data/                      # AppDbContext
@@ -102,7 +103,7 @@ Order: `System.*` → `Microsoft.*` → third-party → project (`CleaningPlatfo
 - Always pass `ct` to EF Core methods
 
 ### Error handling
-- **Global exception handler** in `Program.cs` catches and logs all unhandled exceptions, returns `OperationResult<string>.Fail(message)`
+- **Global exception handler** in `Program.cs` catches and logs all unhandled exceptions, returns `ProblemDetails` (RFC 7807)
 - **Transaction catch blocks**: catch → rollback → rethrow (never swallow)
 - **Controllers never catch exceptions** — let them bubble to the global handler
 - **Never silently swallow exceptions** — if you catch, you must log or rethrow
@@ -130,30 +131,37 @@ return int.Parse(claim);
 - Always annotated: `[ApiController]`, `[Route("api/{plural-noun}")]`, `[Authorize]`
 - Route matches controller name: `EmployeeController` → `api/employees`
 - Action-level authorization: `[Authorize(Policy = PermissionKeys.BookingsView)]`
-- Always return `ActionResult<OperationResult<T>>`
+- Always return `ActionResult<T>` (or `ActionResult` for commands)
 - Thin: receive input → call manager → forward result
 - Never contain business logic
 
-### OperationResult pattern
-All manager methods return `OperationResult<T>`:
-```csharp
-return OperationResult<T>.Ok(data);
-return OperationResult<T>.Fail("error message");
-```
-Controllers forward directly:
-```csharp
-return result.Success ? Ok(result) : NotFound(result);
-```
+### Manager return patterns
+Managers return data directly (no envelope wrapper):
+- Found → return the DTO or `List<T>`
+- Not found → throw `AppException("CODE", "message", 404)`
+- Validation failure → throw `AppException("CODE", "message", 422)`
+- Command success → `return;` (void `Task`)
+
+### ProblemDetails pattern
+All error responses use standard RFC 7807 `ProblemDetails` via `AppException`:
+- Managers throw `AppException(code, message, statusCode)` on errors
+- Global exception handler catches `AppException` and maps to `ProblemDetails`
+- Controllers never catch — errors propagate to the handler automatically
+- Error response shape: `{ type, title, status, detail, code }`
 
 ### Status codes
-| Code | When |
-|------|------|
-| 200 | Success (via `Ok(result)`) |
-| 400 | Bad request (via `BadRequest(result)`) |
-| 404 | Not found (via `NotFound(result)`) |
-| 422 | Validation failure (via `UnprocessableEntity(result)`) |
-| 401 | Unauthorized (via `Unauthorized(result)`) |
-| 403 | Forbidden (via `Forbid()`) |
+| Code | When | Controller method |
+|------|------|-------------------|
+| 200 | Success with data | `Ok(data)` |
+| 201 | Created | `CreatedAtRoute(..., dto)` |
+| 204 | Command success (no data) | `NoContent()` |
+| 400 | Bad request / validation | `Problem(statusCode: 400)` |
+| 404 | Not found | `Problem(statusCode: 404)` |
+| 409 | Conflict / duplicate | `Problem(statusCode: 409)` |
+| 422 | Validation failure | `Problem(statusCode: 422)` |
+| 401 | Unauthorized | `Problem(statusCode: 401)` |
+| 403 | Forbidden | `Problem(statusCode: 403)` or `Forbid()` |
+| 500 | Server error | Auto via exception handler |
 
 ### DTOs
 - Defined in `Contracts/` folder, organized by domain (e.g., `BookingContract.cs`, `InvoiceContract.cs`)
@@ -177,7 +185,7 @@ If a field has a restricted set of allowed values, validate it explicitly in the
 // Good
 var validTypes = new[] { "Vehicle", "SiteBased", "Boat", "Generic" };
 if (!validTypes.Contains(dto.ServiceType?.Trim()))
-    return OperationResult<T>.Fail("ServiceType must be one of: Vehicle, SiteBased, Boat, Generic.");
+    throw new AppException("SERVICE_TYPE_INVALID", "ServiceType must be one of: Vehicle, SiteBased, Boat, Generic.", 422);
 
 // Bad — lets the SQL constraint throw a generic error
 entity.ServiceType = dto.ServiceType;
@@ -216,7 +224,7 @@ Always check for an existing record before inserting into a junction table. Neve
 var exists = await _db.BookingSopAssignments
     .AnyAsync(a => a.BookingId == bookingId && a.SopTemplateId == templateId, ct);
 if (exists)
-    return OperationResult<T>.Fail("Already assigned.");
+    throw new AppException("ALREADY_ASSIGNED", "Already assigned.", 409);
 
 // Bad — lets the unique constraint throw
 _db.BookingSopAssignments.Add(new BookingSopAssignment { ... });
@@ -305,7 +313,7 @@ An employee must not be able to change their own role. The manager must check th
 Use camelCase with type constraints: `{bookingId:int}`, `{id:int}`.
 
 ### Fallback route scope
-`MapFallbackToFile` and any fallback handler must only apply to non-API routes. Any request path starting with `/api/` that does not match a controller action must return `404` with a JSON `OperationResult` body — never an HTML page. Serving HTML for unmatched API paths hides bugs from API clients and monitoring tools.
+`MapFallbackToFile` and any fallback handler must only apply to non-API routes. Any request path starting with `/api/` that does not match a controller action must return `404` with a JSON `ProblemDetails` body — never an HTML page. Serving HTML for unmatched API paths hides bugs from API clients and monitoring tools.
 
 ---
 
@@ -363,9 +371,12 @@ async function apiFetch(endpoint, options = {}) {
     const token = getToken();
     const response = await fetch(`${API_BASE}${endpoint}`, { ... });
     if (response.status === 401) { logout(); throw ...; }
-    return response.json();
+    if (!response.ok) { /* read ProblemDetails: data.detail, data.code */ }
+    return data; // Direct response (no envelope)
 }
 ```
+Error responses follow ProblemDetails shape: `{ type, title, status, detail, code }`.
+Success responses return data directly — no envelope to unwrap.
 
 ### JWT storage
 - Token stored in `localStorage` as `accessToken`
@@ -427,10 +438,14 @@ var actor = all.First(u => u.Id != target.Id);
 - Avoid early `return` in tests when data is missing (assert or skip)
 - Avoid seeding permission keys that no controller policy actually checks
 - Avoid serving HTML for unmatched `/api/` routes
+- Avoid wrapping success responses in an envelope (use ProblemDetails only for errors)
+- Avoid catching exceptions in controllers (let them propagate to the global handler)
 
 ### What to always do
 - Always use `CancellationToken` as last parameter on async methods
-- Always return `OperationResult<T>` from managers
+- Always return data directly from managers on success (no envelope)
+- Always throw `AppException` for known error cases in managers
+- Always use `ProblemDetails` for error responses
 - Always use `[ApiController]` + `[Route]` + `[Authorize]` on controllers
 - Always use file-scoped namespaces
 - Always use `string.Empty` for string defaults
@@ -459,6 +474,7 @@ var actor = all.First(u => u.Id != target.Id);
 | Controllers | `{Domain}Controller` | `BookingController` |
 | Managers | `{Domain}Manager` | `BookingManager` |
 | Mappers | `{Domain}Mapper` | `BookingMapper` |
+| Paginated response | `Paginated<T>` | `Paginated<BookingResponse>` |
 
 ### Blank lines
 - Single blank line between methods

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Controllers;
 
@@ -16,65 +16,58 @@ public class SopController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.SopsView)]
-    public async Task<ActionResult<OperationResult<List<SopTemplateResponse>>>> Get(CancellationToken ct)
+    public async Task<ActionResult<List<SopTemplateResponse>>> Get(CancellationToken ct)
     {
-        var templates = await _sopManager.GetAllTemplatesAsync(ct);
-        return Ok(OperationResult<List<SopTemplateResponse>>.Ok(templates));
+        return Ok(await _sopManager.GetAllTemplatesAsync(ct));
     }
 
     [HttpGet("{id:int}")]
     [Authorize(Policy = PermissionKeys.SopsView)]
-    public async Task<ActionResult<OperationResult<SopTemplateResponse>>> GetById(int id, CancellationToken ct)
+    public async Task<ActionResult<SopTemplateResponse>> GetById(int id, CancellationToken ct)
     {
-        var result = await _sopManager.GetTemplateByIdAsync(id, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+        return Ok(await _sopManager.GetTemplateByIdAsync(id, ct));
     }
 
     [HttpPost]
     [Authorize(Policy = PermissionKeys.SopsManage)]
-    public async Task<ActionResult<OperationResult<SopTemplateResponse>>> Create([FromBody] CreateSopTemplateRequest request, CancellationToken ct)
+    public async Task<ActionResult<SopTemplateResponse>> Create([FromBody] CreateSopTemplateRequest request, CancellationToken ct)
     {
-        var result = await _sopManager.CreateTemplateAsync(request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _sopManager.CreateTemplateAsync(request, ct));
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
-    public async Task<ActionResult<OperationResult<SopTemplateResponse>>> Update(int id, [FromBody] CreateSopTemplateRequest request, CancellationToken ct)
+    public async Task<ActionResult<SopTemplateResponse>> Update(int id, [FromBody] CreateSopTemplateRequest request, CancellationToken ct)
     {
-        var result = await _sopManager.UpdateTemplateAsync(id, request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _sopManager.UpdateTemplateAsync(id, request, ct));
     }
 
     [HttpPut("{id:int}/active")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
-    public async Task<ActionResult<OperationResult<SopTemplateResponse>>> ToggleActive(int id, [FromBody] ToggleSopActiveRequest request, CancellationToken ct)
+    public async Task<ActionResult<SopTemplateResponse>> ToggleActive(int id, [FromBody] ToggleSopActiveRequest request, CancellationToken ct)
     {
-        var result = await _sopManager.ToggleActiveAsync(id, request.IsActive, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _sopManager.ToggleActiveAsync(id, request.IsActive, ct));
     }
 
     [HttpPost("{id:int}/items")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
-    public async Task<ActionResult<OperationResult<ChecklistItemResponse>>> AddItem(int id, [FromBody] UpsertChecklistItemRequest request, CancellationToken ct)
+    public async Task<ActionResult<ChecklistItemResponse>> AddItem(int id, [FromBody] UpsertChecklistItemRequest request, CancellationToken ct)
     {
-        var result = await _sopManager.AddChecklistItemAsync(id, request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _sopManager.AddChecklistItemAsync(id, request, ct));
     }
 
     [HttpPut("items/{itemId:int}")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
-    public async Task<ActionResult<OperationResult<ChecklistItemResponse>>> UpdateItem(int itemId, [FromBody] UpsertChecklistItemRequest request, CancellationToken ct)
+    public async Task<ActionResult<ChecklistItemResponse>> UpdateItem(int itemId, [FromBody] UpsertChecklistItemRequest request, CancellationToken ct)
     {
-        var result = await _sopManager.UpdateChecklistItemAsync(itemId, request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _sopManager.UpdateChecklistItemAsync(itemId, request, ct));
     }
 
     [HttpDelete("items/{itemId:int}")]
     [Authorize(Policy = PermissionKeys.SopsManage)]
-    public async Task<ActionResult<OperationResult<string>>> DeleteItem(int itemId, CancellationToken ct)
+    public async Task<ActionResult> DeleteItem(int itemId, CancellationToken ct)
     {
-        var result = await _sopManager.DeleteChecklistItemAsync(itemId, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        await _sopManager.DeleteChecklistItemAsync(itemId, ct);
+        return NoContent();
     }
 }

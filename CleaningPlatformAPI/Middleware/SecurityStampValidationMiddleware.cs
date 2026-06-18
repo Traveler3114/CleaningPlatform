@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Managers;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CleaningPlatformAPI.Middleware;
 
@@ -30,8 +30,16 @@ public class SecurityStampValidationMiddleware
                     !await authManager.ValidateSecurityStampAsync(userId, stampClaim))
                 {
                     context.Response.StatusCode = 401;
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("SESSION_INVALID", "Session is no longer valid."));
+                    context.Response.ContentType = "application/problem+json";
+                    var pd = new ProblemDetails
+                    {
+                        Type = "https://httpstatuses.com/401",
+                        Title = "Unauthorized",
+                        Status = 401,
+                        Detail = "Session is no longer valid.",
+                        Extensions = { ["code"] = "SESSION_INVALID" }
+                    };
+                    await context.Response.WriteAsJsonAsync(pd, pd.GetType());
                     return;
                 }
             }

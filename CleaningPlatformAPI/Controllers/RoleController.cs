@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Controllers;
 
@@ -16,49 +16,44 @@ public class RoleController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = PermissionKeys.RolesView)]
-    public async Task<ActionResult<OperationResult<List<RoleResponse>>>> GetAll(CancellationToken ct)
+    public async Task<ActionResult<List<RoleResponse>>> GetAll(CancellationToken ct)
     {
-        var roles = await _roleManager.GetAllRolesAsync(ct);
-        return Ok(OperationResult<List<RoleResponse>>.Ok(roles));
+        return Ok(await _roleManager.GetAllRolesAsync(ct));
     }
 
     [HttpGet("{id}")]
     [Authorize(Policy = PermissionKeys.RolesView)]
-    public async Task<ActionResult<OperationResult<RoleResponse>>> GetById(int id, CancellationToken ct)
+    public async Task<ActionResult<RoleResponse>> GetById(int id, CancellationToken ct)
     {
-        var result = await _roleManager.GetByIdAsync(id, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+        return Ok(await _roleManager.GetByIdAsync(id, ct));
     }
 
     [HttpGet("permissions")]
     [Authorize(Policy = PermissionKeys.RolesView)]
-    public ActionResult<OperationResult<List<AvailablePermissionResponse>>> GetPermissions()
+    public ActionResult<List<AvailablePermissionResponse>> GetPermissions()
     {
-        var permissions = _roleManager.GetAvailablePermissions();
-        return Ok(OperationResult<List<AvailablePermissionResponse>>.Ok(permissions));
+        return Ok(_roleManager.GetAvailablePermissions());
     }
 
     [HttpPost]
     [Authorize(Policy = PermissionKeys.RolesManage)]
-    public async Task<ActionResult<OperationResult<RoleResponse>>> Create([FromBody] CreateRoleRequest request, CancellationToken ct)
+    public async Task<ActionResult<RoleResponse>> Create([FromBody] CreateRoleRequest request, CancellationToken ct)
     {
-        var result = await _roleManager.CreateRoleAsync(request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _roleManager.CreateRoleAsync(request, ct));
     }
 
     [HttpPut("{id}")]
     [Authorize(Policy = PermissionKeys.RolesManage)]
-    public async Task<ActionResult<OperationResult<RoleResponse>>> Update(int id, [FromBody] UpdateRoleRequest request, CancellationToken ct)
+    public async Task<ActionResult<RoleResponse>> Update(int id, [FromBody] UpdateRoleRequest request, CancellationToken ct)
     {
-        var result = await _roleManager.UpdateRoleAsync(id, request, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        return Ok(await _roleManager.UpdateRoleAsync(id, request, ct));
     }
 
     [HttpDelete("{id}")]
     [Authorize(Policy = PermissionKeys.RolesManage)]
-    public async Task<ActionResult<OperationResult<string>>> Delete(int id, CancellationToken ct)
+    public async Task<ActionResult> Delete(int id, CancellationToken ct)
     {
-        var result = await _roleManager.DeleteRoleAsync(id, ct);
-        return result.Success ? Ok(result) : UnprocessableEntity(result);
+        await _roleManager.DeleteRoleAsync(id, ct);
+        return NoContent();
     }
 }

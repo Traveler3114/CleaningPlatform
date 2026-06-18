@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
@@ -23,70 +22,64 @@ public class PortalDataController : ControllerBase
 
     [HttpGet("dashboard")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<PortalDashboardResponse>>> GetDashboard(CancellationToken ct)
+    public async Task<ActionResult<PortalDashboardResponse>> GetDashboard(CancellationToken ct)
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<PortalDashboardResponse>.Fail("INVALID_TOKEN", "Invalid token."));
-        var result = await _portalManager.GetDashboardAsync(clientId.Value, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+        return Ok(await _portalManager.GetDashboardAsync(clientId.Value, ct));
     }
 
     [HttpGet("bookings")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<List<BookingResponse>>>> GetBookings(
+    public async Task<ActionResult<List<BookingResponse>>> GetBookings(
         [FromQuery] string? status, CancellationToken ct)
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<List<BookingResponse>>.Fail("INVALID_TOKEN", "Invalid token."));
-        var result = await _portalManager.GetBookingsAsync(clientId.Value, status, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+        return Ok(await _portalManager.GetBookingsAsync(clientId.Value, status, ct));
     }
 
     [HttpGet("bookings/{id:int}")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<BookingResponse>>> GetBookingDetail(
+    public async Task<ActionResult<BookingResponse>> GetBookingDetail(
         int id, CancellationToken ct)
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<BookingResponse>.Fail("INVALID_TOKEN", "Invalid token."));
-        var result = await _portalManager.GetBookingDetailAsync(clientId.Value, id, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+        return Ok(await _portalManager.GetBookingDetailAsync(clientId.Value, id, ct));
     }
 
     [HttpGet("invoices")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<List<InvoiceResponse>>>> GetInvoices(CancellationToken ct)
+    public async Task<ActionResult<List<InvoiceResponse>>> GetInvoices(CancellationToken ct)
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<List<InvoiceResponse>>.Fail("INVALID_TOKEN", "Invalid token."));
-        var result = await _portalManager.GetInvoicesAsync(clientId.Value, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+        return Ok(await _portalManager.GetInvoicesAsync(clientId.Value, ct));
     }
 
     [HttpGet("invoices/{id:int}")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<InvoiceResponse>>> GetInvoiceDetail(
+    public async Task<ActionResult<InvoiceResponse>> GetInvoiceDetail(
         int id, CancellationToken ct)
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<InvoiceResponse>.Fail("INVALID_TOKEN", "Invalid token."));
-        var result = await _portalManager.GetInvoiceDetailAsync(clientId.Value, id, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+        return Ok(await _portalManager.GetInvoiceDetailAsync(clientId.Value, id, ct));
     }
 
     [HttpGet("profile")]
     [Authorize(Policy = "PortalOnly")]
-    public async Task<ActionResult<OperationResult<PortalProfileResponse>>> GetProfile(CancellationToken ct)
+    public async Task<ActionResult<PortalProfileResponse>> GetProfile(CancellationToken ct)
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Unauthorized(OperationResult<PortalProfileResponse>.Fail("INVALID_TOKEN", "Invalid token."));
-        var result = await _portalManager.GetProfileAsync(clientId.Value, ct);
-        return result.Success ? Ok(result) : NotFound(result);
+            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+        return Ok(await _portalManager.GetProfileAsync(clientId.Value, ct));
     }
 }

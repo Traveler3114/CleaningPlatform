@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -24,6 +25,7 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
 // Razor Pages removed - using static HTML instead
@@ -93,9 +95,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var localizer = context.Request.HttpContext.RequestServices
                     .GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResources>>();
                 context.Response.StatusCode = 403;
-                context.Response.ContentType = "application/json";
-                var result = OperationResult<string>.Fail("ACCESS_DENIED", localizer["error_access_denied"]);
-                return context.Response.WriteAsJsonAsync(result);
+                context.Response.ContentType = "application/problem+json";
+                var pd = new ProblemDetails
+                {
+                    Type = "https://httpstatuses.com/403",
+                    Title = "Forbidden",
+                    Status = 403,
+                    Detail = localizer["error_access_denied"],
+                    Extensions = { ["code"] = "ACCESS_DENIED" }
+                };
+                return context.Response.WriteAsJsonAsync(pd, pd.GetType());
             },
             OnChallenge = context =>
             {
@@ -103,9 +112,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     .GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResources>>();
                 context.HandleResponse();
                 context.Response.StatusCode = 401;
-                context.Response.ContentType = "application/json";
-                var result = OperationResult<string>.Fail("AUTHENTICATION_REQUIRED", localizer["error_authentication_required"]);
-                return context.Response.WriteAsJsonAsync(result);
+                context.Response.ContentType = "application/problem+json";
+                var pd = new ProblemDetails
+                {
+                    Type = "https://httpstatuses.com/401",
+                    Title = "Unauthorized",
+                    Status = 401,
+                    Detail = localizer["error_authentication_required"],
+                    Extensions = { ["code"] = "AUTHENTICATION_REQUIRED" }
+                };
+                return context.Response.WriteAsJsonAsync(pd, pd.GetType());
             }
         };
     });
@@ -153,14 +169,21 @@ app.UseExceptionHandler(errorApp =>
                 context.Request.Method, context.Request.Path);
         }
 
-        context.Response.ContentType = "application/json";
         context.Response.StatusCode = 500;
 
         string message;
+        string code;
 
-        if (error?.Error is SqlException sqlEx)
+        if (error?.Error is AppException appEx)
+        {
+            context.Response.StatusCode = appEx.StatusCode;
+            message = appEx.Message;
+            code = appEx.Code;
+        }
+        else if (error?.Error is SqlException sqlEx)
         {
             message = SqlHelper.GetUserFriendlyMessage(sqlEx);
+            code = "DB_ERROR";
         }
         else if (error?.Error is DbUpdateException dbEx)
         {
@@ -169,26 +192,48 @@ app.UseExceptionHandler(errorApp =>
                 : isDev
                     ? $"Database update failed: {dbEx.InnerException?.Message ?? dbEx.Message}"
                     : localizer["error_db_error"];
+            code = "DB_UPDATE_ERROR";
         }
         else if (error?.Error is InvalidOperationException invEx)
         {
             message = isDev
                 ? $"Invalid operation: {invEx.Message}"
                 : localizer["error_invalid_operation"];
+            code = "INVALID_OPERATION";
         }
         else if (error?.Error is UnauthorizedAccessException)
         {
             context.Response.StatusCode = 403;
             message = localizer["error_no_permission"];
+            code = "ACCESS_DENIED";
         }
         else
         {
             message = isDev && error?.Error is not null
                 ? $"Unexpected error ({error.Error.GetType().Name}): {error.Error.Message}"
                 : localizer["error_unexpected"];
+            code = "UNEXPECTED_ERROR";
         }
 
-        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("UNEXPECTED_ERROR", message));
+        context.Response.ContentType = "application/problem+json";
+        var pd = new ProblemDetails
+        {
+            Type = $"https://httpstatuses.com/{context.Response.StatusCode}",
+            Title = context.Response.StatusCode switch
+            {
+                400 => "Bad Request",
+                401 => "Unauthorized",
+                403 => "Forbidden",
+                404 => "Not Found",
+                409 => "Conflict",
+                422 => "Unprocessable Entity",
+                _ => "Internal Server Error"
+            },
+            Status = context.Response.StatusCode,
+            Detail = message,
+            Extensions = { ["code"] = code }
+        };
+        await context.Response.WriteAsJsonAsync(pd, pd.GetType());
     });
 });
 
@@ -214,8 +259,16 @@ app.MapFallback(async context =>
     {
         var localizer = context.RequestServices.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResources>>();
         context.Response.StatusCode = 404;
-        context.Response.ContentType = "application/json";
-        await context.Response.WriteAsJsonAsync(OperationResult<string>.Fail("ENDPOINT_NOT_FOUND", localizer["error_endpoint_not_found"]));
+        context.Response.ContentType = "application/problem+json";
+        var pd = new ProblemDetails
+        {
+            Type = "https://httpstatuses.com/404",
+            Title = "Not Found",
+            Status = 404,
+            Detail = localizer["error_endpoint_not_found"],
+            Extensions = { ["code"] = "ENDPOINT_NOT_FOUND" }
+        };
+        await context.Response.WriteAsJsonAsync(pd, pd.GetType());
         return;
     }
     context.Response.Redirect("/public/index.html");

@@ -4,8 +4,8 @@ using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 using Microsoft.Extensions.Localization;
 using CleaningPlatformAPI;
-using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Mapping;
+using CleaningPlatformAPI.Common;
 
 namespace CleaningPlatformAPI.Managers;
 
@@ -22,16 +22,16 @@ public class ScheduleManager
         return schedules.Select(ScheduleMapper.ToWeeklyResponse).ToList();
     }
 
-    public async Task<OperationResult<WeeklyScheduleResponse>> CreateDayAsync(WeeklyScheduleRequest request, CancellationToken ct = default)
+    public async Task<WeeklyScheduleResponse> CreateDayAsync(WeeklyScheduleRequest request, CancellationToken ct = default)
     {
         var err = ValidateScheduleRequest(request.DayOfWeek, request.StartHour, request.EndHour, request.Capacity, true);
-        if (err is not null) return OperationResult<WeeklyScheduleResponse>.Fail("SCHEDULE_ERROR", err);
+        if (err is not null) throw new AppException("SCHEDULE_ERROR", err, 422);
 
         var dayName  = ((DayOfWeek)request.DayOfWeek).ToString();
         var existing = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == request.DayOfWeek, ct);
         if (existing is not null)
-            return OperationResult<WeeklyScheduleResponse>.Fail("SCHEDULE_ENTRY_EXISTS",
-                $"A schedule entry for {dayName} already exists. Click the row to edit the existing entry instead.");
+            throw new AppException("SCHEDULE_ENTRY_EXISTS",
+                $"A schedule entry for {dayName} already exists. Click the row to edit the existing entry instead.", 409);
 
         var schedule = new WeeklySchedule
         {
@@ -42,35 +42,35 @@ public class ScheduleManager
         };
         _db.WeeklySchedules.Add(schedule);
         await _db.SaveChangesAsync(ct);
-        return OperationResult<WeeklyScheduleResponse>.Ok(ScheduleMapper.ToWeeklyResponse(schedule));
+        return ScheduleMapper.ToWeeklyResponse(schedule);
     }
 
-    public async Task<OperationResult<WeeklyScheduleResponse>> UpdateDayAsync(int dayOfWeek, UpdateWeeklyScheduleRequest request, CancellationToken ct = default)
+    public async Task<WeeklyScheduleResponse> UpdateDayAsync(int dayOfWeek, UpdateWeeklyScheduleRequest request, CancellationToken ct = default)
     {
         var err = ValidateScheduleRequest(dayOfWeek, request.StartHour, request.EndHour, request.Capacity, false);
-        if (err is not null) return OperationResult<WeeklyScheduleResponse>.Fail("SCHEDULE_ERROR", err);
+        if (err is not null) throw new AppException("SCHEDULE_ERROR", err, 422);
 
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == dayOfWeek, ct);
         if (schedule is null)
-            return OperationResult<WeeklyScheduleResponse>.Fail("SCHEDULE_ENTRY_NOT_FOUND",
-                $"No schedule entry found for {((DayOfWeek)dayOfWeek)}.");
+            throw new AppException("SCHEDULE_ENTRY_NOT_FOUND",
+                $"No schedule entry found for {((DayOfWeek)dayOfWeek)}.", 404);
 
         schedule.StartHour = request.StartHour;
         schedule.EndHour   = request.EndHour;
         schedule.Capacity  = request.Capacity;
         await _db.SaveChangesAsync(ct);
-        return OperationResult<WeeklyScheduleResponse>.Ok(ScheduleMapper.ToWeeklyResponse(schedule));
+        return ScheduleMapper.ToWeeklyResponse(schedule);
     }
 
-    public async Task<OperationResult<bool>> DeleteDayAsync(int dayOfWeek, CancellationToken ct = default)
+    public async Task DeleteDayAsync(int dayOfWeek, CancellationToken ct = default)
     {
         var schedule = await _db.WeeklySchedules.FirstOrDefaultAsync(s => s.DayOfWeek == dayOfWeek, ct);
         if (schedule is null)
-            return OperationResult<bool>.Fail("SCHEDULE_ENTRY_NOT_FOUND", $"No schedule entry found for {((DayOfWeek)dayOfWeek)}.");
+            throw new AppException("SCHEDULE_ENTRY_NOT_FOUND", $"No schedule entry found for {((DayOfWeek)dayOfWeek)}.", 404);
 
         _db.WeeklySchedules.Remove(schedule);
         await _db.SaveChangesAsync(ct);
-        return OperationResult<bool>.Ok(true);
+        return;
     }
 
     private static string? ValidateScheduleRequest(int dayOfWeek, int startHour, int endHour, int capacity, bool validateDayOfWeek)

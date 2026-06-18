@@ -67,15 +67,14 @@ async function apiFetch(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-        const errorMsg = translateApiError(data && data.code, data && data.message) || `Request failed (HTTP ${response.status})`;
-        throw new Error(errorMsg);
-    }
-    if (data && data.success === false) {
-        var err = new Error(translateApiError(data.code, data.message));
-        err.code = data.code;
+        const code = data && data.code || data && data.title;
+        const detail = data && data.detail || `Request failed (HTTP ${response.status})`;
+        const errorMsg = translateApiError(code, detail);
+        var err = new Error(errorMsg);
+        err.code = code;
         throw err;
     }
-    return data; // OperationResult<T> shape: { success, message, data }
+    return data; // Direct response (no envelope — errors use ProblemDetails)
 }
 
 // Helper to check permissions from token claims (simplified – you may need to decode JWT)
@@ -105,7 +104,5 @@ function hasPermission(permission) {
 }
 
 async function loadCurrentUser() {
-    const result = await apiFetch('/employees/me');
-    if (result.success) return result.data;
-    throw new Error(result.message);
+    return await apiFetch('/employees/me');
 }
