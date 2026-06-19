@@ -16,4 +16,10 @@ public static class ClaimsPrincipalExtensions
         var raw = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(raw, out var id) ? id : null;
     }
+
+    public static int RequireEmployeeId(this ClaimsPrincipal user)
+    {
+        return user.GetEmployeeId()
+            ?? throw new AppException("INVALID_TOKEN", "Invalid token.", 401);
+    }
 }

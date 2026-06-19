@@ -51,11 +51,8 @@ public class KanbanController : ControllerBase
         [FromQuery] DateTime weekStart,
         CancellationToken ct)
     {
-        var userId = User.GetEmployeeId();
-        if (userId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
-
-        return Ok(await _kanbanManager.GetEmployeeWeekAsync(userId.Value, weekStart, ct));
+        var userId = User.RequireEmployeeId();
+        return Ok(await _kanbanManager.GetEmployeeWeekAsync(userId, weekStart, ct));
     }
 }
 

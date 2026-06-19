@@ -40,11 +40,8 @@ public class AuthController : ControllerBase
         [FromBody] ChangePasswordRequest request,
         CancellationToken ct)
     {
-        var userId = User.GetEmployeeId();
-        if (userId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: _localizer["error_invalid_token"]);
-
-        await _authManager.ChangePasswordAsync(request, userId.Value, ct);
+        var userId = User.RequireEmployeeId();
+        await _authManager.ChangePasswordAsync(request, userId, ct);
         return NoContent();
     }
 

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
+using CleaningPlatformAPI.Common;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Managers;
 
@@ -11,8 +13,9 @@ namespace CleaningPlatformAPI.Controllers;
 public class PortalDataController : ControllerBase
 {
     private readonly PortalDataManager _portalManager;
+    private readonly IStringLocalizer<SharedResources> _localizer;
 
-    public PortalDataController(PortalDataManager portalManager) { _portalManager = portalManager; }
+    public PortalDataController(PortalDataManager portalManager, IStringLocalizer<SharedResources> localizer) { _portalManager = portalManager; _localizer = localizer; }
 
     private int? GetClientId()
     {
@@ -26,7 +29,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+            throw new AppException("INVALID_TOKEN", _localizer["error_invalid_token"], 401);
         return Ok(await _portalManager.GetDashboardAsync(clientId.Value, ct));
     }
 
@@ -37,7 +40,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+            throw new AppException("INVALID_TOKEN", _localizer["error_invalid_token"], 401);
         return Ok(await _portalManager.GetBookingsAsync(clientId.Value, status, ct));
     }
 
@@ -48,7 +51,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+            throw new AppException("INVALID_TOKEN", _localizer["error_invalid_token"], 401);
         return Ok(await _portalManager.GetBookingDetailAsync(clientId.Value, id, ct));
     }
 
@@ -58,7 +61,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+            throw new AppException("INVALID_TOKEN", _localizer["error_invalid_token"], 401);
         return Ok(await _portalManager.GetInvoicesAsync(clientId.Value, ct));
     }
 
@@ -69,7 +72,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+            throw new AppException("INVALID_TOKEN", _localizer["error_invalid_token"], 401);
         return Ok(await _portalManager.GetInvoiceDetailAsync(clientId.Value, id, ct));
     }
 
@@ -79,7 +82,7 @@ public class PortalDataController : ControllerBase
     {
         var clientId = GetClientId();
         if (clientId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+            throw new AppException("INVALID_TOKEN", _localizer["error_invalid_token"], 401);
         return Ok(await _portalManager.GetProfileAsync(clientId.Value, ct));
     }
 }

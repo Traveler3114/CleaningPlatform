@@ -48,7 +48,7 @@ public class InvoiceController : ControllerBase
     public async Task<ActionResult<InvoiceResponse>> CreateFromBookingPayload([FromBody] CreateInvoiceFromBookingRequest request, CancellationToken ct)
     {
         if (request.BookingId <= 0)
-            return Problem(statusCode: 400, title: "BOOKING_ID_REQUIRED", detail: _localizer["err_booking_id_required"]);
+            throw new AppException("BOOKING_ID_REQUIRED", _localizer["err_booking_id_required"], 400);
         return Ok(await _invoiceManager.CreateFromBookingAsync(request.BookingId, User.GetEmployeeId(), ct));
     }
 

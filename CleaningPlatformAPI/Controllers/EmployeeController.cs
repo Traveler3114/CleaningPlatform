@@ -19,11 +19,8 @@ public class EmployeeController : ControllerBase
     [HttpGet("me")]
     public async Task<ActionResult<UserResponse>> Me(CancellationToken ct)
     {
-        var userId = User.GetEmployeeId();
-        if (userId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
-
-        return Ok(await _userManager.GetByIdAsync(userId.Value, ct));
+        var userId = User.RequireEmployeeId();
+        return Ok(await _userManager.GetByIdAsync(userId, ct));
     }
 
     [HttpGet("available-for-booking/{bookingId:int}")]
@@ -49,21 +46,15 @@ public class EmployeeController : ControllerBase
     [Authorize(Policy = PermissionKeys.UsersEdit)]
     public async Task<ActionResult<UserResponse>> Update(int id, [FromBody] UpdateEmployeeRequest request, CancellationToken ct)
     {
-        var requestingUserId = User.GetEmployeeId();
-        if (requestingUserId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
-
-        return Ok(await _userManager.UpdateEmployeeAsync(id, request, requestingUserId.Value, ct));
+        var requestingUserId = User.RequireEmployeeId();
+        return Ok(await _userManager.UpdateEmployeeAsync(id, request, requestingUserId, ct));
     }
 
     [HttpPut("{id}/toggle")]
     [Authorize(Policy = PermissionKeys.UsersEdit)]
     public async Task<ActionResult<UserResponse>> Toggle(int id, CancellationToken ct)
     {
-        var requestingUserId = User.GetEmployeeId();
-        if (requestingUserId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
-
-        return Ok(await _userManager.ToggleActiveAsync(id, requestingUserId.Value, ct));
+        var requestingUserId = User.RequireEmployeeId();
+        return Ok(await _userManager.ToggleActiveAsync(id, requestingUserId, ct));
     }
 }

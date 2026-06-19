@@ -35,7 +35,7 @@ public class ReportingManager
 
     public async Task<OverdueInvoiceSummaryView> GetOverdueInvoiceSummaryAsync(CancellationToken ct = default)
     {
-        return (await _db.OverdueInvoiceSummaryViews.AsNoTracking().FirstOrDefaultAsync(ct))!;
+        return await _db.OverdueInvoiceSummaryViews.AsNoTracking().FirstOrDefaultAsync(ct) ?? new();
     }
 
     public async Task<DashboardSummaryResponse> GetDashboardSummaryAsync(CancellationToken ct = default)

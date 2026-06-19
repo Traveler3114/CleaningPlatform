@@ -144,17 +144,15 @@ public class BookingController : ControllerBase
         [FromQuery] DateTime? date,
         CancellationToken ct)
     {
-        var targetId = employeeId ?? User.GetEmployeeId();
-        if (targetId is null)
-            return Problem(statusCode: 401, title: "INVALID_TOKEN", detail: "Invalid token.");
+        var targetId = employeeId ?? User.RequireEmployeeId();
 
         var currentUserId = User.GetEmployeeId();
         if (currentUserId != targetId && !User.IsInRole(RoleNames.Owner) && !User.IsInRole(RoleNames.Admin))
             return Forbid();
 
         if (date.HasValue)
-            return Ok(await _bookingManager.GetAssignedBookingsForEmployeeByDateAsync(targetId.Value, date.Value, ct));
+            return Ok(await _bookingManager.GetAssignedBookingsForEmployeeByDateAsync(targetId, date.Value, ct));
         else
-            return Ok(await _bookingManager.GetAssignedBookingsForEmployeeAsync(targetId.Value, ct));
+            return Ok(await _bookingManager.GetAssignedBookingsForEmployeeAsync(targetId, ct));
     }
 }
