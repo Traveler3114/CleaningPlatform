@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 
@@ -5,6 +6,14 @@ namespace CleaningPlatformAPI.Mapping;
 
 public static class UserMapper
 {
+    public static Expression<Func<Employee, EmployeeSimpleResponse>> SimpleProjection => e => new()
+    {
+        Id = e.Id,
+        FirstName = e.FirstName,
+        LastName = e.LastName,
+        Role = e.Role == null ? string.Empty : e.Role.Name
+    };
+
     public static UserResponse ToResponse(Employee u, List<string> permissions) => new()
     {
         Id = u.Id,

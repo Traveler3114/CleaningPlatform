@@ -18,8 +18,10 @@ public class ScheduleManager
 
     public async Task<List<WeeklyScheduleResponse>> GetScheduleAsync(CancellationToken ct = default)
     {
-        var schedules = await _db.WeeklySchedules.OrderBy(s => s.DayOfWeek).ToListAsync(ct);
-        return schedules.Select(ScheduleMapper.ToWeeklyResponse).ToList();
+        return await _db.WeeklySchedules
+            .OrderBy(s => s.DayOfWeek)
+            .Select(ScheduleMapper.WeeklyProjection)
+            .ToListAsync(ct);
     }
 
     public async Task<WeeklyScheduleResponse> CreateDayAsync(WeeklyScheduleRequest request, CancellationToken ct = default)

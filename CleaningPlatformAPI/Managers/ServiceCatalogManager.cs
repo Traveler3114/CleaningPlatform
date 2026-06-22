@@ -19,11 +19,10 @@ public class ServiceCatalogManager
 
     public async Task<List<ServiceCatalogResponse>> GetAllAsync(CancellationToken ct = default)
     {
-        var services = await _db.ServiceCatalog
+        return await _db.ServiceCatalog
             .OrderBy(s => s.Name)
+            .Select(ServiceCatalogMapper.Projection)
             .ToListAsync(ct);
-
-        return services.Select(ServiceCatalogMapper.ToResponse).ToList();
     }
 
     public async Task<ServiceCatalogResponse> GetByIdAsync(int id, CancellationToken ct = default)

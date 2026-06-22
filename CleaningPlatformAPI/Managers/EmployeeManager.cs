@@ -90,14 +90,12 @@ public class EmployeeManager
 
     public async Task<List<EmployeeSimpleResponse>> GetActiveEmployeesAsync(CancellationToken ct = default)
     {
-        var employees = await _db.Employees
-            .Include(e => e.Role)
+        return await _db.Employees
             .Where(e => e.IsActive)
             .OrderBy(e => e.FirstName)
             .ThenBy(e => e.LastName)
+            .Select(UserMapper.SimpleProjection)
             .ToListAsync(ct);
-
-        return employees.Select(UserMapper.ToSimpleResponse).ToList();
     }
 
     public async Task<UserResponse> UpdateEmployeeAsync(int id, UpdateEmployeeRequest request, int requestingUserId, CancellationToken ct = default)

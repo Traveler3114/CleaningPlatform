@@ -16,10 +16,10 @@ public class InventoryManager
 
     public async Task<List<InventoryResponse>> GetAllAsync(CancellationToken ct = default)
     {
-        var items = await _db.Inventory
+        return await _db.Inventory
             .OrderBy(i => i.Name)
+            .Select(InventoryMapper.Projection)
             .ToListAsync(ct);
-        return items.Select(InventoryMapper.ToResponse).ToList();
     }
 
     public async Task<InventoryResponse> GetByIdAsync(int id, CancellationToken ct = default)

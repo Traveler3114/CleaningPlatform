@@ -173,6 +173,42 @@ All error responses use standard RFC 7807 `ProblemDetails` via `AppException`:
 - Static classes in `Mapping/` folder: `{Domain}Mapper` (e.g., `BookingMapper`)
 - Manual field mapping methods (no AutoMapper)
 - Names: `ToResponse()`, `ToEntity()`, `ToDto()` depending on direction
+- For read-only list queries, add an `Expression<Func<TEntity, TDto>> Projection`
+  field alongside the existing method. EF translates it to `SELECT col1, col2, …`
+  at the database level instead of fetching all columns.
+
+  ```csharp
+  public static Expression<Func<ServiceCatalog, ServiceCatalogResponse>> Projection
+      => s => new()
+      {
+          Id = s.Id,
+          CatalogCode = s.CatalogCode,
+          Name = s.Name,
+          // … every field accounted for
+      };
+  ```
+
+  Usage in the manager:
+  ```csharp
+  return await _db.ServiceCatalog
+      .Select(ServiceCatalogMapper.Projection)
+      .ToListAsync(ct);
+  ```
+
+  **When to use `Projection` vs `ToResponse()`**
+
+  | Projection | ToResponse() |
+  |---|---|
+  | Read-only list endpoints | Detail endpoints with nested data |
+  | Simple field copies only | Computed fields, method calls, `?.` / `??` |
+  | Entity not needed for change tracking | Entity loaded for mutation later |
+
+  **Expression tree limitations:** No `?.`, no method calls (except
+  EF-translatable ones), no `string.Empty`. Use
+  `condition ? value : fallback` for null handling.
+  `Projection` must still account for every source field.
+  Keep the existing `ToResponse()` method for in-memory scenarios —
+  both live in the same mapper class.
 
 ---
 

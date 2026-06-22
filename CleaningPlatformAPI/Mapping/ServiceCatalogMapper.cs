@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 
@@ -5,6 +6,21 @@ namespace CleaningPlatformAPI.Mapping;
 
 public static class ServiceCatalogMapper
 {
+    public static Expression<Func<ServiceCatalog, ServiceCatalogResponse>> Projection => s => new()
+    {
+        Id = s.Id,
+        CatalogCode = s.CatalogCode,
+        Name = s.Name,
+        Category = s.Category,
+        Unit = s.Unit,
+        BasePrice = s.BasePrice,
+        ApproxTime = s.ApproxTime,
+        ServiceType = s.ServiceType,
+        IsActive = s.IsActive,
+        CreatedAt = s.CreatedAt,
+        UpdatedAt = s.UpdatedAt
+    };
+
     public static ServiceCatalogResponse ToResponse(ServiceCatalog s) => new()
     {
         Id = s.Id,

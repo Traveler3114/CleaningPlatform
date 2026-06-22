@@ -18,12 +18,12 @@ public class DateOverrideManager
 
     public async Task<List<DateOverrideResponse>> GetOverridesAsync(CancellationToken ct = default)
     {
-        var cutoff    = DateOnly.FromDateTime(DateTime.UtcNow);
-        var overrides = await _db.DateOverrides
+        var cutoff = DateOnly.FromDateTime(DateTime.UtcNow);
+        return await _db.DateOverrides
             .Where(o => o.Date >= cutoff)
             .OrderBy(o => o.Date)
+            .Select(ScheduleMapper.DateOverrideProjection)
             .ToListAsync(ct);
-        return overrides.Select(ScheduleMapper.ToDateOverrideResponse).ToList();
     }
 
     public async Task<DateOverrideResponse> CreateOverrideAsync(DateOverrideRequest request, CancellationToken ct = default)

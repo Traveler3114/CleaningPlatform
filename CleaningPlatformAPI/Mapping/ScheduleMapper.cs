@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using CleaningPlatformAPI.Contracts;
 using CleaningPlatformAPI.Entities;
 
@@ -5,6 +6,24 @@ namespace CleaningPlatformAPI.Mapping;
 
 public static class ScheduleMapper
 {
+    public static Expression<Func<WeeklySchedule, WeeklyScheduleResponse>> WeeklyProjection => s => new()
+    {
+        DayOfWeek = s.DayOfWeek,
+        StartHour = s.StartHour,
+        EndHour = s.EndHour,
+        Capacity = s.Capacity
+    };
+
+    public static Expression<Func<DateOverride, DateOverrideResponse>> DateOverrideProjection => o => new()
+    {
+        Id = o.Id,
+        Date = o.Date,
+        StartHour = o.StartHour,
+        EndHour = o.EndHour,
+        Capacity = o.Capacity,
+        IsFullyClosed = o.IsFullyClosed
+    };
+
     public static WeeklyScheduleResponse ToWeeklyResponse(WeeklySchedule s) => new()
     {
         DayOfWeek = s.DayOfWeek,
